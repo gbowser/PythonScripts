@@ -1,0 +1,54 @@
+import psycopg2
+
+conn = psycopg2.connect(dbname='db', user='grok')
+cursor = conn.cursor()
+cursor.execute('SELECT * FROM Star')
+records = cursor.fetchall()
+
+t_eff = []
+for row in records:
+  t_eff.append(row[1])
+
+print(t_eff)
+
+-------------------------------------
+import psycopg2
+
+conn = psycopg2.connect(dbname='db', user='grok')
+cursor = conn.cursor()
+
+cursor.execute('SELECT * FROM Planet LIMIT 1;')
+
+records = cursor.fetchall()
+
+for col in records[0]:
+    print(type(col))
+------------------------------------
+import psycopg2
+import numpy as np
+
+conn = psycopg2.connect(dbname='db', user='grok')
+cursor = conn.cursor()
+
+cursor.execute('SELECT radius FROM Star;')
+
+records = cursor.fetchall()
+array = np.array(records)
+
+print(array.shape)
+print(array.mean())
+print(array.std())
+
+----------------------------------------------
+import psycopg2
+import numpy as np
+
+def column_stats(table_name,col_name):
+  conn = psycopg2.connect(dbname='db', user='grok')
+  cursor = conn.cursor()
+  query = 'SELECT ' + col_name + ' FROM ' + table_name + ' ;'
+
+  cursor.execute(query)
+  records = cursor.fetchall()
+
+  return(np.average(records),np.median(records))

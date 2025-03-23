@@ -1,0 +1,50 @@
+# https://docs.astropy.org/en/stable/io/votable/index.html
+
+# https://clustertools.readthedocs.io/en/latest/
+
+
+import clustertools as ctools
+from astropy import units as u
+from astropy.coordinates import SkyCoord
+from astropy.table import QTable
+
+dir_import = ("D://Dropbox/Public Documents/UCLAN/AA3050 Dissertation/Pleaides Membership/")
+file_import = "Brandner 2023.vot"
+
+# t is my astropy table of cluster stars
+
+t = QTable.read(dir_import + file_import)
+
+# put in zero values for x,y,z, vx,vy, vz
+t.add_column(0 * u.pc, name="x")  # Add column of all zero pc to end of table
+t.add_column(0 * u.pc, name="y")  # Add column of all zero pc to end of table
+t.add_column(0 * u.pc, name="z")  # Add column of all zero pc to end of table
+
+t.add_column(0 * u.km / u.second, name="vx")  # Add column of all zero km/s to end of table
+t.add_column(0 * u.km / u.second, name="vy")  # Add column of all zero km/s to end of table
+t.add_column(0 * u.km / u.second, name="vz")  # Add column of all zero km/s to end of table
+
+
+# compute cartesian co-ords and put in table
+t["x"] = SkyCoord(ra=(t["RA_ICRS"]), dec=(t["DE_ICRS"]), distance=(t["dpgeo"]), frame="icrs").cartesian.x
+t["y"] = SkyCoord(ra=(t["RA_ICRS"]), dec=(t["DE_ICRS"]), distance=(t["dpgeo"]), frame="icrs").cartesian.y
+t["z"] = SkyCoord(ra=(t["RA_ICRS"]), dec=(t["DE_ICRS"]), distance=(t["dpgeo"]), frame="icrs").cartesian.z
+
+'_____________________________________________________'
+#Load all stars into cluster all in one go
+#____________________________________________________
+cluster=ctools.StarCluster(particles = t, units='pckms')
+cm = {"m": "Mass", "x": "x", "y": "y", "z": "z", "vx": "vx", "xy": "vy", "vz": "vz"}
+cluster = ctools.load_cluster("astropy_table", particles=t, units="pckms", origin="galaxy", column_mapper=cm)
+# _____________________________________________________
+
+
+
+'_____________________________________________________'
+#Load stars into cluster one at a time
+#____________________________________________________
+
+# cluster.add_stars(x,y,z,vx,vy,vz,m)
+# cluster=ctools.StarCluster()
+# for i in range(0,len(t)-1):
+#    cluster.add_stars(t["x"][i],t["y"][i],t["z"][i],t["vx"][i],t["vy"][i],t["vz"][i])
