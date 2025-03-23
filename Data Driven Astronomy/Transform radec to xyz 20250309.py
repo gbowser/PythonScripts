@@ -26,10 +26,6 @@ def radec_to_cartesian(ra, dec, distance):
     return x, y, z
 
 
-ra, dec, distance = 67.8056	, 16.8670,46.15
-
-
-
-
+ra, dec, distance = 67.8056, 16.8670, 46.15
 x, y, z = radec_to_cartesian(ra, dec, distance)
 print(f"x: {x:.3f} pc, y: {y:.3f} pc, z: {z:.3f}")
