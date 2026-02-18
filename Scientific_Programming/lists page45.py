@@ -1,3 +1,6 @@
+import math
+
+
 list2 = [5,6,7,'eight',9.0] 
 list1=[1,'two',3.0,[4,5,6],list2]
 
@@ -47,5 +50,20 @@ print(list ('hello'))  #should return ['h', 'e', 'l', 'l', 'o']
 
 a=[5,4,3,2,1]
 b=a
-print (b is a)
-print (b == a)
+print (f"b is a  --> {b is a}")
+print (f"b == a  --> {b == a}")
+#page 50
+b=list(a)
+print(b)
+print (f"b is a  --> {b is a}")
+print (f"b == a  --> {b == a}")
+
+a=[1,0,0,2,3]
+print(f" array is {a}")
+print (f"any(a) -->  {any(a)}")
+print (f"all(a) -->  {all(a)}")
+
+# page 51
+a=[3,4]
+print (f"hypotenuse using slices {math.hypot(a[0],a[1])}")
+print (f"hypotenuse using unpacking {math.hypot(*a)}")
