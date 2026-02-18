@@ -110,3 +110,17 @@ mammals = ["dog", "cat", "mouse", "hamster", "rabbit"]
 for i, mammal in enumerate(mammals,4):
     print(f"{i}th animal is : {mammal}") 
 
+#now for zipping two lists together
+names = ["Alice", "Bob", "Charlie"]
+ages = [25, 30, 35]
+for pair in zip(names, ages):
+    print(pair)
+print(f"Here is the list of zip: {list(zip(names, ages))}")
+
+#Unzip the list of pairs
+pairs = list(zip(names, ages))
+A, B = zip(*pairs)
+print(f"Unzipped names: {A}")
+print(f"Unzipped ages: {B}")    
+print(f"are a and A  the same values? {list(A) == names}")
+
