@@ -347,6 +347,7 @@ dependencies = [
     { name = "galpy" },
     { name = "matplotlib" },
     { name = "pandas" },
+    { name = "scipy" },
 ]
 
 [package.metadata]
@@ -356,6 +357,7 @@ requires-dist = [
     { name = "galpy", specifier = ">=1.11.1" },
     { name = "matplotlib", specifier = ">=3.10.7" },
     { name = "pandas", specifier = ">=3.0.0" },
+    { name = "scipy", specifier = ">=1.17.0" },
 ]
 
 [[package]]

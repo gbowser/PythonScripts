@@ -10,4 +10,5 @@ dependencies = [
     "galpy>=1.11.1",
     "matplotlib>=3.10.7",
     "pandas>=3.0.0",
+    "scipy>=1.17.0",
 ]
