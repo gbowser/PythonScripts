@@ -50,6 +50,12 @@ def reformat_lines(fi):
 with open(fname) as fi:
     gender,bps, bpd=np.loadtxt(reformat_lines(fi), dtype3, skiprows=9, usecols=(1,7,8), converters={7:parse_bp,8:parse_bp}, unpack=True)
 
+# Remove rows with invalid blood-pressure values.
+valid_bp = (bps >= 0) & (bpd >= 0)
+gender = gender[valid_bp]
+bps = bps[valid_bp]
+bpd = bpd[valid_bp]
+
 #now do something with the data
 print(f"Gender = {gender}\nBPS = {bps}\nBPD = {bpd}")
       
