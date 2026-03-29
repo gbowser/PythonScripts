@@ -2,6 +2,13 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import rc
+
+font_properties = {"family": "serif", "weight": "bold", "size": 16}
+rc("font", **font_properties)
+# The default line width is a bit thin, so let's increase it:
+rc("lines", linewidth=2)    
+
 
 fig, ax = plt.subplots()
 
@@ -26,4 +33,5 @@ ax.legend(loc="upper left")
 ax.set_xlim(1800, 2020)
 ax.set_xlabel("Year")
 ax.set_ylabel("Population (millions)")
+ax.set_title("Population of Five US Cities", fontsize=16, fontname="serif", color="navy")
 plt.show()
