@@ -56,6 +56,7 @@ VZ_KICK = 1.0
 
 FPS = 30
 DT = 1 / FPS
+PLAYBACK_SPEED = 2.0
 T_STAGE1 = 6.0
 STAGE2_DURATION = 15.0
 T_STAGE2 = T_STAGE1 + STAGE2_DURATION
@@ -313,7 +314,12 @@ def update(i):
 
 
 anim = FuncAnimation(
-    fig, update, frames=frames, init_func=init, blit=False, interval=1000 / FPS
+    fig,
+    update,
+    frames=frames,
+    init_func=init,
+    blit=False,
+    interval=1000 / (FPS * PLAYBACK_SPEED),
 )
 
 plt.show()
@@ -324,7 +330,7 @@ plt.show()
 if SAVE_MP4:
     anim.save(
         MP4_NAME,
-        fps=FPS,
+        fps=FPS * PLAYBACK_SPEED,
         dpi=160,
         savefig_kwargs={"facecolor": fig.get_facecolor(), "edgecolor": "none"},
     )
