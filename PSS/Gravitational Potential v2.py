@@ -1,92 +1,68 @@
-"""
-Plot Milky Way gravitational potential Φ(R, z=0) versus Galactocentric radius R.
-
-This script gives you TWO options:
-  A) galpy (recommended if you already use it)
-  B) gala (also popular; depends on astropy units)
-
-Run one option (comment the other).
-"""
-
 import matplotlib.pyplot as plt
 import numpy as np
 
-# -------------------------------
-# Choose radius grid (kpc)
-# -------------------------------
-R_kpc = np.linspace(0.5, 30.0, 400)  # avoid R=0
-z_kpc = 0.0
+# ---------- Milky Way-like potential model ----------
+# Units:
+# distance = kpc, mass = Msun, potential = (km/s)^2
+G = 4.30091e-6  # kpc (km/s)^2 Msun^-1
 
-# ============================================================
-# OPTION A: galpy (MWPotential2014)
-# ============================================================
-try:
-    from galpy.potential import MWPotential2014, evaluatePotentials
-    from galpy.util import bovy_conversion
+# Disk (Miyamoto-Nagai)
+M_d = 6.0e10
+a_d = 6.5
+b_d = 0.26
 
-    # galpy works in dimensionless units (R in units of ro, velocities in vo)
-    ro = 8.2  # kpc (set this to what you use)
-    vo = 232.0  # km/s (set this to what you use)
+# Bulge (Hernquist)
+M_b = 5.0e9
+c_b = 0.7
 
-    R_galpy = R_kpc / ro
-    z_galpy = np.zeros_like(R_galpy) + (z_kpc / ro)
+# Halo (spherical logarithmic)
+v_h = 180.0  # km/s
+d_h = 12.0  # kpc
 
-    # Dimensionless Φ (per unit mass) in units of vo^2
-    Phi_dimless = np.array(
-        [evaluatePotentials(MWPotential2014, R, z) for R, z in zip(R_galpy, z_galpy)]
-    )
 
-    # Convert to physical units: (km/s)^2
-    Phi_kms2 = Phi_dimless * vo**2
+def phi_disk(R, z):
+    return -G * M_d / np.sqrt(R**2 + (a_d + np.sqrt(z**2 + b_d**2)) ** 2)
 
-    # You can also convert to SI J/kg by multiplying by (1000 m/s)^2:
-    Phi_Jperkg = Phi_kms2 * (1000.0**2)
 
-    plt.figure()
-    plt.plot(R_kpc, Phi_kms2)
-    plt.xlabel("Galactocentric radius R [kpc]")
-    plt.ylabel(r"Gravitational potential $\Phi(R, z=0)$ [$(\mathrm{km/s})^2$]")
-    plt.title(r"Milky Way potential (galpy MWPotential2014) at $z=0$")
-    plt.grid(True)
-    plt.show()
+def phi_bulge(r):
+    return -G * M_b / (r + c_b)
 
-    # If you prefer J/kg:
-    plt.figure()
-    plt.plot(R_kpc, Phi_Jperkg)
-    plt.xlabel("Galactocentric radius R [kpc]")
-    plt.ylabel(r"Gravitational potential $\Phi(R, z=0)$ [J/kg]")
-    plt.title(r"Milky Way potential (galpy MWPotential2014) at $z=0$")
-    plt.grid(True)
-    plt.show()
 
-except ImportError as e:
-    print("galpy not installed (or import failed). Error:", e)
-    print("Try OPTION B (gala) below, or install galpy: pip install galpy")
+def phi_halo(r):
+    return 0.5 * v_h**2 * np.log(r**2 + d_h**2)
 
-# ============================================================
-# OPTION B: gala (MilkyWayPotential)
-# ============================================================
-# Uncomment this block if you prefer gala and have it installed.
-"""
-import astropy.units as u
-from gala.potential import MilkyWayPotential
 
-pot = MilkyWayPotential()
+def phi_total(R, z):
+    r = np.sqrt(R**2 + z**2)
+    return phi_disk(R, z) + phi_bulge(r) + phi_halo(r)
 
-R = R_kpc * u.kpc
-z = np.zeros_like(R_kpc) * u.kpc
 
-# gala returns potential energy per unit mass; usually in (km/s)^2
-Phi = pot.energy([R, z, 0*R])  # 3D positions (R, z, phi-like), but gala expects Cartesian in many contexts
-# If the above line errors, use Cartesian positions instead:
-# x = R; y = 0; z = 0
-# Phi = pot.energy([x, 0*x, 0*x])
+# ---------- Grid in Galactic plane ----------
+x = np.linspace(-9, 9, 220)  # kpc
+y = np.linspace(-9, 9, 220)  # kpc
 
-plt.figure()
-plt.plot(R_kpc, Phi.to((u.km/u.s)**2).value)
-plt.xlabel("Galactocentric radius R [kpc]")
-plt.ylabel(r"Gravitational potential $\Phi(R, z=0)$ [$(\mathrm{km/s})^2$]")
-plt.title(r"Milky Way potential (gala) at $z=0$")
-plt.grid(True)
+
+X, Y = np.meshgrid(x, y)
+R = np.sqrt(X**2 + Y**2)
+
+# Height above the plane where we evaluate "vertical" potential
+z_above = 1.0  # kpc
+
+# Vertical potential relative to the midplane at same R
+Phi_vert = phi_total(R, z_above) - phi_total(R, 0.0)  # (km/s)^2
+
+# ---------- Plot ----------
+fig = plt.figure(figsize=(10, 7))
+ax = fig.add_subplot(111, projection="3d")
+ax.set_xlim(-9, 9)
+ax.set_ylim(-9, 9)
+
+surf = ax.plot_surface(X, Y, Phi_vert, cmap="viridis", linewidth=0, antialiased=True)
+
+ax.set_xlabel("x [kpc]")
+ax.set_ylabel("y [kpc]")
+ax.set_zlabel(r"$\Delta\Phi_z(R, z=1\,\mathrm{kpc})\;[(\mathrm{km}/\mathrm{s})^2]$")
+ax.set_title("3D Map of Vertical Gravitational Potential Above the Milky Way")
+fig.colorbar(surf, ax=ax, shrink=0.65, pad=0.1, label=r"$(\mathrm{km}/\mathrm{s})^2$")
+plt.tight_layout()
 plt.show()
-"""

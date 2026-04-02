@@ -5,8 +5,6 @@ from io import BytesIO
 from PIL import Image
 
 # --------------------------------------------------
-# Snail breathing mode animation with pendulum ensemble
-# Gord
 # Parameters
 # --------------------------------------------------"
 video_file = "D://Dropbox/Public Documents/UCLAN/AA3057 Collaborative Investigation/GB Section/pendulum_20251127.mp4"

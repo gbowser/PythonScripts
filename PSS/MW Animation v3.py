@@ -9,7 +9,7 @@ import os
 # Output / saving
 # ============================================================
 SAVE_MP4 = True
-SAVE_FINAL_PNG = True
+SAVE_FINAL_PNG = False
 
 timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
 OUT_DIR = r"D:\Dropbox\Public Documents\UCLAN\AA3057 Collaborative Investigation\Animations"
@@ -49,9 +49,9 @@ VZ_KICK = 1.0
 FPS = 30
 DT = 1 / FPS
 T_STAGE1 = 6.0
-STAGE2_DURATION = 20.0
+STAGE2_DURATION = 15.0
 T_STAGE2 = T_STAGE1 + STAGE2_DURATION
-T_TOTAL = T_STAGE2 + 20.0
+T_TOTAL = T_STAGE2 + 15.0
 
 VIEW_ELEV_DEG = 20
 VIEW_AZIM_DEG = 35
