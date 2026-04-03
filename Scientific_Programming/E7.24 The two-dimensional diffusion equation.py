@@ -1,65 +1,105 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-# plate size, mm
-w = h = 10.0
-# intervals in x-, y- directions, mm
-dx = dy = 0.1
-# Thermal diffusivity of steel, mm2.s-1
-D = 4.0
+# Physical size of the square metal plate, in millimetres.
+plate_width = plate_height = 10.0
+# Distance between neighbouring grid points in the x and y directions.
+grid_spacing_x = grid_spacing_y = 0.1
+# Thermal diffusivity of steel, in mm^2 s^-1.
+thermal_diffusivity = 4.0
 
-Tcool, Thot = 300, 700
+# Background and hot-spot temperatures, in kelvin.
+cool_temperature, hot_temperature = 300, 700
 
-nx, ny = int(w / dx), int(h / dy)
+# Number of grid points used to represent the plate.
+num_points_x = int(plate_width / grid_spacing_x)
+num_points_y = int(plate_height / grid_spacing_y)
 
-dx2, dy2 = dx * dx, dy * dy
-dt = dx2 * dy2 / (2 * D * (dx2 + dy2))
+# Precompute repeated terms used in the diffusion update.
+grid_spacing_x_squared = grid_spacing_x * grid_spacing_x
+grid_spacing_y_squared = grid_spacing_y * grid_spacing_y
+# Choose a stable time step for the explicit finite-difference scheme.
+time_step = grid_spacing_x_squared * grid_spacing_y_squared / (
+    2
+    * thermal_diffusivity
+    * (grid_spacing_x_squared + grid_spacing_y_squared)
+)
 
-u0 = Tcool * np.ones((nx, ny))
-u = u0.copy()
+# current_temperature stores the current temperature field;
+# next_temperature stores the updated one.
+current_temperature = cool_temperature * np.ones((num_points_x, num_points_y))
+next_temperature = current_temperature.copy()
 
-# Initial conditions - circle of radius r centred at (cx,cy) (mm)
-r, cx, cy = 2, 5, 5
-r2 = r**2
-for i in range(nx):
-    for j in range(ny):
-        p2 = (i * dx - cx) ** 2 + (j * dy - cy) ** 2
-        if p2 < r2:
-            u0[i, j] = Thot
+# Initial condition: a hot circular patch centred on the plate.
+hot_radius = 2
+hot_centre_x, hot_centre_y = 5, 5
+hot_radius_squared = hot_radius**2
+for x_index in range(num_points_x):
+    for y_index in range(num_points_y):
+        # Squared distance from this grid point to the circle centre.
+        distance_squared = (
+            (x_index * grid_spacing_x - hot_centre_x) ** 2
+            + (y_index * grid_spacing_y - hot_centre_y) ** 2
+        )
+        if distance_squared < hot_radius_squared:
+            current_temperature[x_index, y_index] = hot_temperature
 
 
-def do_timestep(u0, u):
-    # Propagate with forward-difference in time, central-difference in space.
-    u[1:-1, 1:-1] = u0[1:-1, 1:-1] + D * dt * (
-        (u0[2:, 1:-1] - 2 * u0[1:-1, 1:-1] + u0[:-2, 1:-1]) / dx2
-        + (u0[1:-1, 2:] - 2 * u0[1:-1, 1:-1] + u0[1:-1, :-2]) / dy2
+def do_timestep(current_temperature, next_temperature):
+    # Advance the 2D diffusion equation by one time step.
+    # The interior points are updated from their current value and the
+    # temperature of their four nearest neighbours.
+    next_temperature[1:-1, 1:-1] = current_temperature[1:-1, 1:-1] + (
+        thermal_diffusivity
+        * time_step
+        * (
+            (
+                current_temperature[2:, 1:-1]
+                - 2 * current_temperature[1:-1, 1:-1]
+                + current_temperature[:-2, 1:-1]
+            )
+            / grid_spacing_x_squared
+            + (
+                current_temperature[1:-1, 2:]
+                - 2 * current_temperature[1:-1, 1:-1]
+                + current_temperature[1:-1, :-2]
+            )
+            / grid_spacing_y_squared
+        )
     )
 
-    u0 = u.copy()
-    return u0, u
+    # Copy the newly computed temperatures so they become the current state
+    # for the next iteration.
+    current_temperature = next_temperature.copy()
+    return current_temperature, next_temperature
 
 
-# Number of timesteps.
-nsteps = 101
-# Output 4 figures at these timesteps.
-mfig = [0, 10, 50, 100]
-fignum = 0
+# Total number of time steps to simulate.
+num_time_steps = 101
+# Plot snapshots of the temperature field at these selected steps.
+plot_steps = [0, 10, 50, 100]
+plot_number = 0
 fig, axes = plt.subplots(nrows=2, ncols=2)
-for m in range(nsteps):
-    u0, u = do_timestep(u0, u)
-    if m in mfig:
-        print(m, fignum)
-        ax = axes[fignum // 2, fignum % 2]
+for step_number in range(num_time_steps):
+    current_temperature, next_temperature = do_timestep(
+        current_temperature, next_temperature
+    )
+    if step_number in plot_steps:
+        # Place each snapshot into the next panel of the 2x2 figure.
+        ax = axes[plot_number // 2, plot_number % 2]
         im = ax.imshow(
-            u.copy(),
+            next_temperature.copy(),
             cmap="hot",
-            vmin=Tcool,
-            vmax=Thot,
+            vmin=cool_temperature,
+            vmax=hot_temperature,
             interpolation="bilinear",
         )
         ax.set_axis_off()
-        ax.set_title("{:.1f} ms".format(m * dt * 1000))
-        fignum += 1
+        # Convert the simulated time from seconds to milliseconds.
+        ax.set_title("{:.1f} ms".format(step_number * time_step * 1000))
+        plot_number += 1
+
+# Add a single colour bar to explain how colour maps to temperature.
 fig.subplots_adjust(right=0.85)
 cbar_ax = fig.add_axes([0.9, 0.15, 0.03, 0.7])
 cbar_ax.set_xlabel("$T$ / K", labelpad=20)
