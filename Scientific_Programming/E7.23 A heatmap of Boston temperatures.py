@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from pathlib import Path
+
 
 file_path= Path(__file__).with_name("boston2019.dat")
 
