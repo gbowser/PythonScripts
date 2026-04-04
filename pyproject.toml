@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "astropy>=7.2.0",
+    "astroquery>=0.4.11",
     "ffmpeg>=1.4",
     "galpy>=1.11.1",
     "matplotlib>=3.10.7",
