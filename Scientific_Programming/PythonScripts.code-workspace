@@ -5,6 +5,8 @@
         }
     ],
     "settings": {
-        "chatgpt.openOnStartup": true
+        "chatgpt.openOnStartup": true,
+        "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+        "python.terminal.activateEnvironment": true
     }
 }

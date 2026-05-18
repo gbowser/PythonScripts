@@ -8,6 +8,7 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
+            "python": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
             "program": "${file}",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
