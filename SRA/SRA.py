@@ -437,7 +437,7 @@ def run_SRA(model, t_start, t_end, plot_derivs=True, generate_shoulders_file=Fal
         if by_z_layers == 'Relative':
             hz = np.nanstd(Data['z'])
             
-            #Range of z slcies relative to hz: go up in half hz slices from 0 to 3 sigma, so 6 slices in all
+            #Range of z slices relative to hz: go up in half hz slices from 0 to 3 sigma, so 6 slices in all
             hz_multiples = [[round(val,2), round(val + 0.5, 2)] for val in np.arange(0, 3, 0.5)]
             z_values = [[round(val,2), round(val + 0.5, 2)] for val in np.arange(0, 3, 0.5)]
             
