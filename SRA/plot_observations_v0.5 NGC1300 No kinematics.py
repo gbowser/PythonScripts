@@ -5,7 +5,8 @@ import numpy as np
 import scipy.stats as stats
 from astropy.io import fits
 
-output_folder = "D:/Dropbox/Public Documents/UCLAN/MSc Research/Data"
+# output_folder = "D:/Dropbox/Public Documents/UCLAN/MSc Research/Data"
+output_folder = "C:\\Users\\gordo\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Data"
 
 
 def plot_rotated_coords(data_shape, origin, angle_deg):
@@ -233,7 +234,7 @@ def image_profile(
 # NGC 1300
 # Bar radius is 85 arcsec (https://articles.adsabs.harvard.edu/cgi-bin/nph-iarticle_query?2000A%26A...361..841A&defaultprint=YES&filetype=.pdf)
 # This is 87/0.2 pixels, because MUSE has 0.2 arcsec per pixel, so 435 pixels
-os.chdir("D:/Dropbox/Public Documents/UCLAN/MSc Research/Data")
+os.chdir(output_folder)
 
 Rbar = 435 * (0.2 * (19.6 * 1e3) / 206265.0)
 xlims = (-1.5 * Rbar, 1.5 * Rbar)
