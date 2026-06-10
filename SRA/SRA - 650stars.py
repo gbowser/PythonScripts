@@ -319,9 +319,14 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
 #            bar_extent = max(bar_ends_phi2, bar_ends_a2)
             
         else:
-            bar_ends_phi2 = 0
-            bar_ends_a2 = 0
-            bar_extent = 0
+            if override_bar_extent is not None:
+                bar_ends_phi2 = override_bar_extent
+                bar_ends_a2 = override_bar_extent
+                bar_extent = override_bar_extent
+            else:
+                bar_ends_phi2 = 0
+                bar_ends_a2 = 0
+                bar_extent = 0
 
         if np.isnan(bar_extent):
             bar_extent = 0

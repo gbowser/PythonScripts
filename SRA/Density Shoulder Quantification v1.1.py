@@ -33,13 +33,14 @@ def main():
         t_start=TIMESTEP,
         t_end=TIMESTEP,
         override_folders=[str(DATA_DIR), str(DATA_DIR)],
+        override_bar_extent=8.0,
         generate_shoulders_file=True,
         do_animation=True,
         # Valid values:
         #   False      - analyse all particles as one slice.
         #   'Absolute' - analyse fixed |z| slices in kpc.
         #   'Relative' - analyse |z| slices scaled by the model's z dispersion.
-        by_z_layers='Absolute',
+        by_z_layers=False,
         plot_derivs=True,
         do_plots=True,
     )
