@@ -35,7 +35,11 @@ def main():
         override_folders=[str(DATA_DIR), str(DATA_DIR)],
         generate_shoulders_file=True,
         do_animation=True,
-        by_z_layers=False,
+        # Valid values:
+        #   False      - analyse all particles as one slice.
+        #   'Absolute' - analyse fixed |z| slices in kpc.
+        #   'Relative' - analyse |z| slices scaled by the model's z dispersion.
+        by_z_layers='Absolute',
         plot_derivs=True,
         do_plots=True,
     )

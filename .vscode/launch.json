@@ -13,6 +13,16 @@
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "justMyCode": true
+        },
+        {
+            "name": "Density Shoulder Quantification",
+            "type": "python",
+            "request": "launch",
+            "python": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+            "program": "${workspaceFolder}\\SRA\\Density Shoulder Quantification v1.1.py",
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "justMyCode": true
         }
     ]
 }

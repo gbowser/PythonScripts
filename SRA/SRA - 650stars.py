@@ -912,9 +912,6 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
         
         #        fig2.savefig(plot_file_2)
         #        derivs_for_animation.append(plot_file_2 + '.png')
-                if do_plots:
-                    plt.close()
-                
                 #Do we have a ** pair ** of shoulders?
                 if ~np.isnan(clav_left) and ~np.isnan(clav_right):
                     #We must reject shoulders if they overlap which can happen at

@@ -40,11 +40,9 @@ def plt_settings():
     plt.rcParams['font.variant'] = 'normal'
     plt.rcParams['font.weight'] = 'light'
     plt.rcParams['font.stretch'] = 'normal'
+    plt.rcParams['font.cursive'] = [font_name]
     
-    plt.rcParams['mathtext.fontset'] = 'custom'
-    plt.rcParams['mathtext.rm'] = font_name + ':light'
-    plt.rcParams['mathtext.it'] = font_name + ':italic'
-    plt.rcParams['mathtext.bf'] = font_name + ':bold'
+    plt.rcParams['mathtext.fontset'] = 'dejavusans'
     
     
     plt.rcParams['xtick.top'] = True   # draw ticks on the top side
