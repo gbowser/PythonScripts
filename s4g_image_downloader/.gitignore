@@ -1,2 +1,4 @@
 s4g_images_36um/
 *.fits
+geometry_output/
+geometry_catalog_cache/
