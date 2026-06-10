@@ -2,3 +2,6 @@ numpy
 scipy
 matplotlib
 astropy
+scikit-image
+pandas
+statsmodels

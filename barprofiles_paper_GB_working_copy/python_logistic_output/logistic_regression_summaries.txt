@@ -1,0 +1,146 @@
+
+Model: profs1_logMstar
+Formula: PSh_profile_both ~ logMstar
+                 Generalized Linear Model Regression Results                  
+==============================================================================
+Dep. Variable:       PSh_profile_both   No. Observations:                  181
+Model:                            GLM   Df Residuals:                      179
+Model Family:                Binomial   Df Model:                            1
+Link Function:                  Logit   Scale:                          1.0000
+Method:                          IRLS   Log-Likelihood:                -51.670
+Date:                Wed, 10 Jun 2026   Deviance:                       103.34
+Time:                        17:07:20   Pearson chi2:                     128.
+No. Iterations:                     7   Pseudo R-squ. (CS):             0.4909
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+Intercept    -50.7609      7.930     -6.401      0.000     -66.303     -35.219
+logMstar       5.0024      0.784      6.383      0.000       3.466       6.538
+==============================================================================
+
+
+Model: profs1_t_leda
+Formula: PSh_profile_both ~ t_leda
+                 Generalized Linear Model Regression Results                  
+==============================================================================
+Dep. Variable:       PSh_profile_both   No. Observations:                  181
+Model:                            GLM   Df Residuals:                      179
+Model Family:                Binomial   Df Model:                            1
+Link Function:                  Logit   Scale:                          1.0000
+Method:                          IRLS   Log-Likelihood:                -68.139
+Date:                Wed, 10 Jun 2026   Deviance:                       136.28
+Time:                        17:07:20   Pearson chi2:                     171.
+No. Iterations:                     6   Pseudo R-squ. (CS):             0.3892
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+Intercept      2.9505      0.545      5.411      0.000       1.882       4.019
+t_leda        -0.7628      0.112     -6.806      0.000      -0.982      -0.543
+==============================================================================
+
+
+Model: profs1_logfgas
+Formula: PSh_profile_both ~ logfgas
+                 Generalized Linear Model Regression Results                  
+==============================================================================
+Dep. Variable:       PSh_profile_both   No. Observations:                  181
+Model:                            GLM   Df Residuals:                      179
+Model Family:                Binomial   Df Model:                            1
+Link Function:                  Logit   Scale:                          1.0000
+Method:                          IRLS   Log-Likelihood:                -79.737
+Date:                Wed, 10 Jun 2026   Deviance:                       159.47
+Time:                        17:07:20   Pearson chi2:                     157.
+No. Iterations:                     5   Pseudo R-squ. (CS):             0.3057
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+Intercept     -2.8329      0.405     -6.992      0.000      -3.627      -2.039
+logfgas       -2.4910      0.403     -6.180      0.000      -3.281      -1.701
+==============================================================================
+
+
+Model: profs2_logVrot
+Formula: PSh_profile_both ~ logVrot
+                 Generalized Linear Model Regression Results                  
+==============================================================================
+Dep. Variable:       PSh_profile_both   No. Observations:                  131
+Model:                            GLM   Df Residuals:                      129
+Model Family:                Binomial   Df Model:                            1
+Link Function:                  Logit   Scale:                          1.0000
+Method:                          IRLS   Log-Likelihood:                -31.199
+Date:                Wed, 10 Jun 2026   Deviance:                       62.398
+Time:                        17:07:20   Pearson chi2:                     151.
+No. Iterations:                     7   Pseudo R-squ. (CS):             0.5172
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+Intercept    -43.0281      8.293     -5.188      0.000     -59.282     -26.774
+logVrot       20.3549      3.953      5.150      0.000      12.608      28.102
+==============================================================================
+
+
+Model: profs2_logMstar
+Formula: PSh_profile_both ~ logMstar
+                 Generalized Linear Model Regression Results                  
+==============================================================================
+Dep. Variable:       PSh_profile_both   No. Observations:                  131
+Model:                            GLM   Df Residuals:                      129
+Model Family:                Binomial   Df Model:                            1
+Link Function:                  Logit   Scale:                          1.0000
+Method:                          IRLS   Log-Likelihood:                -32.638
+Date:                Wed, 10 Jun 2026   Deviance:                       65.275
+Time:                        17:07:20   Pearson chi2:                     113.
+No. Iterations:                     7   Pseudo R-squ. (CS):             0.5065
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+Intercept    -55.9664     10.888     -5.140      0.000     -77.306     -34.627
+logMstar       5.5027      1.073      5.130      0.000       3.401       7.605
+==============================================================================
+
+
+Model: profs2_t_leda
+Formula: PSh_profile_both ~ t_leda
+                 Generalized Linear Model Regression Results                  
+==============================================================================
+Dep. Variable:       PSh_profile_both   No. Observations:                  131
+Model:                            GLM   Df Residuals:                      129
+Model Family:                Binomial   Df Model:                            1
+Link Function:                  Logit   Scale:                          1.0000
+Method:                          IRLS   Log-Likelihood:                -51.101
+Date:                Wed, 10 Jun 2026   Deviance:                       102.20
+Time:                        17:07:20   Pearson chi2:                     121.
+No. Iterations:                     5   Pseudo R-squ. (CS):             0.3457
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+Intercept      2.7215      0.633      4.298      0.000       1.481       3.963
+t_leda        -0.7000      0.123     -5.673      0.000      -0.942      -0.458
+==============================================================================
+
+
+Model: profs2_logfgas
+Formula: PSh_profile_both ~ logfgas
+                 Generalized Linear Model Regression Results                  
+==============================================================================
+Dep. Variable:       PSh_profile_both   No. Observations:                  131
+Model:                            GLM   Df Residuals:                      129
+Model Family:                Binomial   Df Model:                            1
+Link Function:                  Logit   Scale:                          1.0000
+Method:                          IRLS   Log-Likelihood:                -58.756
+Date:                Wed, 10 Jun 2026   Deviance:                       117.51
+Time:                        17:07:20   Pearson chi2:                     112.
+No. Iterations:                     5   Pseudo R-squ. (CS):             0.2647
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+Intercept     -2.6407      0.442     -5.975      0.000      -3.507      -1.774
+logfgas       -2.2517      0.446     -5.048      0.000      -3.126      -1.377
+==============================================================================

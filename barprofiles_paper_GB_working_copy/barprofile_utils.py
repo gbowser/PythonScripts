@@ -2,10 +2,15 @@
 
 # *** B/P Morphologies
 
+from pathlib import Path
+
 import numpy as np
 
 
-bpMorphologyFile = "./data/s4gbars_bp-buckling_profiles_checklist.dat"
+PROJECT_DIR = Path(__file__).resolve().parent
+DATA_DIR = PROJECT_DIR / "data"
+
+bpMorphologyFile = DATA_DIR / "s4gbars_bp-buckling_profiles_checklist.dat"
 
 def GetGalaxyNamesAndDict_morphology( filename=bpMorphologyFile ):
     """
@@ -20,7 +25,7 @@ def GetGalaxyNamesAndDict_morphology( filename=bpMorphologyFile ):
         gnames = list of galaxy names
         bpDict = dict mapping galaxy names to B/P morphology classification codes
     """
-    dlines = [line for line in open(filename) if line[0] != "#"]
+    dlines = [line for line in open(filename, encoding="utf-8") if line[0] != "#"]
     gnames = []
     bpDict= {}
     for line in dlines:
@@ -43,15 +48,15 @@ def GetGalaxyNamesAndDict_morphology( filename=bpMorphologyFile ):
 
 # *** Profile Classifications
 
-scrambleMap = "./data/scrambled_map.txt"
-classificationsFile_pe = "./data/classifications_pe.txt"
-classificationsFile_vd2 = "./data/classifications_vd_revised.txt"
+scrambleMap = DATA_DIR / "scrambled_map.txt"
+classificationsFile_pe = DATA_DIR / "classifications_pe.txt"
+classificationsFile_vd2 = DATA_DIR / "classifications_vd_revised.txt"
 
 
 def GetDescrambleDict( filename=scrambleMap ):
     """Returns a dict which maps scrambled galaxy numbers to galaxy names.
     """
-    dlines = [line for line in open(filename) if len(line) > 1 and line[0] != '#']
+    dlines = [line for line in open(filename, encoding="utf-8") if len(line) > 1 and line[0] != '#']
     descrambleDict = {}
     for line in dlines:
         pp = line.split()
@@ -85,7 +90,7 @@ def GetClassifications( classif_filename, descrambling_filename=scrambleMap, cla
     Currently, profiles with no classification ("?") are ignored.
     """
     descrambledDict = GetDescrambleDict(descrambling_filename)
-    dlines = [line for line in open(classif_filename) if len(line) > 1 and line[0] != '#']
+    dlines = [line for line in open(classif_filename, encoding="utf-8") if len(line) > 1 and line[0] != '#']
     classifDict = {}
     for line in dlines:
         pp = line.split()
@@ -240,6 +245,5 @@ def GetS4gIndices( classifDict1, s4gdata, classifDict2=None, profType='BP' ):
                 ii_nontype.append(i)
 
     return (ii_type, ii_nontype)
-
 
 
