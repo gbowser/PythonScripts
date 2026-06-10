@@ -238,11 +238,11 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
     #For the y axis min
     min_y = np.nan
     
-    if override_Data == None:
+    if override_Data is None:
         model_folder = DATA_DIR
         output_folder = DATA_DIR
     
-    if override_folders != None:
+    if override_folders is not None:
         model_folder = override_folders[0]
         output_folder = override_folders[1]
 
@@ -259,19 +259,19 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
     #by_z_layers: False = no z slices
     #by_z_layers: Absolute = z slices by standard layers
     #by_z_layers: Relative = z slices by proportion of h_z
-    if by_z_layers == False or by_z_layers == 'None':
+    if by_z_layers is False or by_z_layers == 'None':
         z_slices = [(0, np.inf)]
         shoulders_fname = 'shoulders_roc{0}.npy'.format(suffix_rot)
         descriptor = 'All particles'
     elif by_z_layers == 'Absolute':
         #Add in full profile by a massive range in |z| if z_slices is None else honor what is sent
-        if z_slices == None:
+        if z_slices is None:
             z_slices=[(round(val,2), round(val + 0.25, 2)) for val in np.arange(0, 1.5, 0.25)]
             z_slices.append( (0, np.inf) )
         shoulders_fname = 'shoulders_roc_z_slices{0}.npy'.format(suffix_rot)
         descriptor = 'By z slice' #This will be replaced in the code
 
-    if slice_actions == True:
+    if slice_actions:
         raise ValueError('slice_actions requires an actions file, but this script is configured to use only D650_stars.npy')
 
     Data_actions = None
@@ -294,7 +294,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
 
         
     # If we have a bar radial extent file, bring that data in
-    if override_bar_extent == None:
+    if override_bar_extent is None:
         bre = []
     else:
         bre = []
@@ -304,7 +304,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
     
     for t in timestamp:
         
-        if do_plots==True:
+        if do_plots:
             fig, axes = plt.subplots(1, 1, figsize=fs)
             ax = axes 
 
@@ -335,13 +335,13 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
         #processing were in its own function but that would be a lot of work
         #The override_Data must have all columns needed
         #Need to supply the bar radiant extent also
-        if not override_Data == None:
+        if override_Data is not None:
             if t_start == t_end:
                 if 'm' not in override_Data.dtype.names:
                     print('To use override data, mass column m must be present')
                     return None
                 else:
-                    if not override_bar_extent == None:
+                    if override_bar_extent is not None:
                         Data = override_Data
                         bar_extent = override_bar_extent
                     else:
@@ -397,7 +397,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
                 #Does mass exist in the data? Else set to what is in the config and add the column
                 Data = modp.append_mass_to_data(model, Data)
             
-        if override_Data == None:
+        if override_Data is None:
             div = modp.model_time_divisor(model)
         else:
             div = 1
@@ -405,7 +405,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
         t_ann = int(t)/div
 
         # Bins in x: usually we fix to 240 (+/- 12 / 0.1) but can be changed
-        if fixed_num_bins == True:
+        if fixed_num_bins:
             bins = int((x_cut_max - x_cut_min) / bin_size)
         else:
             if bar_extent > 0:
@@ -465,7 +465,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
     
         #Get the density max and min for all layers - and normalise to that for any
         #Subsequent layer analysis
-        p_glob_den_bins = stats.binned_statistic(x[global_keep == True], m[global_keep == True], 'sum', 
+        p_glob_den_bins = stats.binned_statistic(x[global_keep], m[global_keep], 'sum', 
                                              bins=bins)
         density_glob = np.log10(p_glob_den_bins.statistic.T/density_div)
         denmin = np.nanmin(density_glob[~np.isinf(density_glob)])
@@ -491,16 +491,17 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
             ########################
             #Process by action %-ile
             ########################
-            if (slice_actions == True) and (not Data_actions == None):
+            if slice_actions and Data_actions is not None:
                 #IF we are slicing by actions then do so...
                 # We take %-iles from all particles in the galaxy
                 # For this mode the percentiles applied are those from ALL particles
                 # and not just those in our slice
-                p = np.percentile(Bin_by[~np.isnan(Bin_by)], percentiles, axis=0, keepdims=True)
+                bin_by = Data_actions[Bin_by_action]
+                p = np.percentile(bin_by[~np.isnan(bin_by)], percentiles, axis=0, keepdims=True)
         
                 # Generate the masking arrays based on the limits for ALL particles
                 # which have been derived in the np.percentile statement above
-                maskst, labels = generate_mask_arrays_from_limits(Bin_by, p, 
+                maskst, labels = generate_mask_arrays_from_limits(bin_by, p, 
                                     Bin_by_label, percentiles, Bin_by_label)
                 
             else:
@@ -511,10 +512,10 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
             for mk, mask in enumerate(maskst):
                 # Cut the data so we only analyse those in the pctile being analysed
                 keep1 = (x_keep) & (y_keep) & (z_keep)
-                keep = (keep1 == True) & (mask == True)
+                keep = keep1 & mask
     
-                x_plot = x[keep == True]
-                m_plot = m[keep == True]
+                x_plot = x[keep]
+                m_plot = m[keep]
                 
                 #We must check we have particles to analyse
                 if len(x_plot)==0:
@@ -522,14 +523,14 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
                     break
     
                 #Descriptor goes into the shoulder file to aid subsequent plotting
-                if slice_actions == True:
+                if slice_actions:
                     descriptor = labels[mk].replace(' % ', ' ' + Bin_by_action + ' ')
                     
-                y_plot = y[keep == True]
-                z_plot = z[keep == True]
-                vy_plot = vy[keep == True]
-                vx_plot = vx[keep == True]
-                vz_plot = vz[keep == True]
+                y_plot = y[keep]
+                z_plot = z[keep]
+                vy_plot = vy[keep]
+                vx_plot = vx[keep]
+                vz_plot = vz[keep]
                 vR = (x * vx + y * vy) / np.hypot(x, y)
         
                 R_plot = np.hypot(x_plot, y_plot)
@@ -597,7 +598,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
                             len(find_peaks(-abs(deriv[abs(bin_middles)<=1]))[0])
 
                 #Too many extrema?
-                if d_extrema > max_extrema and test_extrema == True:
+                if d_extrema > max_extrema and test_extrema:
                     failed_extrema = True
 
                 #Radius of curvature
@@ -617,7 +618,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
                     x_plot *= x_cut_max
 
                 #When we do the plot we expand once more to kpc on the x axis
-                if do_plots==True:
+                if do_plots:
                     #Without a bar the analysis will have been done out to +/- the limits
                     #with a bar we go out to +/- 1.8 times the bar extent
                     if z_cut_min == 0 and np.isinf(z_cut_max):
@@ -632,7 +633,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
                     else:
                         ax.plot(bin_middles, smoothed + smoothed_offset, c=colors[i], linestyle='--')
             
-                    if plot_derivs == True:
+                    if plot_derivs:
                         ax2  = ax.twinx()
                         ax2.plot(bin_middles, deriv, c='green', label=r'd$ log \Sigma(x)/$d$x$', alpha=0.5)               
                         ax2.plot(bin_middles, deriv2, c='purple', linestyle=':',
@@ -663,7 +664,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
                     ax.axvline(bar_extent, c='k', ls='--', lw=3)
         
         
-                    if override_Data == None:
+                    if override_Data is None:
                         annotation = r'{0} $t=${1} Gyr'.format(modp.model_name(model), t_ann)
                     else:
                         annotation = r'{0} $t=${1} Gyr'.format(model, t_ann)
@@ -777,7 +778,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
                     #NEGATIVE SLOPE ON THE LEFT MEANS SHRUGGED SHOULDER, 7/May/2020
                     if np.round(clav_left, 1) > -np.round(bar_extent, 1) and \
                         (clav_left != left_inner and clav_left != left_outer) and \
-                        left_slope < slope_cutoff and failed_extrema == False:
+                        left_slope < slope_cutoff and not failed_extrema:
                         
                         #Too thin? Reject
 #                        if abs(left_outer - left_inner)/bar_extent <= thin_be_gone:
@@ -794,7 +795,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
                             counter += 1
                             #We have found a left shoulder so break
                             break
-                    elif failed_extrema == True:
+                    elif failed_extrema:
                         print('Potential shoulder (left) rejected - too many extrema {0} in the first derivative'.format(d_extrema))
                         clav_left = np.nan
                     elif not(left_slope < slope_cutoff):
@@ -882,7 +883,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
                     #POSITIVE SLOPE ON THE RIGHT MEANS SHRUGGED SHOULDER. SO NOT ABS(SLOPE) < CUTOFF BUT SLOPE > -CUTOFF
                     if np.round(clav_right, 1) < np.round(bar_extent, 1) and \
                         (clav_right != right_inner and clav_right != right_outer) and \
-                        right_slope > -slope_cutoff and failed_extrema == False:
+                        right_slope > -slope_cutoff and not failed_extrema:
                             
                         #Too thin? Reject
 #                        if abs(right_outer - right_inner)/bar_extent <= thin_be_gone:
@@ -898,7 +899,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
         
                             counter += 1
                             break
-                    elif failed_extrema == True:
+                    elif failed_extrema:
                         print('Potential shoulder (right) rejected - too many extrema {0} in the first derivative'.format(d_extrema))
                         clav_right = np.nan
                     elif not(right_slope > -slope_cutoff):
@@ -911,7 +912,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
         
         #        fig2.savefig(plot_file_2)
         #        derivs_for_animation.append(plot_file_2 + '.png')
-                if do_plots == True:
+                if do_plots:
                     plt.close()
                 
                 #Do we have a ** pair ** of shoulders?
@@ -957,20 +958,17 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
                         sh_width_left, sh_width_right,\
                         clav_width_left, clav_width_right = (np.nan,) * 113
                         
-                        has_sh = False
                         print('OVERLAPPING OR CLOSE TO x=0 SHOULDERS AT t={0} slice {1}'.format(t, i))
                     else:
                         #################
                         # SHOUDLERS FOUND
                         #################
-                        has_sh = True
-
                         #Plot the shoulders and the clavicle
-                        if do_plots==True:
+                        if do_plots:
                             
                             shoulders_found += r'{0} ${1:1.3f}\leq|z|\leq {2:1.3f}$ kpc shoulders'.format('\n', z_cut_min, z_cut_max)
 
-                            if override_Data == None:
+                            if override_Data is None:
                                 annotation = r'{0} $t=${1} Gyr{2}Slope L: {3}{4}Slope R:{5}'.format(modp.model_name(model), \
                                  t_ann, '\n', round(left_slope,3),'\n', round(right_slope,3))
                             else:
@@ -1186,7 +1184,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
     #                        y_values = left_inner_slope * x_values + const
                         y_values = linear_slope * x_values + const
                         
-                        if do_plots==True:
+                        if do_plots:
                             ax.plot(x_values, y_values, c='sienna', linewidth = 1.5)
                         
                         ################################################################################
@@ -1276,7 +1274,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
     #                        y_values = right_inner_slope * x_values + const
                         y_values = linear_slope * x_values + const
 
-                        if do_plots==True:
+                        if do_plots:
                             ax.plot(x_values, y_values, c='sienna', linewidth = 1.5)
         
                         #Calculate the particles along the line and the smoothed curve
@@ -1352,7 +1350,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
     
     
                         #Plot the locations of the maximum excess
-                        if do_plots==True:
+                        if do_plots:
 #                            yrange = ax2.get_ylim()[1] - ax2.get_ylim()[0]
 #                            ax2.axvline(x=left_excess_max, ymin = 0.3, ymax = 0.7, c = 'blue', linewidth=1, ls='-.')
 #                            ax2.axvline(x=right_excess_max, ymin = 0.3, ymax= 0.7, c = 'blue', linewidth=1, ls='-.')
@@ -1394,13 +1392,12 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
                     sh_width_left, sh_width_right,\
                     clav_width_left, clav_width_right = (np.nan,) * 113
                     
-                    has_sh = False
                     print('NO SHOULDERS AT t={0} slice {1}'.format(t, i))
         
                 bar_radial_extent = (bar_ends_a2 + bar_ends_phi2) / 2
                 
                 #Save the winning parameters
-                if by_z_layers == False:
+                if by_z_layers is False:
                     zcmin, zcmax = np.nan, np.nan
                 else:               
                     zcmin, zcmax = z_cut_min, z_cut_max
@@ -1455,7 +1452,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
         
         
                 # Now show the bar radial extent
-                if do_plots==True:
+                if do_plots:
                     l_o = min(-bar_ends_phi2, -bar_ends_a2)
                     l_i = max(-bar_ends_phi2, -bar_ends_a2)
                     r_o = max(bar_ends_phi2, bar_ends_a2)
@@ -1472,13 +1469,13 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
                          ax.axvspan(r_o, r_i, alpha=0.25, color='grey')  
             
                     #Plot a derivative = 0 line
-                    if plot_derivs == True:
+                    if plot_derivs:
                         ax2.axhline(y=0, c='r')
                     
 
         #END OF z-LAYERS LOOP
         #Output plot(s) filename root
-        if do_plots==True:
+        if do_plots:
             ax.set_ylim(min_y, 1.1)
 
             annotation += '\n{0} full-profile particles'.format(global_keep.sum())
@@ -1506,7 +1503,7 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
             profiles_for_animation.append(plot_file + '.png')
 
     #END OF TIMESTAMP LOOP
-    if do_plots==True:
+    if do_plots:
         plt.close()
 
     # Create the array and save to the output folder
@@ -1574,13 +1571,13 @@ def run_SRA(model=SINGLE_MODEL, t_start=SINGLE_TIMESTEP, t_end=SINGLE_TIMESTEP, 
 
         ])
 
-    if generate_shoulders_file == True:            
+    if generate_shoulders_file:            
         f_shoulders = os.path.join(model_folder, '{0}_{1}'.format(model, shoulders_fname))
         np.save(f_shoulders, shoulders_array)
 
     #Make an animation with 0.2s gap between frames
-    if do_animation == True and do_plots==True:
-        if by_z_layers == True:
+    if do_animation and do_plots:
+        if by_z_layers is True:
             fname = os.path.join(output_folder, '{0}-sh_quant_anim{1}{2}.gif'.format(model, suffixz, suffix_rot))
         else:
             fname = os.path.join(output_folder, '{0}-sh_quant_anim{1}.gif'.format(model, suffix_rot))
