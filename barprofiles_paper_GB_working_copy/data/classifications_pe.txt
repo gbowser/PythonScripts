@@ -1,0 +1,202 @@
+# Classifications of (scrambled-order) bar-major-axis profile types for S4G galaxies
+# This means: S4G barred spirals which are either low-inc (i < 30) *or* moderate-inc
+# and good PA (deltaPA_bar,dp <= 60)
+# by Peter Erwin
+#
+#    Profile = bar-major-axis profile, from r ~ 0 to end of bar
+#    Suggested types:
+#       Exp = single-exponential
+#       Exp(N) = single-exponential with nuclear excess
+#       FT = Flat-top = roughly constant central SB, exponential falloff
+#       FT(N)
+#       2S = Two-slope = outer steep exponential, inner shallow exponential
+#       BP = classic EE85 "flat" profile associated with B/P bulges ["P+Sh" in paper]
+#
+#    Outer_slope = approximate slope of profile outside the bar, relative
+#    to the profile inside (closest to bar end if multiple slopes in bar)
+#    Suggested types:
+#       steeper, same, shallower
+#
+#Number	Profile			Outer_slope		Comments
+  0		Exp(N)			same
+  1		BP				shallower
+  2		FT?				same
+  3		BP				shallower
+  4		FT				same
+  5		Exp(N)			same?
+  6		Exp				shallower
+  7		BP				shallower
+  8		BP				same
+  9		Exp?			?				FT?
+ 10		Exp?			same			FT?
+ 11		Exp				same
+ 12		BP				shallower
+ 13		Exp				same			asymmetric
+ 14		Exp				shallower
+ 15		BP				same?
+ 16		Exp				same
+ 17		FT?				?				asymmetric
+ 18		BP				same
+ 19		BP				same-to-shallower
+ 20		2S				same-to-shallower
+ 21		Exp?			?				asymmetric
+ 22		Exp				shallower		weak BP?
+ 23		Exp(N)			?				Exp? BP?
+ 24		FT				same
+ 25		BP				shallower
+ 26		Exp				shallower?
+ 27		Exp				same			asymmetric (SF?)
+ 28		Exp?			?				outer asymmetric
+ 29		Exp				shallower		FT?
+ 30		Exp?			?				asymmetric
+ 31		2S?				shallower		asymmetric (SF?)
+ 32		BP				same?
+ 33		Exp(N)?			?				asymmetric
+ 34		Exp				same-to-shallower
+ 35		Exp(N)			same
+ 36		BP?				same?
+ 37		Exp				shallower
+ 38		Exp(N)			same
+ 39		Exp				steeper
+ 40		BP				same?
+ 41		BP				shallower
+ 42		BP				shallower?
+ 43		BP				shallower?		asymmetric
+ 44		Exp				same?
+ 45		BP				shallower
+ 46		FT?				same?			asymmetric
+ 47		FT				same?
+ 48		BP				same?
+ 49		Exp				shallower
+ 50		BP				same-to-shallower
+ 51		Exp?			shallower?
+ 52		BP				shallower
+ 53		BP?				shallower?
+ 54		Exp				shallower
+ 55		FT				same-to-shallower
+ 56		Exp?			shallower?		weak BP?
+ 57		Exp				shallower?		asymmetric
+ 58		Exp?			shallower?		weak BP?
+ 59		Exp?			?				asymmetric
+ 60		BP				shallower		flat nucleus
+ 61		Exp				steeper
+ 62		FT				same
+ 63		BP				shallower
+ 64		Exp				steeper
+ 65		Exp				same			deficit in center
+ 66		BP				shallower
+ 67		Exp(N)?			steeper			FT?
+ 68		BP				shallower
+ 69		BP				same
+ 70		Exp(N)			steeper
+ 71		FT?				steeper
+ 72		Exp				shallower
+ 73		FT?				shallower		slanted top
+ 74		Exp(N)?			same			large, broad peak
+ 75		FT?				same-to-shallower	asymmetric top
+ 76		FT				same-to-steeper
+ 77		Exp				same
+ 78		FT				same?
+ 79		Exp				same
+ 80		Exp				same
+ 81		BP				shallower
+ 82		Exp(N)			steeper
+ 83		BP				same
+ 84		Exp?			shallower?
+ 85		BP				shallower
+ 86		Exp?			?				asymmetric
+ 87		Exp				same?
+ 88		FT?				shallower
+ 89		Exp?			shallower
+ 90		Exp(N)?			?				asymmetric
+ 91		Exp?			same?			BP?
+ 92		FT				shallower
+ 93		BP				same
+ 94		Exp(N)?							asymmetric
+ 95		FT				same			asymmetric
+ 96		Exp				shallower
+ 97		FT				same?			asymmetric
+ 98		Exp				same
+ 99		Exp				steeper
+100		Exp				same
+101		Exp				same
+102		Exp				steepr
+103		2S				same
+104		Exp				same?
+105		BP				same-to-shallower
+106		FT				same
+107		BP				same-to-shallower
+108		FT?				same-to-shallower?	slanted top
+109		FT?				same?			slanted top (narrow)
+110		2S?				same			asymmetric
+111		BP				shallower
+112		Exp				steeper
+113		2S?				?				slanted top, asymmetric
+114		FT(N)?			same			asymmetric (SF?)
+115		FT(N)?			same?			asymmetric
+116		FT?				same?			slanted top, asymmetric
+117		Exp				same
+118		Exp(N)			same
+119		Exp				same
+120		FT				same-to-shallower	asymmetric (SF?)
+121		Exp				same
+122		Exp				same			FT? (narrow)
+123		FT				?				very broad
+124		BP				shallower
+125		Exp				shallower
+126		FT				same
+127		FT?				shallower		slanted top
+128		BP				shallower
+129		FT?				same?			narrow top, asymmetric
+130		BP				same
+131		FT?				same
+132		BP?				shallower
+133		BP				?
+134		BP				shallower
+135		Exp(N)?			steeper?		BP?
+136		Exp(N)			same
+137		Exp				shallower
+138		Exp				same
+139		BP				shallower
+140		Exp				shallowe?		asymmetric
+141		Exp				same
+142		FT				same
+143		BP				shallower
+144		FT?				shallower		asymmetric top
+145		BP				same-to-shallower
+146		BP				same?
+147		FT?				same?			odd curving profile
+148		BP				same
+149		BP				same?
+150		2S				shallower
+151		Exp(N)?							odd curving profile?
+152		BP				shallower
+153		Exp?			shallower
+154		BP				shallower
+155		Exp?
+156		BP				shallower
+157		BP				shallower
+158		BP				same-to-shallower
+159		Exp				shallower
+160		BP				shallower
+161		FT				same			slanted top
+162		BP				same
+163		BP				shallower
+164		BP				same-to-shallower
+165		BP				same-to-shallower
+166		Exp				same-to-shallower
+167		2S?				shallower		asymmetric
+168		BP				same-to-shallower
+169		Exp(N)			steeper
+170		FT?				same			slanted top
+171		BP				same-to-shallower
+172		Exp				shallower
+173		Exp(N)?			steeper
+174		Exp(N)			same
+175		BP?				same-to-shallower
+176		Exp				steeper
+177		BP				shallower
+178		BP?				same-to-shallower?	asymmetric
+179		Exp				shallower
+180		Exp				steeper
+181		BP				shallower

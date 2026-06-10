@@ -1,0 +1,140 @@
+# List of galaxies in S4G barred-spirals Sample 1 (D < 25 Mpc) from Erwin 2018 
+# S4G-bar-fractions paper, subsetted to inclination i = 40--70 and bar deltaPA_dp <= 60.
+#
+# Second column indicates whether bar has boxy/peanut-shaped bulge (B/P), none (NO),
+# or is possibly buckling
+#
+# [x] = galaxy analyzed
+#
+[x]ESO013-016  BUCKLING??? (small)
+[x]ESO054-021  NO
+[x]ESO079-005  NO
+[x]ESO085-047  NO -- dubious bar (faint outer disk)
+[x]ESO120-012  NO
+[x]ESO202-041  NO -- dubious bar
+[x]ESO236-039  NO
+[x]ESO357-012  NO
+[x]ESO358-020  NO -- sl. dubious bar
+[x]ESO420-009  NO -- bar is tiny (r ~ 7 pixels)
+[x]ESO440-044  NO -- "bar" may have same ellipticity as disk
+[x]ESO443-085  NO (?; skinny bar)
+[x]ESO479-004  NO
+[x]ESO572-030  NO
+[x]IC0600      NO
+[x]IC0797      NO (may not be barred)
+[x]IC1014      NO
+[x]IC1933      NO -- bar is tiny (r ~ 10 pixels)
+[x]IC1953      NO (poss. very weak offset spurs?)
+[x]IC1954      NO (slightly banana-shaped; ED17)
+[x]IC2007      NO
+[x]IC3115      NO -- note bright star at end of bar on one side
+[x]IC3517      NO
+[x]IC3521      NO (strongly curve/banana-shaped bar)
+[x]IC4901      B/P (corner spurs)
+[x]IC5273      NO (off-center bar)
+[x]NGC0210     B/P (weird spurs)
+[x]NGC0289     B/P (weak, asymm. spurs); i = 38 from ED17
+[x]NGC0298     NO (small)
+[x]NGC0578     NO (slightly weird)
+[x]NGC0672     NO
+[x]NGC0685     NO (too face-on?)
+[x]NGC0701     NO (smooth, narrow elliptical bar)
+[x]NGC0918     NO (small)
+[x]NGC1051     NO (small)
+[x]NGC1097     B/P (ED17)
+[x]NGC1187     B/P (ED17)
+[x]NGC1255     NO (ED17)
+[x]NGC1326A    NO
+[x]NGC1350     B/P (ED17)
+[x]NGC1367     B/P (ED17 = NGC1371) 
+[x]NGC1436     NO
+[x]NGC1512     B/P (ED17)
+[x]NGC1559     NO (ED17)
+[x]NGC1800     NO?
+[x]NGC1808     B/P (ED17)
+[x]NGC1879     NO
+[x]NGC2903     B/P (ED17)
+[x]NGC2968     B/P
+[x]NGC3185     B/P (ED13)
+[x]NGC3227     BUCKLING (ED16,ED17)
+[x]NGC3264     NO
+[x]NGC3287     NO
+[x]NGC3319     NO (ED17)
+[x]NGC3359     NO (ED17)
+[x]NGC3447     NO
+[x]NGC3486     NO (ED17)
+[x]NGC3627     B/P (ED17)
+[x]NGC3673     B/P (ED17)
+[x]NGC3684     NO (ED17)
+[x]NGC3726     NO (ED17)
+[x]NGC3729     B/P (ED13)
+[x]NGC3850     NO
+[x]NGC3930     NO (ED17)
+[x]NGC3953     B/P (ED17)
+[x]NGC3992     B/P (ED17)
+[x]NGC4020     NO
+[x]NGC4064     NO (ED17)
+[x]NGC4102     B/P (ED17)
+[x]NGC4116     NO
+[x]NGC4123     B/P (ED17)
+[x]NGC4133     B/P? (small, but probable)
+[x]NGC4145     NO (ED17)
+[x]NGC4293     B/P (ED17)
+[x]NGC4294     NO (too highly inclined?)
+[x]NGC4389     NO (SF in bar)
+[x]NGC4405     NO? (too small, really)
+[x]NGC4424     NO (weird; buckling??)
+[x]NGC4449     NO
+[x]NGC4450     B/P (ED17)
+[x]NGC4487     NO (ED17)
+[x]NGC4498     B/P? (skinny bar)
+[x]NGC4525     NO
+[x]NGC4532     NO
+[x]NGC4535     B/P (ED13)
+[x]NGC4559     NO (ED17)
+[x]NGC4579     B/P
+[x]NGC4618     NO (off-center!)
+[x]NGC4639     B/P
+[x]NGC4654     NO (ED17)
+[x]NGC4668     NO
+[x]NGC4713     NO (small)
+[x]NGC4725     B/P (ED17)
+[x]NGC4765     NO (sort of banana-shaped?)
+[x]NGC4781     NO (ED17)
+[x]NGC4981     B/P (almost-centered spurs)
+[x]NGC5042     NO -- weak, dubious bar
+[x]NGC5569     NO
+[x]NGC5669     NO (ED17)
+[x]NGC6237     NO
+[x]NGC7418     NO (ED17)
+[x]NGC7513     B/P (ED17)
+[x]NGC7531     B/P (ED17)
+[x]NGC7582     B/P (ED17)
+[x]NGC7764     NO
+[x]NGC7800     NO (banana-shaped?)
+[x]PGC002492   NO (small)
+[x]PGC007654   NO
+[x]PGC013821   NO (banana-shaped)
+[x]PGC035705   NO
+[x]PGC042160   NO
+[x]PGC051523   NO (off-center)
+[x]UGC02345    NO
+[x]UGC04393    NO
+[x]UGC04499    NO (note: bar is a bit trapezoidal, but no spurs)
+[x]UGC04988    NO
+[x]UGC05354    NO
+[x]UGC05393    NO
+[x]UGC05633    NO (skinny bar)
+[x]UGC06840    NO
+[x]UGC06931    NO
+[x]UGC06983    NO (SF in bar)
+[x]UGC07129    NO
+[x]UGC07257    NO
+[x]UGC07612    NO
+[x]UGC07911    NO
+[x]UGC08385    NO (bent/banana shape?)
+[x]UGC08489    NO (somewhat bent bar)
+[x]UGC08507    NO
+[x]UGC08851    NO
+[x]UGC09245    NO
+[x]UGC12151    NO

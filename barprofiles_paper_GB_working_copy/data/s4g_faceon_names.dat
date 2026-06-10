@@ -1,0 +1,85 @@
+# Names of barred S4G spiral galaxies with D < 25 Mpc and inclination < 30.
+# List of galaxies in S4G barred-spirals Sample 1 (D < 25 Mpc) from Erwin 2018 
+# S4G-bar-fractions paper, restricted to inclination < 30 deg.
+#
+# Valid galaxies are indicated by "[x]" in front of their names; galaxies with dubious or 
+# nonexistent bars, or other reasons for exclusion, are indicated by "[-]" and are *excluded*
+# from the sample.
+#
+[x]ESO026-001
+#    center adjusted
+[x]ESO298-023
+[-]ESO347-008
+#    bar dubious
+[x]ESO359-031
+#    definitely barred
+[x]ESO485-021
+[x]NGC0255
+#    center adjusted
+[x]NGC0600
+[x]NGC0986
+[x]NGC0991
+[x]NGC1022
+[x]NGC1291
+#    barPA adjusted
+[x]NGC1302
+#    barPA adjusted
+[x]NGC1313
+[x]NGC1341
+#    center and barPA adjusted
+[x]NGC1347
+[x]NGC1493
+[x]NGC1640
+[x]NGC1672
+[x]NGC2500
+[-]NGC2655
+#    unbarred, interacting
+[x]NGC2681
+[x]NGC3344
+[x]NGC3380
+[-]NGC3445
+#    off-center nucleus, probably not barred
+[x]NGC3485
+[x]NGC3504
+[x]NGC3681
+[x]NGC4204
+[x]NGC4214
+[x]NGC4303
+#	bad center fixed; S4G image has messed-up background outside central pointing
+[x]NGC4314
+[x]NGC4369
+#    center adjusted
+[x]NGC4457
+[x]NGC4496A
+[-]NGC4535
+#    most likely moderately inclined [i=44 in ED13]
+[x]NGC4540
+[x]NGC4625
+[x]NGC4900
+[x]NGC5068
+[x]NGC5134
+[x]NGC5236
+[-]NGC5636
+#    most likely moderately inclined
+[x]NGC5713
+[x]NGC6217
+[x]NGC6412
+[x]NGC7424
+[x]NGC7496
+[x]NGC7552
+#    center and barPA adjusted
+[x]PGC006626
+#    center adjusted (Salo+15 centered on off-center SF)
+[x]PGC011677
+[x]PGC048179
+[x]UGC02302
+#    center adjusted
+[-]UGC05015
+#    bar dubious
+[x]UGC05832
+[x]UGC06682
+[-]UGC07332
+#    bar very dubious
+[x]UGC09661
+[-]UGC12846
+#	off-center, probably not barred

@@ -1,0 +1,208 @@
+# Classifications of (scrambled-order) bar-major-axis profile types for S4G galaxies
+# This means: S4G barred spirals which are either low-inc (i < 30) *or* moderate-inc
+# and good PA (deltaPA_bar,dp <= 60)
+# by Victor P. Debattista
+# 
+#    Profile = bar-major-axis profile, from r ~ 0 to end of bar
+#    Suggested types:
+#       Exp = single-exponential
+#       Exp(N) = single-exponential with nuclear excess
+#       Flat-top = roughly constant central SB, exponential falloff
+#       Flat-top(N)
+#       Two-slope = outer steep exponential, inner shallow exponential
+#       BP = classic EE85 "flat" profile associated with B/P bulges ["P+Sh" in paper]
+#
+#    Outer_slope = approximate slope of profile outside the bar, relative
+#    to the profile inside (closest to bar end if multiple slopes in bar)
+#    Suggested types:
+#       steeper, same, shallower
+#
+# NOTE: This file incorporates revised classifications made by VD, sent to PE
+# on 9 May 2019: these were his reclassifications (sometimes unchanged) of those
+# 27 galaxies where his classifications differed from PE's, possibly because he
+# had forgotten about the option of "Two-Slope" ("2S") classifications
+# Classifications which were changed are indicated by "[CHANGED]".
+#
+#Number	Profile			Outer_slope		Comments
+  0 Exp(N) Same
+  1 BP	   Steeper
+  2 Exp	   Shallower
+  3 BP	   Shallower
+  4 FT	   steeper + shallower
+  5 Exp(N) shallower
+  6 Exp	   shallower		(or is it a nuclear B/P instead of Exp?)
+  7 BP	   shallower
+  8 BP	   shallower
+  9 FT	   steeper
+ 10 Exp	   same
+ 11 Exp	   shallower
+ 12 BP	   shallower
+ 13 BP	   same				[Classic BP on one side, exp on the other]
+ 14 Exp	   shallower
+ 15 BP	   steeper
+ 16 Exp	   steeper
+ 17 Exp	   steeper
+ 18 BP	   steeper
+ 19 BP	   steeper
+ 20 Exp	   steeper			[maybe 2S]
+ 21 Exp	   same
+ 22 Exp	   same
+ 23 Exp(N) same
+ 24 FT	   shallower
+ 25 BP	   shallower
+ 26 Exp	   shallower
+ 27 Exp	   same
+ 28 Exp	   same + steeper
+ 29 Exp	   shallower
+ 30 BP	   steeper
+ 31 2S	   shallower		[CHANGED]
+ 32 BP	   same
+ 33 FT	   steeper
+ 34 Exp	   shallower
+ 35 Exp(N) steeper + same
+ 36 BP	   same
+ 37 Exp	   steeper
+ 38 Exp(N) shallower (ring?)
+ 39 Exp	   steeper
+ 40 BP	   same
+ 41 BP	   shallower
+ 42 BP	   shallower
+ 43 BP	   shallower
+ 44 Exp	   steeper + same
+ 45 BP	   steeper
+ 46 FT	   steeper
+ 47 FT	   same + shallower
+ 48 BP	   same
+ 49 Exp	   shallower
+ 50 BP	   steeper
+ 51 Exp	   same
+ 52 BP	   steeper
+ 53 BP(?)  steeper + same
+ 54 Exp	   shallower
+ 55 FT	   shallower
+ 56 Exp	   shallower
+ 57 FT	   steeper			[FT + 2S]
+ 58 Exp	   shallower
+ 59 Exp	   shallower
+ 60 BP	   steeper
+ 61 Exp	   steeper
+ 62 FT	   same
+ 63 BP	   shallower
+ 64 Exp	   steeper
+ 65 Exp	   same
+ 66 BP	   shallower
+ 67 FT(N)  steeper
+ 68 BP	   shallower
+ 69 BP	   steeper
+ 70 Exp(N) steeper
+ 71 FT	   steeper
+ 72 Exp	   shallower
+ 73 Exp	   shallower		[BP + exp]
+ 74 Exp(N) same
+ 75 BP	   shallower
+ 76 Exp	   steeper			[or 2S]
+ 77 Exp	   same
+ 78 FT	   steeper
+ 79 Exp	   same
+ 80 Exp	   same
+ 81 BP	   shallower
+ 82 Exp(N) steeper
+ 83 BP	   shallower
+ 84 Exp	   shallower
+ 85 BP	   shallower
+ 86 Exp	   steeper
+ 87 Exp	   shallower + steeper
+ 88 Exp	   shallower
+ 89 BP?	   shallower
+ 90 Exp(N) shallower + same
+ 91 Exp	   shallower
+ 92 FT	   shallower
+ 93 BP	   steeper
+ 94 Exp(N) steeper + shallower
+ 95 FT	   steeper
+ 96 Exp	   shallower
+ 97 FT	   steeper
+ 98 Exp	   steeper + same
+ 99 Exp	   steeper
+100 Exp	   shallower
+101 Exp(N) steeper + shallower
+102 Exp	   shallower
+103 2S	   same				[CHANGED]
+104 Exp	   shallower
+105 BP	   shallower
+106 FT	   same
+107 BP	   steeper
+108 BP	   steeper
+109 Exp	   same + shallower
+110 2S	   shallower + steeper		[CHANGED]
+111 BP	   steeper
+112 Exp	   steeper
+113 2S	   steeper + shallower		[CHANGED; asymmetric]
+114 FT(N)  same
+115 2S	   shallower + steeper		[CHANGED; asymmetric]
+116 FT	   shallower + steeper
+117 Exp	   same
+118 Exp(N) shallower
+119 Exp	   steeper
+120 FT	   same
+121 Exp	   same
+122 Exp	   same
+123 FT	   steeper
+124 BP	   steeper
+125 Exp	   shallower
+126 FT	   steeper
+127 2S	   shallower		[CHANGED; asymmetric]
+128 BP	   shallower
+129 Exp	   same				or maybe weakly BP
+130 BP	   steeper
+131 FT	   same
+132 2S(N) shallower			[CHANGED]
+133 BP	   same
+134 BP	   shallower
+135 Exp(N) steeper
+136 Exp(N) shallower
+137 Exp	   shallower
+138 Exp	   same
+139 BP	   shallower
+140 Exp	   shallower
+141 Exp	   same
+142 FT	   same
+143 BP	   shallower
+144 FT	   shallower
+145 BP	   shallower
+146 BP	   shallower
+147 FT	   shallower
+148 BP	   shallower
+149 BP	   shallower
+150 2S	   steeper			[CHANGED]
+151 Exp	   shallower
+152 BP	   shallower
+153 Exp(N) steeper
+154 BP	   shallower
+155 Exp	   same
+156 BP	   shallower
+157 BP	   same
+158 BP	   same
+159 Exp	   shallower
+160 BP	   shallower
+161 FT	   steeper
+162 BP	   shallower
+163 BP	   shallower
+164 BP	   same
+165 BP	   steeper
+166 Exp	   shallower
+167 2S	   shallower		[CHANGED]
+168 BP	   shallower
+169 Exp(N) steeper
+170 2S	   shallower		[CHANGED]
+171 BP	   steeper
+172 Exp	   shallower
+173 Exp(N) steeper
+174 Exp(N) same
+175 BP	   shallower
+176 Exp	   steeper
+177 BP	   shallower
+178 Exp(N) steeper			asymmetric
+179 Exp	   shallower
+180 Exp	   steeper
+181 BP	   shallower
