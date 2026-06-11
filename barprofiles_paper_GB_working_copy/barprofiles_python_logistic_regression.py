@@ -1,4 +1,4 @@
-"""Python replacement for the R logistic-regression script.
+"""Codex-created Python replacement for the Erwin R logistic-regression script.
 
 This intentionally leaves ``barprofiles_R_logistic_regression.R`` untouched.
 It reads the same data tables and fits the same binomial GLM models using

@@ -1,4 +1,4 @@
-"""Compatibility helpers used by the paper scripts."""
+"""Codex-created compatibility helpers used by the Erwin paper scripts."""
 
 import numpy as np
 

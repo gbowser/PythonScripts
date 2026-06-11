@@ -1,3 +1,4 @@
+# Origin: Erwin paper plotting utility code, preserved/adapted in this working copy.
 # Plotting-related code
 
 import math
@@ -868,4 +869,3 @@ def PlotFrequency( values, i_1, i_non1, start, stop, step, offset=0, noErase=Fal
 	else:
 		axisObj.errorbar(x + offset, ff, [ff_low,ff_high], None, elinewidth=1.2, 
 					capthick=1.2, capsize=5, **kwargs)
-

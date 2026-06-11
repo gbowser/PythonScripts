@@ -1,4 +1,6 @@
-"""Download S4G 3.6 micron FITS images for galaxies in scrambled_map.txt.
+"""User-provided/ChatGPT-origin downloader, organized for this repo by Codex.
+
+Download S4G 3.6 micron FITS images for galaxies in scrambled_map.txt.
 
 By default this reads the scrambled-map file from the converted bar-profiles
 project and writes FITS files into ``s4g_images_36um`` beside this script.

@@ -1,4 +1,4 @@
-"""Small table-reading helper used by the converted paper scripts."""
+"""Codex-created table-reading helper used by the converted Erwin paper scripts."""
 
 from __future__ import annotations
 

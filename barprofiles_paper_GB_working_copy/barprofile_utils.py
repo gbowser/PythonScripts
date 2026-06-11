@@ -1,3 +1,4 @@
+# Origin: Erwin paper utility code, preserved/adapted in this working copy.
 # Use functions for working with bar profiles
 
 # *** B/P Morphologies
@@ -245,5 +246,4 @@ def GetS4gIndices( classifDict1, s4gdata, classifDict2=None, profType='BP' ):
                 ii_nontype.append(i)
 
     return (ii_type, ii_nontype)
-
 

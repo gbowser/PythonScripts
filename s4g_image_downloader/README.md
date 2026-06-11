@@ -79,3 +79,24 @@ Note that Erwin et al. mention manual revisions to 26 bar PAs, 35 galaxy centres
 and one disc PA. Those revisions are not directly available in the VizieR source
 catalogues, so the manifest uses catalogue values unless the local project data
 already provide an adjusted value.
+
+## Plot Isophote Axes
+
+```powershell
+python plot_s4g_isophote_axes.py
+```
+
+This creates Figure-1-style diagnostic PDFs in:
+
+```text
+isophote_output\
+```
+
+The script writes one combined multi-page PDF plus individual per-galaxy PDFs.
+Each plot shows S4G 3.6 micron log-isophotes, the observed bar major axis, the
+projected bar minor axis, and major/minor-axis intensity cuts. For quick tests:
+
+```powershell
+python plot_s4g_isophote_axes.py --limit 3
+python plot_s4g_isophote_axes.py --names NGC1879 IC0600
+```

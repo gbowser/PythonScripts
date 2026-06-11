@@ -1,4 +1,4 @@
-"""Build a CSV manifest linking S4G images to available geometry parameters.
+"""Codex-created script for linking S4G images to geometry parameters.
 
 The Erwin et al. paper describes using centre coordinates, disc PA/inclination,
 and bar PA/size. This script joins the local Erwin project table to public S4G

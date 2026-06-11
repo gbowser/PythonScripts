@@ -1,3 +1,4 @@
+# Origin: Erwin paper code, converted/adapted to plain Python by Codex.
 # Plain Python figure-generation script for the bar-profiles paper.
 
 # %% Cell 5
@@ -12,7 +13,7 @@ import matplotlib
 matplotlib.use("Agg")
 
 from matplotlib.pyplot import figure, plot, xlim, ylim, title, legend, xlabel, ylabel
-from matplotlib.pyplot import subplots_adjust, text, savefig, gca, clf, hist
+from matplotlib.pyplot import subplots_adjust, text, savefig as _plt_savefig, gca, clf, hist
 from matplotlib.pyplot import loglog, semilogx, semilogy
 
 matplotlib.rcParams['figure.figsize'] = (8,6)
@@ -72,6 +73,19 @@ mm = np.arange(8,12,0.01)
 
 # set the following to True in order to save the figures as PDF files
 savePlots = True
+LAST_ISOPHOTE_PLOT_MADE = True
+
+
+def savefig(*args, **kwargs):
+    """Save figures with enough PDF margin for axis labels."""
+
+    if args and str(args[0]).endswith("_isophotes+profiles.pdf"):
+        if not LAST_ISOPHOTE_PLOT_MADE:
+            print(f"Skipping isophote/profile save because source image was unavailable: {args[0]}")
+            return None
+    kwargs.setdefault("bbox_inches", "tight")
+    kwargs.setdefault("pad_inches", 0.08)
+    return _plt_savefig(*args, **kwargs)
 
 # %% Cell 9
 # useful definitions for printing and plotting labels
@@ -152,6 +166,9 @@ def MakeIsophoteAndProfilePlots( fname, xc,yc, imageWidth, diskPA, inclination, 
         "nice" = for Fig.1 in paper
     """
 
+    global LAST_ISOPHOTE_PLOT_MADE
+    LAST_ISOPHOTE_PLOT_MADE = False
+
     if not os.path.exists(fname):
         print(f"Skipping missing image: {fname}")
         return None
@@ -179,10 +196,12 @@ def MakeIsophoteAndProfilePlots( fname, xc,yc, imageWidth, diskPA, inclination, 
     # 3. Get image data and plot contours   [left, bottom, width, height]
     imdata_m3 = median_filter(fits.getdata(fname), 3)
     fig = figure(figsize=(10,4))
+    axis_bottom = 0.23
+    axis_height = 0.70
     if figMode == "nice":   # e.g. Fig.1 of paper
-        ax1 = fig.add_axes([0.05,0.15, 0.35,0.8])   # left, bottom, width, height
+        ax1 = fig.add_axes([0.05,axis_bottom, 0.35,axis_height])   # left, bottom, width, height
     else:
-        ax1 = fig.add_axes([0.07,0.15, 0.35,0.8])   # left, bottom, width, height
+        ax1 = fig.add_axes([0.07,axis_bottom, 0.35,axis_height])   # left, bottom, width, height
     pu.nicecont(imdata_m3, xc,yc,1.5*profileRadius, log=True,levels=levs,
                             pix=pixSize, printAxisLabels='x',axisLabel='arc sec',
                             labelSize=axisLabelSize, color='0.4', axesObj=ax1)
@@ -203,7 +222,7 @@ def MakeIsophoteAndProfilePlots( fname, xc,yc, imageWidth, diskPA, inclination, 
     # Profile plot   [left, bottom, width, height]
     # this (assuming figsize = ()) gets us the approximate standard 1.3 aspect ratio
     # of a matplotlib plot
-    ax2 = fig.add_axes([0.55,0.15, 0.42,0.8])
+    ax2 = fig.add_axes([0.55,axis_bottom, 0.42,axis_height])
     if ZP is None:
         ax2.semilogy(rr_barmaj_arcsec_dp, ii_barmaj, "k")
         ax2.semilogy(rr_barmin_arcsec_dp, ii_barmin, "0.5", lw=0.5)
@@ -235,6 +254,8 @@ def MakeIsophoteAndProfilePlots( fname, xc,yc, imageWidth, diskPA, inclination, 
     else:
         ytitle = ytmu
     ax2.set_ylabel(ytitle, fontsize=axisLabelSize)
+    LAST_ISOPHOTE_PLOT_MADE = True
+    return fig
 
 
 def GetNames( filename ):
@@ -457,6 +478,7 @@ massesDict_modinc = {'pe': massesDict_modinc_pe, 'vd': massesDict_modinc_vd}
 # %% Cell 28
 bins_logmstar = np.arange(8.0,11.5,0.25)
 
+figure()
 hist(massesDict['pe']['Exp'], bins=bins_logmstar, color='c', label='Exp')
 hist(massesDict['pe']['FT'], bins=bins_logmstar, histtype='step', color='b', lw=2.5, ls='--', label='Flat-top (FT)')
 hist(massesDict['pe']['2S'], bins=bins_logmstar, color='r', label='Two-slope (2S)', alpha=0.5)

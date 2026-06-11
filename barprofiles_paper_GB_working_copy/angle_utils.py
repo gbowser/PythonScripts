@@ -1,3 +1,4 @@
+# Origin: Erwin paper utility code, preserved/adapted in this working copy.
 # Use functions dealing with angles, deprojections, etc.
 
 import math
@@ -98,5 +99,4 @@ def minoraxis( structurePA: float, diskPA: float, inclination=0.0 ) -> float:
         minoraxis_proj += diskPA
 
     return RectifyPA(minoraxis_proj, 180.0)
-
 
