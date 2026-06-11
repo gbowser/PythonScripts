@@ -16,7 +16,7 @@ try:
 except ModuleNotFoundError as error:
     raise SystemExit(
         "This script needs matplotlib to draw the graph.\n"
-        "Install it with: uv add matplotlib\n"
+        "Install it with: python -m pip install matplotlib\n"
         "Or run this script with the Python environment that already has matplotlib."
     ) from error
 

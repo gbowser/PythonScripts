@@ -8,8 +8,8 @@ Model:                            GLM   Df Residuals:                      179
 Model Family:                Binomial   Df Model:                            1
 Link Function:                  Logit   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -51.670
-Date:                Wed, 10 Jun 2026   Deviance:                       103.34
-Time:                        17:07:20   Pearson chi2:                     128.
+Date:                Thu, 11 Jun 2026   Deviance:                       103.34
+Time:                        09:16:22   Pearson chi2:                     128.
 No. Iterations:                     7   Pseudo R-squ. (CS):             0.4909
 Covariance Type:            nonrobust                                         
 ==============================================================================
@@ -29,8 +29,8 @@ Model:                            GLM   Df Residuals:                      179
 Model Family:                Binomial   Df Model:                            1
 Link Function:                  Logit   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -68.139
-Date:                Wed, 10 Jun 2026   Deviance:                       136.28
-Time:                        17:07:20   Pearson chi2:                     171.
+Date:                Thu, 11 Jun 2026   Deviance:                       136.28
+Time:                        09:16:22   Pearson chi2:                     171.
 No. Iterations:                     6   Pseudo R-squ. (CS):             0.3892
 Covariance Type:            nonrobust                                         
 ==============================================================================
@@ -50,8 +50,8 @@ Model:                            GLM   Df Residuals:                      179
 Model Family:                Binomial   Df Model:                            1
 Link Function:                  Logit   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -79.737
-Date:                Wed, 10 Jun 2026   Deviance:                       159.47
-Time:                        17:07:20   Pearson chi2:                     157.
+Date:                Thu, 11 Jun 2026   Deviance:                       159.47
+Time:                        09:16:22   Pearson chi2:                     157.
 No. Iterations:                     5   Pseudo R-squ. (CS):             0.3057
 Covariance Type:            nonrobust                                         
 ==============================================================================
@@ -71,8 +71,8 @@ Model:                            GLM   Df Residuals:                      129
 Model Family:                Binomial   Df Model:                            1
 Link Function:                  Logit   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -31.199
-Date:                Wed, 10 Jun 2026   Deviance:                       62.398
-Time:                        17:07:20   Pearson chi2:                     151.
+Date:                Thu, 11 Jun 2026   Deviance:                       62.398
+Time:                        09:16:22   Pearson chi2:                     151.
 No. Iterations:                     7   Pseudo R-squ. (CS):             0.5172
 Covariance Type:            nonrobust                                         
 ==============================================================================
@@ -92,8 +92,8 @@ Model:                            GLM   Df Residuals:                      129
 Model Family:                Binomial   Df Model:                            1
 Link Function:                  Logit   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -32.638
-Date:                Wed, 10 Jun 2026   Deviance:                       65.275
-Time:                        17:07:20   Pearson chi2:                     113.
+Date:                Thu, 11 Jun 2026   Deviance:                       65.275
+Time:                        09:16:22   Pearson chi2:                     113.
 No. Iterations:                     7   Pseudo R-squ. (CS):             0.5065
 Covariance Type:            nonrobust                                         
 ==============================================================================
@@ -113,8 +113,8 @@ Model:                            GLM   Df Residuals:                      129
 Model Family:                Binomial   Df Model:                            1
 Link Function:                  Logit   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -51.101
-Date:                Wed, 10 Jun 2026   Deviance:                       102.20
-Time:                        17:07:20   Pearson chi2:                     121.
+Date:                Thu, 11 Jun 2026   Deviance:                       102.20
+Time:                        09:16:22   Pearson chi2:                     121.
 No. Iterations:                     5   Pseudo R-squ. (CS):             0.3457
 Covariance Type:            nonrobust                                         
 ==============================================================================
@@ -134,8 +134,8 @@ Model:                            GLM   Df Residuals:                      129
 Model Family:                Binomial   Df Model:                            1
 Link Function:                  Logit   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -58.756
-Date:                Wed, 10 Jun 2026   Deviance:                       117.51
-Time:                        17:07:20   Pearson chi2:                     112.
+Date:                Thu, 11 Jun 2026   Deviance:                       117.51
+Time:                        09:16:22   Pearson chi2:                     112.
 No. Iterations:                     5   Pseudo R-squ. (CS):             0.2647
 Covariance Type:            nonrobust                                         
 ==============================================================================

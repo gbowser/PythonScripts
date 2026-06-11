@@ -14,7 +14,7 @@ def get_outlook_namespace():
         import win32com.client
     except ImportError as exc:
         raise SystemExit(
-            "This script needs pywin32 installed. Run: uv add pywin32"
+            "This script needs pywin32 installed. Run: python -m pip install pywin32"
         ) from exc
 
     outlook = win32com.client.Dispatch("Outlook.Application")
