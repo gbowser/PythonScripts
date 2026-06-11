@@ -1,12 +1,9 @@
 """Build a CSV manifest linking S4G images to available geometry parameters.
 
 The Erwin et al. paper describes using centre coordinates, disc PA/inclination,
-and bar PA/size. The public data bundled in this workspace includes the
-scrambled galaxy map plus ``s4gbars_table.dat`` with inclination and several
-bar-size/deprojected-size measurements, but it does not include the full centre,
-disc-PA, or bar-PA tables from Salo et al. (2015) / Herrera-Endoqui et al.
-(2015). This script writes those missing fields as blank columns so a fuller
-geometry table can be merged later without changing downstream code.
+and bar PA/size. This script joins the local Erwin project table to public S4G
+catalogues and writes a manifest that links each downloaded FITS file to the
+available geometry parameters.
 """
 
 from __future__ import annotations
@@ -39,6 +36,23 @@ DIAZ_CATALOG = "J/A+A/587/A160"
 DIAZ_FOURIER_TABLE = "J/A+A/587/A160/tablea3"
 
 MISSING_NUMBER_CODES = {-99.0, -999.0, -999.999}
+S4G_ZERO_IS_MISSING_COLUMNS = {
+    "sma",
+    "sma_kpc",
+    "sma_ell_kpc",
+    "sma_dp_kpc",
+    "sma_dp_kpc2",
+    "sma_ell_dp_kpc2",
+    "ell_dp",
+}
+S4G_POSITIVE_SIZE_COLUMNS = {
+    "sma",
+    "sma_kpc",
+    "sma_ell_kpc",
+    "sma_dp_kpc",
+    "sma_dp_kpc2",
+    "sma_ell_dp_kpc2",
+}
 
 S4G_COLUMNS_TO_KEEP = [
     "logmstar",
@@ -92,7 +106,9 @@ OUTPUT_FIELDS = [
     "herrera_bar_sma_ell_arcsec",
     "bar_sma_kpc",
     "bar_sma_deproj_kpc",
-    "bar_sma_deproj_alt_kpc",
+    "bar_sma_deproj_legacy_kpc",
+    "bar_sma_deproj_ellipticity_based_kpc",
+    "bar_sma_deproj_source",
     "bar_ellipticity_deproj",
     "bar_strength",
     "bar_A2",
@@ -112,12 +128,16 @@ OUTPUT_FIELDS = [
 ]
 
 
-def clean_value(value: str) -> float | str | None:
+def clean_value(value: str, column: str | None = None) -> float | str | None:
     try:
         number = float(value)
     except ValueError:
         return value
     if any(math.isclose(number, missing) for missing in MISSING_NUMBER_CODES):
+        return None
+    if column in S4G_ZERO_IS_MISSING_COLUMNS and math.isclose(number, 0.0):
+        return None
+    if column in S4G_POSITIVE_SIZE_COLUMNS and number <= 0:
         return None
     return number
 
@@ -159,7 +179,7 @@ def read_s4g_table(path: Path) -> dict[str, dict[str, Any]]:
                 raise ValueError(f"No header found before data rows in {path}")
             values = line.split()
             row = {
-                column: clean_value(values[index])
+                column: clean_value(values[index], column)
                 for index, column in enumerate(header)
             }
             rows[str(row["name"])] = row
@@ -282,6 +302,9 @@ def build_manifest(
             notes.append("No matching Salo galaxy row")
         if not diaz:
             notes.append("No matching Diaz-Garcia Fourier row")
+        legacy_deproj = s4g.get("sma_dp_kpc")
+        if legacy_deproj is None:
+            notes.append("Legacy local sma_dp_kpc value is missing or non-positive")
         notes.append("Erwin et al. manual revisions are not represented unless present in local project data")
 
         output_row: dict[str, Any] = {field: None for field in OUTPUT_FIELDS}
@@ -301,8 +324,10 @@ def build_manifest(
                 "herrera_bar_ellipticity": herrera.get("Ell"),
                 "herrera_bar_sma_ell_arcsec": herrera.get("smaEll"),
                 "bar_sma_kpc": s4g.get("sma_kpc"),
-                "bar_sma_deproj_kpc": s4g.get("sma_dp_kpc"),
-                "bar_sma_deproj_alt_kpc": s4g.get("sma_dp_kpc2"),
+                "bar_sma_deproj_kpc": s4g.get("sma_dp_kpc2"),
+                "bar_sma_deproj_legacy_kpc": legacy_deproj,
+                "bar_sma_deproj_ellipticity_based_kpc": s4g.get("sma_ell_dp_kpc2"),
+                "bar_sma_deproj_source": "s4gbars_table.dat sma_dp_kpc2",
                 "bar_ellipticity_deproj": diaz.get("Ell") or s4g.get("ell_dp"),
                 "bar_strength": s4g.get("bar_strength"),
                 "bar_A2": diaz.get("A2") or s4g.get("A2"),

@@ -68,7 +68,7 @@ for Figure 1 in `data/images`.
 2. Install the Python dependencies:
 
    ```powershell
-   ..\.venv\Scripts\python.exe -m pip install -r requirements.txt
+   python -m pip install -r requirements.txt
    ```
 
 3. Run the Python figure script:
@@ -81,7 +81,7 @@ for Figure 1 in `data/images`.
    environment directly:
 
    ```powershell
-   ..\.venv\Scripts\python.exe barprofiles_figures_for_paper.py
+   python barprofiles_figures_for_paper.py
    ```
 
    By default `savePlots = True`, so the script writes PDF figures into the
@@ -96,7 +96,7 @@ for Figure 1 in `data/images`.
    If `python` is not on PATH, run:
 
    ```powershell
-   ..\.venv\Scripts\python.exe barprofiles_python_logistic_regression.py
+   python barprofiles_python_logistic_regression.py
    ```
 
    This writes `logistic_regression_summaries.txt` and

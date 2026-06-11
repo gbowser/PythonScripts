@@ -7,25 +7,25 @@ bar-profiles `scrambled_map.txt` file.
 
 ```powershell
 cd "D:\Dropbox\Public Documents\PythonScripts\s4g_image_downloader"
-& "..\.venv\Scripts\python.exe" -m pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 ## Test Without Downloading
 
 ```powershell
-& "..\.venv\Scripts\python.exe" download_s4g_images.py --dry-run --limit 5
+python download_s4g_images.py --dry-run --limit 5
 ```
 
 ## Download One Image
 
 ```powershell
-& "..\.venv\Scripts\python.exe" download_s4g_images.py --limit 1
+python download_s4g_images.py --limit 1
 ```
 
 ## Download All Images
 
 ```powershell
-& "..\.venv\Scripts\python.exe" download_s4g_images.py
+python download_s4g_images.py
 ```
 
 Downloaded FITS files are written to `s4g_images_36um`. That folder is ignored
@@ -34,7 +34,7 @@ by Git so the code stays tracked without committing large image files.
 ## Build Image/Geometry Manifest
 
 ```powershell
-& "..\.venv\Scripts\python.exe" build_s4g_geometry_manifest.py
+python build_s4g_geometry_manifest.py
 ```
 
 This writes:
@@ -55,17 +55,24 @@ file, FITS image metadata, and geometry-related fields from:
 * local `s4gbars_table.dat`: inclination, deprojected bar sizes, stellar mass,
   distance, and other values already used by the converted paper scripts
 
+The main deprojected bar-size column in the output is `bar_sma_deproj_kpc`.
+This is taken from local `s4gbars_table.dat` column `sma_dp_kpc2`, which the
+source table documents as using the Herrera-Endoqui bar size/PA with
+Munoz-Mateos galaxy inclination/PA. The older local `sma_dp_kpc` values are kept
+only as `bar_sma_deproj_legacy_kpc`; non-positive legacy values are treated as
+missing because some rows contain invalid negative sizes.
+
 The VizieR catalogues are cached in `geometry_catalog_cache`, which is ignored by
 Git. To rebuild using only local files, run:
 
 ```powershell
-& "..\.venv\Scripts\python.exe" build_s4g_geometry_manifest.py --no-vizier
+python build_s4g_geometry_manifest.py --no-vizier
 ```
 
 To force fresh VizieR downloads, run:
 
 ```powershell
-& "..\.venv\Scripts\python.exe" build_s4g_geometry_manifest.py --refresh-cache
+python build_s4g_geometry_manifest.py --refresh-cache
 ```
 
 Note that Erwin et al. mention manual revisions to 26 bar PAs, 35 galaxy centres,
