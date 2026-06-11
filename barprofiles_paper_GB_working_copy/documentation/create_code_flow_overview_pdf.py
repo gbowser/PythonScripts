@@ -173,9 +173,9 @@ def page_images_geometry(pdf: PdfPages):
     box(
         ax,
         0.06,
-        0.70,
+        0.68,
         0.26,
-        0.17,
+        0.20,
         "Input: galaxy list",
         "scrambled_map.txt\n\nIdentifies the 182 galaxies to download.",
         COLORS["grey"],
@@ -186,29 +186,30 @@ def page_images_geometry(pdf: PdfPages):
         0.70,
         0.26,
         0.17,
-        "download script",
-        "read_galaxy_names()\ndownload_image()\nmain()",
+        "Python file",
+        "s4g_image_downloader/\ndownload_s4g_images.py\n\nInside:\nmain()\nread_galaxy_names()\ndownload_image()",
         COLORS["blue"],
+        body_size=7.1,
     )
     box(
         ax,
         0.72,
-        0.70,
+        0.68,
         0.22,
-        0.17,
+        0.20,
         "Output: FITS images",
         "s4g_images_36um/*.fits",
         COLORS["green"],
     )
-    arrow(ax, (0.32, 0.785), (0.39, 0.785))
-    arrow(ax, (0.65, 0.785), (0.72, 0.785))
+    arrow(ax, (0.32, 0.78), (0.39, 0.78))
+    arrow(ax, (0.65, 0.78), (0.72, 0.78))
 
     box(
         ax,
         0.06,
-        0.43,
+        0.39,
         0.26,
-        0.18,
+        0.22,
         "Input: catalogue fields",
         "s4gbars_table.dat\nFITS images\n\nProvides centre, PA, inc., and bar radius.",
         COLORS["grey"],
@@ -216,31 +217,32 @@ def page_images_geometry(pdf: PdfPages):
     box(
         ax,
         0.39,
-        0.43,
+        0.39,
         0.26,
-        0.18,
-        "geometry manifest script",
-        "read_scrambled_map()\nread_s4g_table()\nfind_image_file()\nbuild_manifest_rows()\nmain()",
+        0.22,
+        "Python file",
+        "s4g_image_downloader/\nbuild_s4g_geometry_manifest.py\n\nInside:\nread_s4g_table()\nfind_image_file()\nbuild_manifest_rows()",
         COLORS["blue"],
         title_size=10.3,
+        body_size=7.3,
     )
     box(
         ax,
         0.72,
-        0.43,
+        0.39,
         0.22,
-        0.18,
+        0.22,
         "Output: manifest CSV",
         "geometry_output/\nmanifest CSV",
         COLORS["green"],
     )
-    arrow(ax, (0.32, 0.52), (0.39, 0.52))
-    arrow(ax, (0.65, 0.52), (0.72, 0.52))
+    arrow(ax, (0.32, 0.50), (0.39, 0.50))
+    arrow(ax, (0.65, 0.50), (0.72, 0.50))
 
     paragraph(
         ax,
         0.06,
-        0.28,
+        0.22,
         "The manifest is the bridge between catalogue data and image data. Later plotting code does not need to "
         "re-query catalogues; it reads one row per galaxy from this CSV and follows the linked FITS file path.",
         width_chars=110,
@@ -269,11 +271,11 @@ def page_isophote_plots(pdf: PdfPages):
         0.66,
         0.27,
         0.20,
-        "isophote plotting script",
-        "read_manifest()\nselected_rows()\nload_fits_image()\nobserved_bar_minor_pa()\nsample_profile()\nmake_plot()\nmain()",
+        "Python file",
+        "s4g_image_downloader/\nplot_s4g_isophote_axes.py\n\nFunctions inside:\nread_manifest()\nprofile_at_pa()\nmake_plot()\nmain()",
         COLORS["blue"],
         title_size=10.3,
-        body_size=8.2,
+        body_size=7.5,
     )
     box(
         ax,
@@ -327,10 +329,10 @@ def page_paper_figures(pdf: PdfPages):
         0.68,
         0.27,
         0.20,
-        "Figure 6 script",
-        "reproduce_figure6_histograms.py\n\nget_names()\nbuild_stellar_mass_dict()\nget_classification_values()\nplot_panel()\nwrite_counts_csv()",
+        "Python file",
+        "barprofiles_paper_GB_working_copy/\nreproduce_figure6_histograms.py\n\nFunctions inside:\nbuild_stellar_mass_dict()\nget_classification_values()\nplot_panel()",
         COLORS["yellow"],
-        body_size=7.5,
+        body_size=6.7,
     )
     box(
         ax,
@@ -352,10 +354,10 @@ def page_paper_figures(pdf: PdfPages):
         0.38,
         0.27,
         0.20,
-        "Figures 9-11 script",
-        "reproduce_figures9_10_11.py\n\nfrequency_rows()\nplot_frequency()\nwrite_frequency_csv()\nwrite_coefficients_csv()",
+        "Python file",
+        "barprofiles_paper_GB_working_copy/\nreproduce_figures9_10_11.py\n\nFunctions inside:\nfrequency_rows()\nplot_frequency()\nwrite_frequency_csv()",
         COLORS["yellow"],
-        body_size=7.8,
+        body_size=6.9,
     )
     box(
         ax,
@@ -390,10 +392,84 @@ def page_paper_figures(pdf: PdfPages):
     plt.close(fig)
 
 
+def page_file_opening_order(pdf: PdfPages):
+    fig, ax = new_page("Practical Reading Order", "Open these Python files first; then drill into the functions listed inside them.")
+
+    box(
+        ax,
+        0.06,
+        0.70,
+        0.88,
+        0.13,
+        "1. Download images",
+        "Open: s4g_image_downloader/download_s4g_images.py\n\nRead: main() -> read_galaxy_names() -> download_image()",
+        COLORS["blue"],
+        body_size=9.0,
+    )
+    box(
+        ax,
+        0.06,
+        0.53,
+        0.88,
+        0.13,
+        "2. Build the geometry manifest",
+        "Open: s4g_image_downloader/build_s4g_geometry_manifest.py\n\nRead: main() -> build_manifest_rows() -> read_s4g_table() -> find_image_file()",
+        COLORS["blue"],
+        body_size=9.0,
+    )
+    box(
+        ax,
+        0.06,
+        0.36,
+        0.88,
+        0.13,
+        "3. Draw isophote/profile plots",
+        "Open: s4g_image_downloader/plot_s4g_isophote_axes.py\n\nRead: main() -> make_plot() -> profile_at_pa() -> deprojected_profile_radius()",
+        COLORS["green"],
+        body_size=9.0,
+    )
+    box(
+        ax,
+        0.06,
+        0.19,
+        0.42,
+        0.13,
+        "4. Reproduce Figure 6",
+        "Open:\nbarprofiles_paper_GB_working_copy/\nreproduce_figure6_histograms.py",
+        COLORS["yellow"],
+        body_size=7.6,
+    )
+    box(
+        ax,
+        0.52,
+        0.19,
+        0.42,
+        0.13,
+        "5. Reproduce Figures 9-11",
+        "Open:\nbarprofiles_paper_GB_working_copy/\nreproduce_figures9_10_11.py",
+        COLORS["yellow"],
+        body_size=7.6,
+    )
+
+    paragraph(
+        ax,
+        0.06,
+        0.08,
+        "Helper files worth knowing about: barprofile_utils.py reads PE/VPD classifications and B/P morphology; "
+        "datautils.py reads the Erwin table format; plotutils.py contains profile and frequency plotting helpers; "
+        "angle_utils.py contains position-angle and deprojection calculations.",
+        width_chars=115,
+        size=9.5,
+    )
+    pdf.savefig(fig, bbox_inches="tight")
+    plt.close(fig)
+
+
 def main() -> int:
     OUTPUT_DIR.mkdir(exist_ok=True)
     with PdfPages(OUTPUT_PDF) as pdf:
         page_overview(pdf)
+        page_file_opening_order(pdf)
         page_images_geometry(pdf)
         page_isophote_plots(pdf)
         page_paper_figures(pdf)
