@@ -4,7 +4,7 @@ import random
 import numpy as np
 from datetime import datetime
 
-output_dir = "D://Dropbox/Public Documents/PythonScripts/Scientific_Programming"
+output_dir = "C://Users/gordo/Documents/GitHub/PythonScripts/Scientific_Programming"
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 output_file = f"{output_dir}/Images_{timestamp}.png"
 

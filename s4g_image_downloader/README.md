@@ -6,7 +6,7 @@ bar-profiles `scrambled_map.txt` file.
 ## Install
 
 ```powershell
-cd "D:\Dropbox\Public Documents\PythonScripts\s4g_image_downloader"
+cd "C:\Users\gordo\Documents\GitHub\PythonScripts\s4g_image_downloader"
 python -m pip install -r requirements.txt
 ```
 

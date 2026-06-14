@@ -8,7 +8,7 @@ def mean_datasets(mylist):
     
     for i in range (1 , len(mylist)):
         sum_array = np.loadtxt(mylist[0], delimiter=",")
-        myfile = pl.Path("d:/Dropbox/Public Documents/PythonScripts/Data Driven Astronomy/"+ myfilename)
+        myfile = pl.Path("C:/Users/gordo/Documents/GitHub/PythonScripts/Data Driven Astronomy/"+ myfilename)
         
         
         arr = np.loadtxt(myfile, delimiter=",")
