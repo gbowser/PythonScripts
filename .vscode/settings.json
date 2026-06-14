@@ -1,14 +1,15 @@
-{
-    "python.defaultInterpreterPath": "C:\\Users\\gordo\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
-    "python.terminal.activateEnvironment": false,
-    "workbench.colorTheme": "Light+",
-    "[python]": {
-        "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": {
-            "source.fixAll": "explicit",
-            "source.organizeImports": "explicit"
-        },
-        "editor.defaultFormatter": "charliermarsh.ruff"
-    },
-    "r.lsp.promptToInstall": false
+﻿{
+    "python.defaultInterpreterPath":  "C:\\Users\\gordo\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+    "python.terminal.activateEnvironment":  false,
+    "workbench.colorTheme":  "Light+",
+    "[python]":  {
+                     "editor.formatOnSave":  true,
+                     "editor.codeActionsOnSave":  {
+                                                      "source.fixAll":  "explicit",
+                                                      "source.organizeImports":  "explicit"
+                                                  },
+                     "editor.defaultFormatter":  "charliermarsh.ruff"
+                 },
+    "r.lsp.promptToInstall":  false,
+    "terminal.integrated.cwd":  "${workspaceFolder}"
 }
