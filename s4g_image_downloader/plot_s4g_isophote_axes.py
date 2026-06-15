@@ -32,8 +32,10 @@ import angle_utils as angles  # noqa: E402
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+DEFAULT_ERWIN_DIR = Path(r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Erwin")
+DEFAULT_IMAGE_DIR = DEFAULT_ERWIN_DIR / "s4g_images_36um"
 DEFAULT_MANIFEST = SCRIPT_DIR / "geometry_output" / "s4g_image_geometry_manifest.csv"
-DEFAULT_OUTPUT_DIR = SCRIPT_DIR / "isophote_output"
+DEFAULT_OUTPUT_DIR = DEFAULT_ERWIN_DIR / "isophote_output"
 DEFAULT_COMBINED_PDF = DEFAULT_OUTPUT_DIR / "s4g_isophote_axes_all.pdf"
 
 
@@ -196,12 +198,15 @@ def required_geometry(row: dict[str, str]) -> dict[str, float] | None:
 def make_plot(
     row: dict[str, str],
     *,
+    image_dir: Path = DEFAULT_IMAGE_DIR,
     output_pdf: Path | None = None,
     pdf_pages: PdfPages | None = None,
     profile_width: int = 3,
 ) -> bool:
     geometry = required_geometry(row)
     image_path = Path(row["image_path"])
+    if not image_path.exists():
+        image_path = image_dir / f"{row['name']}.phot.1.fits"
     if geometry is None or not image_path.exists():
         return False
 
@@ -355,6 +360,7 @@ def parse_args() -> argparse.Namespace:
         description="Create Figure-1-style S4G isophote plots with bar major/minor axes."
     )
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
+    parser.add_argument("--image-dir", type=Path, default=DEFAULT_IMAGE_DIR)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--combined-pdf", type=Path, default=DEFAULT_COMBINED_PDF)
     parser.add_argument("--limit", type=int, default=None)
@@ -393,6 +399,7 @@ def main() -> int:
             try:
                 ok = make_plot(
                     row,
+                    image_dir=args.image_dir.resolve(),
                     output_pdf=output_pdf,
                     pdf_pages=pdf_pages,
                     profile_width=args.profile_width,

@@ -6,9 +6,8 @@
     "configurations": [
         {
             "name": "Python: Current File",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
-            "python": "C:\\Users\\gordo\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
             "program": "${file}",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
@@ -16,9 +15,8 @@
         },
         {
             "name": "Density Shoulder Quantification",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
-            "python": "C:\\Users\\gordo\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
             "program": "${workspaceFolder}\\SRA\\Density Shoulder Quantification v1.1.py",
             "cwd": "${workspaceFolder}",
             "console": "internalConsole",

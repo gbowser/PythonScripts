@@ -1,5 +1,5 @@
 ﻿{
-    "python.defaultInterpreterPath":  "C:\\Users\\gordo\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
+    "python.defaultInterpreterPath":  "C:\\Users\\gordo\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
     "python.terminal.activateEnvironment":  false,
     "workbench.colorTheme":  "Light+",
     "[python]":  {

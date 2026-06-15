@@ -28,8 +28,13 @@ python download_s4g_images.py --limit 1
 python download_s4g_images.py
 ```
 
-Downloaded FITS files are written to `s4g_images_36um`. That folder is ignored
-by Git so the code stays tracked without committing large image files.
+Downloaded FITS files are written to:
+
+```text
+D:\Dropbox\Public Documents\UCLAN\MSc Research\Erwin\s4g_images_36um
+```
+
+That keeps the large image files outside the Git repository.
 
 ## Build Image/Geometry Manifest
 
@@ -89,7 +94,7 @@ python plot_s4g_isophote_axes.py
 This creates Figure-1-style diagnostic PDFs in:
 
 ```text
-isophote_output\
+D:\Dropbox\Public Documents\UCLAN\MSc Research\Erwin\isophote_output
 ```
 
 The script writes one combined multi-page PDF plus individual per-galaxy PDFs.

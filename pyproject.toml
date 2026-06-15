@@ -3,7 +3,7 @@ name = "pythonscripts"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.13"
 dependencies = [
     "astropy>=7.2.0",
     "astroquery>=0.4.11",
@@ -16,6 +16,7 @@ dependencies = [
     "pandas>=3.0.0",
     "pvextractor>=0.4",
     "pywin32>=311",
+    "requests>=2.34.0",
     "scipy>=1.17.0",
     "selenium>=4.41.0",
     "spectral-cube>=0.6.7",

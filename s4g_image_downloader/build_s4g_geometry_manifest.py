@@ -24,7 +24,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 BARPROFILES_DATA_DIR = PROJECT_ROOT / "barprofiles_paper_GB_working_copy" / "data"
 DEFAULT_SCRAMBLED_MAP = BARPROFILES_DATA_DIR / "scrambled_map.txt"
 DEFAULT_S4G_TABLE = BARPROFILES_DATA_DIR / "s4gbars_table.dat"
-DEFAULT_IMAGE_DIR = Path(__file__).resolve().parent / "s4g_images_36um"
+DEFAULT_ERWIN_DIR = Path(r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Erwin")
+DEFAULT_IMAGE_DIR = DEFAULT_ERWIN_DIR / "s4g_images_36um"
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "geometry_output"
 DEFAULT_CACHE_DIR = Path(__file__).resolve().parent / "geometry_catalog_cache"
 
