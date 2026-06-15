@@ -170,7 +170,7 @@ anim = FuncAnimation(
 
 # Auto-export MP4 with timestamped filename
 output_dir = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\AA3057 Collaborative Investigation\Animations"
+    r"D:\Dropbox\Public Documents\UCLAN\B.Sc. DL Astronomy\AA3057 Collaborative Investigation\PSS Outputs\Animations"
 )
 output_dir.mkdir(parents=True, exist_ok=True)
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")

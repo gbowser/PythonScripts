@@ -9,7 +9,7 @@ from scipy.ndimage import median_filter
 from scipy.ndimage import generic_filter
 import scipy.stats as stats
 
-output_folder = '/Users/stuartanderson/Documents/Astronomy/Projects/MW_Bar_Orbits/Papers/Paper II'
+output_folder = "D:/Dropbox/Public Documents/UCLAN/MSc Research/Erwin/sra_original_outputs"
 
 
 def calc_percentile(window, pct):
@@ -505,5 +505,4 @@ kinematics_maps(name_file='NGC1365_MAPS_copt_1.15asec.fits',
                 vsyst=0, distance=19.6, VLIM=250, SMIN=20, SMAX=140, 
                 origin=(743., 458.), slice_width=Rbar*0.2, Rbar=Rbar, 
                 fig_maps=False, fig_profile=True, bins1d=100, xlims=xlims)
-
 

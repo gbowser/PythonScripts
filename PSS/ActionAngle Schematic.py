@@ -6,8 +6,15 @@ Gaia snail schematic: (A) post-perturbation blob in (z, vz),
 Produces: gaia_snail_schematic.png and .pdf
 """
 
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
+
+
+OUTPUT_DIR = Path(
+    r"D:\Dropbox\Public Documents\UCLAN\B.Sc. DL Astronomy\AA3057 Collaborative Investigation\PSS Outputs\Figures"
+)
 
 
 def panel_A(ax, rng):
@@ -136,8 +143,10 @@ def panel_C(ax, rng):
     )
 
 
-def make_figure(seed=7, outfile_base="gaia_snail_schematic"):
+def make_figure(seed=7, outfile_base=OUTPUT_DIR / "gaia_snail_schematic"):
     rng = np.random.default_rng(seed)
+    outfile_base = Path(outfile_base)
+    outfile_base.parent.mkdir(parents=True, exist_ok=True)
 
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.8), constrained_layout=True)
 
@@ -149,8 +158,8 @@ def make_figure(seed=7, outfile_base="gaia_snail_schematic"):
         "Action–angle interpretation of the Gaia phase-space spiral (schematic)", y=1.03
     )
 
-    fig.savefig(f"{outfile_base}.png", dpi=250, bbox_inches="tight")
-    fig.savefig(f"{outfile_base}.pdf", bbox_inches="tight")
+    fig.savefig(outfile_base.with_suffix(".png"), dpi=250, bbox_inches="tight")
+    fig.savefig(outfile_base.with_suffix(".pdf"), bbox_inches="tight")
     plt.show()
 
 

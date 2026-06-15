@@ -8,8 +8,8 @@ from PIL import Image
 # --------------------------------------------------
 # Parameters
 # --------------------------------------------------"
-video_file = "D://Dropbox/Public Documents/UCLAN/AA3057 Collaborative Investigation/GB Section/pendulum_20251127.mp4"
-stack_image_file = "D://Dropbox/Public Documents/UCLAN/AA3057 Collaborative Investigation/GB Section/pendulum_snapshots_stack.png"
+video_file = "D://Dropbox/Public Documents/UCLAN/B.Sc. DL Astronomy/AA3057 Collaborative Investigation/PSS Outputs/Animations/pendulum_20251127.mp4"
+stack_image_file = "D://Dropbox/Public Documents/UCLAN/B.Sc. DL Astronomy/AA3057 Collaborative Investigation/PSS Outputs/Animations/pendulum_snapshots_stack.png"
 
 g = 9.81
 N = 80

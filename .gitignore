@@ -21,6 +21,18 @@ build/
 dist/
 *.egg-info/
 
+# Generated analytical outputs
+Erwin_barprofiles_paper_GB_working_copy/plots/
+Erwin_barprofiles_paper_GB_working_copy/python_figure_output/
+PSS/*.pdf
+PSS/*.png
+PSS/*.gif
+PSS/*.mp4
+PSS/*.avi
+PSS/*.mov
+Data Driven Astronomy/*.pdf
+Basic UCLan tasks/gaia-plot.pdf
+
 # Operating system files
 .DS_Store
 Thumbs.db

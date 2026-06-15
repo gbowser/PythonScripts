@@ -64,7 +64,7 @@ ro = 8.2  # kpc
 vo = 232.0  # km/s
 output_base = "mw_potential_nonaxisymmetric_vertical_diagnostics"
 output_dir = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\AA3057 Collaborative Investigation\Presentation"
+    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Erwin\data_driven_astronomy_outputs"
 )
 
 # Pattern speeds in physical units -> galpy dimensionless units
@@ -384,7 +384,6 @@ fig_angle.savefig(output_dir / f"{output_base}_azimuth_{timestamp}.png", dpi=400
     "\n".join(summary_lines), encoding="utf-8"
 )
 plt.show()
-
 
 
 

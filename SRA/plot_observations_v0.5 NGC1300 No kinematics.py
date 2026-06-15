@@ -6,7 +6,7 @@ import scipy.stats as stats
 from astropy.io import fits
 
 # output_folder = "D:/Dropbox/Public Documents/UCLAN/MSc Research/Data"
-output_folder = "C:\\Users\\gordo\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Data"
+output_folder = "D:/Dropbox/Public Documents/UCLAN/MSc Research/Erwin/sra_outputs"
 
 
 def plot_rotated_coords(data_shape, origin, angle_deg):

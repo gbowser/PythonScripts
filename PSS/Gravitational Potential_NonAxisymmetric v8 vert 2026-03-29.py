@@ -64,7 +64,7 @@ ro = 8.2  # kpc
 vo = 232.0  # km/s
 output_base = "mw_potential_nonaxisymmetric_vertical_diagnostics_Vert"
 output_dir = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\AA3057 Collaborative Investigation\Presentation"
+    r"D:\Dropbox\Public Documents\UCLAN\B.Sc. DL Astronomy\AA3057 Collaborative Investigation\PSS Outputs\Figures"
 )
 
 # Pattern speeds in physical units -> galpy dimensionless units
@@ -431,4 +431,3 @@ fig_angle.savefig(
     "\n".join(summary_lines), encoding="utf-8"
 )
 plt.show()
-

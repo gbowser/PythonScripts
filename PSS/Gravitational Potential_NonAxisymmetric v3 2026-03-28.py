@@ -58,7 +58,7 @@ z_kpc = 0.5  # kpc, vertical height above the MW plane (try 0.0 to 1.0)
 z_galpy = z_kpc / ro
 output_base = "mw_potential_nonaxisymmetric"
 output_dir = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\AA3057 Collaborative Investigation\Presentation"
+    r"D:\Dropbox\Public Documents\UCLAN\B.Sc. DL Astronomy\AA3057 Collaborative Investigation\PSS Outputs\Figures"
 )
 
 # Pattern speeds in physical units -> galpy dimensionless units
@@ -341,8 +341,6 @@ summary = "\n".join(
 (output_dir / f"{output_base}_summary.txt").write_text(summary, encoding="utf-8")
 
 plt.show()
-
-
 
 
 

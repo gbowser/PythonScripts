@@ -9,10 +9,10 @@ from PIL import Image
 # --------------------------------------------------
 # Parameters
 # --------------------------------------------------
-output_dir = "D://Dropbox/Public Documents/UCLAN/AA3057 Collaborative Investigation/GB Section"
+output_dir = "D://Dropbox/Public Documents/UCLAN/B.Sc. DL Astronomy/AA3057 Collaborative Investigation/PSS Outputs/Animations"
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 video_file = f"{output_dir}/pendulum_{timestamp}.mp4"
-stack_image_file = "D://Dropbox/Public Documents/UCLAN/AA3057 Collaborative Investigation/GB Section/pendulum_snapshots_stack.png"
+stack_image_file = "D://Dropbox/Public Documents/UCLAN/B.Sc. DL Astronomy/AA3057 Collaborative Investigation/PSS Outputs/Animations/pendulum_snapshots_stack.png"
 
 g = 9.81
 N = 80

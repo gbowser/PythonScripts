@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
+from pathlib import Path
 
 # -----------------------------
 # Controls
@@ -61,7 +62,11 @@ TRAIL_SECONDS = 3.0
 TRAIL_LEN = int(TRAIL_SECONDS * FPS)
 
 SAVE_MP4 = False
-MP4_NAME = "mw_tilted_3d_trails_smooth.mp4"
+OUTPUT_DIR = Path(
+    r"D:\Dropbox\Public Documents\UCLAN\B.Sc. DL Astronomy\AA3057 Collaborative Investigation\PSS Outputs\Animations"
+)
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+MP4_NAME = OUTPUT_DIR / "mw_tilted_3d_trails_smooth.mp4"
 
 
 # -----------------------------
