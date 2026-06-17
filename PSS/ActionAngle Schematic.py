@@ -13,7 +13,7 @@ import numpy as np
 
 
 OUTPUT_DIR = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\B.Sc. DL Astronomy\AA3057 Collaborative Investigation\PSS Outputs\Figures"
+    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Erwin\data_driven_astronomy_outputs"
 )
 
 

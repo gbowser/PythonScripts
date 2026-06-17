@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from pathlib import Path
 
 # =========================================================
 # Physical constants
@@ -161,11 +160,6 @@ ani = animation.FuncAnimation(fig, update, frames=frames, init_func=init, blit=T
 # =========================================================
 # Save as GIF using Pillow
 # =========================================================
-output_dir = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\B.Sc. DL Astronomy\AA3057 Collaborative Investigation\PSS Outputs\Animations"
-)
-output_dir.mkdir(parents=True, exist_ok=True)
-output_file = output_dir / "Gaia_snail_threepanel_physical_units_grids.gif"
-ani.save(output_file, writer="pillow", fps=fps)
+ani.save("Gaia_snail_threepanel_physical_units_grids.gif", writer="pillow", fps=fps)
 plt.close(fig)
-print(f"Saved: {output_file}")
+print("Saved: Gaia_snail_threepanel_physical_units_grids.gif")

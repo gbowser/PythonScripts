@@ -12,7 +12,7 @@ SAVE_MP4 = True
 SAVE_FINAL_PNG = False
 
 timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
-OUT_DIR = r"D:\Dropbox\Public Documents\UCLAN\B.Sc. DL Astronomy\AA3057 Collaborative Investigation\PSS Outputs\Animations"
+OUT_DIR = r"D:\Dropbox\Public Documents\UCLAN\AA3057 Collaborative Investigation\Animations"
 os.makedirs(OUT_DIR, exist_ok=True)
 
 MP4_NAME = os.path.join(OUT_DIR, f"mw_tilted_3d_trails_{timestamp}.mp4")

@@ -19,7 +19,7 @@ CROP_PX_RIGHT = 50
 
 timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
 OUT_DIR = (
-    r"D:\Dropbox\Public Documents\UCLAN\B.Sc. DL Astronomy\AA3057 Collaborative Investigation\PSS Outputs\Animations"
+    r"D:\Dropbox\Public Documents\UCLAN\AA3057 Collaborative Investigation\Animations"
 )
 os.makedirs(OUT_DIR, exist_ok=True)
 

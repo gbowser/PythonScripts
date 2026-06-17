@@ -42,7 +42,6 @@ from matplotlib.font_manager import FontProperties
 # Increase all plot text sizes by about 20% from the previous settings.
 FONT_SCALE = 2.34
 KPC_IN_KM = 3.0856775814913673e16
-SECONDS_PER_MYR = 365.25 * 24.0 * 3600.0 * 1.0e6
 
 
 def _scaled_fontsize(rc_key, fallback_pts):
@@ -65,7 +64,7 @@ ro = 8.2  # kpc
 vo = 232.0  # km/s
 output_base = "mw_potential_nonaxisymmetric_vertical_diagnostics"
 output_dir = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\B.Sc. DL Astronomy\AA3057 Collaborative Investigation\PSS Outputs\Figures"
+    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Erwin\data_driven_astronomy_outputs"
 )
 
 # Pattern speeds in physical units -> galpy dimensionless units
@@ -158,11 +157,6 @@ def vertical_frequency_kmskpc(R_kpc, zmax_kpc, phi_rad):
     return omega_s * KPC_IN_KM
 
 
-def vertical_period_myr_from_omega_kmskpc(omega_kmskpc):
-    omega_s = omega_kmskpc / KPC_IN_KM
-    return (2.0 * np.pi / omega_s) / SECONDS_PER_MYR
-
-
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 fig_height, (ax_force_z, ax_frequency_z) = plt.subplots(1, 2, figsize=(18, 7.5))
 fig_radius, (ax_force_radius, ax_frequency_radius) = plt.subplots(1, 2, figsize=(18, 7.5))
@@ -189,7 +183,6 @@ summary_lines = [
 for radius_kpc, color in zip(radii_kpc, colors):
     nu_squared = local_nu_squared_kms2_per_kpc2(radius_kpc, phi_slice_rad, dz_nu_kpc)
     nu_kmskpc = np.sqrt(max(nu_squared, 0.0))
-    nu_period_myr = vertical_period_myr_from_omega_kmskpc(nu_kmskpc)
 
     force_curve = np.array(
         [fz_physical_kms2_per_kpc(radius_kpc, z_val, phi_slice_rad) for z_val in z_force_plot_kpc]
@@ -200,7 +193,6 @@ for radius_kpc, color in zip(radii_kpc, colors):
         [vertical_frequency_kmskpc(radius_kpc, zmax_kpc, phi_slice_rad) for zmax_kpc in z_frequency_plot_kpc]
     )
     omega_harm = np.full_like(z_frequency_plot_kpc, nu_kmskpc)
-    omega_period_curve_myr = vertical_period_myr_from_omega_kmskpc(omega_curve)
 
     force_phi_curve = np.array(
         [
@@ -269,11 +261,8 @@ for radius_kpc, color in zip(radii_kpc, colors):
         [
             f"R_{radius_kpc:.1f}_kpc_nu_squared_kms2_per_kpc2 = {nu_squared}",
             f"R_{radius_kpc:.1f}_kpc_nu_kmskpc = {nu_kmskpc}",
-            f"R_{radius_kpc:.1f}_kpc_nu_period_myr = {nu_period_myr}",
             f"R_{radius_kpc:.1f}_kpc_omega_zmax_min_kmskpc = {np.min(omega_curve)}",
             f"R_{radius_kpc:.1f}_kpc_omega_zmax_max_kmskpc = {np.max(omega_curve)}",
-            f"R_{radius_kpc:.1f}_kpc_period_zmax_min_myr = {np.min(omega_period_curve_myr)}",
-            f"R_{radius_kpc:.1f}_kpc_period_zmax_max_myr = {np.max(omega_period_curve_myr)}",
             f"R_{radius_kpc:.1f}_kpc_delta_force_phi_min_1e3kms2perkpc = {np.min(force_phi_delta_curve / 1000.0)}",
             f"R_{radius_kpc:.1f}_kpc_delta_force_phi_max_1e3kms2perkpc = {np.max(force_phi_delta_curve / 1000.0)}",
             f"R_{radius_kpc:.1f}_kpc_delta_omega_phi_min_kmskpc = {np.min(omega_phi_delta_curve)}",
@@ -395,6 +384,7 @@ fig_angle.savefig(output_dir / f"{output_base}_azimuth_{timestamp}.png", dpi=400
     "\n".join(summary_lines), encoding="utf-8"
 )
 plt.show()
+
 
 
 

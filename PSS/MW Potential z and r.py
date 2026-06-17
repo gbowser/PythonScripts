@@ -11,7 +11,7 @@ vo = 232.0  # km/s
 R_kpc = np.linspace(0.0, 10.0, 500)
 z_levels_kpc = [0.25, 0.50, 0.75, 1.00]
 output_dir = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\B.Sc. DL Astronomy\AA3057 Collaborative Investigation\PSS Outputs\Figures"
+    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Erwin\data_driven_astronomy_outputs"
 )
 output_file_1 = output_dir / "mw_potential_z_vs_r.png"
 output_file_2 = output_dir / "mw_potential_r_fixed_vs_z.png"

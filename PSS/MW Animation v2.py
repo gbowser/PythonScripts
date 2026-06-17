@@ -11,7 +11,7 @@ import os
 SAVE_MP4 = True
 
 timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
-MP4_NAME = rf"D:\Dropbox\Public Documents\UCLAN\B.Sc. DL Astronomy\AA3057 Collaborative Investigation\PSS Outputs\Animations\mw_tilted_3d_trails_{timestamp}.mp4"
+MP4_NAME = rf"D:\Dropbox\Public Documents\UCLAN\AA3057 Collaborative Investigation\Animations\mw_tilted_3d_trails_{timestamp}.mp4"
 os.makedirs(os.path.dirname(MP4_NAME), exist_ok=True)
 
 # ============================================================

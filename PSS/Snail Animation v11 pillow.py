@@ -5,7 +5,7 @@ from matplotlib.animation import FuncAnimation, PillowWriter, FFMpegWriter
 # --------------------------------------------------
 # Parameters
 # --------------------------------------------------"
-video_file = "D://Dropbox/Public Documents/UCLAN/B.Sc. DL Astronomy/AA3057 Collaborative Investigation/PSS Outputs/Animations/pendulum_20251127.mp4"
+video_file = "D://Dropbox/Public Documents/UCLAN/AA3057 Collaborative Investigation/GB Section/pendulum_20251127.mp4"
 
 g = 9.81
 N = 80

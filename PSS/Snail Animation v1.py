@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from pathlib import Path
 
 # =========================================================
 # Physical constants / handy conversions
@@ -177,11 +176,6 @@ def update(frame):
 ani = animation.FuncAnimation(fig, update, frames=frames, init_func=init, blit=True)
 
 # Save (requires ffmpeg)
-output_dir = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\B.Sc. DL Astronomy\AA3057 Collaborative Investigation\PSS Outputs\Animations"
-)
-output_dir.mkdir(parents=True, exist_ok=True)
-output_file = output_dir / "Gaia_snail_threepanel_physical_units.mp4"
-ani.save(output_file, writer="ffmpeg", fps=fps)
+ani.save("Gaia_snail_threepanel_physical_units.mp4", writer="ffmpeg", fps=fps)
 plt.close(fig)
-print(f"Saved: {output_file}")
+print("Saved: Gaia_snail_threepanel_physical_units.mp4")
