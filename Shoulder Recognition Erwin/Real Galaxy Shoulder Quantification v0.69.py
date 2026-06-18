@@ -11,11 +11,32 @@ ASSUMES THREE ROWS AS HEADERS TO IGNORE
 """
 
 import os
+import csv
+import math
+import sys
+import warnings
 import numpy as np
+import matplotlib
+
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
+from astropy.io import fits
 from scipy.signal import find_peaks
 from scipy import signal
 import pandas as pd
+from skimage.measure import profile_line
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+BARPROFILES_DIR = os.path.join(PROJECT_ROOT, 'Erwin_barprofiles_paper_GB_working_copy')
+if BARPROFILES_DIR not in sys.path:
+    sys.path.append(BARPROFILES_DIR)
+S4G_PLOTTER_DIR = os.path.join(PROJECT_ROOT, 'Erwin_s4g_image_downloader')
+if S4G_PLOTTER_DIR not in sys.path:
+    sys.path.append(S4G_PLOTTER_DIR)
+
+import angle_utils as angles
+import plot_s4g_isophote_axes as s4g_axes
 
 def find_nearest(array, value):
     #Find the value nearest to 'value' in the array
@@ -26,39 +47,315 @@ def find_nearest(array, value):
 
 allow_1_sided_shoulders = False
 
-# Where are the profiles?
-data_folder = '/Users/stuartanderson/Documents/Astronomy/Projects/Action_Space/Data'
+research_folder = r'D:\Dropbox\Public Documents\UCLAN\MSc Research'
 
-# Where do the plots land?
-output_folder = '/Users/stuartanderson/Documents/Astronomy/Projects/Density_Shoulder/Output/Erwin Galaxies'
+# Public Erwin, Debattista, & Anderson (2023) paper repository already held locally.
+erwin_repo = os.path.join(research_folder, 'Erwin', 'perwin-barprofiles_paper-a7cd6f5')
+erwin_data_folder = os.path.join(erwin_repo, 'data')
 
-os.chdir(data_folder)
-  
-# Which subfolder are the galaxy profiles held in?
-# gal_folder = 'Erwin_Sep2020'
-# gal_folder = 'Erwin_S0_low_i'
-# gal_folder = 'Erwin_S0'
-# gal_folder = 'Erwin_final'
-# gal_folder = 'Erwin_2020-11-16'
-gal_folder = 'Yasmin'
+# All generated files from this script go here.
+output_folder = os.path.join(research_folder, 'Shoulder_Recognition_Erwin')
+plots_folder = os.path.join(output_folder, 'plots')
+profiles_folder = os.path.join(output_folder, 'profiles')
+os.makedirs(output_folder, exist_ok=True)
+os.makedirs(plots_folder, exist_ok=True)
+os.makedirs(profiles_folder, exist_ok=True)
 
-galaxy_folder = os.path.join(data_folder, gal_folder)
-#Output plot(s) filename root
-plot_file_1 = (os.path.join(output_folder, '{0}_shoulders'.format(gal_folder)))
+manifest_file = os.path.join(
+    PROJECT_ROOT,
+    'Erwin_s4g_image_downloader',
+    'geometry_output',
+    's4g_image_geometry_manifest.csv',
+)
+image_folder = os.path.join(research_folder, 'Erwin', 's4g_images_36um')
+profile_width = 3
 
 
-# Use this to record all galaxy profiles in a folder
-galaxies = []
-for f in os.listdir(galaxy_folder):
-    if f.endswith('.dat') and '_bar-major-axis_profile' in f:
-         galaxy_name = f.rsplit('.' ,1)[0]
-         galaxy_name = galaxy_name.replace('_bar-major-axis_profile','')
-         galaxies.append(galaxy_name)
+def read_s4g_table(filename):
+    table = pd.read_csv(filename, comment='#', sep=r'\s+', header=None)
+    columns = [
+        'name', 'logmstar', 'dist', 'B_tc', 'BmV_tc', 'weight_BmVtc',
+        'gmr_tc', 'gmr_sga_tc', 'm21c', 'M_HI', 'logfgas', 'w25', 'w30',
+        'w40', 'sma', 'sma_kpc', 'sma_ell_kpc', 'sma_dp_kpc',
+        'sma_dp_kpc2', 'sma_ell_dp_kpc2', 'bar_strength', 'A2', 'A4',
+        'ell_dp', 'inclination', 'R25', 'R25_5', 'R25_kpc', 'R25_5_kpc',
+        'R25c_kpc', 'Re', 'Re_kpc', 'h_kpc', 'W_gas', 'V_rot',
+        't_s4g', 't_leda',
+    ]
+    table.columns = columns
+    return table
 
-# Three fixed galaxies from Yasmin
-galaxies = np.array(['IC1067', 'NGC3681', 'ESO340-017'])
-bar_radii = np.array([18.7, 11.9, 29.7])
 
+def read_descramble_map(filename):
+    mapping = {}
+    with open(filename, 'r', encoding='utf-8') as handle:
+        for line in handle:
+            if not line.strip() or line.startswith('#'):
+                continue
+            parts = line.split()
+            mapping[int(parts[0])] = parts[2]
+    return mapping
+
+
+def read_classified_galaxies(filename, descramble_map):
+    galaxies = []
+    with open(filename, 'r', encoding='utf-8') as handle:
+        for line in handle:
+            if not line.strip() or line.startswith('#'):
+                continue
+            parts = line.split()
+            if len(parts) > 1 and parts[1] != '?':
+                galaxies.append(descramble_map[int(parts[0])])
+    return galaxies
+
+
+def read_manifest(filename):
+    with open(filename, newline='', encoding='utf-8') as handle:
+        return {row['name']: row for row in csv.DictReader(handle)}
+
+
+def parse_float(value):
+    if value is None or value == '':
+        return None
+    try:
+        number = float(value)
+    except ValueError:
+        return None
+    if not math.isfinite(number):
+        return None
+    return number
+
+
+def pa_endpoint(pa_deg, radius):
+    return (
+        -radius * math.sin(math.radians(pa_deg)),
+        radius * math.cos(math.radians(pa_deg)),
+    )
+
+
+def profile_at_pa(data, xc, yc, pa_deg, radius_pix, width):
+    dx, dy = pa_endpoint(pa_deg, radius_pix)
+    start = (yc - dy - 1, xc - dx - 1)
+    end = (yc + dy - 1, xc + dx - 1)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', category=RuntimeWarning)
+        values = profile_line(
+            data,
+            start,
+            end,
+            linewidth=width,
+            reduce_func=np.nanmean,
+            mode='constant',
+            cval=np.nan,
+        )
+    radii_pix = np.linspace(-radius_pix, radius_pix, len(values))
+    return radii_pix, values
+
+
+def required_geometry(row):
+    fields = {
+        'xc': 'center_x_pix',
+        'yc': 'center_y_pix',
+        'crpix1': 'crpix1',
+        'crpix2': 'crpix2',
+        'disk_pa': 'disk_pa_deg',
+        'inclination': 'inclination_deg',
+        'bar_pa': 'bar_pa_deg',
+        'bar_sma': 'bar_sma_arcsec',
+        'pixel_scale': 'pixel_scale_arcsec_y',
+    }
+    values = {name: parse_float(row.get(column)) for name, column in fields.items()}
+    required = ['xc', 'yc', 'disk_pa', 'inclination', 'bar_pa', 'bar_sma', 'pixel_scale']
+    if any(values[name] is None for name in required):
+        return None
+    values['pixel_scale'] = abs(values['pixel_scale']) or 0.75
+    values['bar_pa'] = angles.RectifyPA(values['bar_pa'], 180.0)
+    values['disk_pa'] = angles.RectifyPA(values['disk_pa'], 180.0)
+    return values
+
+
+def construct_profile_from_manifest(galaxy, manifest_row):
+    geometry = s4g_axes.required_geometry(manifest_row)
+    if geometry is None:
+        return None, None, None, 'missing required manifest geometry fields'
+
+    image_path = manifest_row.get('image_path') or ''
+    if not os.path.exists(image_path):
+        image_path = os.path.join(image_folder, '{0}.phot.1.fits'.format(galaxy))
+    if not os.path.exists(image_path):
+        return None, None, None, 'missing S4G 3.6 micron FITS image'
+
+    data = np.squeeze(fits.getdata(image_path).astype(float))
+    if data.ndim != 2:
+        return None, None, None, 'FITS image is not two-dimensional after squeeze'
+
+    xc = geometry['xc']
+    yc = geometry['yc']
+    if not (1 <= xc <= data.shape[1] and 1 <= yc <= data.shape[0]):
+        crpix1 = geometry.get('crpix1')
+        crpix2 = geometry.get('crpix2')
+        if crpix1 is None or crpix2 is None:
+            return None, None, None, 'image centre is outside image and CRPIX fallback is missing'
+        xc = crpix1
+        yc = crpix2
+
+    pixel_scale = geometry['pixel_scale']
+    bar_pa = geometry['bar_pa']
+    disk_pa = geometry['disk_pa']
+    inclination = geometry['inclination']
+    bar_sma = geometry['bar_sma']
+    minor_pa = bar_pa + 90.0
+
+    max_radius_pix = int(min(
+        xc - 1,
+        yc - 1,
+        data.shape[1] - xc,
+        data.shape[0] - yc,
+    ))
+    target_radius_arcsec = max(2.8 * bar_sma, 45.0)
+    profile_radius_pix = min(max_radius_pix, int(math.ceil(target_radius_arcsec / pixel_scale)))
+    profile_radius_pix = max(profile_radius_pix, int(math.ceil(1.4 * bar_sma / pixel_scale)))
+    if profile_radius_pix < 3:
+        return None, None, None, 'profile extraction radius is too small'
+
+    radii_pix, intensity = s4g_axes.profile_at_pa(
+        data,
+        xc,
+        yc,
+        bar_pa,
+        profile_radius_pix,
+        width=profile_width,
+    )
+    radii_arcsec = radii_pix * pixel_scale
+    deproject_factor = angles.deprojectr(bar_pa - disk_pa, inclination, 1.0)
+    radii_deproj_arcsec = s4g_axes.deprojected_profile_radius(
+        bar_pa,
+        disk_pa,
+        inclination,
+        radii_arcsec,
+    )
+    bar_radius_deproj_arcsec = deproject_factor * bar_sma
+
+    _, intensity_minor = s4g_axes.profile_at_pa(
+        data,
+        xc,
+        yc,
+        minor_pa,
+        profile_radius_pix,
+        width=profile_width,
+    )
+    finite_intensity = np.concatenate(
+        [
+            intensity[np.isfinite(intensity) & (intensity > 0)],
+            intensity_minor[np.isfinite(intensity_minor) & (intensity_minor > 0)],
+        ]
+    )
+    if len(finite_intensity) == 0:
+        return None, None, None, 'profile has no finite positive intensity samples'
+    y_min, y_max = np.nanpercentile(finite_intensity, [2, 99.5])
+    if y_min > 0 and y_max > y_min:
+        y_min *= 0.8
+        y_max *= 1.25
+    else:
+        y_min = np.nanmin(finite_intensity)
+        y_max = np.nanmax(finite_intensity)
+    if not np.isfinite(y_min) or not np.isfinite(y_max) or y_min <= 0 or y_max <= y_min:
+        return None, None, None, 'could not derive valid semilogy profile scale'
+
+    positive = np.isfinite(intensity) & (intensity > 0)
+    if np.count_nonzero(positive) < 8:
+        return None, None, None, 'profile has too few finite positive intensity samples'
+
+    profile_file = os.path.join(
+        profiles_folder,
+        '{0}_bar-major-axis_profile.dat'.format(galaxy),
+    )
+    header = [
+        'Constructed from S4G FITS image and geometry manifest',
+        'x = deprojected bar-major-axis radius [arcsec]',
+        'intensity = S4G 3.6 micron bar-major-axis profile used by plot_s4g_isophote_axes.py',
+    ]
+    np.savetxt(
+        profile_file,
+        np.column_stack([radii_deproj_arcsec, intensity]),
+        header='\n'.join(header),
+        comments='# ',
+        fmt='%.8g',
+    )
+    return profile_file, bar_radius_deproj_arcsec, (y_min, y_max), None
+
+
+def write_missing_data_report(missing_rows, filename):
+    with open(filename, 'w', encoding='utf-8') as handle:
+        handle.write('Missing data components required for shoulder quantification\n')
+        handle.write('==========================================================\n\n')
+        handle.write('Profiles are constructed from the S4G FITS images and geometry manifest used by\n')
+        handle.write('Erwin_s4g_image_downloader/plot_s4g_isophote_axes.py.\n\n')
+        handle.write('Required components:\n')
+        handle.write('  - geometry manifest: {0}\n'.format(manifest_file))
+        handle.write('  - S4G FITS images: {0}\n'.format(image_folder))
+        handle.write('  - Erwin catalog/classification data: {0}\n'.format(erwin_data_folder))
+        handle.write('Constructed profile cache:\n')
+        handle.write('  - {0}\n'.format(profiles_folder))
+        handle.write('\n')
+        if len(missing_rows) == 0:
+            handle.write('No missing required components detected.\n')
+            return
+        handle.write('Missing or unusable components:\n')
+        for row in missing_rows:
+            handle.write('  - {0}: {1}\n'.format(row['galaxy'], row['reason']))
+
+
+gal_folder = 'Erwin_2023_profile_classification_sample'
+
+s4g_table = read_s4g_table(os.path.join(erwin_data_folder, 's4gbars_table.dat'))
+descramble_map = read_descramble_map(os.path.join(erwin_data_folder, 'scrambled_map.txt'))
+manifest_rows = read_manifest(manifest_file)
+classified_galaxies = sorted(set(
+    read_classified_galaxies(os.path.join(erwin_data_folder, 'classifications_pe.txt'), descramble_map) +
+    read_classified_galaxies(os.path.join(erwin_data_folder, 'classifications_vd_revised.txt'), descramble_map)
+))
+
+available_rows = []
+missing_data = []
+for galaxy in classified_galaxies:
+    row = s4g_table[s4g_table['name'] == galaxy]
+    if row.empty:
+        missing_data.append({'galaxy': galaxy, 'reason': 'missing s4gbars_table.dat row'})
+        continue
+
+    manifest_row = manifest_rows.get(galaxy)
+    if manifest_row is None:
+        missing_data.append({'galaxy': galaxy, 'reason': 'missing geometry manifest row'})
+        continue
+
+    profile_file, bar_radius, profile_scale, reason = construct_profile_from_manifest(galaxy, manifest_row)
+    if reason is not None:
+        missing_data.append({'galaxy': galaxy, 'reason': reason})
+        continue
+    if not np.isfinite(bar_radius) or bar_radius <= 0:
+        missing_data.append({'galaxy': galaxy, 'reason': 'missing/invalid deprojected bar radius'})
+        continue
+
+    available_rows.append({
+        'galaxy': galaxy,
+        'bar_radius': bar_radius,
+        'profile_file': profile_file,
+        'profile_scale': profile_scale,
+    })
+
+write_missing_data_report(
+    missing_data,
+    os.path.join(output_folder, 'missing_data_components.txt'),
+)
+
+missing_csv = os.path.join(output_folder, 'missing_data_components.csv')
+pd.DataFrame(missing_data, columns=['galaxy', 'reason']).to_csv(missing_csv, index=False)
+
+galaxies = np.array([row['galaxy'] for row in available_rows])
+bar_radii = np.array([row['bar_radius'] for row in available_rows])
+profile_files = {row['galaxy']: row['profile_file'] for row in available_rows}
+profile_scales = {row['galaxy']: row['profile_scale'] for row in available_rows}
 galaxies_to_plot = galaxies
 
 # Reject shoulders whose clavicle lengths are too small; what is this length
@@ -116,29 +413,36 @@ for ki, galaxy in enumerate(galaxies_to_plot):
 
     fname = '{0}_bar-major-axis_profile.dat'.format(galaxy)        
         
-    # Load the galaxy's profile
-    dtype = {'names': ('x', 'mu'), 'formats': (float, float)}
-    Data = np.loadtxt(os.path.join(galaxy_folder, fname),
-                      dtype=dtype, skiprows = 3)
+    # Load the galaxy's profile. The second column is the same raw bar-major
+    # intensity plotted by plot_s4g_isophote_axes.py.
+    dtype = {'names': ('x', 'intensity'), 'formats': (float, float)}
+    Data = np.loadtxt(profile_files[galaxy], dtype=dtype, skiprows = 3)
     
-    # Normalise by the bar radius
-    Data['x'] /= bar_radii[ki]
-    
-    # We're only interested in the area within the bar so go out to 1.8 R_bar
-    x = Data['x'][abs(Data['x']) < x_cutoff_vs_bre]
-    
-    # mu is the SB
-    mu = -Data['mu'][abs(Data['x']) < x_cutoff_vs_bre]
+    # Normalise by the bar radius. Keep the raw full profile for display so the
+    # shoulder PNG has the same semilogy profile shape as the isophote PDF.
+    x_all = Data['x'] / bar_radii[ki]
+    intensity_all = Data['intensity']
+    y_min, y_max = profile_scales[galaxy]
+    mu_all = np.array(intensity_all, dtype=float)
 
     # Some might have nans at the start
-    if np.isnan(mu[0]):
-        first_non_nan_idx = np.where(~np.isnan(mu))[0][0]
-        mu[:first_non_nan_idx] = mu[first_non_nan_idx]
+    if np.isnan(mu_all[0]):
+        first_non_nan_idx = np.where(~np.isnan(mu_all))[0][0]
+        mu_all[:first_non_nan_idx] = mu_all[first_non_nan_idx]
 
     # Linearly interpolate nans - NEED TO DISCUSS WITH YASMIN
-    mu = np.array(pd.DataFrame(mu).interpolate().values.ravel().tolist())
+    mu_all = np.array(pd.DataFrame(mu_all).interpolate().values.ravel().tolist())
     
-    # Normalise mu before we calculate the S_N
+    # We're only interested in the area within the bar so go out to 1.8 R_bar
+    analysis_mask = abs(x_all) < x_cutoff_vs_bre
+    x = x_all[analysis_mask]
+    
+    # mu is the raw bar-major intensity profile used by the original shoulder
+    # detection logic. It is normalised over the analysed bar window below.
+    mu = mu_all[analysis_mask]
+    
+    # Match the original algorithm scale: derivatives and slope cuts are applied
+    # after normalising the analysed profile to 0..1.
     mu_N = (mu - mu.min())/(mu.max() - mu.min())
     
     # Gap between measurements is needed for the derivative calc
@@ -201,10 +505,14 @@ for ki, galaxy in enumerate(galaxies_to_plot):
     S_N_out = np.round(np.sqrt(abs(smoothed)).mean()/np.mean(abs(smoothed)),3)
 
 
-    # Plot original profile
-    ax.plot(x, mu_N, c='k', linewidth=1)
-
-    ax.plot(x, smoothed + 0.03, c='blue', linestyle='--', linewidth=0.75)
+    # Plot the original bar-major profile exactly as the isophote-axis PDF does:
+    # raw intensity on a logarithmic y-axis. The grey dashed curve is the
+    # Butterworth-smoothed analysis profile converted back from the algorithm's
+    # 0..1 normalised raw-intensity scale.
+    smoothed_intensity = smoothed * (mu.max() - mu.min()) + mu.min()
+    ax.semilogy(x_all, intensity_all, c='#1f77b4', linewidth=1.2)
+    ax.semilogy(x_all, intensity_all, c='k', linewidth=0.65)
+    ax.semilogy(x, smoothed_intensity, c='0.25', linestyle='--', linewidth=0.75)
     ax.tick_params(labelbottom=False) 
     
     # Plot the residual
@@ -224,8 +532,9 @@ for ki, galaxy in enumerate(galaxies_to_plot):
 
 
     # Radius of curvature
-    roc = ((1 + deriv**2)**1.5) / abs(deriv2)
-    roc_mu = ((1 + deriv_mu**2)**1.5) / abs(deriv2_mu)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        roc = ((1 + deriv**2)**1.5) / abs(deriv2)
+        roc_mu = ((1 + deriv_mu**2)**1.5) / abs(deriv2_mu)
 
     # How many minima in roc do we have?
     roc_minima = len(find_peaks(-abs(roc[abs(x)<=1]))[0])
@@ -270,6 +579,7 @@ for ki, galaxy in enumerate(galaxies_to_plot):
     clav_left, clav_right = np.nan, np.nan
     left_outer, left_inner = np.nan, np.nan
     left_inner_slope, left_outer_slope = np.nan, np.nan
+    left_slope, right_slope = np.nan, np.nan
     right_outer, right_inner = np.nan, np.nan
     right_outer_slope, right_outer_slope = np.nan, np.nan
 
@@ -514,8 +824,8 @@ for ki, galaxy in enumerate(galaxies_to_plot):
             left_slope, right_inner, right_outer, right_slope,
             left_clav_inner, left_clav_outer, right_clav_inner, right_clav_outer)) 
 
-    ax.set_ylabel(r'$\mu_N$', fontsize=12)
-    ax.set_ylim(0, 1.1)
+    ax.set_ylabel('intensity', fontsize=12)
+    ax.set_ylim(y_min, y_max)
 
     dir_suffix = 'sh_false'
     dir_suffix = ''
@@ -532,15 +842,13 @@ for ki, galaxy in enumerate(galaxies_to_plot):
         annotation = r'{0}: SHOULDERS'.format(galaxy)
         fc='green'
         num_sh_found += 1
-        sh_galaxies.append(galaxy)
+        sh_galaxies.append(str(galaxy))
         dir_suffix= ''
 
-    xrange = ax.get_xlim()[1] - ax.get_xlim()[0]
-    yrange = ax.get_ylim()[1] - ax.get_ylim()[0]
     bbox_props = dict(fc = fc, ec = 'k', alpha=0.75)
-    ax.text(ax.get_xlim()[0] + xrange * 0.05, 
-                    ax.get_ylim()[1] - (yrange * 0.15), annotation, fontsize=8,
-                    bbox=bbox_props, c = 'white', weight='bold')        
+    ax.text(0.05, 0.85, annotation, fontsize=8,
+                    bbox=bbox_props, c = 'white', weight='bold',
+                    transform=ax.transAxes)        
 
     ax.tick_params(axis='both', which='major', labelsize=12)
     ax.tick_params(axis='both', which='minor', labelsize=12)
@@ -566,19 +874,13 @@ for ki, galaxy in enumerate(galaxies_to_plot):
     yrange = ax_resid.get_ylim()[1] - ax_resid.get_ylim()[0]
     bbox_props = dict(fc = fc, ec = 'k')
 
-    plot_file_1 = (os.path.join(output_folder, '{0}')).format(galaxies_to_plot[ki])
+    plot_file_1 = os.path.join(plots_folder, '{0}.png'.format(galaxies_to_plot[ki]))
         
     fig.savefig(plot_file_1, dpi = 100, bbox_inches = 'tight', pad_inches = 0.1)
     print('Plot saved in {}'.format(plot_file_1))
     
-    plt.show()
     plt.close()
-    fig.clf()
 
-
-shoulders.append((galaxy, clav_left, clav_right, left_inner, left_outer,
-        left_slope, right_inner, right_outer, right_slope,
-        left_clav_inner, left_clav_outer, right_clav_inner, right_clav_outer)) 
 
 dt = np.dtype([('galaxy', 'U30'), ('clav_left', float), ('clav_right', float),
                ('left_inner', float), ('left_outer', float), ('left_slope', float),
@@ -591,3 +893,26 @@ shoulders = np.array(shoulders, dtype=dt)
 print('Found {0} shoulder systems out of {1}'.format(num_sh_found, len(galaxies)))
 print('These are {0}'.format(sh_galaxies))
 
+results_npy = os.path.join(output_folder, 'shoulder_measurements.npy')
+results_csv = os.path.join(output_folder, 'shoulder_measurements.csv')
+np.save(results_npy, shoulders)
+pd.DataFrame.from_records(shoulders).to_csv(results_csv, index=False)
+
+summary_file = os.path.join(output_folder, 'run_summary.txt')
+with open(summary_file, 'w', encoding='utf-8') as handle:
+    handle.write('Shoulder quantification summary\n')
+    handle.write('===============================\n\n')
+    handle.write('Erwin data folder: {0}\n'.format(erwin_data_folder))
+    handle.write('Output folder: {0}\n'.format(output_folder))
+    handle.write('Paper-classified galaxies found in Erwin data: {0}\n'.format(len(classified_galaxies)))
+    handle.write('Galaxies with all required components: {0}\n'.format(len(galaxies)))
+    handle.write('Galaxies missing required components: {0}\n'.format(len(missing_data)))
+    handle.write('Shoulder systems found: {0}\n'.format(num_sh_found))
+    handle.write('Shoulder galaxies: {0}\n'.format(', '.join(sh_galaxies)))
+    handle.write('\nOutput files:\n')
+    handle.write('  - {0}\n'.format(results_npy))
+    handle.write('  - {0}\n'.format(results_csv))
+    handle.write('  - {0}\n'.format(profiles_folder))
+    handle.write('  - {0}\n'.format(os.path.join(output_folder, 'missing_data_components.txt')))
+    handle.write('  - {0}\n'.format(missing_csv))
+    handle.write('  - {0}\n'.format(plots_folder))
