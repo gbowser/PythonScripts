@@ -11,6 +11,7 @@ ASSUMES THREE ROWS AS HEADERS TO IGNORE
 """
 
 import os
+import argparse
 import csv
 import math
 import sys
@@ -47,7 +48,32 @@ def find_nearest(array, value):
 
 allow_1_sided_shoulders = False
 
-research_folder = r'D:\Dropbox\Public Documents\UCLAN\MSc Research'
+PC_RESEARCH_FOLDERS = {
+    'Laptop': r'C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research',
+    'Desktop': r'D:\Dropbox\Public Documents\UCLAN\MSc Research',
+}
+
+
+def parse_runtime_args():
+    parser = argparse.ArgumentParser(
+        description='Run real-galaxy shoulder recognition without regenerating plots by default.'
+    )
+    parser.add_argument(
+        '--pc',
+        choices=sorted(PC_RESEARCH_FOLDERS),
+        default='Laptop',
+        help='Select which Dropbox research-folder location to use.',
+    )
+    parser.add_argument(
+        '--write-plots',
+        action='store_true',
+        help='Regenerate diagnostic plot PNGs.',
+    )
+    return parser.parse_args()
+
+
+runtime_args = parse_runtime_args()
+research_folder = PC_RESEARCH_FOLDERS[runtime_args.pc]
 
 # Public Erwin, Debattista, & Anderson (2023) paper repository already held locally.
 erwin_repo = os.path.join(research_folder, 'Erwin', 'perwin-barprofiles_paper-a7cd6f5')
@@ -60,6 +86,9 @@ profiles_folder = os.path.join(output_folder, 'profiles')
 os.makedirs(output_folder, exist_ok=True)
 os.makedirs(plots_folder, exist_ok=True)
 os.makedirs(profiles_folder, exist_ok=True)
+
+# Diagnostic PNGs are rebuilt only when explicitly requested.
+WRITE_PLOTS = runtime_args.write_plots
 
 manifest_file = os.path.join(
     PROJECT_ROOT,
@@ -396,6 +425,20 @@ slope_cutoff = 0.35
 
 #Catch all key shoulders parameters
 shoulders = []
+classification_rows = [
+    {
+        'galaxy': row['galaxy'],
+        'sra_classification': 'Missing Data',
+        'sra_classification_detail': row['reason'],
+        'left_shoulder_found': False,
+        'right_shoulder_found': False,
+        'failed_extrema': False,
+        'd_extrema': np.nan,
+        'd2_extrema': np.nan,
+        'roc_minima': np.nan,
+    }
+    for row in missing_data
+]
 
 fs = (10, 10/1.618)
 num_sh_found, sh_galaxies = 0, []
@@ -404,6 +447,7 @@ for ki, galaxy in enumerate(galaxies_to_plot):
     fig = plt.figure(figsize=fs)
 
     has_shoulders = False
+    rejected_for_overlap_or_centre = False
 
     grid = fig.add_gridspec(nrows = 2, ncols = 1, 
               hspace = 0.07,  
@@ -773,6 +817,7 @@ for ki, galaxy in enumerate(galaxies_to_plot):
         #the start of the simulations
         #We also reject if the shoulders are within bin size of x=0
         if cond2 == True:
+            rejected_for_overlap_or_centre = True
 
             clav_left, left_inner, left_outer, left_slope, left_inner_slope, \
              left_outer_slope, left_excess_1, left_excess_2, \
@@ -824,6 +869,9 @@ for ki, galaxy in enumerate(galaxies_to_plot):
             left_slope, right_inner, right_outer, right_slope,
             left_clav_inner, left_clav_outer, right_clav_inner, right_clav_outer)) 
 
+    left_shoulder_found = bool(np.isfinite(clav_left))
+    right_shoulder_found = bool(np.isfinite(clav_right))
+
     ax.set_ylabel('intensity', fontsize=12)
     ax.set_ylim(y_min, y_max)
 
@@ -833,17 +881,40 @@ for ki, galaxy in enumerate(galaxies_to_plot):
         if failed_extrema == True:
             annotation = r'{0}: TOO NOISY{1}$peaks_d$ {2} ;$peaks_{{d2}}$ {3}; roc$_{{min}}$ {4}'.format(galaxy,'\n', d_extrema, d2_extrema, roc_minima)
             fc = 'orange'
+            sra_classification = 'Too Noisy'
+            sra_classification_detail = 'too many profile derivative extrema'
         else:
             annotation = r'{0}: NO SHOULDERS{1}$peaks_d$ {2} ;$peaks_{{d2}}$ {3}; roc$_{{min}}$ {4}'.format(galaxy,'\n', d_extrema, d2_extrema, roc_minima)
             annotation = r'{0}: NO SHOULDERS'.format(galaxy)
             fc = 'red'
+            sra_classification = 'No Shoulders'
+            if rejected_for_overlap_or_centre:
+                sra_classification_detail = 'candidate shoulders rejected because they overlap or are too close to x=0'
+            elif left_shoulder_found or right_shoulder_found:
+                sra_classification_detail = 'only one accepted shoulder and paired shoulders are required'
+            else:
+                sra_classification_detail = 'no accepted shoulder pair'
     else:
         annotation = r'{0}: SHOULDERS{1}$peaks_d$ {2} ;$peaks_{{d2}}$ {3}; roc$_{{min}}$ {4}'.format(galaxy,'\n', d_extrema, d2_extrema, roc_minima)
         annotation = r'{0}: SHOULDERS'.format(galaxy)
         fc='green'
+        sra_classification = 'Shoulders'
+        sra_classification_detail = 'accepted left and right shoulders'
         num_sh_found += 1
         sh_galaxies.append(str(galaxy))
         dir_suffix= ''
+
+    classification_rows.append({
+        'galaxy': str(galaxy),
+        'sra_classification': sra_classification,
+        'sra_classification_detail': sra_classification_detail,
+        'left_shoulder_found': left_shoulder_found,
+        'right_shoulder_found': right_shoulder_found,
+        'failed_extrema': bool(failed_extrema),
+        'd_extrema': d_extrema,
+        'd2_extrema': d2_extrema,
+        'roc_minima': roc_minima,
+    })
 
     bbox_props = dict(fc = fc, ec = 'k', alpha=0.75)
     ax.text(0.05, 0.85, annotation, fontsize=8,
@@ -875,9 +946,10 @@ for ki, galaxy in enumerate(galaxies_to_plot):
     bbox_props = dict(fc = fc, ec = 'k')
 
     plot_file_1 = os.path.join(plots_folder, '{0}.png'.format(galaxies_to_plot[ki]))
-        
-    fig.savefig(plot_file_1, dpi = 100, bbox_inches = 'tight', pad_inches = 0.1)
-    print('Plot saved in {}'.format(plot_file_1))
+
+    if WRITE_PLOTS:
+        fig.savefig(plot_file_1, dpi = 100, bbox_inches = 'tight', pad_inches = 0.1)
+        print('Plot saved in {}'.format(plot_file_1))
     
     plt.close()
 
@@ -895,8 +967,10 @@ print('These are {0}'.format(sh_galaxies))
 
 results_npy = os.path.join(output_folder, 'shoulder_measurements.npy')
 results_csv = os.path.join(output_folder, 'shoulder_measurements.csv')
+classifications_csv = os.path.join(output_folder, 'shoulder_classifications.csv')
 np.save(results_npy, shoulders)
 pd.DataFrame.from_records(shoulders).to_csv(results_csv, index=False)
+pd.DataFrame(classification_rows).sort_values('galaxy').to_csv(classifications_csv, index=False)
 
 summary_file = os.path.join(output_folder, 'run_summary.txt')
 with open(summary_file, 'w', encoding='utf-8') as handle:
@@ -912,7 +986,9 @@ with open(summary_file, 'w', encoding='utf-8') as handle:
     handle.write('\nOutput files:\n')
     handle.write('  - {0}\n'.format(results_npy))
     handle.write('  - {0}\n'.format(results_csv))
+    handle.write('  - {0}\n'.format(classifications_csv))
     handle.write('  - {0}\n'.format(profiles_folder))
     handle.write('  - {0}\n'.format(os.path.join(output_folder, 'missing_data_components.txt')))
     handle.write('  - {0}\n'.format(missing_csv))
-    handle.write('  - {0}\n'.format(plots_folder))
+    if WRITE_PLOTS:
+        handle.write('  - {0}\n'.format(plots_folder))

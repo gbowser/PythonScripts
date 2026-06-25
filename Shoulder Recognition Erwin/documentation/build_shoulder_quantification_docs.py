@@ -16,6 +16,7 @@ SCRIPT_DIR = Path(__file__).resolve().parents[1]
 DOC_DIR = SCRIPT_DIR / "documentation"
 SCRIPT_NAME = "Real Galaxy Shoulder Quantification v0.69.py"
 OUTPUT_DOCX = DOC_DIR / "Real Galaxy Shoulder Quantification v0.69 Documentation.docx"
+OUTPUT_PDF = DOC_DIR / "Real Galaxy Shoulder Quantification v0.69 Documentation.pdf"
 EXAMPLE_IMAGE = SCRIPT_DIR / "SRA_Example.png"
 
 
@@ -214,7 +215,7 @@ def add_metadata(doc: Document) -> None:
         ["Script", SCRIPT_NAME],
         ["Location", str(SCRIPT_DIR / SCRIPT_NAME)],
         ["Document date", date.today().isoformat()],
-        ["Documentation scope", "High-level overview, data sources, processing workflow, outputs, parameters, and detailed code behavior."],
+        ["Documentation scope", "High-level overview, data sources, processing workflow, outputs, workbook merge/format utilities, parameters, and detailed code behavior."],
     ]
     add_table(doc, ["Field", "Value"], rows, [2200, 7160])
 
@@ -244,11 +245,49 @@ def add_intro(doc: Document) -> None:
     add_bullets(
         doc,
         [
-            "Input data are external to this folder and are mostly hard-coded under the MSc research Dropbox path.",
+            "Input data are external to this folder and are selected with the --pc Laptop/Desktop switch for the two Dropbox layouts.",
             "The analysis window is restricted to |x/R_bar| < 1.8, while accepted shoulders must lie inside |x/R_bar| < 1.",
             "By default, a galaxy is counted as having shoulders only when both left and right shoulders are accepted.",
-            "The script writes constructed profile caches, diagnostic plots, missing-data reports, measurement tables, and a run summary.",
+            "The script writes constructed profile caches, missing-data reports, measurement tables, a per-galaxy classification CSV, and a run summary.",
+            "Diagnostic PNGs are not regenerated unless --write-plots is supplied.",
         ],
+    )
+
+
+def add_recent_updates(doc: Document) -> None:
+    doc.add_heading("Updates Added 2026-06-25", level=1)
+    add_text(
+        doc,
+        "The shoulder-recognition workflow was extended to support the two working-machine Dropbox layouts, preserve existing plots by default, export explicit SRA classifications by galaxy, and merge those results into the PE/VPD workbook."
+    )
+    add_bullets(
+        doc,
+        [
+            "Real Galaxy Shoulder Quantification v0.69.py now accepts --pc Laptop or --pc Desktop. Laptop maps to C:\\Users\\gordo\\Dropbox\\Public Documents\\UCLAN\\MSc Research; Desktop maps to D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research.",
+            "Diagnostic plot PNGs are skipped by default. Use --write-plots only when plots/<galaxy>.png should be rebuilt.",
+            "The analysis now writes shoulder_classifications.csv with one row per galaxy and explicit labels: Shoulders, No Shoulders, Too Noisy, or Missing Data.",
+            "Merge Shoulder Classifications Into Workbook.py updates PE_VPD_galaxy_classifications_with_definitions.xlsx from shoulder_classifications.csv and creates a timestamped workbook backup before saving.",
+            "The merge utility also adds PE/VPD profile-class columns from the same classifications_pe.txt and classifications_vd_revised.txt files used by barprofiles_figures_for_paper.py.",
+            "Format PE VPD Classification Workbook.py reorders the workbook so PE/VPD classifications are on the left and SRA output columns are grouped on the right. It applies bold white text on a dark-blue header background, freezes the top row, enables filters, auto-sizes columns, and creates a timestamped backup.",
+            "The formatted workbook now adds an isophote profile PDF hyperlink column plus GB visual class and GB visual notes columns. The visual class column uses a dropdown with Peak+Sh, Exp, Flat-top (FT), Two-slope (2S), and Unclear.",
+            "Build Bar Profile Visual Gallery.py creates a local HTML gallery for browsing the same isophote profile PDFs with PE/VPD/SRA context, visual-class dropdowns, notes, search, and CSV export from the browser.",
+            "The gallery has a Reveal Classifiers toggle. When it is off, PE, VPD, and SRA labels are all hidden for every galaxy. When it is on, all three classifier labels are shown.",
+            "The gallery can also be run with --serve, which starts a local server and writes GB visual class and GB visual notes changes directly back to the workbook. The Laptop launcher uses http://127.0.0.1:8899/.",
+        ],
+    )
+    add_table(
+        doc,
+        ["Command", "Purpose"],
+        [
+            ['python "Shoulder Recognition Erwin\\Real Galaxy Shoulder Quantification v0.69.py" --pc Laptop', "Run the full shoulder analysis on the Laptop Dropbox path without regenerating plot PNGs."],
+            ['python "Shoulder Recognition Erwin\\Real Galaxy Shoulder Quantification v0.69.py" --pc Desktop', "Run the same analysis on the Desktop Dropbox path."],
+            ['python "Shoulder Recognition Erwin\\Real Galaxy Shoulder Quantification v0.69.py" --pc Laptop --write-plots', "Run the analysis and regenerate diagnostic plot PNGs."],
+            ['python "Shoulder Recognition Erwin\\Merge Shoulder Classifications Into Workbook.py" --pc Laptop', "Merge shoulder_classifications.csv plus PE/VPD profile labels into the PE/VPD workbook."],
+            ['python "Shoulder Recognition Erwin\\Format PE VPD Classification Workbook.py" --pc Laptop', "Reorder and style the PE/VPD workbook after merging."],
+            ['python "Shoulder Recognition Erwin\\Build Bar Profile Visual Gallery.py" --pc Laptop', "Build the local HTML gallery for visual review of isophote profile PDFs."],
+            ['python "Shoulder Recognition Erwin\\Build Bar Profile Visual Gallery.py" --pc Laptop --serve --port 8899', "Run the workbook-writing local gallery server at http://127.0.0.1:8899/."],
+        ],
+        [4300, 5060],
     )
 
 
@@ -265,7 +304,7 @@ def add_data_sources(doc: Document) -> None:
         [
             ["Erwin catalog data", "Reads s4gbars_table.dat for bar and galaxy properties, scrambled_map.txt to map classification IDs to galaxy names, and classifications_pe.txt plus classifications_vd_revised.txt to define the classified sample."],
             ["S4G geometry manifest", "Reads Erwin_s4g_image_downloader/geometry_output/s4g_image_geometry_manifest.csv for image centres, disk PA, inclination, bar PA, bar semi-major axis, pixel scale, CRPIX fallback values, and image path metadata."],
-            ["S4G FITS images", "Loads 3.6 micron images from each manifest image_path or from D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Erwin\\s4g_images_36um\\<galaxy>.phot.1.fits."],
+            ["S4G FITS images", "Loads 3.6 micron images from each manifest image_path or from <research_folder>\\Erwin\\s4g_images_36um\\<galaxy>.phot.1.fits."],
             ["Helper modules", "Imports angle_utils from Erwin_barprofiles_paper_GB_working_copy and plot_s4g_isophote_axes from Erwin_s4g_image_downloader for PA rectification, deprojection, and profile extraction utilities."],
             ["Scientific Python stack", "Uses numpy, pandas, scipy.signal, astropy.io.fits, scikit-image profile_line, matplotlib, csv, math, os, sys, and warnings."],
         ],
@@ -276,7 +315,8 @@ def add_data_sources(doc: Document) -> None:
         doc,
         ["Name", "Value / meaning"],
         [
-            ["research_folder", r"D:\Dropbox\Public Documents\UCLAN\MSc Research"],
+            ["--pc Laptop", r"C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research"],
+            ["--pc Desktop", r"D:\Dropbox\Public Documents\UCLAN\MSc Research"],
             ["erwin_repo", r"<research_folder>\Erwin\perwin-barprofiles_paper-a7cd6f5"],
             ["erwin_data_folder", r"<erwin_repo>\data"],
             ["manifest_file", r"<repo>\Erwin_s4g_image_downloader\geometry_output\s4g_image_geometry_manifest.csv"],
@@ -284,6 +324,7 @@ def add_data_sources(doc: Document) -> None:
             ["output_folder", r"<research_folder>\Shoulder_Recognition_Erwin"],
             ["plots_folder", r"<output_folder>\plots"],
             ["profiles_folder", r"<output_folder>\profiles"],
+            ["workbook", r"<output_folder>\PE_VPD_galaxy_classifications_with_definitions.xlsx"],
         ],
         [2400, 6960],
     )
@@ -301,7 +342,8 @@ def add_workflow(doc: Document) -> None:
             "Write a missing-data text report and CSV for galaxies that cannot be analysed.",
             "Loop over all galaxies with usable profiles, interpolate NaNs, normalise the analysed profile, smooth it, calculate derivatives and radius of curvature, and search for left and right shoulder candidates.",
             "Reject shoulders that are too close to the centre, outside the bar, too thin, too steep, too noisy, one-sided when paired shoulders are required, or overlapping.",
-            "Save one diagnostic PNG per analysed galaxy and write the final shoulder measurements in NPY and CSV formats plus a plain-text run summary.",
+            "Write final shoulder measurements in NPY and CSV formats, write shoulder_classifications.csv, and write a plain-text run summary.",
+            "Optionally save one diagnostic PNG per analysed galaxy when --write-plots is supplied.",
         ],
     )
 
@@ -362,7 +404,10 @@ def add_parameters_outputs(doc: Document) -> None:
             ["missing_data_components.csv", "CSV version of the missing-data report with galaxy and reason columns."],
             ["shoulder_measurements.npy", "Structured NumPy array containing final shoulder measurements."],
             ["shoulder_measurements.csv", "CSV version of the structured shoulder table."],
+            ["shoulder_classifications.csv", "Per-galaxy SRA classification table with sra_classification, detail text, left/right shoulder flags, failed_extrema, d_extrema, d2_extrema, and roc_minima."],
             ["run_summary.txt", "Run-level summary of classified galaxies, usable galaxies, skipped galaxies, shoulder systems found, and output locations."],
+            ["PE_VPD_galaxy_classifications_with_definitions.xlsx", "Workbook updated by the merge and formatter scripts. The Classifications sheet keeps isophote PDF links and manual GB visual-review columns near the galaxy name, PE/VPD profile classifications on the left, and SRA output columns on the right."],
+            ["bar_profile_visual_gallery.html", "Local HTML gallery for browsing the isophote profile PDFs with PE/VPD/SRA context, hiding or revealing those classifier labels with the Reveal Classifiers toggle, saving browser-local visual classes and notes, and exporting those visual classifications to CSV."],
         ],
         [3100, 6260],
     )
@@ -381,6 +426,61 @@ def add_parameters_outputs(doc: Document) -> None:
             ["right_clav_inner / right_clav_outer", "Radius-of-curvature minima bracketing the right clavicle."],
         ],
         [2600, 6760],
+    )
+
+    doc.add_heading("Classification CSV columns", level=2)
+    add_table(
+        doc,
+        ["Column", "Meaning"],
+        [
+            ["galaxy", "Galaxy name."],
+            ["sra_classification", "Final SRA label: Shoulders, No Shoulders, Too Noisy, or Missing Data."],
+            ["sra_classification_detail", "Short explanation for the SRA label, such as accepted left and right shoulders, too many extrema, no accepted shoulder pair, or missing-data reason."],
+            ["left_shoulder_found / right_shoulder_found", "Boolean flags showing whether each side survived the candidate filters."],
+            ["failed_extrema", "True when the profile was rejected as too noisy because first-derivative extrema exceeded peaks_max."],
+            ["d_extrema / d2_extrema / roc_minima", "Diagnostic counts used in the plot annotations and classification detail."],
+        ],
+        [3000, 6360],
+    )
+
+
+def add_workbook_utilities(doc: Document) -> None:
+    doc.add_heading("Workbook Merge and Formatting Utilities", level=1)
+    add_text(
+        doc,
+        "Companion scripts maintain PE_VPD_galaxy_classifications_with_definitions.xlsx after the SRA run and provide a separate HTML visual-review option. They are separate from the scientific analysis so the workbook and review gallery can be refreshed or restyled without regenerating profiles or plots."
+    )
+    add_table(
+        doc,
+        ["Script", "Behavior"],
+        [
+            ["Merge Shoulder Classifications Into Workbook.py", "Reads shoulder_classifications.csv and updates the Classifications sheet. It also reads the PE and VPD bar-profile classification files, maps raw codes to display labels, writes profile-definition rows to the Definitions sheet, and creates a timestamped backup before saving."],
+            ["Format PE VPD Classification Workbook.py", "Reorders the Classifications sheet so galaxy, isophote PDF links, and manual GB visual-review columns are leftmost, PE/VPD columns follow, and SRA columns are grouped to the right. It applies bold white text on dark-blue headers, freezes the top row, enables filters, auto-sizes columns, styles the Definitions headers, and creates a timestamped backup before saving."],
+            ["Build Bar Profile Visual Gallery.py", "Reads the Classifications sheet and the individual isophote profile PDF folder, then writes bar_profile_visual_gallery.html with one card per galaxy, embedded PDF previews, current PE/VPD/SRA context, browser-local visual class/notes fields, search, CSV export, and a Reveal Classifiers toggle that hides or shows PE, VPD, and SRA together. With --serve it starts a local server that writes visual classes and notes directly back to the workbook."],
+        ],
+        [3200, 6160],
+    )
+    add_table(
+        doc,
+        ["Workbook column group", "Columns"],
+        [
+            ["Galaxy", "galaxy name"],
+            ["Manual visual review", "isophote profile PDF, GB visual class, GB visual notes"],
+            ["PE/VPD profile classifications", "PE classification, PE profile class, PE profile label, VPD classification, VPD profile class, VPD profile label"],
+            ["SRA output", "sra_classification, sra_classification_detail, left_shoulder_found, right_shoulder_found, failed_extrema, d_extrema, d2_extrema, roc_minima"],
+        ],
+        [3000, 6360],
+    )
+    add_table(
+        doc,
+        ["Display label", "Source profile code(s)"],
+        [
+            ["Peak+Sh", "BP"],
+            ["Exp", "Exp, Exp(N)"],
+            ["Flat-top (FT)", "FT, FT(N), Flat-top, Flat-top(N)"],
+            ["Two-slope (2S)", "2S, 2S(N), Two-slope, Two-slope(N)"],
+        ],
+        [3000, 6360],
     )
 
 
@@ -476,7 +576,7 @@ def add_operational_notes(doc: Document) -> None:
     add_bullets(
         doc,
         [
-            "The script is not command-line parameterised; changing data locations or thresholds requires editing global variables in the source file.",
+            "The research-folder location is command-line parameterised with --pc Laptop/Desktop; changing thresholds still requires editing global variables in the source file.",
             "The code executes at import time. Importing it from another module would run the full analysis unless the main workflow is later moved behind an if __name__ == '__main__' guard.",
             "Several functions duplicate concepts available in plot_s4g_isophote_axes, and construct_profile_from_manifest currently calls the imported helper versions for geometry/profile work.",
             "The profile interpolation step includes a note saying it needs discussion, so NaN handling should be treated as an explicit scientific assumption.",
@@ -489,7 +589,7 @@ def add_operational_notes(doc: Document) -> None:
     add_bullets(
         doc,
         [
-            "Add argparse options or a small configuration file for data paths, output path, and shoulder thresholds.",
+            "Extend argparse or add a small configuration file for shoulder thresholds and output options.",
             "Move the executable workflow into a main() function guarded by if __name__ == '__main__'.",
             "Write a compact run manifest alongside each result CSV that records parameter values, script version, and input file timestamps.",
             "Consider replacing print-only progress with logging so rejected candidates can be persisted per galaxy.",
@@ -517,9 +617,11 @@ def build() -> Path:
     style_document(doc)
     add_footer(doc)
     add_intro(doc)
+    add_recent_updates(doc)
     add_data_sources(doc)
     add_workflow(doc)
     add_parameters_outputs(doc)
+    add_workbook_utilities(doc)
     add_detailed_code(doc)
     add_operational_notes(doc)
     doc.save(OUTPUT_DOCX)
