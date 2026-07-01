@@ -484,6 +484,72 @@ def add_workbook_utilities(doc: Document) -> None:
     )
 
 
+def add_visual_classification_instructions(doc: Document) -> None:
+    doc.add_heading("Visual Classification Instructions", level=1)
+    add_text(
+        doc,
+        "The visual-classification workflow is designed to review the individual isophote profile PDFs and write the manual GB classification into the same Classifications sheet that already contains PE, VPD, and SRA outputs. The result is one merged workbook row per galaxy with the manual visual classification beside the classifier outputs."
+    )
+
+    doc.add_heading("Before starting", level=2)
+    add_bullets(
+        doc,
+        [
+            "Close PE_VPD_galaxy_classifications_with_definitions.xlsx before using the gallery server. Excel can lock the file and prevent browser edits from being saved.",
+            "Use the workbook-writing server page, not only the static HTML file, when classifications need to write back to the workbook.",
+            "The Laptop launcher starts the server on http://127.0.0.1:8899/ and uses the Laptop Dropbox research-folder path.",
+        ],
+    )
+
+    doc.add_heading("Start the workbook-writing gallery", level=2)
+    add_numbered(
+        doc,
+        [
+            r"Open PowerShell in C:\Users\gordo\Documents\GitHub\PythonScripts.",
+            r'Run: & "C:\Users\gordo\Documents\GitHub\PythonScripts\Shoulder Recognition Erwin\Run Bar Profile Visual Gallery Server Laptop.bat"',
+            "Open http://127.0.0.1:8899/ in the browser.",
+            "Check that the page header shows v2026-06-25 hide-all. If an older page appears, restart the batch file and refresh with Ctrl+F5.",
+        ],
+    )
+
+    doc.add_heading("Classify galaxies visually", level=2)
+    add_numbered(
+        doc,
+        [
+            "Keep Reveal Classifiers off for a blind visual pass. With the switch off, PE, VPD, and SRA are hidden for every galaxy.",
+            "Inspect the right-hand major-axis bar-profile plot in the embedded isophote PDF. Use Open PDF if the embedded view is too small.",
+            "Use the classification picker to select Peak+Sh, Exp, Flat-top (FT), Two-slope (2S), or Unclear.",
+            "Add any comments in the Notes field.",
+            "Wait for the page to show Saved to workbook. The selected class is written to GB visual class and the notes are written to GB visual notes in the workbook.",
+            "Use Export CSV as an optional browser-side backup of the visual classifications.",
+        ],
+    )
+
+    doc.add_heading("Merge with classifier results", level=2)
+    add_text(
+        doc,
+        "No separate merge step is needed after using the server page: the workbook is updated in place. Each galaxy row then contains the manual GB visual result, PE/VPD profile classifications, and SRA output columns together."
+    )
+    add_table(
+        doc,
+        ["Result source", "Workbook columns"],
+        [
+            ["Manual visual review", "GB visual class, GB visual notes"],
+            ["PE/VPD classifiers", "PE classification, PE profile class, PE profile label, VPD classification, VPD profile class, VPD profile label"],
+            ["SRA classifier", "sra_classification, sra_classification_detail, left_shoulder_found, right_shoulder_found, failed_extrema, d_extrema, d2_extrema, roc_minima"],
+        ],
+        [2800, 6560],
+    )
+    add_bullets(
+        doc,
+        [
+            "After the visual pass, open PE_VPD_galaxy_classifications_with_definitions.xlsx and use filters to compare GB visual class with PE profile label, VPD profile label, and sra_classification.",
+            "Turn Reveal Classifiers on in the gallery only when checking or comparing against the PE/VPD/SRA outputs.",
+            "If PE/VPD/SRA results are regenerated later, rerun Merge Shoulder Classifications Into Workbook.py and then Format PE VPD Classification Workbook.py. The formatter preserves the GB visual class and GB visual notes columns while restoring the preferred column order and styling.",
+        ],
+    )
+
+
 def add_detailed_code(doc: Document) -> None:
     doc.add_heading("Detailed Code Documentation", level=1)
 
@@ -622,6 +688,7 @@ def build() -> Path:
     add_workflow(doc)
     add_parameters_outputs(doc)
     add_workbook_utilities(doc)
+    add_visual_classification_instructions(doc)
     add_detailed_code(doc)
     add_operational_notes(doc)
     doc.save(OUTPUT_DOCX)

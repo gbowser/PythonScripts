@@ -107,10 +107,7 @@ def update_workbook_visual_review(workbook_path: Path, galaxy: str, visual_class
 
 def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
     data_json = json.dumps(gallery_rows, ensure_ascii=True)
-    options_html = "\n".join(
-        f'<option value="{html.escape(option)}">{html.escape(option or "Select...")}</option>'
-        for option in CLASS_OPTIONS
-    )
+    options_json = json.dumps(CLASS_OPTIONS, ensure_ascii=True)
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -145,7 +142,7 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
       font-size: 20px;
       font-weight: 700;
     }}
-    input, select, textarea, button {{
+    input, textarea, button {{
       font: inherit;
     }}
     #search {{
@@ -188,7 +185,7 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
     }}
     article {{
       display: grid;
-      grid-template-rows: auto minmax(480px, 64vh) auto;
+      grid-template-rows: auto auto auto;
       gap: 10px;
       background: white;
       border: 1px solid #d7dee8;
@@ -224,7 +221,10 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
     }}
     iframe {{
       width: 100%;
-      height: 100%;
+      aspect-ratio: 2.45 / 1;
+      height: auto;
+      min-height: 260px;
+      max-height: 520px;
       border: 1px solid #c8d2df;
       border-radius: 4px;
       background: #f8fafc;
@@ -241,16 +241,77 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
       grid-template-columns: minmax(160px, 220px) 1fr;
       gap: 10px;
     }}
-    .review select, .review textarea {{
+    .review textarea {{
       width: 100%;
       box-sizing: border-box;
       border: 1px solid #b6c2d1;
       border-radius: 4px;
       padding: 8px;
+      color: #111827;
+      background: #ffffff;
     }}
     .review textarea {{
       min-height: 42px;
       resize: vertical;
+    }}
+    .class-picker {{
+      position: relative;
+    }}
+    .class-picker-button {{
+      width: 100%;
+      min-height: 42px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border: 1px solid #b6c2d1;
+      border-radius: 4px;
+      padding: 8px 10px;
+      background: #ffffff;
+      color: #111827;
+      font-weight: 400;
+      text-align: left;
+    }}
+    .class-picker-button::after {{
+      content: "v";
+      color: #111827;
+      font-size: 13px;
+    }}
+    .class-picker-menu {{
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: calc(100% + 4px);
+      z-index: 5;
+      display: none;
+      overflow: hidden;
+      border: 1px solid #b6c2d1;
+      border-radius: 4px;
+      background: #ffffff;
+      box-shadow: 0 8px 20px rgba(15, 39, 70, 0.18);
+    }}
+    .class-picker.open .class-picker-menu {{
+      display: block;
+    }}
+    .class-option {{
+      display: block;
+      width: 100%;
+      border: 0;
+      border-radius: 0;
+      padding: 9px 10px;
+      background: #ffffff;
+      color: #111827;
+      font-weight: 400;
+      text-align: left;
+    }}
+    .class-option:hover, .class-option:focus {{
+      background: #e7eef7;
+      outline: none;
+    }}
+    .class-option.selected {{
+      background: #17365d;
+      color: #ffffff;
     }}
     a {{
       color: #0b57a3;
@@ -278,7 +339,7 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
   <main id="gallery"></main>
   <script>
     const rows = {data_json};
-    const classOptions = `{options_html}`;
+    const classOptions = {options_json};
     const storagePrefix = "barProfileVisual:";
     const gallery = document.getElementById("gallery");
     const search = document.getElementById("search");
@@ -343,6 +404,17 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
       return `${{pdfUrl}}#page=1&view=FitH&pagemode=none&toolbar=0`;
     }}
 
+    function classLabel(value) {{
+      return value || "Select...";
+    }}
+
+    function classOptionButtons(selectedValue) {{
+      return classOptions.map(option => {{
+        const selectedClass = option === selectedValue ? " selected" : "";
+        return `<button type="button" class="class-option${{selectedClass}}" data-value="${{escapeHtml(option)}}">${{escapeHtml(classLabel(option))}}</button>`;
+      }}).join("");
+    }}
+
     function classifierTags(row, visualClass) {{
       const showClassifiers = revealClassifiers.checked;
       const peTag = showClassifiers
@@ -380,7 +452,10 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
           </div>
           ${{pdf}}
           <div class="review">
-            <select data-field="class">${{classOptions}}</select>
+            <div class="class-picker" data-field="class" data-value="${{escapeHtml(visualClass)}}">
+              <button type="button" class="class-picker-button">${{escapeHtml(classLabel(visualClass))}}</button>
+              <div class="class-picker-menu">${{classOptionButtons(visualClass)}}</div>
+            </div>
             <textarea data-field="notes" placeholder="Notes"></textarea>
           </div>
         </article>`;
@@ -390,18 +465,33 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
         const galaxy = article.dataset.galaxy;
         const row = rows.find(item => item.galaxy === galaxy);
         const saved = savedFor(galaxy);
-        const select = article.querySelector('select[data-field="class"]');
+        const picker = article.querySelector('.class-picker[data-field="class"]');
+        const pickerButton = picker.querySelector(".class-picker-button");
         const textarea = article.querySelector('textarea[data-field="notes"]');
-        select.value = saved?.visualClass ?? row.visualClass ?? "";
+        picker.dataset.value = saved?.visualClass ?? row.visualClass ?? "";
         textarea.value = saved?.notes ?? row.notes ?? "";
-        select.addEventListener("change", () => {{
-          save(galaxy, select.value, textarea.value);
-          saveToWorkbook(galaxy, select.value, textarea.value);
-          render();
+        pickerButton.addEventListener("click", () => {{
+          for (const otherPicker of gallery.querySelectorAll(".class-picker.open")) {{
+            if (otherPicker !== picker) {{
+              otherPicker.classList.remove("open");
+            }}
+          }}
+          picker.classList.toggle("open");
+        }});
+        for (const optionButton of picker.querySelectorAll(".class-option")) {{
+          optionButton.addEventListener("click", () => {{
+            picker.dataset.value = optionButton.dataset.value;
+            save(galaxy, picker.dataset.value, textarea.value);
+            saveToWorkbook(galaxy, picker.dataset.value, textarea.value);
+            render();
+          }});
+        }}
+        textarea.addEventListener("focus", () => {{
+          picker.classList.remove("open");
         }});
         textarea.addEventListener("input", () => {{
-          save(galaxy, select.value, textarea.value);
-          queueSaveToWorkbook(galaxy, select.value, textarea.value);
+          save(galaxy, picker.dataset.value, textarea.value);
+          queueSaveToWorkbook(galaxy, picker.dataset.value, textarea.value);
         }});
       }}
     }}
@@ -427,6 +517,13 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
 
     search.addEventListener("input", render);
     revealClassifiers.addEventListener("change", render);
+    document.addEventListener("click", event => {{
+      if (!event.target.closest(".class-picker")) {{
+        for (const picker of gallery.querySelectorAll(".class-picker.open")) {{
+          picker.classList.remove("open");
+        }}
+      }}
+    }});
     render();
   </script>
 </body>
