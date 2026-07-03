@@ -6,9 +6,10 @@ The scientific product is a binary mask: 0 means usable science pixel, 1 means
 masked contaminant. Optional cleaned images are only previews and should not be
 used in place of mask-aware bar-profile measurements.
 
-Example
--------
+Examples
+--------
 python foreground_mask_photutils.py IC2007_deprojected_bar_aligned.fits --output-dir ./mask_outputs
+python foreground_mask_photutils.py ./s4g_images_36um --glob "NGC*.fits" --limit 5 --output-dir ./mask_outputs
 
 Required packages
 -----------------
@@ -338,6 +339,17 @@ def make_diagnostic_plots(
     fig.savefig(output_dir / f"{prefix}_masked_preview.png", dpi=180)
     plt.close(fig)
 
+    fig, axes = plt.subplots(1, 2, figsize=(12, 6), constrained_layout=True)
+    axes[0].imshow(display, origin="lower", cmap="gray")
+    axes[0].set_title("Original")
+    axes[0].set_axis_off()
+    axes[1].imshow(display, origin="lower", cmap="gray")
+    axes[1].imshow(overlay, origin="lower", cmap="autumn", alpha=0.45, vmin=0, vmax=1)
+    axes[1].set_title("Mask overlay")
+    axes[1].set_axis_off()
+    fig.savefig(output_dir / f"{prefix}_before_after_comparison.png", dpi=180)
+    plt.close(fig)
+
 
 def make_optional_cleaned_image(data: np.ndarray, mask: np.ndarray) -> np.ndarray:
     """Fill masked pixels from nearest unmasked neighbours for visual inspection only."""
@@ -426,6 +438,7 @@ def build_foreground_mask(
         "residual": output_dir / f"{prefix}_residual.png",
         "candidates": output_dir / f"{prefix}_candidates.png",
         "smooth_model": output_dir / f"{prefix}_smooth_model.png",
+        "before_after": output_dir / f"{prefix}_before_after_comparison.png",
     }
 
     save_mask_fits(mask, header, outputs["mask"])
@@ -456,8 +469,10 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Detect compact foreground/background contaminants in galaxy FITS images."
     )
-    parser.add_argument("fits_path", help="Input 2D FITS image.")
+    parser.add_argument("input_path", help="Input 2D FITS image, or a folder of FITS images.")
     parser.add_argument("--output-dir", default="./mask_outputs", help="Directory for FITS/PNG outputs.")
+    parser.add_argument("--glob", default="*.fits", help="Filename pattern used when input_path is a folder.")
+    parser.add_argument("--limit", type=int, default=None, help="Optional maximum number of folder images to process.")
     parser.add_argument("--hdu-index", type=int, default=0, help="FITS HDU index containing the image.")
     parser.add_argument("--smooth-sigma-pixels", type=float, default=15.0)
     parser.add_argument("--detection-nsigma", type=float, default=5.0)
@@ -495,26 +510,37 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    outputs = build_foreground_mask(
-        args.fits_path,
-        args.output_dir,
-        smooth_sigma_pixels=args.smooth_sigma_pixels,
-        detection_nsigma=args.detection_nsigma,
-        npixels=args.npixels,
-        dilation_radius_pixels=args.dilation_radius_pixels,
-        deblend=not args.no_deblend,
-        min_area=args.min_area,
-        max_area=args.max_area,
-        max_elongation=args.max_elongation,
-        galaxy_center=args.galaxy_center,
-        exclude_center_radius_pixels=args.exclude_center_radius_pixels,
-        min_peak_residual_nsigma=args.min_peak_residual_nsigma,
-        make_cleaned=args.make_cleaned,
-        hdu_index=args.hdu_index,
-    )
-    print("Wrote foreground-mask outputs:")
-    for name, path in outputs.items():
-        print(f"  {name}: {path}")
+    input_path = Path(args.input_path)
+    if input_path.is_dir():
+        fits_paths = sorted(input_path.glob(args.glob))
+        if args.limit is not None:
+            fits_paths = fits_paths[: args.limit]
+        if not fits_paths:
+            raise FileNotFoundError(f"No files matching {args.glob!r} found in {input_path}.")
+    else:
+        fits_paths = [input_path]
+
+    for fits_path in fits_paths:
+        outputs = build_foreground_mask(
+            fits_path,
+            args.output_dir,
+            smooth_sigma_pixels=args.smooth_sigma_pixels,
+            detection_nsigma=args.detection_nsigma,
+            npixels=args.npixels,
+            dilation_radius_pixels=args.dilation_radius_pixels,
+            deblend=not args.no_deblend,
+            min_area=args.min_area,
+            max_area=args.max_area,
+            max_elongation=args.max_elongation,
+            galaxy_center=args.galaxy_center,
+            exclude_center_radius_pixels=args.exclude_center_radius_pixels,
+            min_peak_residual_nsigma=args.min_peak_residual_nsigma,
+            make_cleaned=args.make_cleaned,
+            hdu_index=args.hdu_index,
+        )
+        print(f"Wrote foreground-mask outputs for {fits_path}:")
+        for name, path in outputs.items():
+            print(f"  {name}: {path}")
 
 
 if __name__ == "__main__":
