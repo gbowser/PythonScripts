@@ -175,12 +175,14 @@ def add_bullets(doc: Document, items: list[str]) -> None:
 
 
 def add_numbered(doc: Document, items: list[str]) -> None:
-    for item in items:
-        p = doc.add_paragraph(style="List Number")
+    for index, item in enumerate(items, start=1):
+        p = doc.add_paragraph()
         p.paragraph_format.left_indent = Inches(0.375)
         p.paragraph_format.first_line_indent = Inches(-0.188)
         p.paragraph_format.space_after = Pt(4)
         p.paragraph_format.line_spacing = 1.25
+        prefix = p.add_run(f"{index}.  ")
+        prefix.bold = True
         p.add_run(item)
 
 
@@ -272,7 +274,7 @@ def add_recent_updates(doc: Document) -> None:
             "The formatted workbook now adds an isophote profile PDF hyperlink column plus GB visual class and GB visual notes columns. The visual class column uses a dropdown with Peak+Sh, Exp, Flat-top (FT), Two-slope (2S), and Unclear.",
             "Build Bar Profile Visual Gallery.py creates a local HTML gallery for browsing the same isophote profile PDFs with PE/VPD/SRA context, visual-class dropdowns, notes, search, and CSV export from the browser.",
             "The gallery has a Reveal Classifiers toggle. When it is off, PE, VPD, and SRA labels are all hidden for every galaxy. When it is on, all three classifier labels are shown.",
-            "The gallery can also be run with --serve, which starts a local server and writes GB visual class and GB visual notes changes directly back to the workbook. The Laptop launcher uses http://127.0.0.1:8899/.",
+            "The gallery can also be run with --serve, which starts a local server and writes GB visual class and GB visual notes changes directly back to the workbook. Laptop and Desktop launchers use http://127.0.0.1:8899/.",
         ],
     )
     add_table(
@@ -286,6 +288,7 @@ def add_recent_updates(doc: Document) -> None:
             ['python "Shoulder Recognition Erwin\\Format PE VPD Classification Workbook.py" --pc Laptop', "Reorder and style the PE/VPD workbook after merging."],
             ['python "Shoulder Recognition Erwin\\Build Bar Profile Visual Gallery.py" --pc Laptop', "Build the local HTML gallery for visual review of isophote profile PDFs."],
             ['python "Shoulder Recognition Erwin\\Build Bar Profile Visual Gallery.py" --pc Laptop --serve --port 8899', "Run the workbook-writing local gallery server at http://127.0.0.1:8899/."],
+            ['python "Shoulder Recognition Erwin\\Build Bar Profile Visual Gallery.py" --pc Desktop --serve --port 8899', "Run the same workbook-writing gallery server using the Desktop Dropbox path."],
         ],
         [4300, 5060],
     )
@@ -460,6 +463,25 @@ def add_workbook_utilities(doc: Document) -> None:
         ],
         [3200, 6160],
     )
+    doc.add_heading("Visual gallery command-line parameters", level=2)
+    add_text(
+        doc,
+        "Build Bar Profile Visual Gallery.py can be used either to write a static HTML file or to start the workbook-writing local server used by the batch launchers."
+    )
+    add_table(
+        doc,
+        ["Parameter", "Default", "Role"],
+        [
+            ["--pc", "Laptop", "Selects the Dropbox research-folder layout. Laptop maps to C:\\Users\\gordo\\Dropbox\\Public Documents\\UCLAN\\MSc Research; Desktop maps to D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research."],
+            ["--workbook", "<research_folder>\\Shoulder_Recognition_Erwin\\PE_VPD_galaxy_classifications_with_definitions.xlsx", "Optional explicit workbook path. Use this only when the workbook is not in the default Laptop/Desktop research-folder location."],
+            ["--isophote-dir", "<research_folder>\\Erwin\\isophote_output\\individual", "Optional explicit folder containing the individual <galaxy>_isophote_axes.pdf files shown in the gallery."],
+            ["--output", "<research_folder>\\Shoulder_Recognition_Erwin\\bar_profile_visual_gallery.html", "Output path for the static HTML gallery when --serve is not supplied."],
+            ["--serve", "off", "Starts a local HTTP server instead of writing only a static HTML file. In server mode, class and notes changes are saved directly into the workbook."],
+            ["--host", "127.0.0.1", "Local network interface used by the server. Keep the default for normal single-PC use."],
+            ["--port", "8765", "Port used by the server. The supplied Laptop and Desktop batch launchers override this to 8899, so the browser address is http://127.0.0.1:8899/."],
+        ],
+        [1800, 2400, 5160],
+    )
     add_table(
         doc,
         ["Workbook column group", "Columns"],
@@ -497,7 +519,7 @@ def add_visual_classification_instructions(doc: Document) -> None:
         [
             "Close PE_VPD_galaxy_classifications_with_definitions.xlsx before using the gallery server. Excel can lock the file and prevent browser edits from being saved.",
             "Use the workbook-writing server page, not only the static HTML file, when classifications need to write back to the workbook.",
-            "The Laptop launcher starts the server on http://127.0.0.1:8899/ and uses the Laptop Dropbox research-folder path.",
+            "The Laptop and Desktop launchers start the server on http://127.0.0.1:8899/ and select the corresponding Dropbox research-folder path.",
         ],
     )
 
@@ -506,7 +528,8 @@ def add_visual_classification_instructions(doc: Document) -> None:
         doc,
         [
             r"Open PowerShell in C:\Users\gordo\Documents\GitHub\PythonScripts.",
-            r'Run: & "C:\Users\gordo\Documents\GitHub\PythonScripts\Shoulder Recognition Erwin\Run Bar Profile Visual Gallery Server Laptop.bat"',
+            r'For the Laptop path, run: & "C:\Users\gordo\Documents\GitHub\PythonScripts\Shoulder Recognition Erwin\Run Bar Profile Visual Gallery Server Laptop.bat"',
+            r'For the Desktop path, run: & "C:\Users\gordo\Documents\GitHub\PythonScripts\Shoulder Recognition Erwin\Run Bar Profile Visual Gallery Server Desktop.bat"',
             "Open http://127.0.0.1:8899/ in the browser.",
             "Check that the page header shows v2026-06-25 hide-all. If an older page appears, restart the batch file and refresh with Ctrl+F5.",
         ],
