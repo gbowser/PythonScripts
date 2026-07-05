@@ -18,7 +18,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
 from matplotlib.patches import Circle
-from scipy.interpolate import PchipInterpolator
 from scipy.ndimage import median_filter
 
 
@@ -104,7 +103,7 @@ def build_mask_products(
     raw_mask = fgmask.segmentation_to_mask(filtered_segm, data.shape)
     mask = fgmask.dilate_mask(raw_mask, dilation_radius_pixels)
     kept_rows = [row for row in candidate_rows if row["kept"]]
-    return mask, kept_rows
+    return mask, kept_rows, smooth
 
 
 def plot_profile(
@@ -134,18 +133,90 @@ def plot_profile(
     ax.tick_params(labelsize=8)
 
 
-def interpolate_positive_profile(values: np.ndarray) -> np.ndarray:
-    """Fill masked profile gaps with PCHIP interpolation in log-intensity space."""
+def profile_mask_at_pa(
+    mask: np.ndarray,
+    xc: float,
+    yc: float,
+    pa_deg: float,
+    radius_pix: int,
+    *,
+    width: int,
+) -> np.ndarray:
+    """Return profile samples touched by masked image pixels."""
+    _, mask_fraction = s4g_plot.profile_at_pa(
+        mask.astype(float), xc, yc, pa_deg, radius_pix, width=width
+    )
+    return np.isfinite(mask_fraction) & (mask_fraction > 0.0)
+
+
+def _merge_boolean_runs(masked: np.ndarray, max_gap: int) -> np.ndarray:
+    """Merge masked stretches separated by short unmasked islands."""
+    merged = np.asarray(masked, dtype=bool).copy()
+    if max_gap <= 0 or not np.any(merged):
+        return merged
+
+    indices = np.flatnonzero(merged)
+    start = int(indices[0])
+    previous = int(indices[0])
+    runs: list[tuple[int, int]] = []
+    for index in indices[1:]:
+        index = int(index)
+        if index - previous > max_gap + 1:
+            runs.append((start, previous))
+            start = index
+        previous = index
+    runs.append((start, previous))
+
+    merged[:] = False
+    for start, stop in runs:
+        merged[start : stop + 1] = True
+    return merged
+
+
+def fill_masked_profile_with_log_linear_bridges(
+    values: np.ndarray,
+    masked_samples: np.ndarray,
+    *,
+    merge_gap_samples: int,
+) -> np.ndarray:
+    """Fill masked profile stretches with straight bridges in log-intensity space."""
     profile = np.asarray(values, dtype=float)
-    interpolated = np.array(profile, copy=True)
+    filled = np.array(profile, copy=True)
+    bad = np.asarray(masked_samples, dtype=bool) | ~np.isfinite(profile) | (profile <= 0)
+    bad = _merge_boolean_runs(bad, merge_gap_samples)
     x = np.arange(profile.size)
-    good = np.isfinite(profile) & (profile > 0)
-    if np.count_nonzero(good) < 2:
-        return interpolated
-    fill = ~good
-    log_interpolator = PchipInterpolator(x[good], np.log(profile[good]), extrapolate=True)
-    interpolated[fill] = np.exp(log_interpolator(x[fill]))
-    return interpolated
+
+    index = 0
+    while index < profile.size:
+        if not bad[index]:
+            index += 1
+            continue
+
+        start = index
+        while index + 1 < profile.size and bad[index + 1]:
+            index += 1
+        stop = index
+
+        left = start - 1
+        while left >= 0 and (~np.isfinite(profile[left]) or profile[left] <= 0):
+            left -= 1
+        right = stop + 1
+        while right < profile.size and (~np.isfinite(profile[right]) or profile[right] <= 0):
+            right += 1
+
+        fill_slice = slice(start, stop + 1)
+        if left >= 0 and right < profile.size:
+            log_left = math.log(float(profile[left]))
+            log_right = math.log(float(profile[right]))
+            weight = (x[fill_slice] - left) / (right - left)
+            filled[fill_slice] = np.exp(log_left + weight * (log_right - log_left))
+        elif left >= 0:
+            filled[fill_slice] = profile[left]
+        elif right < profile.size:
+            filled[fill_slice] = profile[right]
+        index += 1
+
+    return filled
 
 
 def set_shared_profile_limits(axes: list[plt.Axes], intensities: list[np.ndarray]) -> None:
@@ -171,7 +242,7 @@ def make_report(args: argparse.Namespace) -> Path:
     if data.ndim != 2:
         raise ValueError(f"Expected a 2D FITS image, got shape {data.shape}.")
 
-    mask, kept_rows = build_mask_products(
+    mask, kept_rows, smooth_model = build_mask_products(
         data,
         geometry,
         smooth_sigma_pixels=args.smooth_sigma_pixels,
@@ -214,8 +285,22 @@ def make_report(args: argparse.Namespace) -> Path:
     _, intensity_minor_masked = s4g_plot.profile_at_pa(
         masked_data, xc, yc, minor_pa, radius_pix, width=args.profile_width
     )
-    intensity_major_interpolated = interpolate_positive_profile(intensity_major_masked)
-    intensity_minor_interpolated = interpolate_positive_profile(intensity_minor_masked)
+    mask_major = profile_mask_at_pa(
+        mask, xc, yc, bar_pa, radius_pix, width=args.profile_width
+    )
+    mask_minor = profile_mask_at_pa(
+        mask, xc, yc, minor_pa, radius_pix, width=args.profile_width
+    )
+    intensity_major_filled = fill_masked_profile_with_log_linear_bridges(
+        intensity_major_masked,
+        mask_major,
+        merge_gap_samples=args.bridge_merge_gap_samples,
+    )
+    intensity_minor_filled = fill_masked_profile_with_log_linear_bridges(
+        intensity_minor_masked,
+        mask_minor,
+        merge_gap_samples=args.bridge_merge_gap_samples,
+    )
 
     rr_major_deproj = s4g_plot.deprojected_profile_radius(
         bar_pa, disk_pa, inclination, rr_major_pix * pixel_scale
@@ -333,11 +418,11 @@ def make_report(args: argparse.Namespace) -> Path:
     plot_profile(
         ax_interpolated,
         rr_major_deproj,
-        intensity_major_interpolated,
+        intensity_major_filled,
         rr_minor_deproj,
-        intensity_minor_interpolated,
+        intensity_minor_filled,
         bar_sma_deproj_arcsec,
-        "Masked cuts with interpolated gaps",
+        "Masked cuts with straight log-linear bridges",
     )
     set_shared_profile_limits(
         [ax_original, ax_masked, ax_interpolated],
@@ -346,8 +431,8 @@ def make_report(args: argparse.Namespace) -> Path:
             intensity_minor,
             intensity_major_masked,
             intensity_minor_masked,
-            intensity_major_interpolated,
-            intensity_minor_interpolated,
+            intensity_major_filled,
+            intensity_minor_filled,
         ],
     )
     ax_parameters.axis("off")
@@ -363,7 +448,8 @@ def make_report(args: argparse.Namespace) -> Path:
         ("Central exclusion radius", f"{args.exclude_center_radius_pixels:g} px"),
         ("Profile width", f"{args.profile_width} px"),
         ("Applied mask", f"{len(kept_rows)} source segments; {int(np.count_nonzero(mask))} pixels ignored"),
-        ("Interpolated panel", "PCHIP interpolation in log-intensity space across masked/non-positive profile gaps"),
+        ("Filled-profile panel", "nearby masked samples merged, then bridged by straight lines in log-intensity space"),
+        ("Bridge merge gap", f"{args.bridge_merge_gap_samples} profile samples"),
     ]
     table = ax_parameters.table(
         cellText=parameter_rows,
@@ -402,6 +488,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-area", type=int, default=500)
     parser.add_argument("--max-elongation", type=float, default=6.0)
     parser.add_argument("--exclude-center-radius-pixels", type=float, default=12.0)
+    parser.add_argument("--bridge-merge-gap-samples", type=int, default=12)
     return parser.parse_args()
 
 
