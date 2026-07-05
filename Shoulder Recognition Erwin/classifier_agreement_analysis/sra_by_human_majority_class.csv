@@ -1,0 +1,5 @@
+human majority class,human binary expectation,n,SRA Shoulders,SRA No Shoulders,SRA shoulder rate,SRA disagreement count,SRA disagreement rate
+Peak+Sh,Shoulders,55,48,7,0.8727272727272727,7,0.12727272727272726
+Exp,No Shoulders,79,28,51,0.35443037974683544,28,0.35443037974683544
+Flat-top (FT),No Shoulders,30,10,20,0.3333333333333333,10,0.3333333333333333
+Two-slope (2S),No Shoulders,6,1,5,0.16666666666666666,1,0.16666666666666666

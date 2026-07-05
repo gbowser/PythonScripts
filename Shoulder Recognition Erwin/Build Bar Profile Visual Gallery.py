@@ -198,6 +198,22 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
       gap: 8px;
       align-items: start;
     }}
+    .meta-actions {{
+      display: grid;
+      gap: 8px;
+      justify-items: end;
+    }}
+    .reveal-one {{
+      padding: 6px 9px;
+      border-color: #9fb4cf;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }}
+    .reveal-one[disabled] {{
+      cursor: default;
+      opacity: 0.68;
+    }}
     h2 {{
       margin: 0;
       font-size: 18px;
@@ -321,6 +337,9 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
       header, main, article, .review, .meta {{
         grid-template-columns: 1fr;
       }}
+      .meta-actions {{
+        justify-items: start;
+      }}
       main {{
         padding: 10px;
       }}
@@ -415,8 +434,16 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
       }}).join("");
     }}
 
-    function classifierTags(row, visualClass) {{
-      const showClassifiers = revealClassifiers.checked;
+    function updatePickerSelection(picker, pickerButton, selectedValue) {{
+      picker.dataset.value = selectedValue;
+      pickerButton.textContent = classLabel(selectedValue);
+      for (const optionButton of picker.querySelectorAll(".class-option")) {{
+        optionButton.classList.toggle("selected", optionButton.dataset.value === selectedValue);
+      }}
+      picker.classList.remove("open");
+    }}
+
+    function classifierTags(row, showClassifiers) {{
       const peTag = showClassifiers
         ? `<span class="tag">PE: ${{escapeHtml(row.pe || "-")}}</span>`
         : `<span class="tag hidden-classifier">PE hidden</span>`;
@@ -429,10 +456,46 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
       return `${{peTag}}${{vpdTag}}${{sraTag}}`;
     }}
 
-    function render() {{
+    function classifiersVisibleFor(article) {{
+      return revealClassifiers.checked || article.dataset.classifiersRevealed === "true";
+    }}
+
+    function updateClassifierCard(article) {{
+      const row = rows.find(item => item.galaxy === article.dataset.galaxy);
+      if (!row) {{
+        return;
+      }}
+      const showClassifiers = classifiersVisibleFor(article);
+      const tags = article.querySelector(".tags");
+      if (tags) {{
+        tags.innerHTML = classifierTags(row, showClassifiers);
+      }}
+      const revealButton = article.querySelector(".reveal-one");
+      if (revealButton) {{
+        revealButton.textContent = showClassifiers ? "Hide Classifiers" : "Reveal Classifiers";
+        revealButton.disabled = revealClassifiers.checked;
+        if (revealClassifiers.checked) {{
+          revealButton.textContent = "Global Reveal On";
+        }}
+      }}
+    }}
+
+    function updateClassifierCards() {{
+      for (const article of gallery.querySelectorAll("article")) {{
+        updateClassifierCard(article);
+      }}
+    }}
+
+    function updateSearchVisibility() {{
       const term = search.value.trim().toLowerCase();
-      const visibleRows = rows.filter(row => !term || combinedText(row).includes(term));
-      gallery.innerHTML = visibleRows.map(row => {{
+      for (const article of gallery.querySelectorAll("article")) {{
+        const row = rows.find(item => item.galaxy === article.dataset.galaxy);
+        article.hidden = Boolean(term && (!row || !combinedText(row).includes(term)));
+      }}
+    }}
+
+    function render() {{
+      gallery.innerHTML = rows.map(row => {{
         const saved = savedFor(row.galaxy);
         const visualClass = saved?.visualClass ?? row.visualClass ?? "";
         const notes = saved?.notes ?? row.notes ?? "";
@@ -440,15 +503,19 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
           ? `<iframe src="${{escapeHtml(embeddedPdfUrl(row.pdf))}}"></iframe>`
           : `<div class="missing">No matching isophote PDF found</div>`;
         const openLink = row.pdf ? `<a href="${{escapeHtml(row.pdf)}}" target="_blank">Open PDF</a>` : "";
+        const showClassifiers = false;
         return `<article data-galaxy="${{escapeHtml(row.galaxy)}}">
           <div class="meta">
             <div>
               <h2>${{escapeHtml(row.galaxy)}}</h2>
               <div class="tags">
-                ${{classifierTags(row, visualClass)}}
+                ${{classifierTags(row, showClassifiers)}}
               </div>
             </div>
-            <div>${{openLink}}</div>
+            <div class="meta-actions">
+              <div>${{openLink}}</div>
+              <button type="button" class="reveal-one">Reveal Classifiers</button>
+            </div>
           </div>
           ${{pdf}}
           <div class="review">
@@ -468,8 +535,13 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
         const picker = article.querySelector('.class-picker[data-field="class"]');
         const pickerButton = picker.querySelector(".class-picker-button");
         const textarea = article.querySelector('textarea[data-field="notes"]');
+        const revealOneButton = article.querySelector(".reveal-one");
         picker.dataset.value = saved?.visualClass ?? row.visualClass ?? "";
         textarea.value = saved?.notes ?? row.notes ?? "";
+        revealOneButton.addEventListener("click", () => {{
+          article.dataset.classifiersRevealed = article.dataset.classifiersRevealed === "true" ? "false" : "true";
+          updateClassifierCard(article);
+        }});
         pickerButton.addEventListener("click", () => {{
           for (const otherPicker of gallery.querySelectorAll(".class-picker.open")) {{
             if (otherPicker !== picker) {{
@@ -480,10 +552,9 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
         }});
         for (const optionButton of picker.querySelectorAll(".class-option")) {{
           optionButton.addEventListener("click", () => {{
-            picker.dataset.value = optionButton.dataset.value;
+            updatePickerSelection(picker, pickerButton, optionButton.dataset.value);
             save(galaxy, picker.dataset.value, textarea.value);
             saveToWorkbook(galaxy, picker.dataset.value, textarea.value);
-            render();
           }});
         }}
         textarea.addEventListener("focus", () => {{
@@ -494,6 +565,8 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
           queueSaveToWorkbook(galaxy, picker.dataset.value, textarea.value);
         }});
       }}
+      updateSearchVisibility();
+      updateClassifierCards();
     }}
 
     function csvEscape(value) {{
@@ -515,8 +588,8 @@ def render_html(gallery_rows: list[dict[str, str]], output_path: Path) -> str:
       URL.revokeObjectURL(url);
     }});
 
-    search.addEventListener("input", render);
-    revealClassifiers.addEventListener("change", render);
+    search.addEventListener("input", updateSearchVisibility);
+    revealClassifiers.addEventListener("change", updateClassifierCards);
     document.addEventListener("click", event => {{
       if (!event.target.closest(".class-picker")) {{
         for (const picker of gallery.querySelectorAll(".class-picker.open")) {{

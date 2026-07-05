@@ -528,9 +528,9 @@ def add_visual_classification_instructions(doc: Document) -> None:
         doc,
         [
             r"Open PowerShell in C:\Users\gordo\Documents\GitHub\PythonScripts.",
-            r'For the Laptop path, run: & "C:\Users\gordo\Documents\GitHub\PythonScripts\Shoulder Recognition Erwin\Run Bar Profile Visual Gallery Server Laptop.bat"',
-            r'For the Desktop path, run: & "C:\Users\gordo\Documents\GitHub\PythonScripts\Shoulder Recognition Erwin\Run Bar Profile Visual Gallery Server Desktop.bat"',
-            "Open http://127.0.0.1:8899/ in the browser.",
+            r"For the Laptop path, run: .\Shoulder*\Run*Laptop.bat",
+            r"For the Desktop path, run: .\Shoulder*\Run*Desktop.bat",
+            "When prompted by the batch file, press Y to open http://127.0.0.1:8899/ in the browser.",
             "Check that the page header shows v2026-06-25 hide-all. If an older page appears, restart the batch file and refresh with Ctrl+F5.",
         ],
     )

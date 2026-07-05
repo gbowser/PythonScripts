@@ -1,0 +1,183 @@
+galaxy name,PE,VPD,GB,SRA,SRA raw,human_unanimous,human_majority_class,human_majority_is_unanimous,human_majority_shoulder_binary,human_shoulder_votes
+ESO013-016,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+ESO026-001,Flat-top (FT),Flat-top (FT),Flat-top (FT),Shoulders,Shoulders,True,Flat-top (FT),True,No Shoulders,0
+ESO054-021,Exp,Exp,Exp,Shoulders,Shoulders,True,Exp,True,No Shoulders,0
+ESO079-005,Exp,Flat-top (FT),Flat-top (FT),Shoulders,Shoulders,False,Flat-top (FT),False,No Shoulders,0
+ESO085-047,Flat-top (FT),Flat-top (FT),Flat-top (FT),No Shoulders,No Shoulders,True,Flat-top (FT),True,No Shoulders,0
+ESO120-012,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+ESO202-041,Exp,Exp,Exp,Shoulders,Shoulders,True,Exp,True,No Shoulders,0
+ESO236-039,Flat-top (FT),Flat-top (FT),Flat-top (FT),Shoulders,Shoulders,True,Flat-top (FT),True,No Shoulders,0
+ESO298-023,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+ESO357-012,Exp,Exp,Exp,,Too Noisy,True,Exp,True,No Shoulders,0
+ESO358-020,Flat-top (FT),Flat-top (FT),Flat-top (FT),No Shoulders,No Shoulders,True,Flat-top (FT),True,No Shoulders,0
+ESO359-031,Flat-top (FT),Exp,Exp,No Shoulders,No Shoulders,False,Exp,False,No Shoulders,0
+ESO420-009,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+ESO440-044,Exp,Exp,Exp,Shoulders,Shoulders,True,Exp,True,No Shoulders,0
+ESO443-085,Exp,Exp,Two-slope (2S),No Shoulders,No Shoulders,False,Exp,False,No Shoulders,0
+ESO479-004,Exp,Exp,Exp,Shoulders,Shoulders,True,Exp,True,No Shoulders,0
+ESO485-021,Exp,Exp,Exp,Shoulders,Shoulders,True,Exp,True,No Shoulders,0
+ESO572-030,Exp,Flat-top (FT),Exp,,Too Noisy,False,Exp,False,No Shoulders,0
+IC0600,Flat-top (FT),Flat-top (FT),Flat-top (FT),No Shoulders,No Shoulders,True,Flat-top (FT),True,No Shoulders,0
+IC0797,Flat-top (FT),Peak+Sh,Flat-top (FT),No Shoulders,No Shoulders,False,Flat-top (FT),False,No Shoulders,1
+IC1014,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+IC1933,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+IC1953,Peak+Sh,Peak+Sh,Peak+Sh,No Shoulders,No Shoulders,True,Peak+Sh,True,Shoulders,3
+IC1954,Flat-top (FT),Flat-top (FT),Peak+Sh,No Shoulders,No Shoulders,False,Flat-top (FT),False,No Shoulders,1
+IC2007,Flat-top (FT),Flat-top (FT),Flat-top (FT),No Shoulders,No Shoulders,True,Flat-top (FT),True,No Shoulders,0
+IC3115,Two-slope (2S),Two-slope (2S),Unclear,Shoulders,Shoulders,False,Two-slope (2S),False,No Shoulders,0
+IC3517,Exp,Exp,Flat-top (FT),No Shoulders,No Shoulders,False,Exp,False,No Shoulders,0
+IC3521,Flat-top (FT),Flat-top (FT),Flat-top (FT),No Shoulders,No Shoulders,True,Flat-top (FT),True,No Shoulders,0
+IC4901,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+IC5273,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC0210,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC0255,Flat-top (FT),Two-slope (2S),Peak+Sh,No Shoulders,No Shoulders,False,Flat-top (FT),False,No Shoulders,1
+NGC0289,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC0298,Two-slope (2S),Two-slope (2S),Two-slope (2S),No Shoulders,No Shoulders,True,Two-slope (2S),True,No Shoulders,0
+NGC0578,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC0600,Flat-top (FT),Flat-top (FT),Flat-top (FT),Shoulders,Shoulders,True,Flat-top (FT),True,No Shoulders,0
+NGC0672,Flat-top (FT),Exp,Flat-top (FT),Shoulders,Shoulders,False,Flat-top (FT),False,No Shoulders,0
+NGC0685,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+NGC0701,Flat-top (FT),Exp,Exp,No Shoulders,No Shoulders,False,Exp,False,No Shoulders,0
+NGC0918,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+NGC0986,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC0991,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+NGC1022,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC1051,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+NGC1097,Peak+Sh,Peak+Sh,Peak+Sh,,Too Noisy,True,Peak+Sh,True,Shoulders,3
+NGC1187,Peak+Sh,Peak+Sh,Peak+Sh,,Too Noisy,True,Peak+Sh,True,Shoulders,3
+NGC1255,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC1291,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC1302,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC1313,Exp,Exp,Exp,,Too Noisy,True,Exp,True,No Shoulders,0
+NGC1326A,Flat-top (FT),Flat-top (FT),Flat-top (FT),No Shoulders,No Shoulders,True,Flat-top (FT),True,No Shoulders,0
+NGC1341,Flat-top (FT),Flat-top (FT),Flat-top (FT),No Shoulders,No Shoulders,True,Flat-top (FT),True,No Shoulders,0
+NGC1347,Exp,Flat-top (FT),Flat-top (FT),Shoulders,Shoulders,False,Flat-top (FT),False,No Shoulders,0
+NGC1350,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC1367,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC1436,Exp,Exp,Two-slope (2S),No Shoulders,No Shoulders,False,Exp,False,No Shoulders,0
+NGC1493,Exp,Exp,Exp,Shoulders,Shoulders,True,Exp,True,No Shoulders,0
+NGC1512,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC1559,Exp,Exp,Flat-top (FT),No Shoulders,No Shoulders,False,Exp,False,No Shoulders,0
+NGC1640,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC1672,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC1800,Exp,Exp,Flat-top (FT),No Shoulders,No Shoulders,False,Exp,False,No Shoulders,0
+NGC1808,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC1879,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+NGC2500,Exp,Exp,Exp,Shoulders,Shoulders,True,Exp,True,No Shoulders,0
+NGC2681,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC2903,Peak+Sh,Peak+Sh,Peak+Sh,,Too Noisy,True,Peak+Sh,True,Shoulders,3
+NGC2968,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC3185,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC3227,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC3264,Flat-top (FT),Flat-top (FT),Flat-top (FT),No Shoulders,No Shoulders,True,Flat-top (FT),True,No Shoulders,0
+NGC3287,Exp,Exp,Exp,Shoulders,Shoulders,True,Exp,True,No Shoulders,0
+NGC3319,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+NGC3344,Peak+Sh,Peak+Sh,Exp,Shoulders,Shoulders,False,Peak+Sh,False,Shoulders,2
+NGC3359,Flat-top (FT),Peak+Sh,Peak+Sh,Shoulders,Shoulders,False,Peak+Sh,False,Shoulders,2
+NGC3380,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC3447,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+NGC3485,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC3486,Peak+Sh,Peak+Sh,Peak+Sh,No Shoulders,No Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC3504,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC3627,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC3673,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC3681,Exp,Exp,Peak+Sh,No Shoulders,No Shoulders,False,Exp,False,No Shoulders,1
+NGC3684,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+NGC3726,Peak+Sh,Peak+Sh,Peak+Sh,No Shoulders,No Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC3729,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC3850,Two-slope (2S),Two-slope (2S),Two-slope (2S),No Shoulders,No Shoulders,True,Two-slope (2S),True,No Shoulders,0
+NGC3930,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+NGC3953,Peak+Sh,Peak+Sh,Peak+Sh,No Shoulders,No Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC3992,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC4020,Exp,Exp,Exp,Shoulders,Shoulders,True,Exp,True,No Shoulders,0
+NGC4064,Exp,Exp,Exp,Shoulders,Shoulders,True,Exp,True,No Shoulders,0
+NGC4102,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC4116,Flat-top (FT),Exp,Exp,No Shoulders,No Shoulders,False,Exp,False,No Shoulders,0
+NGC4123,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC4133,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC4145,Flat-top (FT),Flat-top (FT),Flat-top (FT),No Shoulders,No Shoulders,True,Flat-top (FT),True,No Shoulders,0
+NGC4204,Exp,Exp,Peak+Sh,Shoulders,Shoulders,False,Exp,False,No Shoulders,1
+NGC4214,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+NGC4293,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC4294,Exp,Exp,Exp,Shoulders,Shoulders,True,Exp,True,No Shoulders,0
+NGC4303,Peak+Sh,Peak+Sh,Unclear,,Too Noisy,False,Peak+Sh,False,Shoulders,2
+NGC4314,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC4369,Two-slope (2S),Two-slope (2S),Two-slope (2S),No Shoulders,No Shoulders,True,Two-slope (2S),True,No Shoulders,0
+NGC4389,Exp,Exp,Two-slope (2S),No Shoulders,No Shoulders,False,Exp,False,No Shoulders,0
+NGC4405,Exp,Exp,Peak+Sh,No Shoulders,No Shoulders,False,Exp,False,No Shoulders,1
+NGC4424,Flat-top (FT),Flat-top (FT),Flat-top (FT),No Shoulders,No Shoulders,True,Flat-top (FT),True,No Shoulders,0
+NGC4449,Peak+Sh,Two-slope (2S),Two-slope (2S),Shoulders,Shoulders,False,Two-slope (2S),False,No Shoulders,1
+NGC4450,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC4457,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC4487,Exp,Exp,Exp,Shoulders,Shoulders,True,Exp,True,No Shoulders,0
+NGC4496A,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+NGC4498,Exp,Peak+Sh,Flat-top (FT),No Shoulders,No Shoulders,False,Exp,False,No Shoulders,1
+NGC4525,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+NGC4532,Flat-top (FT),Two-slope (2S),Flat-top (FT),No Shoulders,No Shoulders,False,Flat-top (FT),False,No Shoulders,0
+NGC4535,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC4540,Exp,Exp,Exp,Shoulders,Shoulders,True,Exp,True,No Shoulders,0
+NGC4559,Exp,Exp,Peak+Sh,No Shoulders,No Shoulders,False,Exp,False,No Shoulders,1
+NGC4579,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC4618,Peak+Sh,Peak+Sh,Two-slope (2S),No Shoulders,No Shoulders,False,Peak+Sh,False,Shoulders,2
+NGC4625,Exp,Exp,Peak+Sh,No Shoulders,No Shoulders,False,Exp,False,No Shoulders,1
+NGC4639,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC4654,Exp,Peak+Sh,Peak+Sh,No Shoulders,No Shoulders,False,Peak+Sh,False,Shoulders,2
+NGC4668,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+NGC4713,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+NGC4725,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC4765,Exp,Exp,Peak+Sh,No Shoulders,No Shoulders,False,Exp,False,No Shoulders,1
+NGC4781,Exp,Exp,Exp,Shoulders,Shoulders,True,Exp,True,No Shoulders,0
+NGC4900,Exp,Exp,Peak+Sh,Shoulders,Shoulders,False,Exp,False,No Shoulders,1
+NGC4981,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC5042,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+NGC5068,Exp,Exp,Peak+Sh,Shoulders,Shoulders,False,Exp,False,No Shoulders,1
+NGC5134,Peak+Sh,Peak+Sh,Peak+Sh,,Too Noisy,True,Peak+Sh,True,Shoulders,3
+NGC5236,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC5569,Flat-top (FT),Exp,Exp,No Shoulders,No Shoulders,False,Exp,False,No Shoulders,0
+NGC5669,Two-slope (2S),Two-slope (2S),Two-slope (2S),No Shoulders,No Shoulders,True,Two-slope (2S),True,No Shoulders,0
+NGC5713,Exp,Peak+Sh,Peak+Sh,No Shoulders,No Shoulders,False,Peak+Sh,False,Shoulders,2
+NGC6217,Peak+Sh,Peak+Sh,Peak+Sh,,Too Noisy,True,Peak+Sh,True,Shoulders,3
+NGC6237,Exp,Exp,Exp,,Too Noisy,True,Exp,True,No Shoulders,0
+NGC6412,Exp,Exp,Peak+Sh,No Shoulders,No Shoulders,False,Exp,False,No Shoulders,1
+NGC7418,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC7424,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+NGC7496,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC7513,Peak+Sh,Exp,Peak+Sh,Shoulders,Shoulders,False,Peak+Sh,False,Shoulders,2
+NGC7531,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC7552,Peak+Sh,Peak+Sh,Peak+Sh,,Too Noisy,True,Peak+Sh,True,Shoulders,3
+NGC7582,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+NGC7764,Flat-top (FT),Flat-top (FT),Flat-top (FT),No Shoulders,No Shoulders,True,Flat-top (FT),True,No Shoulders,0
+NGC7800,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+PGC002492,Two-slope (2S),Exp,Exp,No Shoulders,No Shoulders,False,Exp,False,No Shoulders,0
+PGC006626,Exp,Exp,Peak+Sh,Shoulders,Shoulders,False,Exp,False,No Shoulders,1
+PGC007654,Exp,Exp,Two-slope (2S),Shoulders,Shoulders,False,Exp,False,No Shoulders,0
+PGC011677,Exp,Exp,Two-slope (2S),Shoulders,Shoulders,False,Exp,False,No Shoulders,0
+PGC013821,Two-slope (2S),Two-slope (2S),Two-slope (2S),No Shoulders,No Shoulders,True,Two-slope (2S),True,No Shoulders,0
+PGC035705,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+PGC042160,Flat-top (FT),Flat-top (FT),Flat-top (FT),No Shoulders,No Shoulders,True,Flat-top (FT),True,No Shoulders,0
+PGC048179,Exp,Exp,Peak+Sh,Shoulders,Shoulders,False,Exp,False,No Shoulders,1
+PGC051523,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+UGC02302,Flat-top (FT),Flat-top (FT),Flat-top (FT),No Shoulders,No Shoulders,True,Flat-top (FT),True,No Shoulders,0
+UGC02345,Flat-top (FT),Flat-top (FT),Flat-top (FT),No Shoulders,No Shoulders,True,Flat-top (FT),True,No Shoulders,0
+UGC04393,Exp,Exp,Peak+Sh,Shoulders,Shoulders,False,Exp,False,No Shoulders,1
+UGC04499,Exp,Exp,Peak+Sh,No Shoulders,No Shoulders,False,Exp,False,No Shoulders,1
+UGC04988,Exp,Exp,Peak+Sh,Shoulders,Shoulders,False,Exp,False,No Shoulders,1
+UGC05354,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+UGC05393,Flat-top (FT),Exp,Exp,No Shoulders,No Shoulders,False,Exp,False,No Shoulders,0
+UGC05633,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+UGC05832,Flat-top (FT),Two-slope (2S),Flat-top (FT),No Shoulders,No Shoulders,False,Flat-top (FT),False,No Shoulders,0
+UGC06682,Flat-top (FT),Flat-top (FT),Exp,Shoulders,Shoulders,False,Flat-top (FT),False,No Shoulders,0
+UGC06840,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+UGC06931,Exp,Flat-top (FT),Flat-top (FT),Shoulders,Shoulders,False,Flat-top (FT),False,No Shoulders,0
+UGC06983,Flat-top (FT),Exp,Exp,Shoulders,Shoulders,False,Exp,False,No Shoulders,0
+UGC07129,Peak+Sh,Peak+Sh,Peak+Sh,Shoulders,Shoulders,True,Peak+Sh,True,Shoulders,3
+UGC07257,Exp,Exp,Exp,Shoulders,Shoulders,True,Exp,True,No Shoulders,0
+UGC07612,Exp,Exp,Exp,Shoulders,Shoulders,True,Exp,True,No Shoulders,0
+UGC07911,Exp,Exp,Exp,Shoulders,Shoulders,True,Exp,True,No Shoulders,0
+UGC08385,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0
+UGC08489,Exp,Exp,Flat-top (FT),Shoulders,Shoulders,False,Exp,False,No Shoulders,0
+UGC08507,Flat-top (FT),Flat-top (FT),Flat-top (FT),Shoulders,Shoulders,True,Flat-top (FT),True,No Shoulders,0
+UGC08851,Flat-top (FT),Flat-top (FT),Flat-top (FT),Shoulders,Shoulders,True,Flat-top (FT),True,No Shoulders,0
+UGC09245,Exp,Exp,Flat-top (FT),No Shoulders,No Shoulders,False,Exp,False,No Shoulders,0
+UGC09661,Flat-top (FT),Flat-top (FT),Flat-top (FT),No Shoulders,No Shoulders,True,Flat-top (FT),True,No Shoulders,0
+UGC12151,Exp,Exp,Exp,No Shoulders,No Shoulders,True,Exp,True,No Shoulders,0

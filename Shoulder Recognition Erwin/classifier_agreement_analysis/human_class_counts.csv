@@ -1,0 +1,14 @@
+rater,class,count
+PE,Exp,81
+PE,Peak+Sh,60
+PE,Flat-top (FT),34
+PE,Two-slope (2S),7
+VPD,Exp,83
+VPD,Peak+Sh,63
+VPD,Flat-top (FT),26
+VPD,Two-slope (2S),10
+GB,Peak+Sh,75
+GB,Exp,60
+GB,Flat-top (FT),33
+GB,Two-slope (2S),12
+GB,Unclear,2

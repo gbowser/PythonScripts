@@ -1,0 +1,47 @@
+galaxy name,PE,VPD,GB,human_shoulder_votes,human_majority_class,human_majority_shoulder_binary,SRA,SRA raw,SRA disagreement type
+IC1953,Peak+Sh,Peak+Sh,Peak+Sh,3,Peak+Sh,Shoulders,No Shoulders,No Shoulders,SRA false negative vs human majority
+NGC3486,Peak+Sh,Peak+Sh,Peak+Sh,3,Peak+Sh,Shoulders,No Shoulders,No Shoulders,SRA false negative vs human majority
+NGC3726,Peak+Sh,Peak+Sh,Peak+Sh,3,Peak+Sh,Shoulders,No Shoulders,No Shoulders,SRA false negative vs human majority
+NGC3953,Peak+Sh,Peak+Sh,Peak+Sh,3,Peak+Sh,Shoulders,No Shoulders,No Shoulders,SRA false negative vs human majority
+NGC4618,Peak+Sh,Peak+Sh,Two-slope (2S),2,Peak+Sh,Shoulders,No Shoulders,No Shoulders,SRA false negative vs human majority
+NGC4654,Exp,Peak+Sh,Peak+Sh,2,Peak+Sh,Shoulders,No Shoulders,No Shoulders,SRA false negative vs human majority
+NGC5713,Exp,Peak+Sh,Peak+Sh,2,Peak+Sh,Shoulders,No Shoulders,No Shoulders,SRA false negative vs human majority
+ESO054-021,Exp,Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+ESO202-041,Exp,Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+ESO440-044,Exp,Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+ESO479-004,Exp,Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+ESO485-021,Exp,Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+NGC1493,Exp,Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+NGC2500,Exp,Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+NGC3287,Exp,Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+NGC4020,Exp,Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+NGC4064,Exp,Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+NGC4204,Exp,Exp,Peak+Sh,1,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+NGC4294,Exp,Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+NGC4487,Exp,Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+NGC4540,Exp,Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+NGC4781,Exp,Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+NGC4900,Exp,Exp,Peak+Sh,1,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+NGC5068,Exp,Exp,Peak+Sh,1,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+PGC006626,Exp,Exp,Peak+Sh,1,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+PGC007654,Exp,Exp,Two-slope (2S),0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+PGC011677,Exp,Exp,Two-slope (2S),0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+PGC048179,Exp,Exp,Peak+Sh,1,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+UGC04393,Exp,Exp,Peak+Sh,1,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+UGC04988,Exp,Exp,Peak+Sh,1,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+UGC06983,Flat-top (FT),Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+UGC07257,Exp,Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+UGC07612,Exp,Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+UGC07911,Exp,Exp,Exp,0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+UGC08489,Exp,Exp,Flat-top (FT),0,Exp,No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+ESO026-001,Flat-top (FT),Flat-top (FT),Flat-top (FT),0,Flat-top (FT),No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+ESO079-005,Exp,Flat-top (FT),Flat-top (FT),0,Flat-top (FT),No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+ESO236-039,Flat-top (FT),Flat-top (FT),Flat-top (FT),0,Flat-top (FT),No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+NGC0600,Flat-top (FT),Flat-top (FT),Flat-top (FT),0,Flat-top (FT),No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+NGC0672,Flat-top (FT),Exp,Flat-top (FT),0,Flat-top (FT),No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+NGC1347,Exp,Flat-top (FT),Flat-top (FT),0,Flat-top (FT),No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+UGC06682,Flat-top (FT),Flat-top (FT),Exp,0,Flat-top (FT),No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+UGC06931,Exp,Flat-top (FT),Flat-top (FT),0,Flat-top (FT),No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+UGC08507,Flat-top (FT),Flat-top (FT),Flat-top (FT),0,Flat-top (FT),No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+UGC08851,Flat-top (FT),Flat-top (FT),Flat-top (FT),0,Flat-top (FT),No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
+NGC4449,Peak+Sh,Two-slope (2S),Two-slope (2S),1,Two-slope (2S),No Shoulders,Shoulders,Shoulders,SRA false positive vs human majority
