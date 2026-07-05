@@ -133,6 +133,96 @@ def plot_profile(
     ax.tick_params(labelsize=8)
 
 
+def _plot_dotted_replacement_segments(
+    ax: plt.Axes,
+    radius: np.ndarray,
+    values: np.ndarray,
+    replaced: np.ndarray,
+    *,
+    color: str,
+    linestyle: str,
+) -> None:
+    """Draw dotted bridge segments, including adjacent measured endpoints."""
+    replaced = np.asarray(replaced, dtype=bool)
+    if not np.any(replaced):
+        return
+
+    indices = np.flatnonzero(replaced)
+    start = int(indices[0])
+    previous = int(indices[0])
+    runs: list[tuple[int, int]] = []
+    for index in indices[1:]:
+        index = int(index)
+        if index > previous + 1:
+            runs.append((start, previous))
+            start = index
+        previous = index
+    runs.append((start, previous))
+
+    dotted_style = (0, (1.0, 1.5)) if linestyle == "-" else (0, (1.0, 1.4))
+    for start, stop in runs:
+        draw_start = max(0, start - 1)
+        draw_stop = min(values.size - 1, stop + 1)
+        segment = slice(draw_start, draw_stop + 1)
+        ax.semilogy(
+            radius[segment],
+            values[segment],
+            color=color,
+            linestyle=dotted_style,
+            linewidth=1.8,
+        )
+
+
+def plot_profile_with_bridges(
+    ax: plt.Axes,
+    rr_major_deproj: np.ndarray,
+    intensity_major: np.ndarray,
+    major_replaced: np.ndarray,
+    rr_minor_deproj: np.ndarray,
+    intensity_minor: np.ndarray,
+    minor_replaced: np.ndarray,
+    bar_sma_deproj_arcsec: float,
+    title: str,
+) -> None:
+    measured_major = np.array(intensity_major, copy=True)
+    measured_major[major_replaced] = np.nan
+    measured_minor = np.array(intensity_minor, copy=True)
+    measured_minor[minor_replaced] = np.nan
+
+    ax.semilogy(rr_major_deproj, measured_major, color="#1f77b4", label="bar major")
+    ax.semilogy(
+        rr_minor_deproj,
+        measured_minor,
+        color="#d62728",
+        linestyle="--",
+        label="bar minor",
+    )
+    _plot_dotted_replacement_segments(
+        ax,
+        rr_major_deproj,
+        intensity_major,
+        major_replaced,
+        color="#1f77b4",
+        linestyle="-",
+    )
+    _plot_dotted_replacement_segments(
+        ax,
+        rr_minor_deproj,
+        intensity_minor,
+        minor_replaced,
+        color="#d62728",
+        linestyle="--",
+    )
+    ax.axvline(0, color="0.35", linestyle=":", linewidth=0.9)
+    ax.axvline(bar_sma_deproj_arcsec, color="#1f77b4", linewidth=1.1)
+    ax.axvline(-bar_sma_deproj_arcsec, color="#1f77b4", linewidth=1.1)
+    ax.set_xlabel("deprojected radius [arcsec]")
+    ax.set_ylabel("intensity")
+    ax.set_title(title)
+    ax.legend(frameon=False, fontsize=8, loc="upper right")
+    ax.tick_params(labelsize=8)
+
+
 def profile_mask_at_pa(
     mask: np.ndarray,
     xc: float,
@@ -178,22 +268,23 @@ def fill_masked_profile_with_log_linear_bridges(
     masked_samples: np.ndarray,
     *,
     merge_gap_samples: int,
-) -> np.ndarray:
-    """Fill masked profile stretches with straight bridges in log-intensity space."""
+) -> tuple[np.ndarray, np.ndarray]:
+    """Fill only masked samples, using merged stretches to choose bridge endpoints."""
     profile = np.asarray(values, dtype=float)
     filled = np.array(profile, copy=True)
-    bad = np.asarray(masked_samples, dtype=bool) | ~np.isfinite(profile) | (profile <= 0)
-    bad = _merge_boolean_runs(bad, merge_gap_samples)
+    replacement_mask = ~np.isfinite(profile) | (profile <= 0)
+    bridge_seed = np.asarray(masked_samples, dtype=bool) | replacement_mask
+    bridge_context = _merge_boolean_runs(bridge_seed, merge_gap_samples)
     x = np.arange(profile.size)
 
     index = 0
     while index < profile.size:
-        if not bad[index]:
+        if not bridge_context[index]:
             index += 1
             continue
 
         start = index
-        while index + 1 < profile.size and bad[index + 1]:
+        while index + 1 < profile.size and bridge_context[index + 1]:
             index += 1
         stop = index
 
@@ -204,19 +295,22 @@ def fill_masked_profile_with_log_linear_bridges(
         while right < profile.size and (~np.isfinite(profile[right]) or profile[right] <= 0):
             right += 1
 
-        fill_slice = slice(start, stop + 1)
+        fill_indices = x[start : stop + 1][replacement_mask[start : stop + 1]]
+        if fill_indices.size == 0:
+            index += 1
+            continue
         if left >= 0 and right < profile.size:
             log_left = math.log(float(profile[left]))
             log_right = math.log(float(profile[right]))
-            weight = (x[fill_slice] - left) / (right - left)
-            filled[fill_slice] = np.exp(log_left + weight * (log_right - log_left))
+            weight = (fill_indices - left) / (right - left)
+            filled[fill_indices] = np.exp(log_left + weight * (log_right - log_left))
         elif left >= 0:
-            filled[fill_slice] = profile[left]
+            filled[fill_indices] = profile[left]
         elif right < profile.size:
-            filled[fill_slice] = profile[right]
+            filled[fill_indices] = profile[right]
         index += 1
 
-    return filled
+    return filled, replacement_mask
 
 
 def set_shared_profile_limits(axes: list[plt.Axes], intensities: list[np.ndarray]) -> None:
@@ -225,10 +319,11 @@ def set_shared_profile_limits(axes: list[plt.Axes], intensities: list[np.ndarray
     )
     if finite.size == 0:
         return
-    ymin, ymax = np.nanpercentile(finite, [2, 99.5])
+    ymin = np.nanpercentile(finite, 2)
+    ymax = np.nanmax(finite)
     if ymin > 0 and ymax > ymin:
         for ax in axes:
-            ax.set_ylim(ymin * 0.8, ymax * 1.25)
+            ax.set_ylim(ymin * 0.8, ymax * 1.35)
 
 
 def make_report(args: argparse.Namespace) -> Path:
@@ -291,12 +386,12 @@ def make_report(args: argparse.Namespace) -> Path:
     mask_minor = profile_mask_at_pa(
         mask, xc, yc, minor_pa, radius_pix, width=args.profile_width
     )
-    intensity_major_filled = fill_masked_profile_with_log_linear_bridges(
+    intensity_major_filled, major_replaced = fill_masked_profile_with_log_linear_bridges(
         intensity_major_masked,
         mask_major,
         merge_gap_samples=args.bridge_merge_gap_samples,
     )
-    intensity_minor_filled = fill_masked_profile_with_log_linear_bridges(
+    intensity_minor_filled, minor_replaced = fill_masked_profile_with_log_linear_bridges(
         intensity_minor_masked,
         mask_minor,
         merge_gap_samples=args.bridge_merge_gap_samples,
@@ -415,12 +510,14 @@ def make_report(args: argparse.Namespace) -> Path:
         bar_sma_deproj_arcsec,
         "Masked major/minor-axis cuts",
     )
-    plot_profile(
+    plot_profile_with_bridges(
         ax_interpolated,
         rr_major_deproj,
         intensity_major_filled,
+        major_replaced,
         rr_minor_deproj,
         intensity_minor_filled,
+        minor_replaced,
         bar_sma_deproj_arcsec,
         "Masked cuts with straight log-linear bridges",
     )
@@ -448,7 +545,7 @@ def make_report(args: argparse.Namespace) -> Path:
         ("Central exclusion radius", f"{args.exclude_center_radius_pixels:g} px"),
         ("Profile width", f"{args.profile_width} px"),
         ("Applied mask", f"{len(kept_rows)} source segments; {int(np.count_nonzero(mask))} pixels ignored"),
-        ("Filled-profile panel", "nearby masked samples merged, then bridged by straight lines in log-intensity space"),
+        ("Filled-profile panel", "solid=measured data; fine dotted=samples filled by straight log-intensity bridge"),
         ("Bridge merge gap", f"{args.bridge_merge_gap_samples} profile samples"),
     ]
     table = ax_parameters.table(
