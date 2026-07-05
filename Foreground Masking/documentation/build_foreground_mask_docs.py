@@ -17,7 +17,7 @@ OUTPUT_PDF = DOC_DIR / "Foreground Mask Photutils Documentation.pdf"
 
 # Reuse the existing shoulder-quantification documentation style so this manual
 # sits visually beside the other project documentation.
-template_path = DOC_DIR / "build_shoulder_quantification_docs.py"
+template_path = SCRIPT_DIR.parent / "Shoulder Recognition Erwin" / "documentation" / "build_shoulder_quantification_docs.py"
 spec = importlib.util.spec_from_file_location("shoulder_docs_template", template_path)
 template = importlib.util.module_from_spec(spec)
 assert spec.loader is not None
@@ -269,11 +269,11 @@ def add_cli_examples(doc: Document) -> None:
         [
             [
                 "Run one S4G image",
-                'python "Shoulder Recognition Erwin/foreground_mask_photutils.py" "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Erwin\\s4g_images_36um\\NGC1097.phot.1.fits" --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\foreground_mask_examples"',
+                'python "Foreground Masking/foreground_mask_photutils.py" "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Erwin\\s4g_images_36um\\NGC1097.phot.1.fits" --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\foreground_mask_examples"',
             ],
             [
                 "Run five NGC examples from a folder",
-                'python "Shoulder Recognition Erwin/foreground_mask_photutils.py" "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Erwin\\s4g_images_36um" --glob "NGC*.fits" --limit 5 --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\foreground_mask_examples"',
+                'python "Foreground Masking/foreground_mask_photutils.py" "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Erwin\\s4g_images_36um" --glob "NGC*.fits" --limit 5 --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\foreground_mask_examples"',
             ],
             [
                 "Make an optional cleaned preview",

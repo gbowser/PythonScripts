@@ -16,7 +16,7 @@ OUTPUT_DOCX = DOC_DIR / "Foreground Mask SourceXtractor Documentation.docx"
 
 # Reuse the project's compact reference style so this manual matches the
 # Photutils, deprojection, and shoulder-quantification documentation.
-template_path = DOC_DIR / "build_shoulder_quantification_docs.py"
+template_path = SCRIPT_DIR.parent / "Shoulder Recognition Erwin" / "documentation" / "build_shoulder_quantification_docs.py"
 spec = importlib.util.spec_from_file_location("shoulder_docs_template", template_path)
 template = importlib.util.module_from_spec(spec)
 assert spec.loader is not None
@@ -220,15 +220,15 @@ def add_cli_examples(doc: Document) -> None:
         [
             [
                 "Inspect command only",
-                'python "Shoulder Recognition Erwin/foreground_mask_sourcextractor.py" "input.fits" --dry-run',
+                'python "Foreground Masking/foreground_mask_sourcextractor.py" "input.fits" --dry-run',
             ],
             [
                 "One S4G image",
-                'python "Shoulder Recognition Erwin/foreground_mask_sourcextractor.py" "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Erwin\\s4g_images_36um\\NGC1097.phot.1.fits" --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\sourcex_mask_examples" --detect-on residual --overwrite',
+                'python "Foreground Masking/foreground_mask_sourcextractor.py" "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Erwin\\s4g_images_36um\\NGC1097.phot.1.fits" --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\sourcex_mask_examples" --detect-on residual --overwrite',
             ],
             [
                 "Folder test",
-                'python "Shoulder Recognition Erwin/foreground_mask_sourcextractor.py" "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Erwin\\s4g_images_36um" --glob "NGC*.fits" --limit 5 --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\sourcex_mask_examples" --detect-on residual --overwrite',
+                'python "Foreground Masking/foreground_mask_sourcextractor.py" "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Erwin\\s4g_images_36um" --glob "NGC*.fits" --limit 5 --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\sourcex_mask_examples" --detect-on residual --overwrite',
             ],
             [
                 "WSL executable",
