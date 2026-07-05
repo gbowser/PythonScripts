@@ -27,6 +27,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 BARPROFILES_DIR = PROJECT_ROOT / "Erwin_barprofiles_paper_GB_working_copy"
 if str(BARPROFILES_DIR) not in sys.path:
     sys.path.append(str(BARPROFILES_DIR))
+FOREGROUND_MASK_DIR = PROJECT_ROOT / "Foreground Masking"
+if str(FOREGROUND_MASK_DIR) not in sys.path:
+    sys.path.append(str(FOREGROUND_MASK_DIR))
 
 import angle_utils as angles  # noqa: E402
 
@@ -139,6 +142,48 @@ def profile_at_pa(
     return radii_pix, values
 
 
+def build_auto_foreground_mask(
+    data: np.ndarray,
+    *,
+    smooth_sigma_pixels: float,
+    detection_nsigma: float,
+    npixels: int,
+    dilation_radius_pixels: int,
+    max_area: int | None,
+    max_elongation: float | None,
+    galaxy_center: tuple[float, float],
+    exclude_center_radius_pixels: float,
+) -> np.ndarray:
+    """Detect compact contaminants using the photutils foreground-mask helper."""
+    try:
+        import foreground_mask_photutils as fgmask
+    except ImportError as exc:
+        raise RuntimeError(
+            "Automatic foreground masking requires foreground_mask_photutils.py "
+            "and photutils to be importable."
+        ) from exc
+
+    smooth = fgmask.make_smooth_galaxy_model(data, smooth_sigma_pixels)
+    residual = fgmask.make_residual_image(data, smooth)
+    segm = fgmask.detect_compact_sources(
+        residual,
+        nsigma=detection_nsigma,
+        npixels=npixels,
+        deblend=True,
+    )
+    filtered_segm, _ = fgmask.filter_segments(
+        segm,
+        data,
+        residual,
+        max_area=max_area,
+        max_elongation=max_elongation,
+        galaxy_center=galaxy_center,
+        exclude_center_radius_pixels=exclude_center_radius_pixels,
+    )
+    raw_mask = fgmask.segmentation_to_mask(filtered_segm, data.shape)
+    return fgmask.dilate_mask(raw_mask, dilation_radius_pixels)
+
+
 def robust_log_image(data: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     finite = data[np.isfinite(data)]
     positive = finite[finite > 0]
@@ -202,6 +247,14 @@ def make_plot(
     output_pdf: Path | None = None,
     pdf_pages: PdfPages | None = None,
     profile_width: int = 3,
+    auto_foreground_mask: bool = False,
+    mask_smooth_sigma_pixels: float = 15.0,
+    mask_detection_nsigma: float = 5.0,
+    mask_npixels: int = 8,
+    mask_dilation_radius_pixels: int = 3,
+    mask_max_area: int | None = 500,
+    mask_max_elongation: float | None = 6.0,
+    mask_exclude_center_radius_pixels: float = 12.0,
 ) -> bool:
     geometry = required_geometry(row)
     image_path = Path(row["image_path"])
@@ -232,6 +285,21 @@ def make_plot(
     bar_sma = geometry["bar_sma"]
     pixel_scale = geometry["pixel_scale"]
     minor_pa = angles.minoraxis(bar_pa, disk_pa, inclination)
+    foreground_mask = np.zeros(data.shape, dtype=bool)
+    profile_data = data
+    if auto_foreground_mask:
+        foreground_mask = build_auto_foreground_mask(
+            data,
+            smooth_sigma_pixels=mask_smooth_sigma_pixels,
+            detection_nsigma=mask_detection_nsigma,
+            npixels=mask_npixels,
+            dilation_radius_pixels=mask_dilation_radius_pixels,
+            max_area=mask_max_area,
+            max_elongation=mask_max_elongation,
+            galaxy_center=(xc - 1, yc - 1),
+            exclude_center_radius_pixels=mask_exclude_center_radius_pixels,
+        )
+        profile_data = np.where(foreground_mask, np.nan, data)
 
     max_radius_pix = int(
         max(
@@ -284,6 +352,21 @@ def make_plot(
         colors="0.25",
         linewidths=0.45,
     )
+    if np.any(foreground_mask):
+        mask_subimage, _, _ = extract_centered_subimage(
+            foreground_mask.astype(float), xc, yc, pixel_scale, plot_radius_arcsec
+        )
+        mask_overlay = np.ma.masked_where(mask_subimage < 0.5, mask_subimage)
+        ax_image.imshow(
+            mask_overlay,
+            origin="lower",
+            extent=extent,
+            cmap="autumn",
+            alpha=0.38,
+            interpolation="nearest",
+            vmin=0,
+            vmax=1,
+        )
     line_radius = min(plot_radius_arcsec * 0.82, max(1.5 * bar_sma, bar_sma + 15.0))
     draw_pa_line(ax_image, bar_pa, line_radius, color="#1f77b4", linewidth=1.6)
     draw_pa_line(ax_image, bar_pa, bar_sma, color="#1f77b4", linewidth=1.8, alpha=0.75, marker=True)
@@ -296,10 +379,10 @@ def make_plot(
     ax_image.set_title("S4G 3.6 micron isophotes")
 
     rr_major_pix, intensity_major = profile_at_pa(
-        data, xc, yc, bar_pa, profile_radius_pix, width=profile_width
+        profile_data, xc, yc, bar_pa, profile_radius_pix, width=profile_width
     )
     rr_minor_pix, intensity_minor = profile_at_pa(
-        data, xc, yc, minor_pa, profile_radius_pix, width=profile_width
+        profile_data, xc, yc, minor_pa, profile_radius_pix, width=profile_width
     )
     rr_major_arcsec = rr_major_pix * pixel_scale
     rr_minor_arcsec = rr_minor_pix * pixel_scale
@@ -319,7 +402,10 @@ def make_plot(
     ax_profile.axvline(-bar_sma_deproj_arcsec, color="#1f77b4", linewidth=1.1)
     ax_profile.set_xlabel("deprojected radius [arcsec]")
     ax_profile.set_ylabel("intensity")
-    ax_profile.set_title("major/minor-axis cuts")
+    title = "major/minor-axis cuts"
+    if auto_foreground_mask:
+        title += f" ({int(np.count_nonzero(foreground_mask))} masked px ignored)"
+    ax_profile.set_title(title)
     ax_profile.legend(frameon=False, fontsize=9)
     finite_intensity = np.concatenate(
         [
@@ -367,6 +453,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--names", nargs="*", default=[])
     parser.add_argument("--profile-width", type=int, default=3)
     parser.add_argument(
+        "--auto-foreground-mask",
+        action="store_true",
+        help="Detect compact contaminants with photutils and ignore masked pixels in profile cuts.",
+    )
+    parser.add_argument("--mask-smooth-sigma-pixels", type=float, default=15.0)
+    parser.add_argument("--mask-detection-nsigma", type=float, default=5.0)
+    parser.add_argument("--mask-npixels", type=int, default=8)
+    parser.add_argument("--mask-dilation-radius-pixels", type=int, default=3)
+    parser.add_argument("--mask-max-area", type=int, default=500)
+    parser.add_argument("--mask-max-elongation", type=float, default=6.0)
+    parser.add_argument("--mask-exclude-center-radius-pixels", type=float, default=12.0)
+    parser.add_argument(
         "--no-individual",
         action="store_true",
         help="Only write the combined multi-page PDF.",
@@ -403,6 +501,14 @@ def main() -> int:
                     output_pdf=output_pdf,
                     pdf_pages=pdf_pages,
                     profile_width=args.profile_width,
+                    auto_foreground_mask=args.auto_foreground_mask,
+                    mask_smooth_sigma_pixels=args.mask_smooth_sigma_pixels,
+                    mask_detection_nsigma=args.mask_detection_nsigma,
+                    mask_npixels=args.mask_npixels,
+                    mask_dilation_radius_pixels=args.mask_dilation_radius_pixels,
+                    mask_max_area=args.mask_max_area,
+                    mask_max_elongation=args.mask_max_elongation,
+                    mask_exclude_center_radius_pixels=args.mask_exclude_center_radius_pixels,
                 )
             except Exception as exc:  # Keep long batches moving, but report the galaxy.
                 print(f"Failed {row['name']}: {exc}")
