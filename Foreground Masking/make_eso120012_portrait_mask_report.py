@@ -130,6 +130,20 @@ def plot_profile(
     ax.set_ylabel("intensity")
     ax.set_title(title)
     ax.legend(frameon=False, fontsize=8, loc="upper right")
+    ax.tick_params(labelsize=8)
+
+
+def interpolate_positive_profile(values: np.ndarray) -> np.ndarray:
+    """Fill masked profile gaps by linear interpolation between finite positive samples."""
+    profile = np.asarray(values, dtype=float)
+    interpolated = np.array(profile, copy=True)
+    x = np.arange(profile.size)
+    good = np.isfinite(profile) & (profile > 0)
+    if np.count_nonzero(good) < 2:
+        return interpolated
+    fill = ~good
+    interpolated[fill] = np.interp(x[fill], x[good], profile[good])
+    return interpolated
 
 
 def set_shared_profile_limits(axes: list[plt.Axes], intensities: list[np.ndarray]) -> None:
@@ -198,6 +212,8 @@ def make_report(args: argparse.Namespace) -> Path:
     _, intensity_minor_masked = s4g_plot.profile_at_pa(
         masked_data, xc, yc, minor_pa, radius_pix, width=args.profile_width
     )
+    intensity_major_interpolated = interpolate_positive_profile(intensity_major_masked)
+    intensity_minor_interpolated = interpolate_positive_profile(intensity_minor_masked)
 
     rr_major_deproj = s4g_plot.deprojected_profile_radius(
         bar_pa, disk_pa, inclination, rr_major_pix * pixel_scale
@@ -214,14 +230,14 @@ def make_report(args: argparse.Namespace) -> Path:
 
     fig = plt.figure(figsize=(8.27, 11.69))
     gridspec = fig.add_gridspec(
-        3,
+        5,
         1,
-        height_ratios=[1.15, 1.0, 1.0],
+        height_ratios=[1.05, 0.83, 0.83, 0.83, 0.7],
         left=0.11,
         right=0.95,
-        bottom=0.115,
+        bottom=0.055,
         top=0.93,
-        hspace=0.42,
+        hspace=0.55,
     )
     fig.suptitle(
         f"ESO120-012 foreground-mask profile comparison   bar PA={bar_pa:.1f} deg",
@@ -288,9 +304,12 @@ def make_report(args: argparse.Namespace) -> Path:
     ax_image.set_xlabel("arcsec")
     ax_image.set_ylabel("arcsec")
     ax_image.set_title("S4G 3.6 micron isophotes with masked objects circled")
+    ax_image.tick_params(labelsize=8)
 
     ax_original = fig.add_subplot(gridspec[1])
     ax_masked = fig.add_subplot(gridspec[2], sharex=ax_original)
+    ax_interpolated = fig.add_subplot(gridspec[3], sharex=ax_original)
+    ax_parameters = fig.add_subplot(gridspec[4])
     plot_profile(
         ax_original,
         rr_major_deproj,
@@ -309,30 +328,57 @@ def make_report(args: argparse.Namespace) -> Path:
         bar_sma_deproj_arcsec,
         "Masked major/minor-axis cuts",
     )
+    plot_profile(
+        ax_interpolated,
+        rr_major_deproj,
+        intensity_major_interpolated,
+        rr_minor_deproj,
+        intensity_minor_interpolated,
+        bar_sma_deproj_arcsec,
+        "Masked cuts with interpolated gaps",
+    )
     set_shared_profile_limits(
-        [ax_original, ax_masked],
-        [intensity_major, intensity_minor, intensity_major_masked, intensity_minor_masked],
+        [ax_original, ax_masked, ax_interpolated],
+        [
+            intensity_major,
+            intensity_minor,
+            intensity_major_masked,
+            intensity_minor_masked,
+            intensity_major_interpolated,
+            intensity_minor_interpolated,
+        ],
     )
-    parameter_text = (
-        f"Masking model: photutils segmentation on residual image "
-        f"(image - Gaussian-smoothed galaxy model; photutils {photutils_version}). "
-        f"Parameters: smooth sigma={args.smooth_sigma_pixels:g} px; "
-        f"detection threshold={args.detection_nsigma:g} sigma above residual median; "
-        f"minimum connected pixels={args.npixels}; dilation radius={args.dilation_radius_pixels} px; "
-        f"max segment area={args.max_area} px; max elongation={args.max_elongation:g}; "
-        f"central exclusion radius={args.exclude_center_radius_pixels:g} px; "
-        f"profile width={args.profile_width} px. "
-        f"Applied mask: {len(kept_rows)} source segments, {int(np.count_nonzero(mask))} pixels ignored."
+    ax_parameters.axis("off")
+    parameter_rows = [
+        ("Masking model", f"photutils segmentation on residual image; photutils {photutils_version}"),
+        ("Residual image", "science image - Gaussian-smoothed galaxy model"),
+        ("Detection threshold", f"{args.detection_nsigma:g} sigma above residual median"),
+        ("Smooth sigma", f"{args.smooth_sigma_pixels:g} px"),
+        ("Connected-pixel minimum", f"{args.npixels} px"),
+        ("Dilation radius", f"{args.dilation_radius_pixels} px"),
+        ("Max segment area", f"{args.max_area} px"),
+        ("Max elongation", f"{args.max_elongation:g}"),
+        ("Central exclusion radius", f"{args.exclude_center_radius_pixels:g} px"),
+        ("Profile width", f"{args.profile_width} px"),
+        ("Applied mask", f"{len(kept_rows)} source segments; {int(np.count_nonzero(mask))} pixels ignored"),
+        ("Interpolated panel", "linear interpolation across masked/non-positive profile gaps"),
+    ]
+    table = ax_parameters.table(
+        cellText=parameter_rows,
+        colLabels=["Parameter", "Value"],
+        cellLoc="left",
+        colLoc="left",
+        colWidths=[0.28, 0.72],
+        loc="center",
     )
-    fig.text(
-        0.11,
-        0.035,
-        parameter_text,
-        ha="left",
-        va="bottom",
-        fontsize=8,
-        wrap=True,
-    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(7)
+    table.scale(1.0, 0.72)
+    for (row_index, _), cell in table.get_celld().items():
+        cell.set_linewidth(0.25)
+        if row_index == 0:
+            cell.set_text_props(weight="bold")
+            cell.set_facecolor("0.92")
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(args.output)
