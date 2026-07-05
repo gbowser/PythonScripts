@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
 from matplotlib.patches import Circle
+from scipy.interpolate import PchipInterpolator
 from scipy.ndimage import median_filter
 
 
@@ -134,7 +135,7 @@ def plot_profile(
 
 
 def interpolate_positive_profile(values: np.ndarray) -> np.ndarray:
-    """Fill masked profile gaps by linear interpolation between finite positive samples."""
+    """Fill masked profile gaps with PCHIP interpolation in log-intensity space."""
     profile = np.asarray(values, dtype=float)
     interpolated = np.array(profile, copy=True)
     x = np.arange(profile.size)
@@ -142,7 +143,8 @@ def interpolate_positive_profile(values: np.ndarray) -> np.ndarray:
     if np.count_nonzero(good) < 2:
         return interpolated
     fill = ~good
-    interpolated[fill] = np.interp(x[fill], x[good], profile[good])
+    log_interpolator = PchipInterpolator(x[good], np.log(profile[good]), extrapolate=True)
+    interpolated[fill] = np.exp(log_interpolator(x[fill]))
     return interpolated
 
 
@@ -361,7 +363,7 @@ def make_report(args: argparse.Namespace) -> Path:
         ("Central exclusion radius", f"{args.exclude_center_radius_pixels:g} px"),
         ("Profile width", f"{args.profile_width} px"),
         ("Applied mask", f"{len(kept_rows)} source segments; {int(np.count_nonzero(mask))} pixels ignored"),
-        ("Interpolated panel", "linear interpolation across masked/non-positive profile gaps"),
+        ("Interpolated panel", "PCHIP interpolation in log-intensity space across masked/non-positive profile gaps"),
     ]
     table = ax_parameters.table(
         cellText=parameter_rows,
