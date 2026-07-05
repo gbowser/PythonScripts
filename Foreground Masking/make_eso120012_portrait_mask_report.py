@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create a portrait ESO120-012 foreground-mask profile comparison PDF."""
+"""Create portrait foreground-mask profile comparison PDFs."""
 
 from __future__ import annotations
 
@@ -35,10 +35,13 @@ import plot_s4g_isophote_axes as s4g_plot  # noqa: E402
 
 
 DEFAULT_MANIFEST = S4G_PLOTTER_DIR / "geometry_output" / "s4g_image_geometry_manifest.csv"
+DEFAULT_OUTPUT_DIR = Path(
+    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Erwin\isophote_output_foreground_masked\individual"
+)
 DEFAULT_OUTPUT = (
     SCRIPT_DIR
     / "ESO120-012_portrait_mask_report"
-    / "ESO120-012_isophote_axes_portrait_mask_report.pdf"
+    / "ESO120-012_foreground_removed.pdf"
 )
 
 
@@ -48,6 +51,11 @@ def read_row(manifest: Path, galaxy_name: str) -> dict[str, str]:
             if row["name"] == galaxy_name:
                 return row
     raise ValueError(f"{galaxy_name} was not found in {manifest}.")
+
+
+def read_rows(manifest: Path) -> list[dict[str, str]]:
+    with manifest.open(newline="", encoding="utf-8") as handle:
+        return list(csv.DictReader(handle))
 
 
 def profile_radius_pixels(data: np.ndarray, geometry: dict[str, float]) -> int:
@@ -71,11 +79,11 @@ def profile_radius_pixels(data: np.ndarray, geometry: dict[str, float]) -> int:
     return max(radius, int(math.ceil(1.4 * bar_sma / pixel_scale)))
 
 
-def build_mask_products(
+def build_mask_from_residual(
     data: np.ndarray,
+    residual: np.ndarray,
     geometry: dict[str, float],
     *,
-    smooth_sigma_pixels: float,
     detection_nsigma: float,
     npixels: int,
     dilation_radius_pixels: int,
@@ -83,8 +91,6 @@ def build_mask_products(
     max_elongation: float,
     exclude_center_radius_pixels: float,
 ):
-    smooth = fgmask.make_smooth_galaxy_model(data, smooth_sigma_pixels)
-    residual = fgmask.make_residual_image(data, smooth)
     segm = fgmask.detect_compact_sources(
         residual,
         nsigma=detection_nsigma,
@@ -103,6 +109,34 @@ def build_mask_products(
     raw_mask = fgmask.segmentation_to_mask(filtered_segm, data.shape)
     mask = fgmask.dilate_mask(raw_mask, dilation_radius_pixels)
     kept_rows = [row for row in candidate_rows if row["kept"]]
+    return mask, kept_rows
+
+
+def build_mask_products(
+    data: np.ndarray,
+    geometry: dict[str, float],
+    *,
+    smooth_sigma_pixels: float,
+    detection_nsigma: float,
+    npixels: int,
+    dilation_radius_pixels: int,
+    max_area: int,
+    max_elongation: float,
+    exclude_center_radius_pixels: float,
+):
+    smooth = fgmask.make_smooth_galaxy_model(data, smooth_sigma_pixels)
+    residual = fgmask.make_residual_image(data, smooth)
+    mask, kept_rows = build_mask_from_residual(
+        data,
+        residual,
+        geometry,
+        detection_nsigma=detection_nsigma,
+        npixels=npixels,
+        dilation_radius_pixels=dilation_radius_pixels,
+        max_area=max_area,
+        max_elongation=max_elongation,
+        exclude_center_radius_pixels=exclude_center_radius_pixels,
+    )
     return mask, kept_rows, smooth
 
 
@@ -326,22 +360,148 @@ def set_shared_profile_limits(axes: list[plt.Axes], intensities: list[np.ndarray
             ax.set_ylim(ymin * 0.8, ymax * 1.35)
 
 
-def make_report(args: argparse.Namespace) -> Path:
-    row = read_row(args.manifest, "ESO120-012")
+def profile_spike_score(values: np.ndarray, ignore: np.ndarray | None = None) -> float:
+    """Return a robust score for narrow positive spikes in log-intensity space."""
+    profile = np.asarray(values, dtype=float)
+    ignored = np.zeros(profile.size, dtype=bool) if ignore is None else np.asarray(ignore, dtype=bool)
+    good = np.isfinite(profile) & (profile > 0)
+    if np.count_nonzero(good) < 12:
+        return 0.0
+
+    x = np.arange(profile.size)
+    log_profile = np.full(profile.size, np.nan, dtype=float)
+    log_profile[good] = np.log(profile[good])
+    log_profile[~good] = np.interp(x[~good], x[good], log_profile[good])
+    smooth = median_filter(log_profile, size=9, mode="nearest")
+    residual = log_profile - smooth
+    residual[ignored] = np.nan
+    residual = residual[np.isfinite(residual)]
+    if residual.size == 0:
+        return 0.0
+    mad = np.median(np.abs(residual - np.median(residual)))
+    scale = 1.4826 * mad if mad > 0 else np.nanstd(residual)
+    if not np.isfinite(scale) or scale <= 0:
+        return 0.0
+    return float(np.nanmax(residual) / scale)
+
+
+def choose_detection_nsigma(
+    data: np.ndarray,
+    residual: np.ndarray,
+    geometry: dict[str, float],
+    *,
+    candidate_nsigmas: list[float],
+    profile_width: int,
+    npixels: int,
+    dilation_radius_pixels: int,
+    max_area: int,
+    max_elongation: float,
+    exclude_center_radius_pixels: float,
+    bridge_merge_gap_samples: int,
+) -> tuple[float, list[dict[str, float]]]:
+    """Select a conservative threshold that reduces profile spikes without overmasking."""
+    xc = geometry["xc"]
+    yc = geometry["yc"]
+    bar_pa = geometry["bar_pa"]
+    radius_pix = profile_radius_pixels(data, geometry)
+    _, original_major = s4g_plot.profile_at_pa(
+        data, xc, yc, bar_pa, radius_pix, width=profile_width
+    )
+    original_score = profile_spike_score(original_major)
+    image_size = float(data.size)
+
+    evaluations: list[dict[str, float]] = []
+    best_score = math.inf
+    best_nsigma = candidate_nsigmas[0]
+
+    for nsigma in candidate_nsigmas:
+        mask, _ = build_mask_from_residual(
+            data,
+            residual,
+            geometry,
+            detection_nsigma=nsigma,
+            npixels=npixels,
+            dilation_radius_pixels=dilation_radius_pixels,
+            max_area=max_area,
+            max_elongation=max_elongation,
+            exclude_center_radius_pixels=exclude_center_radius_pixels,
+        )
+        masked_data = np.where(mask, np.nan, data)
+        _, masked_major = s4g_plot.profile_at_pa(
+            masked_data, xc, yc, bar_pa, radius_pix, width=profile_width
+        )
+        mask_major = profile_mask_at_pa(mask, xc, yc, bar_pa, radius_pix, width=profile_width)
+        filled_major, replaced_major = fill_masked_profile_with_log_linear_bridges(
+            masked_major,
+            mask_major,
+            merge_gap_samples=bridge_merge_gap_samples,
+        )
+        score = profile_spike_score(filled_major, ignore=replaced_major)
+        replaced_fraction = float(np.count_nonzero(replaced_major) / replaced_major.size)
+        mask_fraction = float(np.count_nonzero(mask) / image_size)
+        improvement = max(0.0, original_score - score)
+        penalty = score + 12.0 * replaced_fraction + 35.0 * mask_fraction
+
+        evaluations.append(
+            {
+                "nsigma": float(nsigma),
+                "spike_score": float(score),
+                "replaced_fraction": replaced_fraction,
+                "mask_fraction": mask_fraction,
+                "improvement": float(improvement),
+                "penalty": float(penalty),
+            }
+        )
+        excessive_mask = mask_fraction > 0.10 or replaced_fraction > 0.45
+        if not excessive_mask and score < best_score:
+            best_score = score
+            best_nsigma = nsigma
+
+    # Prefer a more conservative threshold only when its spike score is essentially as good.
+    for evaluation in evaluations:
+        excessive_mask = evaluation["mask_fraction"] > 0.10 or evaluation["replaced_fraction"] > 0.45
+        if not excessive_mask and evaluation["spike_score"] <= best_score * 1.03 + 0.1:
+            best_nsigma = evaluation["nsigma"]
+            break
+
+    return float(best_nsigma), evaluations
+
+
+def make_report(args: argparse.Namespace, row: dict[str, str], output: Path) -> Path:
+    galaxy_name = row["name"]
     geometry = s4g_plot.required_geometry(row)
     if geometry is None:
-        raise ValueError("ESO120-012 has incomplete geometry in the manifest.")
+        raise ValueError(f"{galaxy_name} has incomplete geometry in the manifest.")
 
     image_path = Path(row["image_path"])
     data = np.squeeze(fits.getdata(image_path).astype(float))
     if data.ndim != 2:
         raise ValueError(f"Expected a 2D FITS image, got shape {data.shape}.")
 
-    mask, kept_rows, smooth_model = build_mask_products(
+    smooth_model = fgmask.make_smooth_galaxy_model(data, args.smooth_sigma_pixels)
+    residual = fgmask.make_residual_image(data, smooth_model)
+    tuning_rows: list[dict[str, float]] = []
+    detection_nsigma = args.detection_nsigma
+    if args.auto_tune:
+        detection_nsigma, tuning_rows = choose_detection_nsigma(
+            data,
+            residual,
+            geometry,
+            candidate_nsigmas=args.auto_tune_nsigmas,
+            profile_width=args.profile_width,
+            npixels=args.npixels,
+            dilation_radius_pixels=args.dilation_radius_pixels,
+            max_area=args.max_area,
+            max_elongation=args.max_elongation,
+            exclude_center_radius_pixels=args.exclude_center_radius_pixels,
+            bridge_merge_gap_samples=args.bridge_merge_gap_samples,
+        )
+
+    mask, kept_rows = build_mask_from_residual(
         data,
+        residual,
         geometry,
-        smooth_sigma_pixels=args.smooth_sigma_pixels,
-        detection_nsigma=args.detection_nsigma,
+        detection_nsigma=detection_nsigma,
         npixels=args.npixels,
         dilation_radius_pixels=args.dilation_radius_pixels,
         max_area=args.max_area,
@@ -422,7 +582,7 @@ def make_report(args: argparse.Namespace) -> Path:
         hspace=0.55,
     )
     fig.suptitle(
-        f"ESO120-012 foreground-mask profile comparison   bar PA={bar_pa:.1f} deg",
+        f"{galaxy_name} foreground-mask profile comparison   bar PA={bar_pa:.1f} deg",
         fontsize=13,
     )
 
@@ -536,7 +696,7 @@ def make_report(args: argparse.Namespace) -> Path:
     parameter_rows = [
         ("Masking model", f"photutils segmentation on residual image; photutils {photutils_version}"),
         ("Residual image", "science image - Gaussian-smoothed galaxy model"),
-        ("Detection threshold", f"{args.detection_nsigma:g} sigma above residual median"),
+        ("Detection threshold", f"{detection_nsigma:g} sigma above residual median"),
         ("Smooth sigma", f"{args.smooth_sigma_pixels:g} px"),
         ("Connected-pixel minimum", f"{args.npixels} px"),
         ("Dilation radius", f"{args.dilation_radius_pixels} px"),
@@ -548,6 +708,9 @@ def make_report(args: argparse.Namespace) -> Path:
         ("Filled-profile panel", "solid=measured data; fine dotted=samples filled by straight log-intensity bridge"),
         ("Bridge merge gap", f"{args.bridge_merge_gap_samples} profile samples"),
     ]
+    if tuning_rows:
+        tuning_grid = ", ".join(f"{row['nsigma']:g}" for row in tuning_rows)
+        parameter_rows.append(("Auto-tune grid", f"{tuning_grid} sigma; selected {detection_nsigma:g} sigma"))
     table = ax_parameters.table(
         cellText=parameter_rows,
         colLabels=["Parameter", "Value"],
@@ -565,21 +728,37 @@ def make_report(args: argparse.Namespace) -> Path:
             cell.set_text_props(weight="bold")
             cell.set_facecolor("0.92")
 
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(args.output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output)
     plt.close(fig)
-    return args.output
+    return output
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Create the ESO120-012 portrait foreground-mask comparison PDF."
+        description="Create portrait foreground-mask comparison PDFs."
     )
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument("--names", nargs="*", default=[])
+    parser.add_argument("--all", action="store_true", help="Process every galaxy in the manifest.")
+    parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--profile-width", type=int, default=3)
     parser.add_argument("--smooth-sigma-pixels", type=float, default=15.0)
     parser.add_argument("--detection-nsigma", type=float, default=3.5)
+    parser.add_argument(
+        "--auto-tune",
+        action="store_true",
+        help="Choose detection threshold per galaxy from --auto-tune-nsigmas.",
+    )
+    parser.add_argument(
+        "--auto-tune-nsigmas",
+        type=float,
+        nargs="*",
+        default=[5.0, 4.5, 4.0, 3.5],
+        help="Candidate detection thresholds, ordered from conservative to aggressive.",
+    )
     parser.add_argument("--npixels", type=int, default=8)
     parser.add_argument("--dilation-radius-pixels", type=int, default=3)
     parser.add_argument("--max-area", type=int, default=500)
@@ -590,9 +769,48 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
-    output = make_report(parse_args())
-    print(f"Wrote {output}")
-    return 0
+    args = parse_args()
+    rows = read_rows(args.manifest)
+    if args.all:
+        selected = rows
+    elif args.names:
+        wanted = set(args.names)
+        selected = [row for row in rows if row["name"] in wanted]
+    else:
+        selected = [read_row(args.manifest, "ESO120-012")]
+
+    if args.limit is not None:
+        selected = selected[: args.limit]
+
+    if not selected:
+        print("No galaxies selected.")
+        return 1
+
+    made = 0
+    failed: list[tuple[str, str]] = []
+    multiple = len(selected) > 1 or args.all or bool(args.names)
+    for row in selected:
+        galaxy_name = row["name"]
+        output = (
+            args.output_dir / f"{s4g_plot.safe_filename(galaxy_name)}_foreground_removed.pdf"
+            if multiple
+            else args.output
+        )
+        try:
+            written = make_report(args, row, output)
+        except Exception as exc:
+            failed.append((galaxy_name, str(exc)))
+            print(f"Failed {galaxy_name}: {exc}")
+            continue
+        made += 1
+        print(f"Wrote {written}")
+
+    print(f"Made {made} foreground-removal reports")
+    if failed:
+        print(f"Failed {len(failed)} galaxies:")
+        for name, message in failed:
+            print(f"  {name}: {message}")
+    return 0 if made else 1
 
 
 if __name__ == "__main__":
