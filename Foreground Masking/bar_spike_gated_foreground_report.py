@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create portrait foreground-mask profile comparison PDFs."""
+"""Create portrait bar-spike-gated foreground-candidate profile PDFs."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ import plot_s4g_isophote_axes as s4g_plot  # noqa: E402
 
 DEFAULT_MANIFEST = S4G_PLOTTER_DIR / "geometry_output" / "s4g_image_geometry_manifest.csv"
 DEFAULT_OUTPUT_DIR = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\calibrated_spike_rule_test_v3"
+    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\calibrated spike_rule"
 )
 DEFAULT_OUTPUT = (
     SCRIPT_DIR
@@ -791,15 +791,16 @@ def make_report(args: argparse.Namespace, row: dict[str, str], output: Path) -> 
     minor_pa = angles.minoraxis(bar_pa, disk_pa, inclination)
     radius_pix = profile_radius_pixels(data, geometry)
     plot_radius_arcsec = min(pixel_scale * radius_pix, max(2.8 * bar_sma, 55.0))
-    for kept in kept_rows:
-        x_mask_arcsec = pixel_scale * (float(kept["x_centroid"]) + 1 - xc)
-        y_mask_arcsec = pixel_scale * (float(kept["y_centroid"]) + 1 - yc)
-        radius_arcsec = pixel_scale * math.sqrt(float(kept["area"]) / math.pi)
-        radius_arcsec += pixel_scale * args.dilation_radius_pixels
-        plot_radius_arcsec = max(
-            plot_radius_arcsec,
-            max(abs(x_mask_arcsec), abs(y_mask_arcsec)) + radius_arcsec + 4.0,
-        )
+    if args.masking_mode == "spike-gated":
+        for kept in kept_rows:
+            x_mask_arcsec = pixel_scale * (float(kept["x_centroid"]) + 1 - xc)
+            y_mask_arcsec = pixel_scale * (float(kept["y_centroid"]) + 1 - yc)
+            radius_arcsec = pixel_scale * math.sqrt(float(kept["area"]) / math.pi)
+            radius_arcsec += pixel_scale * args.dilation_radius_pixels
+            plot_radius_arcsec = max(
+                plot_radius_arcsec,
+                max(abs(x_mask_arcsec), abs(y_mask_arcsec)) + radius_arcsec + 4.0,
+            )
 
     smoothed = median_filter(data, size=3)
     subimage, x_arcsec, y_arcsec = s4g_plot.extract_centered_subimage(
@@ -861,8 +862,13 @@ def make_report(args: argparse.Namespace, row: dict[str, str], output: Path) -> 
         top=0.93,
         hspace=0.55,
     )
+    title_mode = (
+        "bar-spike-gated foreground-candidate"
+        if args.masking_mode == "spike-gated"
+        else "global Photutils foreground-candidate"
+    )
     fig.suptitle(
-        f"{galaxy_name} foreground-mask profile comparison   bar PA={bar_pa:.1f} deg",
+        f"{galaxy_name} {title_mode} profile comparison   bar PA={bar_pa:.1f} deg",
         fontsize=13,
     )
 
@@ -1024,7 +1030,7 @@ def make_report(args: argparse.Namespace, row: dict[str, str], output: Path) -> 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Create portrait foreground-mask comparison PDFs."
+        description="Create portrait bar-spike-gated foreground-candidate comparison PDFs."
     )
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
