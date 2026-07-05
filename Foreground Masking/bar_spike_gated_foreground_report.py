@@ -791,17 +791,6 @@ def make_report(args: argparse.Namespace, row: dict[str, str], output: Path) -> 
     minor_pa = angles.minoraxis(bar_pa, disk_pa, inclination)
     radius_pix = profile_radius_pixels(data, geometry)
     plot_radius_arcsec = min(pixel_scale * radius_pix, max(2.8 * bar_sma, 55.0))
-    if args.masking_mode == "spike-gated":
-        for kept in kept_rows:
-            x_mask_arcsec = pixel_scale * (float(kept["x_centroid"]) + 1 - xc)
-            y_mask_arcsec = pixel_scale * (float(kept["y_centroid"]) + 1 - yc)
-            radius_arcsec = pixel_scale * math.sqrt(float(kept["area"]) / math.pi)
-            radius_arcsec += pixel_scale * args.dilation_radius_pixels
-            plot_radius_arcsec = max(
-                plot_radius_arcsec,
-                max(abs(x_mask_arcsec), abs(y_mask_arcsec)) + radius_arcsec + 4.0,
-            )
-
     smoothed = median_filter(data, size=3)
     subimage, x_arcsec, y_arcsec = s4g_plot.extract_centered_subimage(
         smoothed, xc, yc, pixel_scale, plot_radius_arcsec
@@ -892,6 +881,51 @@ def make_report(args: argparse.Namespace, row: dict[str, str], output: Path) -> 
     )
     line_radius = min(plot_radius_arcsec * 0.82, max(1.5 * bar_sma, bar_sma + 15.0))
     s4g_plot.draw_pa_line(ax_image, bar_pa, line_radius, color="#1f77b4", linewidth=1.5)
+    dx_major, dy_major = s4g_plot.pa_endpoint(bar_pa, line_radius)
+    ax_image.annotate(
+        "",
+        xy=(0.72 * dx_major, 0.72 * dy_major),
+        xytext=(0.18 * dx_major, 0.18 * dy_major),
+        arrowprops={
+            "arrowstyle": "-|>",
+            "color": "white",
+            "linewidth": 3.2,
+            "mutation_scale": 13,
+            "shrinkA": 0,
+            "shrinkB": 0,
+        },
+        zorder=6,
+    )
+    ax_image.annotate(
+        "",
+        xy=(0.72 * dx_major, 0.72 * dy_major),
+        xytext=(0.18 * dx_major, 0.18 * dy_major),
+        arrowprops={
+            "arrowstyle": "-|>",
+            "color": "#1f77b4",
+            "linewidth": 1.7,
+            "mutation_scale": 13,
+            "shrinkA": 0,
+            "shrinkB": 0,
+        },
+        zorder=6,
+    )
+    label_kwargs = {
+        "color": "#1f77b4",
+        "fontsize": 8,
+        "fontweight": "bold",
+        "ha": "center",
+        "va": "center",
+        "bbox": {
+            "boxstyle": "round,pad=0.15",
+            "facecolor": "white",
+            "edgecolor": "none",
+            "alpha": 0.75,
+        },
+        "zorder": 7,
+    }
+    ax_image.text(1.06 * dx_major, 1.06 * dy_major, "+r", **label_kwargs)
+    ax_image.text(-1.06 * dx_major, -1.06 * dy_major, "-r", **label_kwargs)
     s4g_plot.draw_pa_line(
         ax_image,
         bar_pa,
