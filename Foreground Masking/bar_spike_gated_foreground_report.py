@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
 from matplotlib.patches import Circle
-from scipy.ndimage import median_filter
+from scipy.ndimage import map_coordinates, median_filter
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -428,6 +428,74 @@ def profile_mask_at_pa(
     return np.isfinite(mask_fraction) & (mask_fraction > 0.0)
 
 
+def image_transform(disk_pa: float, inclination: float, bar_pa: float) -> np.ndarray:
+    """Map observed x/y offsets to face-on, bar-aligned x/y offsets."""
+    disk = np.radians(disk_pa)
+    bar = np.radians(bar_pa)
+    disk_major = np.array([-np.sin(disk), np.cos(disk)])
+    disk_minor = np.array([np.cos(disk), np.sin(disk)])
+    deproject = np.outer(disk_major, disk_major) + np.outer(
+        disk_minor, disk_minor
+    ) / np.cos(np.radians(inclination))
+
+    observed_bar = np.array([-np.sin(bar), np.cos(bar)])
+    face_on_bar = deproject @ observed_bar
+    angle = math.atan2(face_on_bar[1], face_on_bar[0])
+    rotate = np.array(
+        [[math.cos(angle), math.sin(angle)], [-math.sin(angle), math.cos(angle)]]
+    )
+    return rotate @ deproject
+
+
+def deproject_bar_aligned_cutout(
+    data: np.ndarray,
+    geometry: dict[str, float],
+    radius_arcsec: float,
+    *,
+    order: int = 1,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Sample a face-on, bar-aligned cutout on a regular arcsec grid."""
+    pixel_scale = geometry["pixel_scale"]
+    radius_pix = max(8, int(math.ceil(radius_arcsec / pixel_scale)))
+    offsets_pix = np.arange(-radius_pix, radius_pix + 1, dtype=float)
+    xx_pix, yy_pix = np.meshgrid(offsets_pix, offsets_pix)
+
+    transform_xy = image_transform(
+        geometry["disk_pa"], geometry["inclination"], geometry["bar_pa"]
+    )
+    inverse_xy = np.linalg.inv(transform_xy)
+    input_offsets = inverse_xy @ np.vstack([xx_pix.ravel(), yy_pix.ravel()])
+    input_x = (geometry["xc"] - 1.0) + input_offsets[0].reshape(xx_pix.shape)
+    input_y = (geometry["yc"] - 1.0) + input_offsets[1].reshape(yy_pix.shape)
+
+    valid = np.isfinite(data)
+    filled = np.where(valid, data, 0.0)
+    sampled = map_coordinates(
+        filled,
+        [input_y, input_x],
+        order=order,
+        mode="constant",
+        cval=0.0,
+        prefilter=order > 1,
+    )
+    support = map_coordinates(
+        valid.astype(float),
+        [input_y, input_x],
+        order=1,
+        mode="constant",
+        cval=0.0,
+        prefilter=False,
+    )
+    deprojected = np.divide(
+        sampled,
+        support,
+        out=np.full_like(sampled, np.nan, dtype=float),
+        where=support > 1.0e-3,
+    )
+    axis_arcsec = offsets_pix * pixel_scale
+    return deprojected, axis_arcsec, axis_arcsec, transform_xy
+
+
 def _merge_boolean_runs(masked: np.ndarray, max_gap: int) -> np.ndarray:
     """Merge masked stretches separated by short unmasked islands."""
     merged = np.asarray(masked, dtype=bool).copy()
@@ -797,6 +865,11 @@ def make_report(args: argparse.Namespace, row: dict[str, str], output: Path) -> 
     )
     log_subimage, contour_levels = s4g_plot.robust_log_image(subimage)
     extent = [x_arcsec[0], x_arcsec[-1], y_arcsec[0], y_arcsec[-1]]
+    deproj_image, x_deproj, y_deproj, transform_xy = deproject_bar_aligned_cutout(
+        smoothed, geometry, plot_radius_arcsec, order=1
+    )
+    log_deproj_image, deproj_contour_levels = s4g_plot.robust_log_image(deproj_image)
+    deproj_extent = [x_deproj[0], x_deproj[-1], y_deproj[0], y_deproj[-1]]
 
     rr_major_pix, intensity_major = s4g_plot.profile_at_pa(
         data, xc, yc, bar_pa, radius_pix, width=args.profile_width
@@ -861,7 +934,8 @@ def make_report(args: argparse.Namespace, row: dict[str, str], output: Path) -> 
         fontsize=13,
     )
 
-    ax_image = fig.add_subplot(gridspec[0])
+    top_grid = gridspec[0].subgridspec(1, 2, wspace=0.22)
+    ax_image = fig.add_subplot(top_grid[0])
     ax_image.imshow(
         log_subimage,
         origin="lower",
@@ -965,8 +1039,99 @@ def make_report(args: argparse.Namespace, row: dict[str, str], output: Path) -> 
     ax_image.set_aspect("equal", adjustable="box")
     ax_image.set_xlabel("arcsec")
     ax_image.set_ylabel("arcsec")
-    ax_image.set_title("S4G 3.6 micron isophotes with masked objects circled")
+    ax_image.set_title("Observed sky plane", fontsize=10)
     ax_image.tick_params(labelsize=8)
+
+    ax_deproj = fig.add_subplot(top_grid[1])
+    ax_deproj.imshow(
+        log_deproj_image,
+        origin="lower",
+        extent=deproj_extent,
+        cmap="Greys",
+        vmin=deproj_contour_levels[0],
+        vmax=deproj_contour_levels[-1],
+        interpolation="nearest",
+    )
+    ax_deproj.contour(
+        x_deproj,
+        y_deproj,
+        log_deproj_image,
+        levels=deproj_contour_levels,
+        colors="0.25",
+        linewidths=0.42,
+    )
+    line_radius_deproj = min(
+        plot_radius_arcsec * 0.82,
+        max(1.5 * bar_sma_deproj_arcsec, bar_sma_deproj_arcsec + 15.0),
+    )
+    ax_deproj.axhline(0, color="#1f77b4", linewidth=1.5)
+    ax_deproj.plot(
+        [-bar_sma_deproj_arcsec, bar_sma_deproj_arcsec],
+        [0, 0],
+        "o",
+        color="#1f77b4",
+        ms=4.0,
+        alpha=0.75,
+    )
+    ax_deproj.axvline(0, color="#d62728", linestyle="--", linewidth=1.3)
+    ax_deproj.annotate(
+        "",
+        xy=(0.72 * line_radius_deproj, 0),
+        xytext=(0.18 * line_radius_deproj, 0),
+        arrowprops={
+            "arrowstyle": "-|>",
+            "color": "white",
+            "linewidth": 3.2,
+            "mutation_scale": 13,
+            "shrinkA": 0,
+            "shrinkB": 0,
+        },
+        zorder=6,
+    )
+    ax_deproj.annotate(
+        "",
+        xy=(0.72 * line_radius_deproj, 0),
+        xytext=(0.18 * line_radius_deproj, 0),
+        arrowprops={
+            "arrowstyle": "-|>",
+            "color": "#1f77b4",
+            "linewidth": 1.7,
+            "mutation_scale": 13,
+            "shrinkA": 0,
+            "shrinkB": 0,
+        },
+        zorder=6,
+    )
+    ax_deproj.text(line_radius_deproj, 0, "+r", **label_kwargs)
+    ax_deproj.text(-line_radius_deproj, 0, "-r", **label_kwargs)
+    for kept in kept_rows:
+        x_mask_arcsec = pixel_scale * (float(kept["x_centroid"]) + 1 - xc)
+        y_mask_arcsec = pixel_scale * (float(kept["y_centroid"]) + 1 - yc)
+        x_mask_deproj, y_mask_deproj = transform_xy @ np.array([x_mask_arcsec, y_mask_arcsec])
+        radius_arcsec = pixel_scale * math.sqrt(float(kept["area"]) / math.pi)
+        radius_arcsec += pixel_scale * args.dilation_radius_pixels
+        radius_arcsec = max(radius_arcsec, 2.2 * pixel_scale)
+        if (
+            deproj_extent[0] <= x_mask_deproj <= deproj_extent[1]
+            and deproj_extent[2] <= y_mask_deproj <= deproj_extent[3]
+        ):
+            ax_deproj.add_patch(
+                Circle(
+                    (x_mask_deproj, y_mask_deproj),
+                    radius_arcsec,
+                    edgecolor="red",
+                    facecolor="none",
+                    linewidth=1.0,
+                    alpha=0.9,
+                )
+            )
+    ax_deproj.set_xlim(deproj_extent[0], deproj_extent[1])
+    ax_deproj.set_ylim(deproj_extent[2], deproj_extent[3])
+    ax_deproj.set_aspect("equal", adjustable="box")
+    ax_deproj.set_xlabel("deprojected arcsec")
+    ax_deproj.set_ylabel("deprojected arcsec")
+    ax_deproj.set_title("Deprojected, bar-aligned", fontsize=10)
+    ax_deproj.tick_params(labelsize=8)
 
     ax_original = fig.add_subplot(gridspec[1])
     ax_masked = fig.add_subplot(gridspec[2], sharex=ax_original)
