@@ -36,7 +36,7 @@ import plot_s4g_isophote_axes as s4g_plot  # noqa: E402
 
 DEFAULT_MANIFEST = S4G_PLOTTER_DIR / "geometry_output" / "s4g_image_geometry_manifest.csv"
 DEFAULT_OUTPUT_DIR = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Erwin\isophote_output_foreground_masked\individual"
+    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\calibrated_spike_rule_test_v3"
 )
 DEFAULT_OUTPUT = (
     SCRIPT_DIR
@@ -157,12 +157,14 @@ def detect_profile_spikes(
         neighbour = good & (distance >= neighbour_inner_arcsec) & (distance <= neighbour_outer_arcsec)
         left_neighbour = neighbour & (radii < radii[index])
         right_neighbour = neighbour & (radii > radii[index])
-        if np.count_nonzero(left_neighbour) < 2 or np.count_nonzero(right_neighbour) < 2:
+        if np.count_nonzero(left_neighbour) >= 2 and np.count_nonzero(right_neighbour) >= 2:
+            neighbour_values = np.concatenate([profile[left_neighbour], profile[right_neighbour]])
+        elif np.count_nonzero(neighbour) >= 4:
+            neighbour_values = profile[neighbour]
+        else:
             continue
 
-        neighbour_level = np.nanmedian(
-            np.concatenate([profile[left_neighbour], profile[right_neighbour]])
-        )
+        neighbour_level = np.nanmedian(neighbour_values)
         if not np.isfinite(neighbour_level) or neighbour_level <= 0:
             continue
         if profile[index] < (1.0 + excess_fraction) * neighbour_level:
@@ -788,7 +790,16 @@ def make_report(args: argparse.Namespace, row: dict[str, str], output: Path) -> 
     pixel_scale = geometry["pixel_scale"]
     minor_pa = angles.minoraxis(bar_pa, disk_pa, inclination)
     radius_pix = profile_radius_pixels(data, geometry)
-    plot_radius_arcsec = min(pixel_scale * radius_pix, max(2.8 * bar_sma, 45.0))
+    plot_radius_arcsec = min(pixel_scale * radius_pix, max(2.8 * bar_sma, 55.0))
+    for kept in kept_rows:
+        x_mask_arcsec = pixel_scale * (float(kept["x_centroid"]) + 1 - xc)
+        y_mask_arcsec = pixel_scale * (float(kept["y_centroid"]) + 1 - yc)
+        radius_arcsec = pixel_scale * math.sqrt(float(kept["area"]) / math.pi)
+        radius_arcsec += pixel_scale * args.dilation_radius_pixels
+        plot_radius_arcsec = max(
+            plot_radius_arcsec,
+            max(abs(x_mask_arcsec), abs(y_mask_arcsec)) + radius_arcsec + 4.0,
+        )
 
     smoothed = median_filter(data, size=3)
     subimage, x_arcsec, y_arcsec = s4g_plot.extract_centered_subimage(
