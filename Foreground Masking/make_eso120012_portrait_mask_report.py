@@ -112,6 +112,159 @@ def build_mask_from_residual(
     return mask, kept_rows
 
 
+def _expand_boolean_mask(mask: np.ndarray, radius: int) -> np.ndarray:
+    expanded = np.asarray(mask, dtype=bool).copy()
+    if radius <= 0 or not np.any(expanded):
+        return expanded
+
+    indices = np.flatnonzero(expanded)
+    for index in indices:
+        start = max(0, int(index) - radius)
+        stop = min(expanded.size, int(index) + radius + 1)
+        expanded[start:stop] = True
+    return expanded
+
+
+def detect_profile_spikes(
+    radii_arcsec: np.ndarray,
+    values: np.ndarray,
+    *,
+    excess_fraction: float,
+    neighbour_inner_arcsec: float,
+    neighbour_outer_arcsec: float,
+    side_offset_samples: int,
+    side_drop_fraction: float,
+    center_exclusion_arcsec: float,
+) -> np.ndarray:
+    """Detect narrow positive spikes above neighbouring profile samples."""
+    radii = np.asarray(radii_arcsec, dtype=float)
+    profile = np.asarray(values, dtype=float)
+    spikes = np.zeros(profile.size, dtype=bool)
+    good = np.isfinite(profile) & (profile > 0)
+    if np.count_nonzero(good) < 12:
+        return spikes
+
+    side_offset_samples = max(1, int(side_offset_samples))
+    for index in range(side_offset_samples, profile.size - side_offset_samples):
+        if not good[index]:
+            continue
+        if abs(radii[index]) < center_exclusion_arcsec:
+            continue
+        if profile[index] < profile[index - 1] or profile[index] < profile[index + 1]:
+            continue
+
+        distance = np.abs(radii - radii[index])
+        neighbour = good & (distance >= neighbour_inner_arcsec) & (distance <= neighbour_outer_arcsec)
+        left_neighbour = neighbour & (radii < radii[index])
+        right_neighbour = neighbour & (radii > radii[index])
+        if np.count_nonzero(left_neighbour) < 2 or np.count_nonzero(right_neighbour) < 2:
+            continue
+
+        neighbour_level = np.nanmedian(
+            np.concatenate([profile[left_neighbour], profile[right_neighbour]])
+        )
+        if not np.isfinite(neighbour_level) or neighbour_level <= 0:
+            continue
+        if profile[index] < (1.0 + excess_fraction) * neighbour_level:
+            continue
+
+        side_level = np.nanmedian(
+            [profile[index - side_offset_samples], profile[index + side_offset_samples]]
+        )
+        if not np.isfinite(side_level) or side_level <= 0:
+            continue
+        if profile[index] < (1.0 + side_drop_fraction) * side_level:
+            continue
+
+        spikes[index] = True
+    return spikes
+
+
+def _filter_segment_rows_by_labels(rows: list[dict[str, float | int | bool]], labels: set[int]):
+    return [row for row in rows if int(row["label"]) in labels]
+
+
+def build_spike_gated_mask_from_residual(
+    data: np.ndarray,
+    residual: np.ndarray,
+    geometry: dict[str, float],
+    *,
+    detection_nsigma: float,
+    npixels: int,
+    dilation_radius_pixels: int,
+    max_area: int,
+    max_elongation: float,
+    exclude_center_radius_pixels: float,
+    profile_width: int,
+    spike_excess_fraction: float,
+    spike_neighbour_inner_arcsec: float,
+    spike_neighbour_outer_arcsec: float,
+    spike_side_offset_samples: int,
+    spike_side_drop_fraction: float,
+    spike_center_exclusion_arcsec: float,
+    spike_window_samples: int,
+):
+    """Mask only compact sources that intersect narrow spikes in the bar-major profile."""
+    xc = geometry["xc"]
+    yc = geometry["yc"]
+    bar_pa = geometry["bar_pa"]
+    radius_pix = profile_radius_pixels(data, geometry)
+    rr_major_pix, intensity_major = s4g_plot.profile_at_pa(
+        data, xc, yc, bar_pa, radius_pix, width=profile_width
+    )
+    rr_major_deproj = s4g_plot.deprojected_profile_radius(
+        bar_pa, geometry["disk_pa"], geometry["inclination"], rr_major_pix * geometry["pixel_scale"]
+    )
+    spike_samples = detect_profile_spikes(
+        rr_major_deproj,
+        intensity_major,
+        excess_fraction=spike_excess_fraction,
+        neighbour_inner_arcsec=spike_neighbour_inner_arcsec,
+        neighbour_outer_arcsec=spike_neighbour_outer_arcsec,
+        side_offset_samples=spike_side_offset_samples,
+        side_drop_fraction=spike_side_drop_fraction,
+        center_exclusion_arcsec=spike_center_exclusion_arcsec,
+    )
+    spike_samples = _expand_boolean_mask(spike_samples, spike_window_samples)
+    if not np.any(spike_samples):
+        return np.zeros(data.shape, dtype=bool), [], spike_samples
+
+    segm = fgmask.detect_compact_sources(
+        residual,
+        nsigma=detection_nsigma,
+        npixels=npixels,
+        deblend=True,
+    )
+    filtered_segm, candidate_rows = fgmask.filter_segments(
+        segm,
+        data,
+        residual,
+        max_area=max_area,
+        max_elongation=max_elongation,
+        galaxy_center=(xc - 1, yc - 1),
+        exclude_center_radius_pixels=exclude_center_radius_pixels,
+    )
+    if filtered_segm is None or len(filtered_segm.labels) == 0:
+        return np.zeros(data.shape, dtype=bool), [], spike_samples
+
+    selected_labels: set[int] = set()
+    for label in filtered_segm.labels:
+        label_mask = np.asarray(filtered_segm.data) == int(label)
+        label_mask = fgmask.dilate_mask(label_mask, dilation_radius_pixels)
+        label_profile = profile_mask_at_pa(
+            label_mask, xc, yc, bar_pa, radius_pix, width=profile_width
+        )
+        if np.any(label_profile & spike_samples):
+            selected_labels.add(int(label))
+
+    if not selected_labels:
+        return np.zeros(data.shape, dtype=bool), [], spike_samples
+
+    selected_raw_mask = np.isin(np.asarray(filtered_segm.data), list(selected_labels))
+    mask = fgmask.dilate_mask(selected_raw_mask, dilation_radius_pixels)
+    return mask, _filter_segment_rows_by_labels(candidate_rows, selected_labels), spike_samples
+
+
 def build_mask_products(
     data: np.ndarray,
     geometry: dict[str, float],
@@ -467,6 +620,79 @@ def choose_detection_nsigma(
     return float(best_nsigma), evaluations
 
 
+def choose_spike_gated_detection_nsigma(
+    data: np.ndarray,
+    residual: np.ndarray,
+    geometry: dict[str, float],
+    *,
+    candidate_nsigmas: list[float],
+    profile_width: int,
+    npixels: int,
+    dilation_radius_pixels: int,
+    max_area: int,
+    max_elongation: float,
+    exclude_center_radius_pixels: float,
+    spike_excess_fraction: float,
+    spike_neighbour_inner_arcsec: float,
+    spike_neighbour_outer_arcsec: float,
+    spike_side_offset_samples: int,
+    spike_side_drop_fraction: float,
+    spike_center_exclusion_arcsec: float,
+    spike_window_samples: int,
+) -> tuple[float, list[dict[str, float]]]:
+    """Choose the most conservative threshold that intersects every detected spike."""
+    evaluations: list[dict[str, float]] = []
+    best_nsigma = candidate_nsigmas[-1]
+    for nsigma in candidate_nsigmas:
+        mask, kept_rows, spike_samples = build_spike_gated_mask_from_residual(
+            data,
+            residual,
+            geometry,
+            detection_nsigma=nsigma,
+            npixels=npixels,
+            dilation_radius_pixels=dilation_radius_pixels,
+            max_area=max_area,
+            max_elongation=max_elongation,
+            exclude_center_radius_pixels=exclude_center_radius_pixels,
+            profile_width=profile_width,
+            spike_excess_fraction=spike_excess_fraction,
+            spike_neighbour_inner_arcsec=spike_neighbour_inner_arcsec,
+            spike_neighbour_outer_arcsec=spike_neighbour_outer_arcsec,
+            spike_side_offset_samples=spike_side_offset_samples,
+            spike_side_drop_fraction=spike_side_drop_fraction,
+            spike_center_exclusion_arcsec=spike_center_exclusion_arcsec,
+            spike_window_samples=spike_window_samples,
+        )
+        xc = geometry["xc"]
+        yc = geometry["yc"]
+        bar_pa = geometry["bar_pa"]
+        radius_pix = profile_radius_pixels(data, geometry)
+        mask_profile = profile_mask_at_pa(mask, xc, yc, bar_pa, radius_pix, width=profile_width)
+        spike_count = int(np.count_nonzero(spike_samples))
+        covered_count = int(np.count_nonzero(spike_samples & mask_profile))
+        coverage = 1.0 if spike_count == 0 else covered_count / spike_count
+        mask_fraction = float(np.count_nonzero(mask) / float(data.size))
+        evaluations.append(
+            {
+                "nsigma": float(nsigma),
+                "spike_count": float(spike_count),
+                "coverage": float(coverage),
+                "mask_fraction": mask_fraction,
+                "segments": float(len(kept_rows)),
+            }
+        )
+        if spike_count == 0:
+            best_nsigma = nsigma
+            break
+        if coverage >= 0.999 and mask_fraction <= 0.025:
+            best_nsigma = nsigma
+            break
+        if coverage >= 0.999:
+            best_nsigma = nsigma
+            break
+    return float(best_nsigma), evaluations
+
+
 def make_report(args: argparse.Namespace, row: dict[str, str], output: Path) -> Path:
     galaxy_name = row["name"]
     geometry = s4g_plot.required_geometry(row)
@@ -483,31 +709,74 @@ def make_report(args: argparse.Namespace, row: dict[str, str], output: Path) -> 
     tuning_rows: list[dict[str, float]] = []
     detection_nsigma = args.detection_nsigma
     if args.auto_tune:
-        detection_nsigma, tuning_rows = choose_detection_nsigma(
+        if args.masking_mode == "spike-gated":
+            detection_nsigma, tuning_rows = choose_spike_gated_detection_nsigma(
+                data,
+                residual,
+                geometry,
+                candidate_nsigmas=args.auto_tune_nsigmas,
+                profile_width=args.profile_width,
+                npixels=args.npixels,
+                dilation_radius_pixels=args.dilation_radius_pixels,
+                max_area=args.max_area,
+                max_elongation=args.max_elongation,
+                exclude_center_radius_pixels=args.exclude_center_radius_pixels,
+                spike_excess_fraction=args.spike_excess_fraction,
+                spike_neighbour_inner_arcsec=args.spike_neighbour_inner_arcsec,
+                spike_neighbour_outer_arcsec=args.spike_neighbour_outer_arcsec,
+                spike_side_offset_samples=args.spike_side_offset_samples,
+                spike_side_drop_fraction=args.spike_side_drop_fraction,
+                spike_center_exclusion_arcsec=args.spike_center_exclusion_arcsec,
+                spike_window_samples=args.spike_window_samples,
+            )
+        else:
+            detection_nsigma, tuning_rows = choose_detection_nsigma(
+                data,
+                residual,
+                geometry,
+                candidate_nsigmas=args.auto_tune_nsigmas,
+                profile_width=args.profile_width,
+                npixels=args.npixels,
+                dilation_radius_pixels=args.dilation_radius_pixels,
+                max_area=args.max_area,
+                max_elongation=args.max_elongation,
+                exclude_center_radius_pixels=args.exclude_center_radius_pixels,
+                bridge_merge_gap_samples=args.bridge_merge_gap_samples,
+            )
+
+    if args.masking_mode == "spike-gated":
+        mask, kept_rows, spike_samples = build_spike_gated_mask_from_residual(
             data,
             residual,
             geometry,
-            candidate_nsigmas=args.auto_tune_nsigmas,
-            profile_width=args.profile_width,
+            detection_nsigma=detection_nsigma,
             npixels=args.npixels,
             dilation_radius_pixels=args.dilation_radius_pixels,
             max_area=args.max_area,
             max_elongation=args.max_elongation,
             exclude_center_radius_pixels=args.exclude_center_radius_pixels,
-            bridge_merge_gap_samples=args.bridge_merge_gap_samples,
+            profile_width=args.profile_width,
+            spike_excess_fraction=args.spike_excess_fraction,
+            spike_neighbour_inner_arcsec=args.spike_neighbour_inner_arcsec,
+            spike_neighbour_outer_arcsec=args.spike_neighbour_outer_arcsec,
+            spike_side_offset_samples=args.spike_side_offset_samples,
+            spike_side_drop_fraction=args.spike_side_drop_fraction,
+            spike_center_exclusion_arcsec=args.spike_center_exclusion_arcsec,
+            spike_window_samples=args.spike_window_samples,
         )
-
-    mask, kept_rows = build_mask_from_residual(
-        data,
-        residual,
-        geometry,
-        detection_nsigma=detection_nsigma,
-        npixels=args.npixels,
-        dilation_radius_pixels=args.dilation_radius_pixels,
-        max_area=args.max_area,
-        max_elongation=args.max_elongation,
-        exclude_center_radius_pixels=args.exclude_center_radius_pixels,
-    )
+    else:
+        mask, kept_rows = build_mask_from_residual(
+            data,
+            residual,
+            geometry,
+            detection_nsigma=detection_nsigma,
+            npixels=args.npixels,
+            dilation_radius_pixels=args.dilation_radius_pixels,
+            max_area=args.max_area,
+            max_elongation=args.max_elongation,
+            exclude_center_radius_pixels=args.exclude_center_radius_pixels,
+        )
+        spike_samples = np.zeros(1, dtype=bool)
     masked_data = np.where(mask, np.nan, data)
 
     xc = geometry["xc"]
@@ -694,9 +963,17 @@ def make_report(args: argparse.Namespace, row: dict[str, str], output: Path) -> 
     )
     ax_parameters.axis("off")
     parameter_rows = [
-        ("Masking model", f"photutils segmentation on residual image; photutils {photutils_version}"),
+        ("Masking model", f"{args.masking_mode}; photutils segmentation on residual image; photutils {photutils_version}"),
         ("Residual image", "science image - Gaussian-smoothed galaxy model"),
         ("Detection threshold", f"{detection_nsigma:g} sigma above residual median"),
+        ("Profile spike gate", f"{int(np.count_nonzero(spike_samples))} bar-major spike samples"),
+        (
+            "Spike rule",
+            f"peak >= {100 * args.spike_excess_fraction:.0f}% above "
+            f"{args.spike_neighbour_inner_arcsec:g}-{args.spike_neighbour_outer_arcsec:g} arcsec neighbours; "
+            f">= {100 * args.spike_side_drop_fraction:.0f}% above +/-{args.spike_side_offset_samples} samples; "
+            f"|r| >= {args.spike_center_exclusion_arcsec:g} arcsec",
+        ),
         ("Smooth sigma", f"{args.smooth_sigma_pixels:g} px"),
         ("Connected-pixel minimum", f"{args.npixels} px"),
         ("Dilation radius", f"{args.dilation_radius_pixels} px"),
@@ -748,6 +1025,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--smooth-sigma-pixels", type=float, default=15.0)
     parser.add_argument("--detection-nsigma", type=float, default=3.5)
     parser.add_argument(
+        "--masking-mode",
+        choices=["spike-gated", "global"],
+        default="spike-gated",
+        help="spike-gated masks only source segments intersecting bar-major profile spikes.",
+    )
+    parser.add_argument(
         "--auto-tune",
         action="store_true",
         help="Choose detection threshold per galaxy from --auto-tune-nsigmas.",
@@ -765,6 +1048,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-elongation", type=float, default=6.0)
     parser.add_argument("--exclude-center-radius-pixels", type=float, default=12.0)
     parser.add_argument("--bridge-merge-gap-samples", type=int, default=12)
+    parser.add_argument("--spike-excess-fraction", type=float, default=0.25)
+    parser.add_argument("--spike-neighbour-inner-arcsec", type=float, default=4.0)
+    parser.add_argument("--spike-neighbour-outer-arcsec", type=float, default=15.0)
+    parser.add_argument("--spike-side-offset-samples", type=int, default=3)
+    parser.add_argument("--spike-side-drop-fraction", type=float, default=0.4)
+    parser.add_argument("--spike-center-exclusion-arcsec", type=float, default=8.0)
+    parser.add_argument("--spike-window-samples", type=int, default=2)
     return parser.parse_args()
 
 
