@@ -70,7 +70,10 @@ def image_path_for_pc(row: dict[str, str], pc_name: str) -> Path:
 
 
 def rows_with_images_for_pc(rows: list[dict[str, str]], pc_name: str) -> list[dict[str, str]]:
-    return [row for row in rows if image_path_for_pc(row, pc_name).exists()]
+    return sorted(
+        [row for row in rows if image_path_for_pc(row, pc_name).exists()],
+        key=lambda row: row["name"].casefold(),
+    )
 
 
 def required_geometry(row: dict[str, str]) -> dict[str, float] | None:
