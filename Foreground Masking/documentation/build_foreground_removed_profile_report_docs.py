@@ -344,8 +344,12 @@ def add_report_layout(doc: Document) -> None:
         ["Panel", "Contents"],
         [
             [
-                "Top image panel",
-                "S4G 3.6 micron isophote image with bar-major and bar-minor axes overlaid. Retained foreground objects are circled in red.",
+                "Observed image panel",
+                "S4G 3.6 micron isophote image in the observed sky plane with bar-major and bar-minor axes overlaid. Retained foreground candidates are circled in red.",
+            ],
+            [
+                "Deprojected image panel",
+                "Second isophote panel sampled in the face-on disk plane and rotated so the bar major axis is horizontal. The same retained red-circle candidates are transformed into this coordinate system.",
             ],
             [
                 "Original profile graph",
@@ -407,7 +411,11 @@ def add_cli_examples(doc: Document) -> None:
             ],
             [
                 "Run every manifest galaxy",
-                'python "Foreground Masking/bar_spike_gated_foreground_report.py" --all --auto-tune',
+                'python "Foreground Masking/bar_spike_gated_foreground_report.py" --all --detection-nsigma 3.5 --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\spike_gated_3p5_sigma"',
+            ],
+            [
+                "Run global Photutils at 3.5 sigma",
+                'python "Foreground Masking/bar_spike_gated_foreground_report.py" --all --masking-mode global --detection-nsigma 3.5 --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\global_photutils_3p5_sigma"',
             ],
             [
                 "Override output directory",
