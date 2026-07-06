@@ -20,7 +20,7 @@ if str(PROJECT_ROOT) not in sys.path:
 BAR_SCRIPT = SCRIPT_DIR / "bar_spike_gated_foreground_report.py"
 from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
 
-DEFAULT_PC = "Laptop"
+DEFAULT_PC = "Desktop"
 DEFAULT_OUTPUT = remove_foreground_folder(DEFAULT_PC) / "optimisation"
 DEFAULT_SPIKE_NAMES = ["ESO120-012", "ESO357-012", "ESO358-020", "ESO359-031", "ESO440-044"]
 DEFAULT_CONTROL_NAMES = ["NGC1187", "NGC1640", "NGC3726", "ESO420-009"]
@@ -148,7 +148,10 @@ def parse_args() -> argparse.Namespace:
         "--pc",
         choices=sorted(PC_RESEARCH_FOLDERS),
         default=DEFAULT_PC,
-        help="Select which Dropbox research-folder location to use for default paths.",
+        help=(
+            "Select which Dropbox research-folder location to use for default paths. "
+            "Use 'Desktop' for D:\\Dropbox and 'Laptop' for C:\\Users\\gordo\\Dropbox."
+        ),
     )
     parser.add_argument("--manifest", type=Path, default=bar.DEFAULT_MANIFEST)
     parser.add_argument("--output-dir", type=Path, default=None)
