@@ -212,7 +212,7 @@ def parse_args() -> argparse.Namespace:
         help="Select which Dropbox research-folder location to use for default paths.",
     )
     parser.add_argument("--manifest", type=Path, default=bar.DEFAULT_MANIFEST)
-    parser.add_argument("--output", type=Path, default=bar.DEFAULT_OUTPUT)
+    parser.add_argument("--output", type=Path, default=None)
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--names", nargs="*", default=DEFAULT_NAMES)
     parser.add_argument("--all", action="store_true")
@@ -256,7 +256,7 @@ def main() -> int:
         print("No galaxies selected.")
         return 1
 
-    args.output_dir.mkdir(parents=True, exist_ok=True)
+    pdf_dir, png_dir = bar.ensure_report_output_folders(args.output_dir)
     calibration, fallback_nsigma = calibrate_detection_thresholds(selected, args)
     calibration_csv = args.output_dir / "photutils_global_calibration_from_bar_spikes.csv"
     write_calibration_csv(calibration_csv, calibration, fallback_nsigma)
@@ -267,11 +267,14 @@ def main() -> int:
         name = row["name"]
         nsigma = float(calibration[name]["calibrated_nsigma"])
         report_args = make_global_report_args(args, nsigma)
-        output = args.output_dir / f"{bar.s4g_plot.safe_filename(name)}_photutils_global_foreground_removed.pdf"
+        stem = f"{bar.s4g_plot.safe_filename(name)}_photutils_global_foreground_removed"
+        output = pdf_dir / f"{stem}.pdf"
+        output_png = png_dir / f"{stem}.png"
         print(f"Writing global Photutils report for {name} at nsigma={nsigma:g}...", flush=True)
-        bar.make_report(report_args, row, output)
+        bar.make_report(report_args, row, output, output_png)
         made += 1
         print(f"Wrote {output}", flush=True)
+        print(f"Wrote {output_png}", flush=True)
 
     print(f"Made {made} global Photutils foreground-candidate reports")
     return 0

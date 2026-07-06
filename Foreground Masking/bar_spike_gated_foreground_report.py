@@ -7,6 +7,7 @@ import argparse
 import csv
 import importlib.metadata
 import math
+import shutil
 import sys
 from pathlib import Path
 
@@ -40,11 +41,32 @@ from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa:
 DEFAULT_MANIFEST = S4G_PLOTTER_DIR / "geometry_output" / "s4g_image_geometry_manifest.csv"
 DEFAULT_PC = "Laptop"
 DEFAULT_OUTPUT_DIR = remove_foreground_folder(DEFAULT_PC) / "calibrated spike_rule"
-DEFAULT_OUTPUT = (
-    SCRIPT_DIR
-    / "ESO120-012_portrait_mask_report"
-    / "ESO120-012_foreground_removed.pdf"
-)
+
+
+def ensure_report_output_folders(output_dir: Path) -> tuple[Path, Path]:
+    pdf_dir = output_dir / "pdf"
+    png_dir = output_dir / "png"
+    pdf_dir.mkdir(parents=True, exist_ok=True)
+    png_dir.mkdir(parents=True, exist_ok=True)
+    for old_pdf in output_dir.glob("*.pdf"):
+        target = pdf_dir / old_pdf.name
+        if target.resolve() == old_pdf.resolve():
+            continue
+        if target.exists():
+            suffix = 1
+            while True:
+                candidate = pdf_dir / f"{old_pdf.stem}_{suffix}{old_pdf.suffix}"
+                if not candidate.exists():
+                    target = candidate
+                    break
+                suffix += 1
+        shutil.move(str(old_pdf), str(target))
+    return pdf_dir, png_dir
+
+
+def report_output_paths(output_dir: Path, filename_stem: str) -> tuple[Path, Path]:
+    pdf_dir, png_dir = ensure_report_output_folders(output_dir)
+    return pdf_dir / f"{filename_stem}.pdf", png_dir / f"{filename_stem}.png"
 
 
 def read_row(manifest: Path, galaxy_name: str) -> dict[str, str]:
@@ -765,7 +787,12 @@ def choose_spike_gated_detection_nsigma(
     return float(best_nsigma), evaluations
 
 
-def make_report(args: argparse.Namespace, row: dict[str, str], output: Path) -> Path:
+def make_report(
+    args: argparse.Namespace,
+    row: dict[str, str],
+    output: Path,
+    output_png: Path | None = None,
+) -> Path:
     galaxy_name = row["name"]
     geometry = s4g_plot.required_geometry(row)
     if geometry is None:
@@ -1224,14 +1251,18 @@ def make_report(args: argparse.Namespace, row: dict[str, str], output: Path) -> 
             cell.set_facecolor("0.92")
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(output)
+    if not output.exists():
+        fig.savefig(output)
+    if output_png is not None:
+        output_png.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(output_png, dpi=200)
     plt.close(fig)
     return output
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Create portrait bar-spike-gated foreground-candidate comparison PDFs."
+        description="Create portrait bar-spike-gated foreground-candidate comparison PDFs and PNGs."
     )
     parser.add_argument(
         "--pc",
@@ -1240,7 +1271,7 @@ def parse_args() -> argparse.Namespace:
         help="Select which Dropbox research-folder location to use for default paths.",
     )
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
-    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--output", type=Path, default=None)
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--names", nargs="*", default=[])
     parser.add_argument("--all", action="store_true", help="Process every galaxy in the manifest.")
@@ -1303,24 +1334,24 @@ def main() -> int:
         print("No galaxies selected.")
         return 1
 
+    ensure_report_output_folders(args.output_dir)
     made = 0
     failed: list[tuple[str, str]] = []
     multiple = len(selected) > 1 or args.all or bool(args.names)
     for row in selected:
         galaxy_name = row["name"]
-        output = (
-            args.output_dir / f"{s4g_plot.safe_filename(galaxy_name)}_foreground_removed.pdf"
-            if multiple
-            else args.output
-        )
+        default_stem = f"{s4g_plot.safe_filename(galaxy_name)}_foreground_removed"
+        stem = args.output.stem if args.output is not None and not multiple else default_stem
+        output, output_png = report_output_paths(args.output_dir, stem)
         try:
-            written = make_report(args, row, output)
+            written = make_report(args, row, output, output_png)
         except Exception as exc:
             failed.append((galaxy_name, str(exc)))
             print(f"Failed {galaxy_name}: {exc}")
             continue
         made += 1
         print(f"Wrote {written}")
+        print(f"Wrote {output_png}")
 
     print(f"Made {made} foreground-removal reports")
     if failed:
