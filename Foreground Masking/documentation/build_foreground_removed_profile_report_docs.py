@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import shutil
 import subprocess
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -12,14 +13,18 @@ from docx.shared import Pt
 
 
 SCRIPT_DIR = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = SCRIPT_DIR.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
+
+from machine_paths import remove_foreground_folder  # noqa: E402
+
 DOC_DIR = SCRIPT_DIR / "documentation"
 SCRIPT_NAME = "bar_spike_gated_foreground_report.py"
 OUTPUT_DOCX = DOC_DIR / "Bar Spike-Gated Foreground Candidate Report Documentation.docx"
 OUTPUT_PDF = DOC_DIR / "Bar Spike-Gated Foreground Candidate Report Documentation.pdf"
 
-DROPBOX_DOC_DIR = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\documentation"
-)
+DROPBOX_DOC_DIR = remove_foreground_folder("Laptop") / "documentation"
 
 # Reuse the established compact reference style so this document sits beside
 # the existing foreground-mask, S4G, and shoulder-quantification manuals.

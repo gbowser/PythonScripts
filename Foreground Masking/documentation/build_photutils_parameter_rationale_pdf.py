@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import argparse
+import sys
 import textwrap
 from datetime import date
 from pathlib import Path
@@ -13,10 +15,15 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 
 DOC_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = DOC_DIR.parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
+
+from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
+
 OUTPUT_PDF = DOC_DIR / "Photutils Parameter Rationale.pdf"
-DROPBOX_DIR = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\documentation"
-)
+DEFAULT_PC = "Laptop"
+DROPBOX_DIR = remove_foreground_folder(DEFAULT_PC) / "documentation"
 
 
 def wrapped(text: str, width: int) -> str:
@@ -61,7 +68,7 @@ def add_table(ax, y: float, rows: list[tuple[str, str]]) -> float:
     return y - 0.02
 
 
-def build() -> Path:
+def build(dropbox_dir: Path = DROPBOX_DIR) -> Path:
     OUTPUT_PDF.parent.mkdir(parents=True, exist_ok=True)
     with PdfPages(OUTPUT_PDF) as pdf:
         fig, ax = plt.subplots(figsize=(8.27, 11.69))
@@ -138,10 +145,18 @@ def build() -> Path:
         pdf.savefig(fig, bbox_inches="tight")
         plt.close(fig)
 
-    DROPBOX_DIR.mkdir(parents=True, exist_ok=True)
-    (DROPBOX_DIR / OUTPUT_PDF.name).write_bytes(OUTPUT_PDF.read_bytes())
+    dropbox_dir.mkdir(parents=True, exist_ok=True)
+    (dropbox_dir / OUTPUT_PDF.name).write_bytes(OUTPUT_PDF.read_bytes())
     return OUTPUT_PDF
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=DEFAULT_PC)
+    parser.add_argument("--dropbox-dir", type=Path, default=None)
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    print(build())
+    args = parse_args()
+    print(build(args.dropbox_dir or remove_foreground_folder(args.pc) / "documentation"))

@@ -24,6 +24,8 @@ from skimage.measure import profile_line
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
 BARPROFILES_DIR = PROJECT_ROOT / "Erwin_barprofiles_paper_GB_working_copy"
 if str(BARPROFILES_DIR) not in sys.path:
     sys.path.append(str(BARPROFILES_DIR))
@@ -32,10 +34,12 @@ if str(FOREGROUND_MASK_DIR) not in sys.path:
     sys.path.append(str(FOREGROUND_MASK_DIR))
 
 import angle_utils as angles  # noqa: E402
+from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder  # noqa: E402
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_ERWIN_DIR = Path(r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Erwin")
+DEFAULT_PC = "Laptop"
+DEFAULT_ERWIN_DIR = erwin_folder(DEFAULT_PC)
 DEFAULT_IMAGE_DIR = DEFAULT_ERWIN_DIR / "s4g_images_36um"
 DEFAULT_MANIFEST = SCRIPT_DIR / "geometry_output" / "s4g_image_geometry_manifest.csv"
 DEFAULT_OUTPUT_DIR = DEFAULT_ERWIN_DIR / "isophote_output"
@@ -445,10 +449,16 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Create Figure-1-style S4G isophote plots with bar major/minor axes."
     )
+    parser.add_argument(
+        "--pc",
+        choices=sorted(PC_RESEARCH_FOLDERS),
+        default=DEFAULT_PC,
+        help="Select which Dropbox research-folder location to use for default paths.",
+    )
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
-    parser.add_argument("--image-dir", type=Path, default=DEFAULT_IMAGE_DIR)
-    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
-    parser.add_argument("--combined-pdf", type=Path, default=DEFAULT_COMBINED_PDF)
+    parser.add_argument("--image-dir", type=Path, default=None)
+    parser.add_argument("--output-dir", type=Path, default=None)
+    parser.add_argument("--combined-pdf", type=Path, default=None)
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--names", nargs="*", default=[])
     parser.add_argument("--profile-width", type=int, default=3)
@@ -474,7 +484,15 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Only write individual per-galaxy PDFs.",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    erwin_dir = erwin_folder(args.pc)
+    if args.image_dir is None:
+        args.image_dir = erwin_dir / "s4g_images_36um"
+    if args.output_dir is None:
+        args.output_dir = erwin_dir / "isophote_output"
+    if args.combined_pdf is None:
+        args.combined_pdf = args.output_dir / "s4g_isophote_axes_all.pdf"
+    return args
 
 
 def main() -> int:

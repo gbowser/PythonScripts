@@ -12,6 +12,7 @@ import argparse
 import csv
 import math
 import re
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -20,7 +21,13 @@ from scipy.ndimage import affine_transform
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-RESEARCH_ROOT = Path(r"D:\Dropbox\Public Documents\UCLAN\MSc Research")
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
+
+from machine_paths import PC_RESEARCH_FOLDERS, research_folder  # noqa: E402
+
+DEFAULT_PC = "Laptop"
+RESEARCH_ROOT = research_folder(DEFAULT_PC)
 ERWIN_DATA = RESEARCH_ROOT / "Erwin" / "perwin-barprofiles_paper-a7cd6f5" / "data"
 IMAGE_DIR = RESEARCH_ROOT / "Erwin" / "s4g_images_36um"
 MANIFEST = (
@@ -34,10 +41,16 @@ OUTPUT_DIR = RESEARCH_ROOT / "Shoulder_Recognition_Erwin" / "Deprojected_Images"
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--pc",
+        choices=sorted(PC_RESEARCH_FOLDERS),
+        default=DEFAULT_PC,
+        help="Select which Dropbox research-folder location to use for default paths.",
+    )
     parser.add_argument("--manifest", type=Path, default=MANIFEST)
-    parser.add_argument("--image-dir", type=Path, default=IMAGE_DIR)
-    parser.add_argument("--erwin-data", type=Path, default=ERWIN_DATA)
-    parser.add_argument("--output-dir", type=Path, default=OUTPUT_DIR)
+    parser.add_argument("--image-dir", type=Path, default=None)
+    parser.add_argument("--erwin-data", type=Path, default=None)
+    parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument(
         "--order",
         type=int,
@@ -66,7 +79,15 @@ def parse_args() -> argparse.Namespace:
         metavar="NAME",
         help="process a named galaxy; repeat this option for multiple galaxies",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    selected_research_root = research_folder(args.pc)
+    if args.image_dir is None:
+        args.image_dir = selected_research_root / "Erwin" / "s4g_images_36um"
+    if args.erwin_data is None:
+        args.erwin_data = selected_research_root / "Erwin" / "perwin-barprofiles_paper-a7cd6f5" / "data"
+    if args.output_dir is None:
+        args.output_dir = selected_research_root / "Shoulder_Recognition_Erwin" / "Deprojected_Images"
+    return args
 
 
 def finite_float(value: str | None) -> float | None:

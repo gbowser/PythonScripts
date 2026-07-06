@@ -15,10 +15,14 @@ from astropy.io import fits
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SCRIPT_DIR.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
 BAR_SPIKE_SCRIPT = SCRIPT_DIR / "bar_spike_gated_foreground_report.py"
-DEFAULT_OUTPUT_DIR = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\photutils global_from_spike_calibration"
-)
+from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
+
+DEFAULT_PC = "Laptop"
+DEFAULT_OUTPUT_DIR = remove_foreground_folder(DEFAULT_PC) / "photutils global_from_spike_calibration"
 DEFAULT_NAMES = [
     "ESO120-012",
     "ESO357-012",
@@ -201,9 +205,15 @@ def parse_args() -> argparse.Namespace:
             "then run global Photutils foreground-candidate masking."
         )
     )
+    parser.add_argument(
+        "--pc",
+        choices=sorted(PC_RESEARCH_FOLDERS),
+        default=DEFAULT_PC,
+        help="Select which Dropbox research-folder location to use for default paths.",
+    )
     parser.add_argument("--manifest", type=Path, default=bar.DEFAULT_MANIFEST)
     parser.add_argument("--output", type=Path, default=bar.DEFAULT_OUTPUT)
-    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--names", nargs="*", default=DEFAULT_NAMES)
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--limit", type=int, default=None)
@@ -224,7 +234,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--spike-side-drop-fraction", type=float, default=0.4)
     parser.add_argument("--spike-center-exclusion-arcsec", type=float, default=8.0)
     parser.add_argument("--spike-window-samples", type=int, default=2)
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.output_dir is None:
+        args.output_dir = remove_foreground_folder(args.pc) / "photutils global_from_spike_calibration"
+    return args
 
 
 def main() -> int:

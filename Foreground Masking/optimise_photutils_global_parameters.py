@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import csv
 import importlib.util
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -13,10 +14,14 @@ from astropy.io import fits
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SCRIPT_DIR.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
 BAR_SCRIPT = SCRIPT_DIR / "bar_spike_gated_foreground_report.py"
-DEFAULT_OUTPUT = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\optimisation"
-)
+from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
+
+DEFAULT_PC = "Laptop"
+DEFAULT_OUTPUT = remove_foreground_folder(DEFAULT_PC) / "optimisation"
 DEFAULT_SPIKE_NAMES = ["ESO120-012", "ESO357-012", "ESO358-020", "ESO359-031", "ESO440-044"]
 DEFAULT_CONTROL_NAMES = ["NGC1187", "NGC1640", "NGC3726", "ESO420-009"]
 
@@ -139,8 +144,14 @@ def parameter_grid(args: argparse.Namespace):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Tiered optimisation for global Photutils foreground parameters.")
+    parser.add_argument(
+        "--pc",
+        choices=sorted(PC_RESEARCH_FOLDERS),
+        default=DEFAULT_PC,
+        help="Select which Dropbox research-folder location to use for default paths.",
+    )
     parser.add_argument("--manifest", type=Path, default=bar.DEFAULT_MANIFEST)
-    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--spike-names", nargs="*", default=DEFAULT_SPIKE_NAMES)
     parser.add_argument("--control-names", nargs="*", default=DEFAULT_CONTROL_NAMES)
     parser.add_argument("--nsigmas", type=float, nargs="*", default=[5.5, 5.0, 4.5, 4.0, 3.5])
@@ -158,7 +169,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--spike-side-drop-fraction", type=float, default=0.4)
     parser.add_argument("--spike-center-exclusion-arcsec", type=float, default=8.0)
     parser.add_argument("--spike-window-samples", type=int, default=2)
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.output_dir is None:
+        args.output_dir = remove_foreground_folder(args.pc) / "optimisation"
+    return args
 
 
 def main() -> int:

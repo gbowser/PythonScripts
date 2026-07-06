@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import csv
 import math
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -21,11 +22,16 @@ from astroquery.vizier import Vizier
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
+
+from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder  # noqa: E402
+
 BARPROFILES_DATA_DIR = PROJECT_ROOT / "Erwin_barprofiles_paper_GB_working_copy" / "data"
 DEFAULT_SCRAMBLED_MAP = BARPROFILES_DATA_DIR / "scrambled_map.txt"
 DEFAULT_S4G_TABLE = BARPROFILES_DATA_DIR / "s4gbars_table.dat"
-DEFAULT_ERWIN_DIR = Path(r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Erwin")
-DEFAULT_IMAGE_DIR = DEFAULT_ERWIN_DIR / "s4g_images_36um"
+DEFAULT_PC = "Laptop"
+DEFAULT_IMAGE_DIR = erwin_folder(DEFAULT_PC) / "s4g_images_36um"
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "geometry_output"
 DEFAULT_CACHE_DIR = Path(__file__).resolve().parent / "geometry_catalog_cache"
 
@@ -364,9 +370,15 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Link downloaded S4G FITS files to available geometry parameters."
     )
+    parser.add_argument(
+        "--pc",
+        choices=sorted(PC_RESEARCH_FOLDERS),
+        default=DEFAULT_PC,
+        help="Select which Dropbox research-folder location to use for default paths.",
+    )
     parser.add_argument("--scrambled-map", type=Path, default=DEFAULT_SCRAMBLED_MAP)
     parser.add_argument("--s4g-table", type=Path, default=DEFAULT_S4G_TABLE)
-    parser.add_argument("--image-dir", type=Path, default=DEFAULT_IMAGE_DIR)
+    parser.add_argument("--image-dir", type=Path, default=None)
     parser.add_argument("--cache-dir", type=Path, default=DEFAULT_CACHE_DIR)
     parser.add_argument(
         "--no-vizier",
@@ -383,7 +395,10 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=DEFAULT_OUTPUT_DIR / "s4g_image_geometry_manifest.csv",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.image_dir is None:
+        args.image_dir = erwin_folder(args.pc) / "s4g_images_36um"
+    return args
 
 
 def main() -> int:

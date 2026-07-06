@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import math
+import sys
 from pathlib import Path
 
 import matplotlib
@@ -13,10 +14,15 @@ import pandas as pd
 from scipy.stats import chi2_contingency
 
 
-DEFAULT_WORKBOOK = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Shoulder_Recognition_Erwin"
-    r"\PE_VPD_galaxy_classifications_with_definitions.xlsx"
-)
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
+
+from machine_paths import PC_RESEARCH_FOLDERS, shoulder_folder  # noqa: E402
+
+DEFAULT_PC = "Laptop"
+WORKBOOK_NAME = "PE_VPD_galaxy_classifications_with_definitions.xlsx"
+DEFAULT_WORKBOOK = shoulder_folder(DEFAULT_PC) / WORKBOOK_NAME
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "classifier_agreement_analysis"
 
 HUMAN_RATERS = ["PE", "VPD", "GB"]
@@ -628,9 +634,18 @@ def write_report(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Analyze PE/VPD/GB human agreement and compare SRA shoulder detections.")
-    parser.add_argument("--workbook", type=Path, default=DEFAULT_WORKBOOK)
+    parser.add_argument(
+        "--pc",
+        choices=sorted(PC_RESEARCH_FOLDERS),
+        default=DEFAULT_PC,
+        help="Select which Dropbox research-folder location to use for default paths.",
+    )
+    parser.add_argument("--workbook", type=Path, default=None)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.workbook is None:
+        args.workbook = shoulder_folder(args.pc) / WORKBOOK_NAME
+    return args
 
 
 def main() -> int:

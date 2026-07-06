@@ -23,6 +23,8 @@ from scipy.ndimage import map_coordinates, median_filter
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
 S4G_PLOTTER_DIR = PROJECT_ROOT / "Erwin_s4g_image_downloader"
 BARPROFILES_DIR = PROJECT_ROOT / "Erwin_barprofiles_paper_GB_working_copy"
 for path in (SCRIPT_DIR, S4G_PLOTTER_DIR, BARPROFILES_DIR):
@@ -32,12 +34,12 @@ for path in (SCRIPT_DIR, S4G_PLOTTER_DIR, BARPROFILES_DIR):
 import angle_utils as angles  # noqa: E402
 import foreground_mask_photutils as fgmask  # noqa: E402
 import plot_s4g_isophote_axes as s4g_plot  # noqa: E402
+from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
 
 
 DEFAULT_MANIFEST = S4G_PLOTTER_DIR / "geometry_output" / "s4g_image_geometry_manifest.csv"
-DEFAULT_OUTPUT_DIR = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\calibrated spike_rule"
-)
+DEFAULT_PC = "Laptop"
+DEFAULT_OUTPUT_DIR = remove_foreground_folder(DEFAULT_PC) / "calibrated spike_rule"
 DEFAULT_OUTPUT = (
     SCRIPT_DIR
     / "ESO120-012_portrait_mask_report"
@@ -1231,9 +1233,15 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Create portrait bar-spike-gated foreground-candidate comparison PDFs."
     )
+    parser.add_argument(
+        "--pc",
+        choices=sorted(PC_RESEARCH_FOLDERS),
+        default=DEFAULT_PC,
+        help="Select which Dropbox research-folder location to use for default paths.",
+    )
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--names", nargs="*", default=[])
     parser.add_argument("--all", action="store_true", help="Process every galaxy in the manifest.")
     parser.add_argument("--limit", type=int, default=None)
@@ -1271,7 +1279,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--spike-side-drop-fraction", type=float, default=0.4)
     parser.add_argument("--spike-center-exclusion-arcsec", type=float, default=8.0)
     parser.add_argument("--spike-window-samples", type=int, default=2)
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.output_dir is None:
+        args.output_dir = remove_foreground_folder(args.pc) / "calibrated spike_rule"
+    return args
 
 
 def main() -> int:

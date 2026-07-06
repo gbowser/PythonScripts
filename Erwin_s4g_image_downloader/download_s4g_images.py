@@ -8,20 +8,27 @@ research directory.
 """
 
 import argparse
+import sys
 from pathlib import Path
 
 import requests
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
+
+from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder  # noqa: E402
+
 DEFAULT_GALAXY_LIST = (
-    Path(__file__).resolve().parents[1]
+    PROJECT_ROOT
     / "Erwin_barprofiles_paper_GB_working_copy"
     / "data"
     / "scrambled_map.txt"
 )
 DEFAULT_BASE_URL = "https://irsa.ipac.caltech.edu/data/SPITZER/S4G/galaxies"
-DEFAULT_ERWIN_DIR = Path(r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Erwin")
-DEFAULT_OUTDIR = DEFAULT_ERWIN_DIR / "s4g_images_36um"
+DEFAULT_PC = "Laptop"
+DEFAULT_OUTDIR = erwin_folder(DEFAULT_PC) / "s4g_images_36um"
 
 SETTINGS = {
     "galaxy_list": DEFAULT_GALAXY_LIST,
@@ -38,6 +45,12 @@ def parse_args() -> argparse.Namespace:
         description="Download S4G 3.6 micron FITS images from IRSA."
     )
     parser.add_argument(
+        "--pc",
+        choices=sorted(PC_RESEARCH_FOLDERS),
+        default=DEFAULT_PC,
+        help="Select which Dropbox research-folder location to use for default paths.",
+    )
+    parser.add_argument(
         "--galaxy-list",
         type=Path,
         default=SETTINGS["galaxy_list"],
@@ -46,7 +59,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--outdir",
         type=Path,
-        default=SETTINGS["outdir"],
+        default=None,
         help="Directory where FITS files will be written.",
     )
     parser.add_argument(
@@ -72,7 +85,10 @@ def parse_args() -> argparse.Namespace:
         default=SETTINGS["dry_run"],
         help="Print planned downloads without contacting the server.",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.outdir is None:
+        args.outdir = erwin_folder(args.pc) / "s4g_images_36um"
+    return args
 
 
 def read_galaxy_names(galaxy_list_file: Path) -> list[str]:

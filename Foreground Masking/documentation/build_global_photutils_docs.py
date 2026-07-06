@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import shutil
 import subprocess
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -12,6 +14,12 @@ from docx.shared import Pt
 
 
 SCRIPT_DIR = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = SCRIPT_DIR.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
+
+from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
+
 DOC_DIR = SCRIPT_DIR / "documentation"
 MAIN_SCRIPT_NAME = "bar_spike_gated_foreground_report.py"
 CALIBRATION_SCRIPT_NAME = "photutils_global_from_bar_spike_calibration.py"
@@ -19,9 +27,8 @@ OPTIMISER_SCRIPT_NAME = "optimise_photutils_global_parameters.py"
 OUTPUT_DOCX = DOC_DIR / "Global Photutils Foreground Candidate Report Documentation.docx"
 OUTPUT_PDF = DOC_DIR / "Global Photutils Foreground Candidate Report Documentation.pdf"
 
-DROPBOX_DOC_DIR = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\documentation"
-)
+DEFAULT_PC = "Laptop"
+DROPBOX_DOC_DIR = remove_foreground_folder(DEFAULT_PC) / "documentation"
 
 # Reuse the established project documentation style so this sits beside the
 # spike-gated foreground-candidate manual.
@@ -442,14 +449,23 @@ def convert_to_pdf(docx_path: Path) -> Path:
     raise RuntimeError("Neither LibreOffice soffice nor PowerShell Word automation is available.")
 
 
-def copy_to_dropbox(docx_path: Path, pdf_path: Path | None) -> None:
-    DROPBOX_DOC_DIR.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(docx_path, DROPBOX_DOC_DIR / docx_path.name)
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=DEFAULT_PC)
+    parser.add_argument("--dropbox-doc-dir", type=Path, default=None)
+    return parser.parse_args()
+
+
+def copy_to_dropbox(docx_path: Path, pdf_path: Path | None, dropbox_doc_dir: Path) -> None:
+    dropbox_doc_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(docx_path, dropbox_doc_dir / docx_path.name)
     if pdf_path is not None and pdf_path.exists():
-        shutil.copy2(pdf_path, DROPBOX_DOC_DIR / pdf_path.name)
+        shutil.copy2(pdf_path, dropbox_doc_dir / pdf_path.name)
 
 
 if __name__ == "__main__":
+    args = parse_args()
+    dropbox_doc_dir = args.dropbox_doc_dir or remove_foreground_folder(args.pc) / "documentation"
     docx = build()
     print(docx)
     pdf: Path | None = None
@@ -458,5 +474,5 @@ if __name__ == "__main__":
         print(pdf)
     except Exception as exc:
         print(f"PDF conversion failed: {exc}")
-    copy_to_dropbox(docx, pdf)
-    print(DROPBOX_DOC_DIR)
+    copy_to_dropbox(docx, pdf, dropbox_doc_dir)
+    print(dropbox_doc_dir)
