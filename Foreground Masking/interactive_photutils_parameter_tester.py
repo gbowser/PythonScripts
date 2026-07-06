@@ -183,7 +183,16 @@ def profile_at_pa(
         sampled = map_coordinates(filled, [ys, xs], order=1, mode="constant", cval=0.0)
         support = map_coordinates(finite.astype(float), [ys, xs], order=1, mode="constant", cval=0.0)
         values.append(np.where(support > 0.5, sampled, np.nan))
-    return radii, np.nanmean(np.vstack(values), axis=0)
+    value_stack = np.vstack(values)
+    finite_counts = np.count_nonzero(np.isfinite(value_stack), axis=0)
+    summed = np.nansum(value_stack, axis=0)
+    profile = np.divide(
+        summed,
+        finite_counts,
+        out=np.full(radii.shape, np.nan, dtype=float),
+        where=finite_counts > 0,
+    )
+    return radii, profile
 
 
 def profile_mask_at_pa(
