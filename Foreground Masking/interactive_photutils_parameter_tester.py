@@ -362,6 +362,7 @@ class ParameterTester(tk.Tk):
         button_row.pack(fill=tk.X, pady=(10, 4))
         ttk.Button(button_row, text="Redraw", command=self.redraw).pack(side=tk.LEFT, fill=tk.X, expand=True)
         ttk.Button(button_row, text="Reset", command=self.reset_parameters).pack(side=tk.LEFT, fill=tk.X, expand=True)
+        ttk.Button(control, text="Save PNG", command=self.save_current_png).pack(fill=tk.X, pady=(0, 4))
 
         self.status = tk.StringVar(value="")
         ttk.Label(control, textvariable=self.status, wraplength=250, justify=tk.LEFT).pack(fill=tk.X, pady=(10, 0))
@@ -484,6 +485,20 @@ class ParameterTester(tk.Tk):
 
     def current_params(self) -> dict[str, float | int | bool]:
         return {key: var.get() for key, var in self.vars.items()}
+
+    def save_current_png(self) -> None:
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        params = self.current_params()
+        stem = (
+            f"{safe_filename(self.galaxy_var.get())}_"
+            f"{self.pc_var.get()}_"
+            f"nsigma{float(params['detection_nsigma']):.1f}_"
+            f"dil{int(params['dilation_radius_pixels'])}_"
+            f"area{int(params['max_area'])}"
+        )
+        path = self.output_dir / f"{stem}.png"
+        self.figure.savefig(path, dpi=180)
+        self.status.set(f"Saved {path}")
 
     def schedule_redraw(self) -> None:
         if not self.auto_update.get():
@@ -710,8 +725,24 @@ class ParameterTester(tk.Tk):
         ax.legend(loc="best")
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Interactive global Photutils parameter tester.")
+    parser.add_argument(
+        "--pc",
+        choices=sorted(PC_RESEARCH_FOLDERS),
+        default=DEFAULT_PC,
+        help=(
+            "Select the machine-specific Dropbox folders. "
+            "Laptop uses C:\\Users\\gordo\\Dropbox; Desktop uses D:\\Dropbox."
+        ),
+    )
+    parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
+    return parser.parse_args()
+
+
 def main() -> int:
-    app = ParameterTester(DEFAULT_MANIFEST)
+    args = parse_args()
+    app = ParameterTester(args.manifest, args.pc)
     app.mainloop()
     return 0
 
