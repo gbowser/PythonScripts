@@ -56,6 +56,10 @@ def read_manifest(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
+def safe_filename(value: str) -> str:
+    return "".join(char if char.isalnum() or char in "._-" else "_" for char in value)
+
+
 def image_path_for_pc(row: dict[str, str], pc_name: str) -> Path:
     """Return the selected machine's S4G FITS path for a manifest row."""
     machine_path = erwin_folder(pc_name) / "s4g_images_36um" / f"{row['name']}.phot.1.fits"
@@ -438,6 +442,29 @@ class ParameterTester(tk.Tk):
         toolbar = NavigationToolbar2Tk(self.canvas, frame)
         toolbar.update()
 
+    def refresh_pc_paths(self, initial: bool = False) -> None:
+        pc_name = self.pc_var.get()
+        self.output_dir = remove_foreground_folder(pc_name) / "interactive_photutils_parameter_tester"
+        self.rows = rows_with_images_for_pc(self.all_rows, pc_name)
+        if not self.rows:
+            self.rows_by_name = {}
+            self.galaxy_combo.configure(values=[])
+            self.galaxy_var.set("")
+            raise RuntimeError(
+                f"No FITS images were found for {pc_name} in "
+                f"{erwin_folder(pc_name) / 's4g_images_36um'}."
+            )
+
+        current = self.galaxy_var.get()
+        names = [row["name"] for row in self.rows]
+        self.rows_by_name = {row["name"]: row for row in self.rows}
+        self.data_cache.clear()
+        self.galaxy_combo.configure(values=names)
+        self.galaxy_var.set(current if current in self.rows_by_name else names[0])
+        if initial:
+            self.status.set(f"{pc_name} input folder: {erwin_folder(pc_name) / 's4g_images_36um'}")
+        self.load_selected_galaxy()
+
     def reset_parameters(self) -> None:
         defaults: dict[str, float | int | bool] = {
             "smooth_sigma_pixels": 15.0,
@@ -479,7 +506,7 @@ class ParameterTester(tk.Tk):
         geometry = required_geometry(row)
         if geometry is None:
             raise ValueError(f"{name} has incomplete geometry in {self.manifest}.")
-        data = np.squeeze(fits.getdata(Path(row["image_path"])).astype(float))
+        data = np.squeeze(fits.getdata(image_path_for_pc(row, self.pc_var.get())).astype(float))
         if data.ndim != 2:
             raise ValueError(f"{name} image is not 2D after squeezing: {data.shape}")
         self.data_cache[name] = (data, geometry)
@@ -496,8 +523,10 @@ class ParameterTester(tk.Tk):
             self.draw_products(name, data, geometry, params, mask, kept_rows, profile_width)
             masked_fraction = np.count_nonzero(mask) / mask.size
             self.status.set(
-                f"{name}: {len(kept_rows)} kept segments, "
-                f"{np.count_nonzero(mask)} masked pixels ({masked_fraction:.3%})."
+                f"{self.pc_var.get()} | {name}: {len(kept_rows)} kept segments, "
+                f"{np.count_nonzero(mask)} masked pixels ({masked_fraction:.3%}).\n"
+                f"Input: {erwin_folder(self.pc_var.get()) / 's4g_images_36um'}\n"
+                f"Output: {self.output_dir}"
             )
         except Exception as exc:  # noqa: BLE001
             self.status.set(f"Error: {exc}")
