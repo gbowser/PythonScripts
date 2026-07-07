@@ -39,6 +39,18 @@ from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_f
 
 DEFAULT_MANIFEST = S4G_PLOTTER_DIR / "geometry_output" / "s4g_image_geometry_manifest.csv"
 DEFAULT_PC = "Laptop"
+PARAMETER_DEFAULTS: dict[str, float | int | bool] = {
+    "smooth_sigma_pixels": 15.0,
+    "detection_nsigma": 5.0,
+    "npixels": 8,
+    "dilation_radius_pixels": 3,
+    "max_area": 500,
+    "max_elongation": 6.0,
+    "exclude_center_radius_pixels": 12.0,
+    "min_peak_residual_nsigma": 0.0,
+    "profile_width": 3,
+    "deblend": True,
+}
 
 
 def parse_float(value: str | None) -> float | None:
@@ -103,11 +115,6 @@ def pa_endpoint(pa_deg: float, radius: float) -> tuple[float, float]:
     )
 
 
-def draw_pa_line(ax, pa_deg: float, radius: float, **kwargs) -> None:
-    dx, dy = pa_endpoint(pa_deg, radius)
-    ax.plot([dx, -dx], [dy, -dy], **kwargs)
-
-
 def profile_radius_pixels(data: np.ndarray, geometry: dict[str, float]) -> int:
     xc = geometry["xc"]
     yc = geometry["yc"]
@@ -138,24 +145,6 @@ def robust_log_image(data: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     if lo >= hi:
         hi = lo + 1.0
     return log_data, np.linspace(lo, hi, 16)
-
-
-def extract_centered_subimage(
-    data: np.ndarray,
-    geometry: dict[str, float],
-    radius_arcsec: float,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    pixel_scale = geometry["pixel_scale"]
-    radius_pix = max(8, int(math.ceil(radius_arcsec / pixel_scale)))
-    x_size = data.shape[1]
-    y_size = data.shape[0]
-    x0 = max(0, int(math.floor(geometry["xc"] - 1 - radius_pix)))
-    x1 = min(x_size, int(math.ceil(geometry["xc"] - 1 + radius_pix + 1)))
-    y0 = max(0, int(math.floor(geometry["yc"] - 1 - radius_pix)))
-    y1 = min(y_size, int(math.ceil(geometry["yc"] - 1 + radius_pix + 1)))
-    x_arcsec = pixel_scale * (np.arange(x0, x1) + 1 - geometry["xc"])
-    y_arcsec = pixel_scale * (np.arange(y0, y1) + 1 - geometry["yc"])
-    return data[y0:y1, x0:x1], x_arcsec, y_arcsec
 
 
 def profile_at_pa(
@@ -352,23 +341,29 @@ class ParameterTester(tk.Tk):
         ttk.Checkbutton(control, text="Auto redraw", variable=self.auto_update).pack(anchor=tk.W, pady=(0, 8))
 
         self.vars: dict[str, tk.Variable] = {}
-        self._scale(control, "smooth_sigma_pixels", "Smooth sigma [px]", 15.0, 3.0, 40.0, 0.5)
-        self._scale(control, "detection_nsigma", "Detection nsigma", 5.0, 2.0, 10.0, 0.1)
-        self._spin(control, "npixels", "Minimum pixels", 8, 1, 80, 1)
-        self._spin(control, "dilation_radius_pixels", "Dilation radius [px]", 3, 0, 15, 1)
-        self._spin(control, "max_area", "Max segment area [px]", 500, 10, 5000, 10)
-        self._scale(control, "max_elongation", "Max elongation", 6.0, 1.0, 15.0, 0.25)
-        self._scale(control, "exclude_center_radius_pixels", "Central exclusion [px]", 12.0, 0.0, 80.0, 1.0)
-        self._scale(control, "min_peak_residual_nsigma", "Min peak nsigma (0 off)", 0.0, 0.0, 20.0, 0.5)
-        self._spin(control, "profile_width", "Profile width [px]", 3, 1, 21, 2)
+        self.readouts: dict[str, ttk.Label] = {}
+        self._scale(control, "smooth_sigma_pixels", "Smooth sigma [px]", 3.0, 40.0, 0.5)
+        self._scale(control, "detection_nsigma", "Detection nsigma", 2.0, 10.0, 0.1)
+        self._spin(control, "npixels", "Minimum pixels", 1, 80, 1)
+        self._spin(control, "dilation_radius_pixels", "Dilation radius [px]", 0, 15, 1)
+        self._spin(control, "max_area", "Max segment area [px]", 10, 5000, 10)
+        self._scale(control, "max_elongation", "Max elongation", 1.0, 15.0, 0.25)
+        self._scale(control, "exclude_center_radius_pixels", "Central exclusion [px]", 0.0, 80.0, 1.0)
+        self._scale(control, "min_peak_residual_nsigma", "Min peak nsigma (0 off)", 0.0, 20.0, 0.5)
+        self._spin(control, "profile_width", "Profile width [px]", 1, 21, 2)
 
-        self.vars["deblend"] = tk.BooleanVar(value=True)
+        deblend_row = ttk.Frame(control)
+        deblend_row.pack(fill=tk.X, pady=(8, 4))
+        self.vars["deblend"] = tk.BooleanVar(value=bool(PARAMETER_DEFAULTS["deblend"]))
         ttk.Checkbutton(
-            control,
+            deblend_row,
             text="Deblend sources",
             variable=self.vars["deblend"],
             command=self.schedule_redraw,
-        ).pack(anchor=tk.W, pady=(8, 4))
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True, anchor=tk.W)
+        ttk.Button(deblend_row, text="Reset", width=7, command=lambda: self.reset_one_parameter("deblend")).pack(
+            side=tk.RIGHT
+        )
 
         button_row = ttk.Frame(control)
         button_row.pack(fill=tk.X, pady=(10, 4))
@@ -384,18 +379,23 @@ class ParameterTester(tk.Tk):
         parent: ttk.Frame,
         key: str,
         label: str,
-        value: float,
         minimum: float,
         maximum: float,
         resolution: float,
     ) -> None:
         frame = ttk.Frame(parent)
         frame.pack(fill=tk.X, pady=3)
-        var = tk.DoubleVar(value=value)
+        var = tk.DoubleVar(value=float(PARAMETER_DEFAULTS[key]))
         self.vars[key] = var
-        ttk.Label(frame, text=label).pack(anchor=tk.W)
-        readout = ttk.Label(frame, width=8)
+        label_row = ttk.Frame(frame)
+        label_row.pack(fill=tk.X)
+        ttk.Label(label_row, text=label).pack(side=tk.LEFT, anchor=tk.W)
+        ttk.Button(label_row, text="Reset", width=7, command=lambda k=key: self.reset_one_parameter(k)).pack(
+            side=tk.RIGHT
+        )
+        readout = ttk.Label(label_row, width=8)
         readout.pack(side=tk.RIGHT)
+        self.readouts[key] = readout
         scale = tk.Scale(
             frame,
             variable=var,
@@ -414,16 +414,18 @@ class ParameterTester(tk.Tk):
         parent: ttk.Frame,
         key: str,
         label: str,
-        value: int,
         minimum: int,
         maximum: int,
         increment: int,
     ) -> None:
         frame = ttk.Frame(parent)
         frame.pack(fill=tk.X, pady=3)
-        var = tk.IntVar(value=value)
+        var = tk.IntVar(value=int(PARAMETER_DEFAULTS[key]))
         self.vars[key] = var
         ttk.Label(frame, text=label).pack(side=tk.LEFT)
+        ttk.Button(frame, text="Reset", width=7, command=lambda k=key: self.reset_one_parameter(k)).pack(
+            side=tk.RIGHT
+        )
         spin = ttk.Spinbox(
             frame,
             textvariable=var,
@@ -445,15 +447,22 @@ class ParameterTester(tk.Tk):
     def _build_figure(self) -> None:
         frame = ttk.Frame(self)
         frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
-        self.figure = Figure(figsize=(11.5, 8.6), dpi=100, constrained_layout=True)
-        grid = self.figure.add_gridspec(2, 2, height_ratios=[1.0, 0.72])
-        self.ax_observed = self.figure.add_subplot(grid[0, 0])
-        self.ax_deprojected = self.figure.add_subplot(grid[0, 1])
-        self.ax_profile = self.figure.add_subplot(grid[1, :])
+        self.figure = Figure(figsize=(11.5, 8.6), dpi=100, constrained_layout=False)
+        self.figure.subplots_adjust(left=0.08, right=0.985, bottom=0.07, top=0.97, hspace=0.16)
+        grid = self.figure.add_gridspec(2, 1, height_ratios=[1.12, 0.74])
+        self.ax_deprojected = self.figure.add_subplot(grid[0, 0])
+        self.ax_profile = self.figure.add_subplot(grid[1, 0], sharex=self.ax_deprojected)
         self.canvas = FigureCanvasTkAgg(self.figure, master=frame)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         toolbar = NavigationToolbar2Tk(self.canvas, frame)
         toolbar.update()
+
+    def _align_profile_axis_to_image(self) -> None:
+        image_position = self.ax_deprojected.get_position()
+        profile_position = self.ax_profile.get_position()
+        self.ax_profile.set_position(
+            [image_position.x0, profile_position.y0, image_position.width, profile_position.height]
+        )
 
     def refresh_pc_paths(self, initial: bool = False) -> None:
         pc_name = self.pc_var.get()
@@ -478,21 +487,17 @@ class ParameterTester(tk.Tk):
             self.status.set(f"{pc_name} input folder: {erwin_folder(pc_name) / 's4g_images_36um'}")
         self.load_selected_galaxy()
 
+    def reset_one_parameter(self, key: str) -> None:
+        self.vars[key].set(PARAMETER_DEFAULTS[key])
+        if key in self.readouts:
+            self.readouts[key].configure(text=f"{float(self.vars[key].get()):.2f}")
+        self.redraw()
+
     def reset_parameters(self) -> None:
-        defaults: dict[str, float | int | bool] = {
-            "smooth_sigma_pixels": 15.0,
-            "detection_nsigma": 5.0,
-            "npixels": 8,
-            "dilation_radius_pixels": 3,
-            "max_area": 500,
-            "max_elongation": 6.0,
-            "exclude_center_radius_pixels": 12.0,
-            "min_peak_residual_nsigma": 0.0,
-            "profile_width": 3,
-            "deblend": True,
-        }
-        for key, value in defaults.items():
+        for key, value in PARAMETER_DEFAULTS.items():
             self.vars[key].set(value)
+            if key in self.readouts:
+                self.readouts[key].configure(text=f"{float(self.vars[key].get()):.2f}")
         self.redraw()
 
     def current_params(self) -> dict[str, float | int | bool]:
@@ -569,28 +574,15 @@ class ParameterTester(tk.Tk):
         kept_rows: list[dict[str, float | int | bool]],
         profile_width: int,
     ) -> None:
-        self.ax_observed.clear()
         self.ax_deprojected.clear()
         self.ax_profile.clear()
 
         pixel_scale = geometry["pixel_scale"]
         radius_pix = profile_radius_pixels(data, geometry)
-        plot_radius_arcsec = min(pixel_scale * radius_pix, max(2.8 * geometry["bar_sma"], 55.0))
-        smoothed = median_filter(data, size=3)
-        subimage, x_arcsec, y_arcsec = extract_centered_subimage(smoothed, geometry, plot_radius_arcsec)
-        log_subimage, contour_levels = robust_log_image(subimage)
-        extent = [x_arcsec[0], x_arcsec[-1], y_arcsec[0], y_arcsec[-1]]
-        deproj, x_deproj, y_deproj, transform_xy = deproject_bar_aligned_cutout(
-            smoothed, geometry, plot_radius_arcsec
-        )
-        log_deproj, deproj_levels = robust_log_image(deproj)
-        deproj_extent = [x_deproj[0], x_deproj[-1], y_deproj[0], y_deproj[-1]]
-
         bar_pa = geometry["bar_pa"]
         disk_pa = geometry["disk_pa"]
         inclination = geometry["inclination"]
         bar_sma = geometry["bar_sma"]
-        minor_pa = angles.minoraxis(bar_pa, disk_pa, inclination)
         rr_pix, intensity = profile_at_pa(
             data, geometry["xc"], geometry["yc"], bar_pa, radius_pix, width=profile_width
         )
@@ -603,11 +595,17 @@ class ParameterTester(tk.Tk):
         )
         rr_deproj = deprojected_profile_radius(bar_pa, disk_pa, inclination, rr_pix * pixel_scale)
         bar_sma_deproj = angles.deprojectr(bar_pa - disk_pa, inclination, 1.0) * bar_sma
+        profile_limit_arcsec = float(np.nanmax(np.abs(rr_deproj[np.isfinite(rr_deproj)])))
 
-        self._draw_observed_view(
-            extent, x_arcsec, y_arcsec, log_subimage, contour_levels, geometry, minor_pa, kept_rows, params
+        smoothed = median_filter(data, size=3)
+        deproj, x_deproj, y_deproj, transform_xy = deproject_bar_aligned_cutout(
+            smoothed, geometry, profile_limit_arcsec
         )
+        log_deproj, deproj_levels = robust_log_image(deproj)
+        deproj_extent = [x_deproj[0], x_deproj[-1], y_deproj[0], y_deproj[-1]]
+
         self._draw_deprojected_view(
+            name,
             deproj_extent,
             x_deproj,
             y_deproj,
@@ -619,38 +617,22 @@ class ParameterTester(tk.Tk):
             kept_rows,
             params,
         )
-        self._draw_profile(name, rr_deproj, intensity, masked_intensity, mask_profile, bar_sma_deproj)
+        self._draw_profile(
+            name,
+            rr_deproj,
+            intensity,
+            masked_intensity,
+            mask_profile,
+            bar_sma_deproj,
+            (deproj_extent[0], deproj_extent[1]),
+        )
+        self.canvas.draw()
+        self._align_profile_axis_to_image()
         self.canvas.draw_idle()
-
-    def _draw_observed_view(
-        self,
-        extent: list[float],
-        x_arcsec: np.ndarray,
-        y_arcsec: np.ndarray,
-        log_image: np.ndarray,
-        levels: np.ndarray,
-        geometry: dict[str, float],
-        minor_pa: float,
-        kept_rows: list[dict[str, float | int | bool]],
-        params: dict[str, float | int | bool],
-    ) -> None:
-        ax = self.ax_observed
-        ax.imshow(log_image, origin="lower", extent=extent, cmap="Greys", vmin=levels[0], vmax=levels[-1])
-        ax.contour(x_arcsec, y_arcsec, log_image, levels=levels, colors="0.25", linewidths=0.42)
-        line_radius = min(max(abs(extent[0]), abs(extent[1])) * 0.82, max(1.5 * geometry["bar_sma"], geometry["bar_sma"] + 15))
-        draw_pa_line(ax, geometry["bar_pa"], line_radius, color="#1f77b4", linewidth=1.5)
-        draw_pa_line(ax, minor_pa, line_radius, color="#d62728", linestyle="--", linewidth=1.1)
-        draw_pa_line(ax, geometry["bar_pa"], geometry["bar_sma"], color="#1f77b4", linewidth=2.0, marker="o")
-        self._add_candidate_circles(ax, kept_rows, geometry, params, extent, None)
-        ax.axhline(0, color="0.55", linewidth=0.5)
-        ax.axvline(0, color="0.55", linewidth=0.5)
-        ax.set_title("Observed centred isophotes")
-        ax.set_xlabel("arcsec")
-        ax.set_ylabel("arcsec")
-        ax.set_aspect("equal", adjustable="box")
 
     def _draw_deprojected_view(
         self,
+        name: str,
         extent: list[float],
         x_arcsec: np.ndarray,
         y_arcsec: np.ndarray,
@@ -666,15 +648,32 @@ class ParameterTester(tk.Tk):
         ax.imshow(log_image, origin="lower", extent=extent, cmap="Greys", vmin=levels[0], vmax=levels[-1])
         ax.contour(x_arcsec, y_arcsec, log_image, levels=levels, colors="0.25", linewidths=0.42)
         ax.axhline(0, color="#1f77b4", linewidth=1.5)
+        half_profile_width_arcsec = 0.5 * int(params["profile_width"]) * geometry["pixel_scale"]
+        ax.axhline(
+            half_profile_width_arcsec,
+            color="#1f77b4",
+            linestyle="--",
+            linewidth=1.0,
+            alpha=0.9,
+        )
+        ax.axhline(
+            -half_profile_width_arcsec,
+            color="#1f77b4",
+            linestyle="--",
+            linewidth=1.0,
+            alpha=0.9,
+        )
         ax.axvline(0, color="#d62728", linestyle="--", linewidth=1.1)
         ax.plot([-bar_sma_deproj, bar_sma_deproj], [0, 0], "o", color="#1f77b4", ms=4)
         self._add_candidate_circles(ax, kept_rows, geometry, params, extent, transform_xy)
         ax.set_xlim(extent[0], extent[1])
         ax.set_ylim(extent[2], extent[3])
-        ax.set_title("Deprojected, bar on x-axis")
-        ax.set_xlabel("deprojected arcsec")
+        ax.set_title(f"{name} | deprojected isophotes, bar on x-axis", loc="left", pad=3)
+        ax.set_xlabel("deprojected bar-axis radius [arcsec]")
         ax.set_ylabel("deprojected arcsec")
         ax.set_aspect("equal", adjustable="box")
+        ax.grid(True, alpha=0.18)
+        ax.tick_params(axis="x", pad=1)
 
     def _add_candidate_circles(
         self,
@@ -714,6 +713,7 @@ class ParameterTester(tk.Tk):
         masked_intensity: np.ndarray,
         mask_profile: np.ndarray,
         bar_sma_deproj: float,
+        x_limits: tuple[float, float],
     ) -> None:
         ax = self.ax_profile
         positive = np.isfinite(intensity) & (intensity > 0)
@@ -729,12 +729,14 @@ class ParameterTester(tk.Tk):
         ax.axvline(bar_sma_deproj, color="#1f77b4", linewidth=1.0)
         ax.axvline(-bar_sma_deproj, color="#1f77b4", linewidth=1.0)
         ax.axvline(0, color="0.6", linewidth=0.7)
+        ax.set_xlim(x_limits[0], x_limits[1])
         ax.set_ylim(ymin, ymax)
-        ax.set_title(f"{name} bar-major intensity; red bands are profile samples touched by the mask")
+        ax.set_title("Bar-major intensity; red bands are profile samples touched by the mask", loc="left", pad=3)
         ax.set_xlabel("deprojected bar-major radius [arcsec]")
         ax.set_ylabel("intensity")
         ax.grid(True, which="both", alpha=0.2)
         ax.legend(loc="best")
+        ax.tick_params(axis="x", pad=1)
 
 
 def parse_args() -> argparse.Namespace:
