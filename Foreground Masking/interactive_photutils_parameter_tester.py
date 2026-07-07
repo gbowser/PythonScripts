@@ -703,6 +703,7 @@ class ParameterTester(tk.Tk):
         )
         ax.contour(x_arcsec, y_arcsec, residual_image, levels=levels, colors="0.15", linewidths=0.42)
         self._draw_profile_aperture_guides(ax, geometry, params, bar_sma_deproj)
+        self._draw_central_exclusion(ax, geometry, params, transform_xy)
         self._add_candidate_circles(ax, kept_rows, geometry, params, extent, transform_xy)
         ax.set_xlim(extent[0], extent[1])
         ax.set_ylim(extent[2], extent[3])
@@ -731,6 +732,7 @@ class ParameterTester(tk.Tk):
         ax.imshow(log_image, origin="lower", extent=extent, cmap="Greys", vmin=levels[0], vmax=levels[-1])
         ax.contour(x_arcsec, y_arcsec, log_image, levels=levels, colors="0.25", linewidths=0.42)
         self._draw_profile_aperture_guides(ax, geometry, params, bar_sma_deproj)
+        self._draw_central_exclusion(ax, geometry, params, transform_xy)
         self._add_candidate_circles(ax, kept_rows, geometry, params, extent, transform_xy)
         ax.set_xlim(extent[0], extent[1])
         ax.set_ylim(extent[2], extent[3])
@@ -766,6 +768,28 @@ class ParameterTester(tk.Tk):
         )
         ax.axvline(0, color="#d62728", linestyle="--", linewidth=1.1)
         ax.plot([-bar_sma_deproj, bar_sma_deproj], [0, 0], "o", color="#1f77b4", ms=4)
+
+    def _draw_central_exclusion(
+        self,
+        ax,
+        geometry: dict[str, float],
+        params: dict[str, float | int | bool],
+        transform_xy: np.ndarray,
+    ) -> None:
+        radius_arcsec = float(params["exclude_center_radius_pixels"]) * geometry["pixel_scale"]
+        if radius_arcsec <= 0:
+            return
+        theta = np.linspace(0.0, 2.0 * np.pi, 241)
+        observed_circle = np.vstack([radius_arcsec * np.cos(theta), radius_arcsec * np.sin(theta)])
+        deprojected_circle = transform_xy @ observed_circle
+        ax.plot(
+            deprojected_circle[0],
+            deprojected_circle[1],
+            color="#ffd400",
+            linestyle="--",
+            linewidth=1.4,
+            alpha=0.95,
+        )
 
     def _add_candidate_circles(
         self,
