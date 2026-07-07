@@ -243,6 +243,19 @@ def image_transform(disk_pa: float, inclination: float, bar_pa: float) -> np.nda
     return rotate @ deproject
 
 
+def deprojected_centroid_radius_pixels_func(geometry: dict[str, float]):
+    transform_xy = image_transform(geometry["disk_pa"], geometry["inclination"], geometry["bar_pa"])
+    pixel_scale = geometry["pixel_scale"]
+
+    def distance_pixels(stats: dict[str, float]) -> float:
+        x_arcsec = pixel_scale * (float(stats["x_centroid"]) + 1.0 - geometry["xc"])
+        y_arcsec = pixel_scale * (float(stats["y_centroid"]) + 1.0 - geometry["yc"])
+        x_deproj, y_deproj = transform_xy @ np.array([x_arcsec, y_arcsec])
+        return float(np.hypot(x_deproj, y_deproj) / pixel_scale)
+
+    return distance_pixels
+
+
 def deproject_bar_aligned_cutout(
     data: np.ndarray,
     geometry: dict[str, float],
@@ -293,6 +306,7 @@ def mask_products(data: np.ndarray, geometry: dict[str, float], params: dict[str
             if float(params["min_peak_residual_nsigma"]) <= 0
             else float(params["min_peak_residual_nsigma"])
         ),
+        centroid_distance_func=deprojected_centroid_radius_pixels_func(geometry),
     )
     raw_mask = fgmask.segmentation_to_mask(filtered, data.shape)
     mask = fgmask.dilate_mask(raw_mask, int(params["dilation_radius_pixels"]))
@@ -370,7 +384,7 @@ class ParameterTester(tk.Tk):
         self._spin(control, "dilation_radius_pixels", "Dilation radius [px]", 0, 15, 1)
         self._spin(control, "max_area", "Max segment area [px]", 10, 5000, 10)
         self._scale(control, "max_elongation", "Max elongation", 1.0, 15.0, 0.25)
-        self._scale(control, "exclude_center_radius_pixels", "Central exclusion [px]", 0.0, 80.0, 1.0)
+        self._scale(control, "exclude_center_radius_pixels", "Deprojected central exclusion [px]", 0.0, 80.0, 1.0)
         self._scale(control, "min_peak_residual_nsigma", "Min peak nsigma (0 off)", 0.0, 20.0, 0.5)
         self._spin(control, "profile_width", "Profile width [px]", 1, 21, 2)
 
@@ -780,11 +794,9 @@ class ParameterTester(tk.Tk):
         if radius_arcsec <= 0:
             return
         theta = np.linspace(0.0, 2.0 * np.pi, 241)
-        observed_circle = np.vstack([radius_arcsec * np.cos(theta), radius_arcsec * np.sin(theta)])
-        deprojected_circle = transform_xy @ observed_circle
         ax.plot(
-            deprojected_circle[0],
-            deprojected_circle[1],
+            radius_arcsec * np.cos(theta),
+            radius_arcsec * np.sin(theta),
             color="#ffd400",
             linestyle="--",
             linewidth=1.4,

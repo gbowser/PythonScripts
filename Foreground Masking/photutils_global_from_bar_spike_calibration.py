@@ -225,7 +225,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dilation-radius-pixels", type=int, default=3)
     parser.add_argument("--max-area", type=int, default=500)
     parser.add_argument("--max-elongation", type=float, default=6.0)
-    parser.add_argument("--exclude-center-radius-pixels", type=float, default=12.0)
+    parser.add_argument(
+        "--exclude-center-radius-pixels",
+        type=float,
+        default=12.0,
+        help="Deprojected, bar-aligned central exclusion radius, expressed in image-pixel units.",
+    )
     parser.add_argument("--bridge-merge-gap-samples", type=int, default=12)
     parser.add_argument("--spike-excess-fraction", type=float, default=0.25)
     parser.add_argument("--spike-neighbour-inner-arcsec", type=float, default=4.0)

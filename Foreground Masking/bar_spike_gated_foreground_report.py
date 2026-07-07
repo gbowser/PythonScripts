@@ -129,6 +129,7 @@ def build_mask_from_residual(
         max_elongation=max_elongation,
         galaxy_center=(geometry["xc"] - 1, geometry["yc"] - 1),
         exclude_center_radius_pixels=exclude_center_radius_pixels,
+        centroid_distance_func=deprojected_centroid_radius_pixels_func(geometry),
     )
     raw_mask = fgmask.segmentation_to_mask(filtered_segm, data.shape)
     mask = fgmask.dilate_mask(raw_mask, dilation_radius_pixels)
@@ -269,6 +270,7 @@ def build_spike_gated_mask_from_residual(
         max_elongation=max_elongation,
         galaxy_center=(xc - 1, yc - 1),
         exclude_center_radius_pixels=exclude_center_radius_pixels,
+        centroid_distance_func=deprojected_centroid_radius_pixels_func(geometry),
     )
     if filtered_segm is None or len(filtered_segm.labels) == 0:
         return np.zeros(data.shape, dtype=bool), [], spike_samples
@@ -469,6 +471,22 @@ def image_transform(disk_pa: float, inclination: float, bar_pa: float) -> np.nda
         [[math.cos(angle), math.sin(angle)], [-math.sin(angle), math.cos(angle)]]
     )
     return rotate @ deproject
+
+
+def deprojected_centroid_radius_pixels_func(geometry: dict[str, float]):
+    """Return a segment-centroid distance function in deprojected pixel units."""
+    transform_xy = image_transform(
+        geometry["disk_pa"], geometry["inclination"], geometry["bar_pa"]
+    )
+    pixel_scale = geometry["pixel_scale"]
+
+    def distance_pixels(stats: dict[str, float]) -> float:
+        x_arcsec = pixel_scale * (float(stats["x_centroid"]) + 1.0 - geometry["xc"])
+        y_arcsec = pixel_scale * (float(stats["y_centroid"]) + 1.0 - geometry["yc"])
+        x_deproj, y_deproj = transform_xy @ np.array([x_arcsec, y_arcsec])
+        return float(np.hypot(x_deproj, y_deproj) / pixel_scale)
+
+    return distance_pixels
 
 
 def deproject_bar_aligned_cutout(
@@ -1224,7 +1242,7 @@ def make_report(
         ("Dilation radius", f"{args.dilation_radius_pixels} px"),
         ("Max segment area", f"{args.max_area} px"),
         ("Max elongation", f"{args.max_elongation:g}"),
-        ("Central exclusion radius", f"{args.exclude_center_radius_pixels:g} px"),
+        ("Deprojected central exclusion radius", f"{args.exclude_center_radius_pixels:g} px"),
         ("Profile width", f"{args.profile_width} px"),
         ("Applied mask", f"{len(kept_rows)} source segments; {int(np.count_nonzero(mask))} pixels ignored"),
         ("Filled-profile panel", "solid=measured data; fine dotted=samples filled by straight log-intensity bridge"),
@@ -1301,7 +1319,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dilation-radius-pixels", type=int, default=3)
     parser.add_argument("--max-area", type=int, default=500)
     parser.add_argument("--max-elongation", type=float, default=6.0)
-    parser.add_argument("--exclude-center-radius-pixels", type=float, default=12.0)
+    parser.add_argument(
+        "--exclude-center-radius-pixels",
+        type=float,
+        default=12.0,
+        help="Deprojected, bar-aligned central exclusion radius, expressed in image-pixel units.",
+    )
     parser.add_argument("--bridge-merge-gap-samples", type=int, default=12)
     parser.add_argument("--spike-excess-fraction", type=float, default=0.25)
     parser.add_argument("--spike-neighbour-inner-arcsec", type=float, default=4.0)

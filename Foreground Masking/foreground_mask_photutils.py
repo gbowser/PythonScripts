@@ -187,6 +187,7 @@ def filter_segments(
     galaxy_center: tuple[float, float] | None = None,
     exclude_center_radius_pixels: float = 0.0,
     min_peak_residual_nsigma: float | None = None,
+    centroid_distance_func=None,
 ):
     """Remove detections that are too small, too large, too elongated, or nuclear."""
     if segm is None or len(segm.labels) == 0:
@@ -216,7 +217,11 @@ def filter_segments(
             if peak_nsigma < min_peak_residual_nsigma:
                 keep = False
 
-        if galaxy_center is not None and exclude_center_radius_pixels > 0:
+        if centroid_distance_func is not None and exclude_center_radius_pixels > 0:
+            radius = float(centroid_distance_func(stats))
+            if radius < exclude_center_radius_pixels:
+                keep = False
+        elif galaxy_center is not None and exclude_center_radius_pixels > 0:
             x0, y0 = galaxy_center
             radius = np.hypot(stats["x_centroid"] - x0, stats["y_centroid"] - y0)
             if radius < exclude_center_radius_pixels:

@@ -163,7 +163,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-elongations", type=float, nargs="*", default=[3.0, 4.0, 6.0])
     parser.add_argument("--smooth-sigma-pixels", type=float, default=15.0)
     parser.add_argument("--npixels", type=int, default=8)
-    parser.add_argument("--exclude-center-radius-pixels", type=float, default=12.0)
+    parser.add_argument(
+        "--exclude-center-radius-pixels",
+        type=float,
+        default=12.0,
+        help="Deprojected, bar-aligned central exclusion radius, expressed in image-pixel units.",
+    )
     parser.add_argument("--profile-width", type=int, default=3)
     parser.add_argument("--spike-excess-fraction", type=float, default=0.25)
     parser.add_argument("--spike-neighbour-inner-arcsec", type=float, default=4.0)
