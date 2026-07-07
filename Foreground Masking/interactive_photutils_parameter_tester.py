@@ -39,6 +39,7 @@ from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_f
 
 DEFAULT_MANIFEST = S4G_PLOTTER_DIR / "geometry_output" / "s4g_image_geometry_manifest.csv"
 DEFAULT_PC = "Laptop"
+PARAMETER_REDRAW_DEBOUNCE_MS = 500
 PARAMETER_DEFAULTS: dict[str, float | int | bool] = {
     "smooth_sigma_pixels": 15.0,
     "detection_nsigma": 5.0,
@@ -403,7 +404,7 @@ class ParameterTester(tk.Tk):
 
         button_row = ttk.Frame(control)
         button_row.pack(fill=tk.X, pady=(10, 4))
-        ttk.Button(button_row, text="Redraw", command=self.redraw).pack(side=tk.LEFT, fill=tk.X, expand=True)
+        ttk.Button(button_row, text="Redraw", command=self.redraw_now).pack(side=tk.LEFT, fill=tk.X, expand=True)
         ttk.Button(button_row, text="Reset", command=self.reset_parameters).pack(side=tk.LEFT, fill=tk.X, expand=True)
         ttk.Button(control, text="Save PNG", command=self.save_current_png).pack(fill=tk.X, pady=(0, 4))
 
@@ -530,14 +531,14 @@ class ParameterTester(tk.Tk):
         self.vars[key].set(PARAMETER_DEFAULTS[key])
         if key in self.readouts:
             self.readouts[key].configure(text=f"{float(self.vars[key].get()):.2f}")
-        self.redraw()
+        self.redraw_now()
 
     def reset_parameters(self) -> None:
         for key, value in PARAMETER_DEFAULTS.items():
             self.vars[key].set(value)
             if key in self.readouts:
                 self.readouts[key].configure(text=f"{float(self.vars[key].get()):.2f}")
-        self.redraw()
+        self.redraw_now()
 
     def current_params(self) -> dict[str, float | int | bool]:
         return {key: var.get() for key, var in self.vars.items()}
@@ -559,14 +560,26 @@ class ParameterTester(tk.Tk):
     def schedule_redraw(self) -> None:
         if not self.auto_update.get():
             return
-        if self.after_id is not None:
+        self.cancel_scheduled_redraw()
+        self.after_id = self.after(PARAMETER_REDRAW_DEBOUNCE_MS, self.redraw)
+
+    def cancel_scheduled_redraw(self) -> None:
+        if self.after_id is None:
+            return
+        try:
             self.after_cancel(self.after_id)
-        self.after_id = self.after(300, self.redraw)
+        except tk.TclError:
+            pass
+        self.after_id = None
+
+    def redraw_now(self) -> None:
+        self.cancel_scheduled_redraw()
+        self.redraw()
 
     def load_selected_galaxy(self) -> None:
         try:
             self._load_galaxy(self.galaxy_var.get())
-            self.redraw()
+            self.redraw_now()
         except Exception as exc:  # noqa: BLE001
             messagebox.showerror("Could not load galaxy", str(exc))
 
