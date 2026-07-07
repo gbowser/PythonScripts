@@ -147,6 +147,28 @@ def robust_log_image(data: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return log_data, np.linspace(lo, hi, 16)
 
 
+def robust_residual_image(data: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    finite = data[np.isfinite(data)]
+    if finite.size == 0:
+        return np.zeros_like(data, dtype=float), np.linspace(-1.0, 1.0, 16)
+
+    centre = float(np.nanmedian(finite))
+    spread = float(np.nanpercentile(np.abs(finite - centre), 99.0))
+    if not math.isfinite(spread) or spread <= 0:
+        spread = float(np.nanstd(finite))
+    if not math.isfinite(spread) or spread <= 0:
+        spread = 1.0
+
+    display = np.clip(data - centre, -spread, spread)
+    positive = finite[finite > centre]
+    if positive.size >= 2:
+        contour_levels = np.nanpercentile(positive - centre, [70, 78, 84, 89, 93, 96, 98, 99.2])
+        contour_levels = np.unique(contour_levels[np.isfinite(contour_levels)])
+        if contour_levels.size >= 2:
+            return display, contour_levels
+    return display, np.linspace(0.25 * spread, spread, 8)
+
+
 def profile_at_pa(
     data: np.ndarray,
     xc: float,
@@ -448,10 +470,13 @@ class ParameterTester(tk.Tk):
         frame = ttk.Frame(self)
         frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         self.figure = Figure(figsize=(11.5, 8.6), dpi=100, constrained_layout=False)
-        self.figure.subplots_adjust(left=0.08, right=0.985, bottom=0.07, top=0.97, hspace=0.16)
-        grid = self.figure.add_gridspec(2, 1, height_ratios=[1.12, 0.74])
-        self.ax_deprojected = self.figure.add_subplot(grid[0, 0])
-        self.ax_profile = self.figure.add_subplot(grid[1, 0], sharex=self.ax_deprojected)
+        self.figure.subplots_adjust(left=0.06, right=0.985, bottom=0.07, top=0.97, hspace=0.16, wspace=0.18)
+        grid = self.figure.add_gridspec(2, 2, height_ratios=[1.12, 0.74], width_ratios=[1.0, 1.0])
+        self.ax_residual = self.figure.add_subplot(grid[0, 0])
+        self.ax_deprojected = self.figure.add_subplot(grid[0, 1])
+        self.ax_profile = self.figure.add_subplot(grid[1, 1], sharex=self.ax_deprojected)
+        self.ax_empty = self.figure.add_subplot(grid[1, 0])
+        self.ax_empty.set_axis_off()
         self.canvas = FigureCanvasTkAgg(self.figure, master=frame)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         toolbar = NavigationToolbar2Tk(self.canvas, frame)
@@ -551,8 +576,8 @@ class ParameterTester(tk.Tk):
             data, geometry = self._load_galaxy(name)
             params = self.current_params()
             profile_width = max(1, int(params["profile_width"]))
-            mask, kept_rows, _residual = mask_products(data, geometry, params)
-            self.draw_products(name, data, geometry, params, mask, kept_rows, profile_width)
+            mask, kept_rows, residual = mask_products(data, geometry, params)
+            self.draw_products(name, data, geometry, params, mask, kept_rows, residual, profile_width)
             masked_fraction = np.count_nonzero(mask) / mask.size
             self.status.set(
                 f"{self.pc_var.get()} | {name}: {len(kept_rows)} kept segments, "
@@ -572,10 +597,14 @@ class ParameterTester(tk.Tk):
         params: dict[str, float | int | bool],
         mask: np.ndarray,
         kept_rows: list[dict[str, float | int | bool]],
+        residual: np.ndarray,
         profile_width: int,
     ) -> None:
+        self.ax_residual.clear()
         self.ax_deprojected.clear()
         self.ax_profile.clear()
+        self.ax_empty.clear()
+        self.ax_empty.set_axis_off()
 
         pixel_scale = geometry["pixel_scale"]
         radius_pix = profile_radius_pixels(data, geometry)
@@ -602,8 +631,24 @@ class ParameterTester(tk.Tk):
             smoothed, geometry, profile_limit_arcsec
         )
         log_deproj, deproj_levels = robust_log_image(deproj)
+        residual_deproj, x_resid, y_resid, _ = deproject_bar_aligned_cutout(
+            residual, geometry, profile_limit_arcsec
+        )
+        residual_display, residual_levels = robust_residual_image(residual_deproj)
         deproj_extent = [x_deproj[0], x_deproj[-1], y_deproj[0], y_deproj[-1]]
 
+        self._draw_residual_view(
+            deproj_extent,
+            x_resid,
+            y_resid,
+            residual_display,
+            residual_levels,
+            transform_xy,
+            geometry,
+            bar_sma_deproj,
+            kept_rows,
+            params,
+        )
         self._draw_deprojected_view(
             name,
             deproj_extent,
@@ -630,6 +675,44 @@ class ParameterTester(tk.Tk):
         self._align_profile_axis_to_image()
         self.canvas.draw_idle()
 
+    def _draw_residual_view(
+        self,
+        extent: list[float],
+        x_arcsec: np.ndarray,
+        y_arcsec: np.ndarray,
+        residual_image: np.ndarray,
+        levels: np.ndarray,
+        transform_xy: np.ndarray,
+        geometry: dict[str, float],
+        bar_sma_deproj: float,
+        kept_rows: list[dict[str, float | int | bool]],
+        params: dict[str, float | int | bool],
+    ) -> None:
+        ax = self.ax_residual
+        finite = residual_image[np.isfinite(residual_image)]
+        vmax = float(np.nanmax(np.abs(finite))) if finite.size else 1.0
+        if not math.isfinite(vmax) or vmax <= 0:
+            vmax = 1.0
+        ax.imshow(
+            residual_image,
+            origin="lower",
+            extent=extent,
+            cmap="RdBu_r",
+            vmin=-vmax,
+            vmax=vmax,
+        )
+        ax.contour(x_arcsec, y_arcsec, residual_image, levels=levels, colors="0.15", linewidths=0.42)
+        self._draw_profile_aperture_guides(ax, geometry, params, bar_sma_deproj)
+        self._add_candidate_circles(ax, kept_rows, geometry, params, extent, transform_xy)
+        ax.set_xlim(extent[0], extent[1])
+        ax.set_ylim(extent[2], extent[3])
+        ax.set_title("Residual isophotes", loc="left", pad=3)
+        ax.set_xlabel("deprojected bar-axis radius [arcsec]")
+        ax.set_ylabel("deprojected arcsec")
+        ax.set_aspect("equal", adjustable="box")
+        ax.grid(True, alpha=0.18)
+        ax.tick_params(axis="x", pad=1)
+
     def _draw_deprojected_view(
         self,
         name: str,
@@ -647,6 +730,24 @@ class ParameterTester(tk.Tk):
         ax = self.ax_deprojected
         ax.imshow(log_image, origin="lower", extent=extent, cmap="Greys", vmin=levels[0], vmax=levels[-1])
         ax.contour(x_arcsec, y_arcsec, log_image, levels=levels, colors="0.25", linewidths=0.42)
+        self._draw_profile_aperture_guides(ax, geometry, params, bar_sma_deproj)
+        self._add_candidate_circles(ax, kept_rows, geometry, params, extent, transform_xy)
+        ax.set_xlim(extent[0], extent[1])
+        ax.set_ylim(extent[2], extent[3])
+        ax.set_title(f"{name} | deprojected isophotes, bar on x-axis", loc="left", pad=3)
+        ax.set_xlabel("deprojected bar-axis radius [arcsec]")
+        ax.set_ylabel("deprojected arcsec")
+        ax.set_aspect("equal", adjustable="box")
+        ax.grid(True, alpha=0.18)
+        ax.tick_params(axis="x", pad=1)
+
+    def _draw_profile_aperture_guides(
+        self,
+        ax,
+        geometry: dict[str, float],
+        params: dict[str, float | int | bool],
+        bar_sma_deproj: float,
+    ) -> None:
         ax.axhline(0, color="#1f77b4", linewidth=1.5)
         half_profile_width_arcsec = 0.5 * int(params["profile_width"]) * geometry["pixel_scale"]
         ax.axhline(
@@ -665,15 +766,6 @@ class ParameterTester(tk.Tk):
         )
         ax.axvline(0, color="#d62728", linestyle="--", linewidth=1.1)
         ax.plot([-bar_sma_deproj, bar_sma_deproj], [0, 0], "o", color="#1f77b4", ms=4)
-        self._add_candidate_circles(ax, kept_rows, geometry, params, extent, transform_xy)
-        ax.set_xlim(extent[0], extent[1])
-        ax.set_ylim(extent[2], extent[3])
-        ax.set_title(f"{name} | deprojected isophotes, bar on x-axis", loc="left", pad=3)
-        ax.set_xlabel("deprojected bar-axis radius [arcsec]")
-        ax.set_ylabel("deprojected arcsec")
-        ax.set_aspect("equal", adjustable="box")
-        ax.grid(True, alpha=0.18)
-        ax.tick_params(axis="x", pad=1)
 
     def _add_candidate_circles(
         self,
@@ -731,7 +823,6 @@ class ParameterTester(tk.Tk):
         ax.axvline(0, color="0.6", linewidth=0.7)
         ax.set_xlim(x_limits[0], x_limits[1])
         ax.set_ylim(ymin, ymax)
-        ax.set_title("Bar-major intensity; red bands are profile samples touched by the mask", loc="left", pad=3)
         ax.set_xlabel("deprojected bar-major radius [arcsec]")
         ax.set_ylabel("intensity")
         ax.grid(True, which="both", alpha=0.2)
