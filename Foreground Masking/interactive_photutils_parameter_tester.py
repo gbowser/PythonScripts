@@ -408,8 +408,8 @@ class ParameterTester(tk.Tk):
     def __init__(self, manifest: Path, pc_name: str):
         super().__init__()
         self.title("Photutils Foreground Parameter Tester")
-        self.geometry("1600x1050")
-        self.minsize(1320, 880)
+        self.geometry("1850x1180")
+        self.minsize(1500, 980)
         self.manifest = manifest
         self.all_rows = read_manifest(manifest)
         self.pc_var = tk.StringVar(value=pc_name)
@@ -437,7 +437,7 @@ class ParameterTester(tk.Tk):
         control_shell = ttk.Frame(self)
         control_shell.pack(side=tk.LEFT, fill=tk.Y)
 
-        controls_canvas = tk.Canvas(control_shell, borderwidth=0, highlightthickness=0, width=330)
+        controls_canvas = tk.Canvas(control_shell, borderwidth=0, highlightthickness=0, width=380)
         self.controls_canvas = controls_canvas
         controls_scrollbar = ttk.Scrollbar(control_shell, orient=tk.VERTICAL, command=controls_canvas.yview)
         controls_canvas.configure(yscrollcommand=controls_scrollbar.set)
