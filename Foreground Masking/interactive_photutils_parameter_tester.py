@@ -70,7 +70,7 @@ METHOD_DEFAULTS: dict[str, dict[str, float | int | bool]] = {
         "dilation_radius_pixels": 3,
         "max_area": 500,
         "max_elongation": 6.0,
-        "exclude_center_radius_pixels": 12.0,
+        "exclude_center_radius_pixels": 8.0,
         "min_peak_residual_nsigma": 0.0,
         "profile_width": 3,
         "deblend": True,
@@ -89,7 +89,7 @@ METHOD_DEFAULTS: dict[str, dict[str, float | int | bool]] = {
         "dilation_radius_pixels": 3,
         "max_area": 500,
         "max_elongation": 6.0,
-        "exclude_center_radius_pixels": 12.0,
+        "exclude_center_radius_pixels": 8.0,
         "min_peak_residual_nsigma": 0.0,
         "profile_width": 3,
         "deblend": True,
@@ -307,6 +307,23 @@ def deprojected_centroid_radius_pixels_func(geometry: dict[str, float]):
     return distance_pixels
 
 
+def deprojected_segment_radius_pixels_func(geometry: dict[str, float], dilation_radius_pixels: int):
+    transform_xy = image_transform(geometry["disk_pa"], geometry["inclination"], geometry["bar_pa"])
+    pixel_scale = geometry["pixel_scale"]
+
+    def distance_pixels(segment_pixels: np.ndarray) -> float:
+        footprint = fgmask.dilate_mask(segment_pixels, dilation_radius_pixels)
+        yy, xx = np.nonzero(footprint)
+        if xx.size == 0:
+            return np.inf
+        x_arcsec = pixel_scale * (xx + 1.0 - geometry["xc"])
+        y_arcsec = pixel_scale * (yy + 1.0 - geometry["yc"])
+        deprojected = transform_xy @ np.vstack([x_arcsec, y_arcsec])
+        return float(np.nanmin(np.hypot(deprojected[0], deprojected[1]) / pixel_scale))
+
+    return distance_pixels
+
+
 def deproject_bar_aligned_cutout(
     data: np.ndarray,
     geometry: dict[str, float],
@@ -382,6 +399,9 @@ def mask_products(data: np.ndarray, geometry: dict[str, float], params: dict[str
             else float(params["min_peak_residual_nsigma"])
         ),
         centroid_distance_func=deprojected_centroid_radius_pixels_func(geometry),
+        segment_distance_func=deprojected_segment_radius_pixels_func(
+            geometry, int(params["dilation_radius_pixels"])
+        ),
     )
     raw_mask = fgmask.segmentation_to_mask(filtered, data.shape)
     mask = fgmask.dilate_mask(raw_mask, int(params["dilation_radius_pixels"]))

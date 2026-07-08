@@ -188,6 +188,7 @@ def filter_segments(
     exclude_center_radius_pixels: float = 0.0,
     min_peak_residual_nsigma: float | None = None,
     centroid_distance_func=None,
+    segment_distance_func=None,
 ):
     """Remove detections that are too small, too large, too elongated, or nuclear."""
     if segm is None or len(segm.labels) == 0:
@@ -217,14 +218,22 @@ def filter_segments(
             if peak_nsigma < min_peak_residual_nsigma:
                 keep = False
 
-        if centroid_distance_func is not None and exclude_center_radius_pixels > 0:
+        if segment_distance_func is not None and exclude_center_radius_pixels > 0:
+            radius = float(segment_distance_func(segment_pixels))
+            if radius <= exclude_center_radius_pixels:
+                keep = False
+        elif centroid_distance_func is not None and exclude_center_radius_pixels > 0:
             radius = float(centroid_distance_func(stats))
-            if radius < exclude_center_radius_pixels:
+            if radius <= exclude_center_radius_pixels:
                 keep = False
         elif galaxy_center is not None and exclude_center_radius_pixels > 0:
             x0, y0 = galaxy_center
-            radius = np.hypot(stats["x_centroid"] - x0, stats["y_centroid"] - y0)
-            if radius < exclude_center_radius_pixels:
+            yy, xx = np.nonzero(segment_pixels)
+            if xx.size:
+                radius = float(np.min(np.hypot(xx - x0, yy - y0)))
+            else:
+                radius = np.hypot(stats["x_centroid"] - x0, stats["y_centroid"] - y0)
+            if radius <= exclude_center_radius_pixels:
                 keep = False
         else:
             radius = np.nan
@@ -270,6 +279,23 @@ def dilate_mask(mask: np.ndarray, dilation_radius_pixels: int) -> np.ndarray:
     yy, xx = np.ogrid[-radius : radius + 1, -radius : radius + 1]
     footprint = (xx * xx + yy * yy) <= radius * radius
     return ndimage.binary_dilation(mask, structure=footprint)
+
+
+def segment_center_distance_pixels_func(
+    galaxy_center: tuple[float, float],
+    dilation_radius_pixels: int,
+):
+    """Return the minimum radius of a dilated segment footprint in image pixels."""
+    x0, y0 = galaxy_center
+
+    def distance_pixels(segment_pixels: np.ndarray) -> float:
+        footprint = dilate_mask(segment_pixels, dilation_radius_pixels)
+        yy, xx = np.nonzero(footprint)
+        if xx.size == 0:
+            return np.inf
+        return float(np.min(np.hypot(xx - x0, yy - y0)))
+
+    return distance_pixels
 
 
 def save_mask_fits(mask: np.ndarray, header: fits.Header, output_path: str | Path) -> None:
@@ -431,6 +457,11 @@ def build_foreground_mask(
         galaxy_center=galaxy_center,
         exclude_center_radius_pixels=exclude_center_radius_pixels,
         min_peak_residual_nsigma=min_peak_residual_nsigma,
+        segment_distance_func=(
+            segment_center_distance_pixels_func(galaxy_center, dilation_radius_pixels)
+            if galaxy_center is not None
+            else None
+        ),
     )
 
     raw_mask = segmentation_to_mask(filtered_segm, data.shape)

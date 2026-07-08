@@ -240,7 +240,11 @@ def add_parameters(doc: Document) -> None:
             ["--dilation-radius-pixels", "3", "Circular dilation radius applied to retained segments."],
             ["--max-area", "500", "Rejects large residual regions likely to be galaxy structure or background residuals."],
             ["--max-elongation", "6.0", "Rejects highly elongated residual segments."],
-            ["--exclude-center-radius-pixels", "12.0", "Suppresses compact residuals too close to the galaxy centre."],
+            [
+                "--exclude-center-radius-pixels",
+                "8.0",
+                "Rejects candidates whose dilated footprint touches the deprojected central exclusion zone.",
+            ],
             ["--bridge-merge-gap-samples", "12", "Controls when adjacent profile gaps are bridged as one replacement span."],
             ["--profile-width", "3", "Width in pixels used when sampling bar-major and bar-minor profiles."],
         ],

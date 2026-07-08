@@ -228,7 +228,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--exclude-center-radius-pixels",
         type=float,
-        default=12.0,
+        default=8.0,
         help="Deprojected, bar-aligned central exclusion radius, expressed in image-pixel units.",
     )
     parser.add_argument("--bridge-merge-gap-samples", type=int, default=12)

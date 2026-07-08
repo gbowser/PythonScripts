@@ -313,8 +313,8 @@ def add_masking_model(doc: Document) -> None:
             ],
             [
                 "--exclude-center-radius-pixels",
-                "12.0",
-                "Rejects residual segments whose centroids lie too close to the galaxy centre.",
+                "8.0",
+                "Rejects candidates whose dilated footprint touches the deprojected central exclusion zone.",
             ],
         ],
         [2500, 1700, 5160],

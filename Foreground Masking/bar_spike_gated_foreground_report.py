@@ -135,6 +135,9 @@ def build_mask_from_residual(
         galaxy_center=(geometry["xc"] - 1, geometry["yc"] - 1),
         exclude_center_radius_pixels=exclude_center_radius_pixels,
         centroid_distance_func=deprojected_centroid_radius_pixels_func(geometry),
+        segment_distance_func=deprojected_segment_radius_pixels_func(
+            geometry, dilation_radius_pixels
+        ),
     )
     raw_mask = fgmask.segmentation_to_mask(filtered_segm, data.shape)
     mask = fgmask.dilate_mask(raw_mask, dilation_radius_pixels)
@@ -276,6 +279,9 @@ def build_spike_gated_mask_from_residual(
         galaxy_center=(xc - 1, yc - 1),
         exclude_center_radius_pixels=exclude_center_radius_pixels,
         centroid_distance_func=deprojected_centroid_radius_pixels_func(geometry),
+        segment_distance_func=deprojected_segment_radius_pixels_func(
+            geometry, dilation_radius_pixels
+        ),
     )
     if filtered_segm is None or len(filtered_segm.labels) == 0:
         return np.zeros(data.shape, dtype=bool), [], spike_samples
@@ -490,6 +496,26 @@ def deprojected_centroid_radius_pixels_func(geometry: dict[str, float]):
         y_arcsec = pixel_scale * (float(stats["y_centroid"]) + 1.0 - geometry["yc"])
         x_deproj, y_deproj = transform_xy @ np.array([x_arcsec, y_arcsec])
         return float(np.hypot(x_deproj, y_deproj) / pixel_scale)
+
+    return distance_pixels
+
+
+def deprojected_segment_radius_pixels_func(geometry: dict[str, float], dilation_radius_pixels: int):
+    """Return the minimum deprojected radius of a segment footprint in pixel units."""
+    transform_xy = image_transform(
+        geometry["disk_pa"], geometry["inclination"], geometry["bar_pa"]
+    )
+    pixel_scale = geometry["pixel_scale"]
+
+    def distance_pixels(segment_pixels: np.ndarray) -> float:
+        footprint = fgmask.dilate_mask(segment_pixels, dilation_radius_pixels)
+        yy, xx = np.nonzero(footprint)
+        if xx.size == 0:
+            return np.inf
+        x_arcsec = pixel_scale * (xx + 1.0 - geometry["xc"])
+        y_arcsec = pixel_scale * (yy + 1.0 - geometry["yc"])
+        deprojected = transform_xy @ np.vstack([x_arcsec, y_arcsec])
+        return float(np.nanmin(np.hypot(deprojected[0], deprojected[1]) / pixel_scale))
 
     return distance_pixels
 
@@ -1327,7 +1353,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--exclude-center-radius-pixels",
         type=float,
-        default=12.0,
+        default=8.0,
         help="Deprojected, bar-aligned central exclusion radius, expressed in image-pixel units.",
     )
     parser.add_argument("--bridge-merge-gap-samples", type=int, default=12)
