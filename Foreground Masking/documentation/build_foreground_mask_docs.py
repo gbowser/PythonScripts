@@ -13,7 +13,6 @@ SCRIPT_DIR = Path(__file__).resolve().parents[1]
 DOC_DIR = SCRIPT_DIR / "documentation"
 SCRIPT_NAME = "foreground_mask_photutils.py"
 OUTPUT_DOCX = DOC_DIR / "Foreground Mask Photutils Documentation.docx"
-OUTPUT_PDF = DOC_DIR / "Foreground Mask Photutils Documentation.pdf"
 
 # Reuse the existing shoulder-quantification documentation style so this manual
 # sits visually beside the other project documentation.

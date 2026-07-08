@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import importlib.util
 import shutil
-import subprocess
 import sys
 from datetime import date
 from pathlib import Path
@@ -22,7 +21,6 @@ from machine_paths import remove_foreground_folder  # noqa: E402
 DOC_DIR = SCRIPT_DIR / "documentation"
 SCRIPT_NAME = "bar_spike_gated_foreground_report.py"
 OUTPUT_DOCX = DOC_DIR / "Bar Spike-Gated Foreground Candidate Report Documentation.docx"
-OUTPUT_PDF = DOC_DIR / "Bar Spike-Gated Foreground Candidate Report Documentation.pdf"
 
 DROPBOX_DOC_DIR = remove_foreground_folder("Laptop") / "documentation"
 
@@ -471,16 +469,16 @@ def add_outputs(doc: Document) -> None:
         ["Output", "Meaning"],
         [
             [
-                "{galaxy_name}_foreground_removed.pdf",
-                "Portrait report for one galaxy. The filename is historical shorthand; the current default content is spike-gated profile-contamination correction, not complete image-wide foreground removal.",
+                "{galaxy_name}_fg_removed_sp-gated.pdf and .png",
+                "Portrait report and PNG preview for one galaxy. The method suffix identifies the spike-gated masking run.",
             ],
             [
                 "Default output folder",
-                r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\calibrated spike_rule",
+                r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\spike_gated_auto_tuned",
             ],
             [
                 "One-galaxy default output",
-                "Foreground Masking/ESO120-012_portrait_mask_report/ESO120-012_foreground_removed.pdf when no --names or --all selection is supplied.",
+                "Foreground Masking/ESO120-012_portrait_mask_report/ESO120-012_fg_removed_sp-gated.pdf when no --names or --all selection is supplied.",
             ],
         ],
         [2800, 6560],
@@ -547,60 +545,9 @@ def build() -> Path:
     return OUTPUT_DOCX
 
 
-def convert_to_pdf(docx_path: Path) -> Path:
-    if shutil.which("soffice"):
-        subprocess.run(
-            [
-                "soffice",
-                "--headless",
-                "--convert-to",
-                "pdf",
-                "--outdir",
-                str(docx_path.parent),
-                str(docx_path),
-            ],
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        generated_pdf = docx_path.with_suffix(".pdf")
-        if generated_pdf != OUTPUT_PDF:
-            generated_pdf.replace(OUTPUT_PDF)
-        return OUTPUT_PDF
-
-    powershell = shutil.which("powershell") or shutil.which("pwsh")
-    if powershell:
-        command = (
-            "$docx = "
-            + repr(str(docx_path.resolve()))
-            + "; $pdf = "
-            + repr(str(OUTPUT_PDF.resolve()))
-            + "; $word = New-Object -ComObject Word.Application; "
-            + "$word.Visible = $false; "
-            + "$doc = $word.Documents.Open($docx); "
-            + "$doc.ExportAsFixedFormat($pdf, 17); "
-            + "$doc.Close($false); $word.Quit(); "
-            + "[System.Runtime.InteropServices.Marshal]::ReleaseComObject($doc) | Out-Null; "
-            + "[System.Runtime.InteropServices.Marshal]::ReleaseComObject($word) | Out-Null"
-        )
-        subprocess.run(
-            [powershell, "-NoProfile", "-Command", command],
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        return OUTPUT_PDF
-
-    raise RuntimeError("Neither LibreOffice soffice nor PowerShell Word automation is available.")
-
-
 if __name__ == "__main__":
     docx = build()
     print(docx)
-    try:
-        pdf = convert_to_pdf(docx)
-        print(pdf)
-    except Exception as exc:
-        print(f"PDF conversion failed: {exc}")
+    DROPBOX_DOC_DIR.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(docx, DROPBOX_DOC_DIR / docx.name)
+    print(DROPBOX_DOC_DIR)

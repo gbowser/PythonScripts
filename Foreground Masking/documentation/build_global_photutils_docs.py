@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import shutil
-import subprocess
 import sys
 from datetime import date
 from pathlib import Path
@@ -25,7 +24,6 @@ MAIN_SCRIPT_NAME = "bar_spike_gated_foreground_report.py"
 CALIBRATION_SCRIPT_NAME = "photutils_global_from_bar_spike_calibration.py"
 OPTIMISER_SCRIPT_NAME = "optimise_photutils_global_parameters.py"
 OUTPUT_DOCX = DOC_DIR / "Global Photutils Foreground Candidate Report Documentation.docx"
-OUTPUT_PDF = DOC_DIR / "Global Photutils Foreground Candidate Report Documentation.pdf"
 
 DEFAULT_PC = "Laptop"
 DROPBOX_DOC_DIR = remove_foreground_folder(DEFAULT_PC) / "documentation"
@@ -217,7 +215,7 @@ def add_bar_spike_calibration_experiment(doc: Document) -> None:
             ],
             [
                 "Output reports",
-                "Writes {galaxy_name}_photutils_global_foreground_removed.pdf for the selected calibration/test galaxies.",
+                "Writes {galaxy_name}_fg_removed_global.pdf and {galaxy_name}_fg_removed_global.png for the selected calibration/test galaxies.",
             ],
         ],
         [3000, 6360],
@@ -274,15 +272,15 @@ def add_outputs(doc: Document) -> None:
         ["Output", "Meaning"],
         [
             [
-                "global_photutils_auto_tuned/{galaxy_name}_foreground_removed.pdf",
-                "Current all-galaxy global Photutils comparison reports. The filename suffix is shared with the spike-gated run for easy visual pairing.",
+                "global_photutils_auto_tuned/{galaxy_name}_fg_removed_global.pdf and .png",
+                "Current all-galaxy global Photutils comparison reports. The method suffix distinguishes these from spike-gated outputs.",
             ],
             [
                 "photutils_global_calibration_from_bar_spikes.csv",
                 "Calibration CSV produced by the experimental calibration script when that script is run.",
             ],
             [
-                "{galaxy_name}_photutils_global_foreground_removed.pdf",
+                "{galaxy_name}_fg_removed_global.pdf and .png",
                 "Calibration-script report filename used for the selected calibration/test galaxies.",
             ],
             [
@@ -400,55 +398,6 @@ def build() -> Path:
     return OUTPUT_DOCX
 
 
-def convert_to_pdf(docx_path: Path) -> Path:
-    if shutil.which("soffice"):
-        subprocess.run(
-            [
-                "soffice",
-                "--headless",
-                "--convert-to",
-                "pdf",
-                "--outdir",
-                str(docx_path.parent),
-                str(docx_path),
-            ],
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        generated_pdf = docx_path.with_suffix(".pdf")
-        if generated_pdf != OUTPUT_PDF:
-            generated_pdf.replace(OUTPUT_PDF)
-        return OUTPUT_PDF
-
-    powershell = shutil.which("powershell") or shutil.which("pwsh")
-    if powershell:
-        command = (
-            "$docx = "
-            + repr(str(docx_path.resolve()))
-            + "; $pdf = "
-            + repr(str(OUTPUT_PDF.resolve()))
-            + "; $word = New-Object -ComObject Word.Application; "
-            + "$word.Visible = $false; "
-            + "$doc = $word.Documents.Open($docx); "
-            + "$doc.ExportAsFixedFormat($pdf, 17); "
-            + "$doc.Close($false); $word.Quit(); "
-            + "[System.Runtime.InteropServices.Marshal]::ReleaseComObject($doc) | Out-Null; "
-            + "[System.Runtime.InteropServices.Marshal]::ReleaseComObject($word) | Out-Null"
-        )
-        subprocess.run(
-            [powershell, "-NoProfile", "-Command", command],
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        return OUTPUT_PDF
-
-    raise RuntimeError("Neither LibreOffice soffice nor PowerShell Word automation is available.")
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=DEFAULT_PC)
@@ -456,11 +405,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def copy_to_dropbox(docx_path: Path, pdf_path: Path | None, dropbox_doc_dir: Path) -> None:
+def copy_to_dropbox(docx_path: Path, dropbox_doc_dir: Path) -> None:
     dropbox_doc_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy2(docx_path, dropbox_doc_dir / docx_path.name)
-    if pdf_path is not None and pdf_path.exists():
-        shutil.copy2(pdf_path, dropbox_doc_dir / pdf_path.name)
 
 
 if __name__ == "__main__":
@@ -468,11 +415,5 @@ if __name__ == "__main__":
     dropbox_doc_dir = args.dropbox_doc_dir or remove_foreground_folder(args.pc) / "documentation"
     docx = build()
     print(docx)
-    pdf: Path | None = None
-    try:
-        pdf = convert_to_pdf(docx)
-        print(pdf)
-    except Exception as exc:
-        print(f"PDF conversion failed: {exc}")
-    copy_to_dropbox(docx, pdf, dropbox_doc_dir)
+    copy_to_dropbox(docx, dropbox_doc_dir)
     print(dropbox_doc_dir)

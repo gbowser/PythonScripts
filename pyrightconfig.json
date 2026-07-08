@@ -1,5 +1,10 @@
 {
     "pythonVersion": "3.13",
     "pythonPlatform": "Windows",
+    "extraPaths": [
+        "Foreground Masking",
+        "Erwin_s4g_image_downloader",
+        "Erwin_barprofiles_paper_GB_working_copy"
+    ],
     "typeCheckingMode": "off"
 }
