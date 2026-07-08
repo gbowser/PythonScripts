@@ -966,6 +966,9 @@ class ParameterTester(tk.Tk):
         self.after_id = None
         name = self.galaxy_var.get()
         try:
+            self._clear_calculation_summary()
+            self.status.set(f"Calculating {name}...")
+            self.update_idletasks()
             data, geometry = self._load_galaxy(name)
             params = self.current_params()
             profile_width = max(1, int(params["profile_width"]))
@@ -992,7 +995,7 @@ class ParameterTester(tk.Tk):
         name: str,
         data: np.ndarray,
         geometry: dict[str, float],
-        params: dict[str, float | int | bool],
+        params: dict[str, float | int | bool | str],
         mask: np.ndarray,
         kept_rows: list[dict[str, float | int | bool]],
         residual: np.ndarray,
@@ -1071,9 +1074,81 @@ class ParameterTester(tk.Tk):
             (deproj_extent[0], deproj_extent[1]),
             spike_samples,
         )
+        self._draw_calculation_summary(name, params)
         self.canvas.draw()
         self._align_profile_axis_to_image()
         self.canvas.draw_idle()
+
+    def _clear_calculation_summary(self) -> None:
+        if not hasattr(self, "ax_empty"):
+            return
+        self.ax_empty.clear()
+        self.ax_empty.set_axis_off()
+        self.canvas.draw()
+        self.canvas.flush_events()
+
+    def _display_parameter_value(self, key: str) -> float | int | bool:
+        if key not in self.vars:
+            return self.current_params()[key]
+        return self.vars[key].get()
+
+    def _format_summary_parameters(self) -> list[str]:
+        linear_unit = "px" if self.display_units == "pixels" else "as"
+        area_unit = "px" if self.display_units == "pixels" else "as^2"
+        return [
+            f"nsigma: {float(self._display_parameter_value('detection_nsigma')):.1f}",
+            f"smooth sigma: {float(self._display_parameter_value('smooth_sigma_pixels')):.1f} {linear_unit}",
+            f"npixels: {int(self._display_parameter_value('npixels'))}",
+            f"dilation: {float(self._display_parameter_value('dilation_radius_pixels')):.1f} {linear_unit}",
+            f"max area: {float(self._display_parameter_value('max_area')):.0f} {area_unit}",
+            f"max elongation: {float(self._display_parameter_value('max_elongation')):.1f}",
+            f"central exclusion: {float(self._display_parameter_value('exclude_center_radius_pixels')):.1f} {linear_unit}",
+        ]
+
+    def _draw_calculation_summary(self, name: str, params: dict[str, float | int | bool | str]) -> None:
+        ax = self.ax_empty
+        ax.clear()
+        ax.set_axis_off()
+        method_label = MASKING_METHODS.get(str(params["masking_method"]), str(params["masking_method"]))
+        ax.text(
+            0.04,
+            0.88,
+            name,
+            transform=ax.transAxes,
+            fontsize=20,
+            fontweight="bold",
+            color="0.10",
+            va="top",
+        )
+        ax.text(
+            0.04,
+            0.76,
+            method_label,
+            transform=ax.transAxes,
+            fontsize=16,
+            color="0.18",
+            va="top",
+        )
+        ax.text(
+            0.04,
+            0.62,
+            "Key Parameters",
+            transform=ax.transAxes,
+            fontsize=15,
+            fontweight="bold",
+            color="#1f4d78",
+            va="top",
+        )
+        ax.text(
+            0.04,
+            0.52,
+            "\n".join(self._format_summary_parameters()),
+            transform=ax.transAxes,
+            fontsize=12.5,
+            color="0.18",
+            va="top",
+            linespacing=1.35,
+        )
 
     def _draw_residual_view(
         self,
