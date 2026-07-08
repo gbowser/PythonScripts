@@ -45,6 +45,23 @@ MASKING_METHODS = {
     "global": "Global Photutils",
     "spike-gated": "Spike-gated",
 }
+MASKING_METHOD_LABELS = {
+    "Global": "global",
+    "Spike-gated": "spike-gated",
+}
+PARAMETER_UNIT_LABELS = {
+    "Pixels": "pixels",
+    "Arcsec": "arcsec",
+}
+PIXEL_LINEAR_PARAMS = {
+    "smooth_sigma_pixels",
+    "dilation_radius_pixels",
+    "exclude_center_radius_pixels",
+    "profile_width",
+}
+PIXEL_AREA_PARAMS = {
+    "max_area",
+}
 METHOD_DEFAULTS: dict[str, dict[str, float | int | bool]] = {
     "global": {
         "smooth_sigma_pixels": 15.0,
@@ -396,7 +413,9 @@ class ParameterTester(tk.Tk):
         self.manifest = manifest
         self.all_rows = read_manifest(manifest)
         self.pc_var = tk.StringVar(value=pc_name)
-        self.method_var = tk.StringVar(value="global")
+        self.method_var = tk.StringVar(value="Global")
+        self.unit_var = tk.StringVar(value="Pixels")
+        self.display_units = "pixels"
         self.output_dir = remove_foreground_folder(pc_name) / "interactive_photutils_parameter_tester"
         self.rows: list[dict[str, str]] = []
         self.rows_by_name: dict[str, dict[str, str]] = {}
@@ -408,8 +427,11 @@ class ParameterTester(tk.Tk):
         self._build_figure()
         self.refresh_pc_paths(initial=True)
 
+    def active_method(self) -> str:
+        return MASKING_METHOD_LABELS.get(self.method_var.get(), "global")
+
     def active_defaults(self) -> dict[str, float | int | bool]:
-        return METHOD_DEFAULTS[self.method_var.get()]
+        return METHOD_DEFAULTS[self.active_method()]
 
     def _build_controls(self) -> None:
         control_shell = ttk.Frame(self)
@@ -450,12 +472,23 @@ class ParameterTester(tk.Tk):
         method_combo = ttk.Combobox(
             control,
             textvariable=self.method_var,
-            values=list(MASKING_METHODS),
+            values=list(MASKING_METHOD_LABELS),
             width=28,
             state="readonly",
         )
         method_combo.pack(fill=tk.X, pady=(0, 8))
         method_combo.bind("<<ComboboxSelected>>", lambda _event: self.change_masking_method())
+
+        ttk.Label(control, text="Parameter units").pack(anchor=tk.W)
+        unit_combo = ttk.Combobox(
+            control,
+            textvariable=self.unit_var,
+            values=list(PARAMETER_UNIT_LABELS),
+            width=28,
+            state="readonly",
+        )
+        unit_combo.pack(fill=tk.X, pady=(0, 8))
+        unit_combo.bind("<<ComboboxSelected>>", lambda _event: self.change_parameter_units())
 
         ttk.Label(control, text="Galaxy").pack(anchor=tk.W)
         self.galaxy_var = tk.StringVar()
@@ -473,6 +506,8 @@ class ParameterTester(tk.Tk):
 
         self.vars: dict[str, tk.Variable] = {}
         self.readouts: dict[str, ttk.Label] = {}
+        self.parameter_labels: dict[str, ttk.Label] = {}
+        self.parameter_label_texts: dict[str, str] = {}
         self._scale(control, "smooth_sigma_pixels", "Smooth sigma [px]", 3.0, 40.0, 0.5)
         self._scale(control, "detection_nsigma", "Detection nsigma", 2.0, 10.0, 0.1)
         self._spin(control, "npixels", "Minimum pixels", 1, 80, 1)
@@ -558,11 +593,14 @@ class ParameterTester(tk.Tk):
     ) -> None:
         frame = ttk.Frame(parent)
         frame.pack(fill=tk.X, pady=3)
-        var = tk.DoubleVar(value=float(self.active_defaults()[key]))
+        var = tk.DoubleVar(value=float(self.default_for_display(key)))
         self.vars[key] = var
         label_row = ttk.Frame(frame)
         label_row.pack(fill=tk.X)
-        ttk.Label(label_row, text=label).pack(side=tk.LEFT, anchor=tk.W)
+        label_widget = ttk.Label(label_row, text=self.label_for_display(key, label))
+        label_widget.pack(side=tk.LEFT, anchor=tk.W)
+        self.parameter_labels[key] = label_widget
+        self.parameter_label_texts[key] = label
         ttk.Button(label_row, text="Reset", width=7, command=lambda k=key: self.reset_one_parameter(k)).pack(
             side=tk.RIGHT
         )
@@ -593,9 +631,15 @@ class ParameterTester(tk.Tk):
     ) -> None:
         frame = ttk.Frame(parent)
         frame.pack(fill=tk.X, pady=3)
-        var = tk.IntVar(value=int(self.active_defaults()[key]))
+        if key in PIXEL_LINEAR_PARAMS or key in PIXEL_AREA_PARAMS:
+            var = tk.DoubleVar(value=float(self.default_for_display(key)))
+        else:
+            var = tk.IntVar(value=int(round(float(self.default_for_display(key)))))
         self.vars[key] = var
-        ttk.Label(frame, text=label).pack(side=tk.LEFT)
+        label_widget = ttk.Label(frame, text=self.label_for_display(key, label))
+        label_widget.pack(side=tk.LEFT)
+        self.parameter_labels[key] = label_widget
+        self.parameter_label_texts[key] = label
         ttk.Button(frame, text="Reset", width=7, command=lambda k=key: self.reset_one_parameter(k)).pack(
             side=tk.RIGHT
         )
@@ -616,6 +660,57 @@ class ParameterTester(tk.Tk):
         readout.configure(text=f"{float(self.vars[key].get()):.2f}")
         if schedule:
             self.schedule_redraw()
+
+    def pixel_scale_for_units(self) -> float:
+        name = getattr(self, "galaxy_var", tk.StringVar(value="")).get()
+        if not name:
+            return 1.0
+        try:
+            _data, geometry = self._load_galaxy(name)
+        except Exception:  # noqa: BLE001
+            return 1.0
+        return float(geometry.get("pixel_scale", 1.0)) or 1.0
+
+    def convert_from_pixels(self, key: str, value: float, units: str | None = None) -> float:
+        units = self.display_units if units is None else units
+        if units != "arcsec":
+            return value
+        pixel_scale = self.pixel_scale_for_units()
+        if key in PIXEL_LINEAR_PARAMS:
+            return value * pixel_scale
+        if key in PIXEL_AREA_PARAMS:
+            return value * pixel_scale * pixel_scale
+        return value
+
+    def convert_to_pixels(self, key: str, value: float, units: str | None = None) -> float:
+        units = self.display_units if units is None else units
+        if units != "arcsec":
+            return value
+        pixel_scale = self.pixel_scale_for_units()
+        if key in PIXEL_LINEAR_PARAMS:
+            return value / pixel_scale
+        if key in PIXEL_AREA_PARAMS:
+            return value / (pixel_scale * pixel_scale)
+        return value
+
+    def default_for_display(self, key: str) -> float | int | bool:
+        value = self.active_defaults()[key]
+        if isinstance(value, bool):
+            return value
+        return self.convert_from_pixels(key, float(value))
+
+    def label_for_display(self, key: str, label: str) -> str:
+        if self.display_units != "arcsec":
+            return label
+        if key in PIXEL_AREA_PARAMS:
+            return label.replace("[px]", "[as^2]")
+        if key in PIXEL_LINEAR_PARAMS:
+            return label.replace("[px]", "[as]")
+        return label
+
+    def refresh_parameter_unit_labels(self) -> None:
+        for key, label in self.parameter_labels.items():
+            label.configure(text=self.label_for_display(key, self.parameter_label_texts[key]))
 
     def _build_figure(self) -> None:
         frame = ttk.Frame(self)
@@ -664,7 +759,7 @@ class ParameterTester(tk.Tk):
         self.load_selected_galaxy()
 
     def reset_one_parameter(self, key: str) -> None:
-        self.vars[key].set(self.active_defaults()[key])
+        self.vars[key].set(self.default_for_display(key))
         if key in self.readouts:
             self.readouts[key].configure(text=f"{float(self.vars[key].get()):.2f}")
         self.redraw_now()
@@ -677,7 +772,7 @@ class ParameterTester(tk.Tk):
         for key, value in self.active_defaults().items():
             if key not in self.vars:
                 continue
-            self.vars[key].set(value)
+            self.vars[key].set(value if isinstance(value, bool) else self.convert_from_pixels(key, float(value)))
             if key in self.readouts:
                 self.readouts[key].configure(text=f"{float(self.vars[key].get()):.2f}")
 
@@ -686,9 +781,34 @@ class ParameterTester(tk.Tk):
         self.apply_method_defaults()
         self.redraw()
 
+    def change_parameter_units(self) -> None:
+        new_units = PARAMETER_UNIT_LABELS.get(self.unit_var.get(), "pixels")
+        old_units = self.display_units
+        if new_units == old_units:
+            return
+        self.cancel_scheduled_redraw()
+        for key, var in self.vars.items():
+            if key not in PIXEL_LINEAR_PARAMS and key not in PIXEL_AREA_PARAMS:
+                continue
+            pixel_value = self.convert_to_pixels(key, float(var.get()), old_units)
+            var.set(self.convert_from_pixels(key, pixel_value, new_units))
+            if key in self.readouts:
+                self.readouts[key].configure(text=f"{float(var.get()):.2f}")
+        self.display_units = new_units
+        self.refresh_parameter_unit_labels()
+        self.redraw()
+
     def current_params(self) -> dict[str, float | int | bool | str]:
-        params = {key: var.get() for key, var in self.vars.items()}
-        params["masking_method"] = self.method_var.get()
+        params: dict[str, float | int | bool | str] = {}
+        for key, var in self.vars.items():
+            value = var.get()
+            if isinstance(value, bool):
+                params[key] = value
+            elif key in PIXEL_LINEAR_PARAMS or key in PIXEL_AREA_PARAMS:
+                params[key] = self.convert_to_pixels(key, float(value))
+            else:
+                params[key] = value
+        params["masking_method"] = self.active_method()
         return params
 
     def save_current_png(self) -> None:
