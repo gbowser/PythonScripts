@@ -69,6 +69,11 @@ def report_output_paths(output_dir: Path, filename_stem: str) -> tuple[Path, Pat
     return pdf_dir / f"{filename_stem}.pdf", png_dir / f"{filename_stem}.png"
 
 
+def foreground_removed_stem(galaxy_name: str, masking_mode: str) -> str:
+    method = "sp-gated" if masking_mode == "spike-gated" else "global"
+    return f"{s4g_plot.safe_filename(galaxy_name)}_fg_removed_{method}"
+
+
 def read_row(manifest: Path, galaxy_name: str) -> dict[str, str]:
     with manifest.open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
@@ -1363,7 +1368,7 @@ def main() -> int:
     multiple = len(selected) > 1 or args.all or bool(args.names)
     for row in selected:
         galaxy_name = row["name"]
-        default_stem = f"{s4g_plot.safe_filename(galaxy_name)}_foreground_removed"
+        default_stem = foreground_removed_stem(galaxy_name, args.masking_mode)
         stem = args.output.stem if args.output is not None and not multiple else default_stem
         output, output_png = report_output_paths(args.output_dir, stem)
         try:

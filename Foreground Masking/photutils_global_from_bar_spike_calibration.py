@@ -272,7 +272,7 @@ def main() -> int:
         name = row["name"]
         nsigma = float(calibration[name]["calibrated_nsigma"])
         report_args = make_global_report_args(args, nsigma)
-        stem = f"{bar.s4g_plot.safe_filename(name)}_photutils_global_foreground_removed"
+        stem = bar.foreground_removed_stem(name, "global")
         output = pdf_dir / f"{stem}.pdf"
         output_png = png_dir / f"{stem}.png"
         print(f"Writing global Photutils report for {name} at nsigma={nsigma:g}...", flush=True)
