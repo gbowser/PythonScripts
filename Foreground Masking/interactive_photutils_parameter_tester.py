@@ -1050,6 +1050,8 @@ class ParameterTester(tk.Tk):
             bar_sma_deproj,
             kept_rows,
             params,
+            rr_deproj,
+            mask_profile,
         )
         self._draw_deprojected_view(
             name,
@@ -1063,6 +1065,8 @@ class ParameterTester(tk.Tk):
             bar_sma_deproj,
             kept_rows,
             params,
+            rr_deproj,
+            mask_profile,
         )
         self._draw_profile(
             name,
@@ -1162,6 +1166,8 @@ class ParameterTester(tk.Tk):
         bar_sma_deproj: float,
         kept_rows: list[dict[str, float | int | bool]],
         params: dict[str, float | int | bool],
+        profile_radii: np.ndarray,
+        mask_profile: np.ndarray,
     ) -> None:
         ax = self.ax_residual
         finite = residual_image[np.isfinite(residual_image)]
@@ -1177,6 +1183,7 @@ class ParameterTester(tk.Tk):
             vmax=vmax,
         )
         ax.contour(x_arcsec, y_arcsec, residual_image, levels=levels, colors="0.15", linewidths=0.42)
+        self._draw_masked_profile_bands(ax, profile_radii, mask_profile)
         self._draw_profile_aperture_guides(ax, geometry, params, bar_sma_deproj)
         self._draw_central_exclusion(ax, geometry, params, transform_xy)
         self._add_candidate_circles(ax, kept_rows, geometry, params, extent, transform_xy)
@@ -1202,10 +1209,13 @@ class ParameterTester(tk.Tk):
         bar_sma_deproj: float,
         kept_rows: list[dict[str, float | int | bool]],
         params: dict[str, float | int | bool],
+        profile_radii: np.ndarray,
+        mask_profile: np.ndarray,
     ) -> None:
         ax = self.ax_deprojected
         ax.imshow(log_image, origin="lower", extent=extent, cmap="Greys", vmin=levels[0], vmax=levels[-1])
         ax.contour(x_arcsec, y_arcsec, log_image, levels=levels, colors="0.25", linewidths=0.42)
+        self._draw_masked_profile_bands(ax, profile_radii, mask_profile)
         self._draw_profile_aperture_guides(ax, geometry, params, bar_sma_deproj)
         self._draw_central_exclusion(ax, geometry, params, transform_xy)
         self._add_candidate_circles(ax, kept_rows, geometry, params, extent, transform_xy)
@@ -1217,6 +1227,26 @@ class ParameterTester(tk.Tk):
         ax.set_aspect("equal", adjustable="box")
         ax.grid(True, alpha=0.18)
         ax.tick_params(axis="x", pad=1)
+
+    def _draw_masked_profile_bands(
+        self,
+        ax,
+        profile_radii: np.ndarray,
+        mask_profile: np.ndarray,
+    ) -> None:
+        for start, stop in contiguous_true_runs(mask_profile):
+            x0 = float(profile_radii[start])
+            x1 = float(profile_radii[stop])
+            if not math.isfinite(x0) or not math.isfinite(x1):
+                continue
+            ax.axvspan(
+                min(x0, x1),
+                max(x0, x1),
+                color="red",
+                alpha=0.10,
+                linewidth=0,
+                zorder=1.5,
+            )
 
     def _draw_profile_aperture_guides(
         self,
