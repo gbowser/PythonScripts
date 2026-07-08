@@ -505,8 +505,8 @@ class ParameterTester(tk.Tk):
     def __init__(self, manifest: Path, pc_name: str):
         super().__init__()
         self.title("Photutils Foreground Parameter Tester")
-        self.geometry("1850x1180")
-        self.minsize(1500, 980)
+        self.geometry("1850x1320")
+        self.minsize(1500, 1100)
         self.manifest = manifest
         self.all_rows = read_manifest(manifest)
         self.pc_var = tk.StringVar(value=pc_name)
@@ -812,9 +812,9 @@ class ParameterTester(tk.Tk):
     def _build_figure(self) -> None:
         frame = ttk.Frame(self)
         frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
-        self.figure = Figure(figsize=(11.5, 8.6), dpi=100, constrained_layout=False)
-        self.figure.subplots_adjust(left=0.06, right=0.985, bottom=0.07, top=0.97, hspace=0.16, wspace=0.18)
-        grid = self.figure.add_gridspec(2, 2, height_ratios=[1.12, 0.74], width_ratios=[1.0, 1.0])
+        self.figure = Figure(figsize=(11.5, 10.0), dpi=100, constrained_layout=False)
+        self.figure.subplots_adjust(left=0.06, right=0.985, bottom=0.065, top=0.975, hspace=0.14, wspace=0.18)
+        grid = self.figure.add_gridspec(2, 2, height_ratios=[1.12, 0.82], width_ratios=[1.0, 1.0])
         self.ax_residual = self.figure.add_subplot(grid[0, 0])
         self.ax_deprojected = self.figure.add_subplot(grid[0, 1])
         self.ax_profile = self.figure.add_subplot(grid[1, 1], sharex=self.ax_deprojected)
