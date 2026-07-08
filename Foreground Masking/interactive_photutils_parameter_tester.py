@@ -1255,8 +1255,16 @@ class ParameterTester(tk.Tk):
                     alpha=0.22,
                     label="spike-gate samples",
                 )
+        displayed_masked_intensity = np.array(masked_intensity, copy=True)
+        displayed_masked_intensity[bridged_samples] = np.nan
         ax.semilogy(radii, intensity, color="#1f77b4", linewidth=1.4, label="original major-axis profile")
-        ax.semilogy(radii, masked_intensity, color="#ff7f0e", linewidth=1.25, label="masked profile")
+        ax.semilogy(
+            radii,
+            displayed_masked_intensity,
+            color="#ff7f0e",
+            linewidth=1.25,
+            label="masked profile",
+        )
         bridge_label = "log-linear bridge over masked samples"
         for start, stop in contiguous_true_runs(bridged_samples):
             plot_start = max(0, start - 1)
