@@ -41,6 +41,7 @@ from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_f
 DEFAULT_MANIFEST = S4G_PLOTTER_DIR / "geometry_output" / "s4g_image_geometry_manifest.csv"
 DEFAULT_PC = "Laptop"
 PARAMETER_REDRAW_DEBOUNCE_MS = 500
+PROFILE_BRIDGE_MERGE_GAP_SAMPLES = 12
 MASKING_METHODS = {
     "global": "Global Photutils",
     "spike-gated": "Spike-gated",
@@ -422,6 +423,82 @@ def contiguous_true_runs(values: np.ndarray) -> list[tuple[int, int]]:
         previous = index
     runs.append((start, previous))
     return runs
+
+
+def merge_boolean_runs(masked: np.ndarray, max_gap: int) -> np.ndarray:
+    merged = np.asarray(masked, dtype=bool).copy()
+    if max_gap <= 0 or not np.any(merged):
+        return merged
+
+    indices = np.flatnonzero(merged)
+    start = previous = int(indices[0])
+    runs: list[tuple[int, int]] = []
+    for index in indices[1:]:
+        index = int(index)
+        if index - previous > max_gap + 1:
+            runs.append((start, previous))
+            start = index
+        previous = index
+    runs.append((start, previous))
+
+    merged[:] = False
+    for start, stop in runs:
+        merged[start : stop + 1] = True
+    return merged
+
+
+def fill_profile_with_log_linear_bridges(
+    profile: np.ndarray,
+    masked_samples: np.ndarray,
+    *,
+    merge_gap_samples: int = PROFILE_BRIDGE_MERGE_GAP_SAMPLES,
+) -> tuple[np.ndarray, np.ndarray]:
+    values = np.asarray(profile, dtype=float)
+    filled = np.array(values, copy=True)
+    replacement_mask = np.asarray(masked_samples, dtype=bool) | ~np.isfinite(values) | (values <= 0)
+    bridge_context = merge_boolean_runs(replacement_mask, merge_gap_samples)
+    replaced = np.zeros(values.size, dtype=bool)
+    indices = np.arange(values.size)
+
+    index = 0
+    while index < values.size:
+        if not bridge_context[index]:
+            index += 1
+            continue
+
+        start = index
+        while index + 1 < values.size and bridge_context[index + 1]:
+            index += 1
+        stop = index
+
+        left = start - 1
+        while left >= 0 and (~np.isfinite(values[left]) or values[left] <= 0):
+            left -= 1
+        right = stop + 1
+        while right < values.size and (~np.isfinite(values[right]) or values[right] <= 0):
+            right += 1
+
+        fill_indices = indices[start : stop + 1][replacement_mask[start : stop + 1]]
+        if fill_indices.size == 0:
+            index += 1
+            continue
+
+        if left >= 0 and right < values.size:
+            log_left = math.log(float(values[left]))
+            log_right = math.log(float(values[right]))
+            weight = (fill_indices - left) / (right - left)
+            filled[fill_indices] = np.exp(log_left + weight * (log_right - log_left))
+            replaced[fill_indices] = True
+        elif left >= 0:
+            filled[fill_indices] = values[left]
+            replaced[fill_indices] = True
+        elif right < values.size:
+            filled[fill_indices] = values[right]
+            replaced[fill_indices] = True
+
+        index += 1
+
+    return filled, replaced
 
 
 class ParameterTester(tk.Tk):
@@ -1162,6 +1239,10 @@ class ParameterTester(tk.Tk):
             ymin, ymax = 1.0, 10.0
         for start, stop in contiguous_true_runs(mask_profile):
             ax.axvspan(radii[start], radii[stop], color="red", alpha=0.16, linewidth=0)
+        bridged_intensity, bridged_samples = fill_profile_with_log_linear_bridges(
+            masked_intensity,
+            mask_profile,
+        )
         if spike_samples is not None and spike_samples.size == radii.size:
             finite_spikes = spike_samples & np.isfinite(radii)
             if np.any(finite_spikes):
@@ -1176,6 +1257,27 @@ class ParameterTester(tk.Tk):
                 )
         ax.semilogy(radii, intensity, color="#1f77b4", linewidth=1.4, label="original major-axis profile")
         ax.semilogy(radii, masked_intensity, color="#ff7f0e", linewidth=1.25, label="masked profile")
+        bridge_label = "log-linear bridge over masked samples"
+        for start, stop in contiguous_true_runs(bridged_samples):
+            plot_start = max(0, start - 1)
+            plot_stop = min(bridged_intensity.size - 1, stop + 1)
+            bridge_slice = slice(plot_start, plot_stop + 1)
+            bridge_good = (
+                np.isfinite(radii[bridge_slice])
+                & np.isfinite(bridged_intensity[bridge_slice])
+                & (bridged_intensity[bridge_slice] > 0)
+            )
+            if np.count_nonzero(bridge_good) < 2:
+                continue
+            ax.semilogy(
+                radii[bridge_slice][bridge_good],
+                bridged_intensity[bridge_slice][bridge_good],
+                color="#2ca02c",
+                linestyle="--",
+                linewidth=1.3,
+                label=bridge_label,
+            )
+            bridge_label = "_nolegend_"
         ax.axvline(bar_sma_deproj, color="#1f77b4", linewidth=1.0)
         ax.axvline(-bar_sma_deproj, color="#1f77b4", linewidth=1.0)
         ax.axvline(0, color="0.6", linewidth=0.7)
