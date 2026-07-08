@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Interactive global Photutils foreground-mask parameter tester.
+"""Interactive Photutils foreground-mask parameter tester.
 
 The tool lets you choose an S4G galaxy from the geometry manifest, adjust the
-global Photutils masking parameters, and immediately inspect the detected
+Photutils masking parameters, and immediately inspect the detected
 foreground candidates against the observed and deprojected bar-aligned views.
 """
 
@@ -33,6 +33,7 @@ for path in (PROJECT_ROOT, SCRIPT_DIR, S4G_PLOTTER_DIR, BARPROFILES_DIR):
         sys.path.append(str(path))
 
 import angle_utils as angles  # noqa: E402
+import bar_spike_gated_foreground_report as spike_gate  # noqa: E402
 import foreground_mask_photutils as fgmask  # noqa: E402
 from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_folder  # noqa: E402
 
@@ -40,17 +41,49 @@ from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_f
 DEFAULT_MANIFEST = S4G_PLOTTER_DIR / "geometry_output" / "s4g_image_geometry_manifest.csv"
 DEFAULT_PC = "Laptop"
 PARAMETER_REDRAW_DEBOUNCE_MS = 500
-PARAMETER_DEFAULTS: dict[str, float | int | bool] = {
-    "smooth_sigma_pixels": 15.0,
-    "detection_nsigma": 5.0,
-    "npixels": 8,
-    "dilation_radius_pixels": 3,
-    "max_area": 500,
-    "max_elongation": 6.0,
-    "exclude_center_radius_pixels": 12.0,
-    "min_peak_residual_nsigma": 0.0,
-    "profile_width": 3,
-    "deblend": True,
+MASKING_METHODS = {
+    "global": "Global Photutils",
+    "spike-gated": "Spike-gated",
+}
+METHOD_DEFAULTS: dict[str, dict[str, float | int | bool]] = {
+    "global": {
+        "smooth_sigma_pixels": 15.0,
+        "detection_nsigma": 5.0,
+        "npixels": 8,
+        "dilation_radius_pixels": 3,
+        "max_area": 500,
+        "max_elongation": 6.0,
+        "exclude_center_radius_pixels": 12.0,
+        "min_peak_residual_nsigma": 0.0,
+        "profile_width": 3,
+        "deblend": True,
+        "spike_excess_fraction": 0.25,
+        "spike_neighbour_inner_arcsec": 4.0,
+        "spike_neighbour_outer_arcsec": 15.0,
+        "spike_side_offset_samples": 3,
+        "spike_side_drop_fraction": 0.4,
+        "spike_center_exclusion_arcsec": 8.0,
+        "spike_window_samples": 2,
+    },
+    "spike-gated": {
+        "smooth_sigma_pixels": 15.0,
+        "detection_nsigma": 3.5,
+        "npixels": 8,
+        "dilation_radius_pixels": 3,
+        "max_area": 500,
+        "max_elongation": 6.0,
+        "exclude_center_radius_pixels": 12.0,
+        "min_peak_residual_nsigma": 0.0,
+        "profile_width": 3,
+        "deblend": True,
+        "spike_excess_fraction": 0.25,
+        "spike_neighbour_inner_arcsec": 4.0,
+        "spike_neighbour_outer_arcsec": 15.0,
+        "spike_side_offset_samples": 3,
+        "spike_side_drop_fraction": 0.4,
+        "spike_center_exclusion_arcsec": 8.0,
+        "spike_window_samples": 2,
+    },
 }
 
 
@@ -285,9 +318,33 @@ def deproject_bar_aligned_cutout(
     return deprojected, axis_arcsec, axis_arcsec, transform_xy
 
 
-def mask_products(data: np.ndarray, geometry: dict[str, float], params: dict[str, float | int | bool]):
+def mask_products(data: np.ndarray, geometry: dict[str, float], params: dict[str, float | int | bool | str]):
     smooth = fgmask.make_smooth_galaxy_model(data, float(params["smooth_sigma_pixels"]))
     residual = fgmask.make_residual_image(data, smooth)
+    method = str(params.get("masking_method", "global"))
+
+    if method == "spike-gated":
+        mask, kept_rows, spike_samples = spike_gate.build_spike_gated_mask_from_residual(
+            data,
+            residual,
+            geometry,
+            detection_nsigma=float(params["detection_nsigma"]),
+            npixels=int(params["npixels"]),
+            dilation_radius_pixels=int(params["dilation_radius_pixels"]),
+            max_area=int(params["max_area"]),
+            max_elongation=float(params["max_elongation"]),
+            exclude_center_radius_pixels=float(params["exclude_center_radius_pixels"]),
+            profile_width=max(1, int(params["profile_width"])),
+            spike_excess_fraction=float(params["spike_excess_fraction"]),
+            spike_neighbour_inner_arcsec=float(params["spike_neighbour_inner_arcsec"]),
+            spike_neighbour_outer_arcsec=float(params["spike_neighbour_outer_arcsec"]),
+            spike_side_offset_samples=int(params["spike_side_offset_samples"]),
+            spike_side_drop_fraction=float(params["spike_side_drop_fraction"]),
+            spike_center_exclusion_arcsec=float(params["spike_center_exclusion_arcsec"]),
+            spike_window_samples=int(params["spike_window_samples"]),
+        )
+        return mask, kept_rows, residual, spike_samples
+
     segm = fgmask.detect_compact_sources(
         residual,
         nsigma=float(params["detection_nsigma"]),
@@ -311,7 +368,7 @@ def mask_products(data: np.ndarray, geometry: dict[str, float], params: dict[str
     )
     raw_mask = fgmask.segmentation_to_mask(filtered, data.shape)
     mask = fgmask.dilate_mask(raw_mask, int(params["dilation_radius_pixels"]))
-    return mask, [row for row in rows if row["kept"]], residual
+    return mask, [row for row in rows if row["kept"]], residual, None
 
 
 def contiguous_true_runs(values: np.ndarray) -> list[tuple[int, int]]:
@@ -333,24 +390,50 @@ def contiguous_true_runs(values: np.ndarray) -> list[tuple[int, int]]:
 class ParameterTester(tk.Tk):
     def __init__(self, manifest: Path, pc_name: str):
         super().__init__()
-        self.title("Global Photutils Foreground Parameter Tester")
-        self.geometry("1420x930")
+        self.title("Photutils Foreground Parameter Tester")
+        self.geometry("1600x1050")
+        self.minsize(1320, 880)
         self.manifest = manifest
         self.all_rows = read_manifest(manifest)
         self.pc_var = tk.StringVar(value=pc_name)
+        self.method_var = tk.StringVar(value="global")
         self.output_dir = remove_foreground_folder(pc_name) / "interactive_photutils_parameter_tester"
         self.rows: list[dict[str, str]] = []
         self.rows_by_name: dict[str, dict[str, str]] = {}
         self.data_cache: dict[str, tuple[np.ndarray, dict[str, float]]] = {}
         self.after_id: str | None = None
+        self.controls_canvas: tk.Canvas | None = None
 
         self._build_controls()
         self._build_figure()
         self.refresh_pc_paths(initial=True)
 
+    def active_defaults(self) -> dict[str, float | int | bool]:
+        return METHOD_DEFAULTS[self.method_var.get()]
+
     def _build_controls(self) -> None:
-        control = ttk.Frame(self, padding=8)
-        control.pack(side=tk.LEFT, fill=tk.Y)
+        control_shell = ttk.Frame(self)
+        control_shell.pack(side=tk.LEFT, fill=tk.Y)
+
+        controls_canvas = tk.Canvas(control_shell, borderwidth=0, highlightthickness=0, width=330)
+        self.controls_canvas = controls_canvas
+        controls_scrollbar = ttk.Scrollbar(control_shell, orient=tk.VERTICAL, command=controls_canvas.yview)
+        controls_canvas.configure(yscrollcommand=controls_scrollbar.set)
+        controls_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        controls_canvas.pack(side=tk.LEFT, fill=tk.Y)
+
+        control = ttk.Frame(controls_canvas, padding=8)
+        control_window = controls_canvas.create_window((0, 0), window=control, anchor=tk.NW)
+        control.bind(
+            "<Configure>",
+            lambda _event: controls_canvas.configure(scrollregion=controls_canvas.bbox("all")),
+        )
+        controls_canvas.bind(
+            "<Configure>",
+            lambda event: controls_canvas.itemconfigure(control_window, width=event.width),
+        )
+        controls_canvas.bind("<Enter>", self._bind_controls_mousewheel)
+        controls_canvas.bind("<Leave>", self._unbind_controls_mousewheel)
 
         ttk.Label(control, text="Machine").pack(anchor=tk.W)
         pc_combo = ttk.Combobox(
@@ -362,6 +445,17 @@ class ParameterTester(tk.Tk):
         )
         pc_combo.pack(fill=tk.X, pady=(0, 8))
         pc_combo.bind("<<ComboboxSelected>>", lambda _event: self.refresh_pc_paths())
+
+        ttk.Label(control, text="Masking method").pack(anchor=tk.W)
+        method_combo = ttk.Combobox(
+            control,
+            textvariable=self.method_var,
+            values=list(MASKING_METHODS),
+            width=28,
+            state="readonly",
+        )
+        method_combo.pack(fill=tk.X, pady=(0, 8))
+        method_combo.bind("<<ComboboxSelected>>", lambda _event: self.change_masking_method())
 
         ttk.Label(control, text="Galaxy").pack(anchor=tk.W)
         self.galaxy_var = tk.StringVar()
@@ -389,9 +483,40 @@ class ParameterTester(tk.Tk):
         self._scale(control, "min_peak_residual_nsigma", "Min peak nsigma (0 off)", 0.0, 20.0, 0.5)
         self._spin(control, "profile_width", "Profile width [px]", 1, 21, 2)
 
+        spike_frame = ttk.LabelFrame(control, text="Spike gate")
+        spike_frame.pack(fill=tk.X, pady=(8, 4))
+        self._scale(spike_frame, "spike_excess_fraction", "Spike excess fraction", 0.05, 1.0, 0.05)
+        self._scale(
+            spike_frame,
+            "spike_neighbour_inner_arcsec",
+            "Neighbour inner [arcsec]",
+            1.0,
+            20.0,
+            0.5,
+        )
+        self._scale(
+            spike_frame,
+            "spike_neighbour_outer_arcsec",
+            "Neighbour outer [arcsec]",
+            4.0,
+            40.0,
+            0.5,
+        )
+        self._spin(spike_frame, "spike_side_offset_samples", "Side offset [samples]", 1, 12, 1)
+        self._scale(spike_frame, "spike_side_drop_fraction", "Side drop fraction", 0.05, 1.5, 0.05)
+        self._scale(
+            spike_frame,
+            "spike_center_exclusion_arcsec",
+            "Spike centre exclusion [arcsec]",
+            0.0,
+            40.0,
+            1.0,
+        )
+        self._spin(spike_frame, "spike_window_samples", "Spike window [samples]", 0, 10, 1)
+
         deblend_row = ttk.Frame(control)
         deblend_row.pack(fill=tk.X, pady=(8, 4))
-        self.vars["deblend"] = tk.BooleanVar(value=bool(PARAMETER_DEFAULTS["deblend"]))
+        self.vars["deblend"] = tk.BooleanVar(value=bool(self.active_defaults()["deblend"]))
         ttk.Checkbutton(
             deblend_row,
             text="Deblend sources",
@@ -411,6 +536,17 @@ class ParameterTester(tk.Tk):
         self.status = tk.StringVar(value="")
         ttk.Label(control, textvariable=self.status, wraplength=250, justify=tk.LEFT).pack(fill=tk.X, pady=(10, 0))
 
+    def _bind_controls_mousewheel(self, _event) -> None:
+        self.bind_all("<MouseWheel>", self._on_controls_mousewheel)
+
+    def _unbind_controls_mousewheel(self, _event) -> None:
+        self.unbind_all("<MouseWheel>")
+
+    def _on_controls_mousewheel(self, event) -> None:
+        if self.controls_canvas is None:
+            return
+        self.controls_canvas.yview_scroll(int(-event.delta / 120), "units")
+
     def _scale(
         self,
         parent: ttk.Frame,
@@ -422,7 +558,7 @@ class ParameterTester(tk.Tk):
     ) -> None:
         frame = ttk.Frame(parent)
         frame.pack(fill=tk.X, pady=3)
-        var = tk.DoubleVar(value=float(PARAMETER_DEFAULTS[key]))
+        var = tk.DoubleVar(value=float(self.active_defaults()[key]))
         self.vars[key] = var
         label_row = ttk.Frame(frame)
         label_row.pack(fill=tk.X)
@@ -457,7 +593,7 @@ class ParameterTester(tk.Tk):
     ) -> None:
         frame = ttk.Frame(parent)
         frame.pack(fill=tk.X, pady=3)
-        var = tk.IntVar(value=int(PARAMETER_DEFAULTS[key]))
+        var = tk.IntVar(value=int(self.active_defaults()[key]))
         self.vars[key] = var
         ttk.Label(frame, text=label).pack(side=tk.LEFT)
         ttk.Button(frame, text="Reset", width=7, command=lambda k=key: self.reset_one_parameter(k)).pack(
@@ -528,20 +664,32 @@ class ParameterTester(tk.Tk):
         self.load_selected_galaxy()
 
     def reset_one_parameter(self, key: str) -> None:
-        self.vars[key].set(PARAMETER_DEFAULTS[key])
+        self.vars[key].set(self.active_defaults()[key])
         if key in self.readouts:
             self.readouts[key].configure(text=f"{float(self.vars[key].get()):.2f}")
         self.redraw_now()
 
     def reset_parameters(self) -> None:
-        for key, value in PARAMETER_DEFAULTS.items():
+        self.apply_method_defaults()
+        self.redraw_now()
+
+    def apply_method_defaults(self) -> None:
+        for key, value in self.active_defaults().items():
+            if key not in self.vars:
+                continue
             self.vars[key].set(value)
             if key in self.readouts:
                 self.readouts[key].configure(text=f"{float(self.vars[key].get()):.2f}")
-        self.redraw_now()
 
-    def current_params(self) -> dict[str, float | int | bool]:
-        return {key: var.get() for key, var in self.vars.items()}
+    def change_masking_method(self) -> None:
+        self.cancel_scheduled_redraw()
+        self.apply_method_defaults()
+        self.redraw()
+
+    def current_params(self) -> dict[str, float | int | bool | str]:
+        params = {key: var.get() for key, var in self.vars.items()}
+        params["masking_method"] = self.method_var.get()
+        return params
 
     def save_current_png(self) -> None:
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -549,6 +697,7 @@ class ParameterTester(tk.Tk):
         stem = (
             f"{safe_filename(self.galaxy_var.get())}_"
             f"{self.pc_var.get()}_"
+            f"{safe_filename(str(params['masking_method']))}_"
             f"nsigma{float(params['detection_nsigma']):.1f}_"
             f"dil{int(params['dilation_radius_pixels'])}_"
             f"area{int(params['max_area'])}"
@@ -603,11 +752,16 @@ class ParameterTester(tk.Tk):
             data, geometry = self._load_galaxy(name)
             params = self.current_params()
             profile_width = max(1, int(params["profile_width"]))
-            mask, kept_rows, residual = mask_products(data, geometry, params)
-            self.draw_products(name, data, geometry, params, mask, kept_rows, residual, profile_width)
+            mask, kept_rows, residual, spike_samples = mask_products(data, geometry, params)
+            self.draw_products(name, data, geometry, params, mask, kept_rows, residual, profile_width, spike_samples)
             masked_fraction = np.count_nonzero(mask) / mask.size
+            method_label = MASKING_METHODS.get(str(params["masking_method"]), str(params["masking_method"]))
+            spike_text = ""
+            if spike_samples is not None:
+                spike_text = f", {int(np.count_nonzero(spike_samples))} spike samples"
             self.status.set(
-                f"{self.pc_var.get()} | {name}: {len(kept_rows)} kept segments, "
+                f"{self.pc_var.get()} | {name} | {method_label}: {len(kept_rows)} kept segments"
+                f"{spike_text}, "
                 f"{np.count_nonzero(mask)} masked pixels ({masked_fraction:.3%}).\n"
                 f"Input: {erwin_folder(self.pc_var.get()) / 's4g_images_36um'}\n"
                 f"Output: {self.output_dir}"
@@ -626,6 +780,7 @@ class ParameterTester(tk.Tk):
         kept_rows: list[dict[str, float | int | bool]],
         residual: np.ndarray,
         profile_width: int,
+        spike_samples: np.ndarray | None,
     ) -> None:
         self.ax_residual.clear()
         self.ax_deprojected.clear()
@@ -697,6 +852,7 @@ class ParameterTester(tk.Tk):
             mask_profile,
             bar_sma_deproj,
             (deproj_extent[0], deproj_extent[1]),
+            spike_samples,
         )
         self.canvas.draw()
         self._align_profile_axis_to_image()
@@ -855,6 +1011,7 @@ class ParameterTester(tk.Tk):
         mask_profile: np.ndarray,
         bar_sma_deproj: float,
         x_limits: tuple[float, float],
+        spike_samples: np.ndarray | None,
     ) -> None:
         ax = self.ax_profile
         positive = np.isfinite(intensity) & (intensity > 0)
@@ -865,6 +1022,18 @@ class ParameterTester(tk.Tk):
             ymin, ymax = 1.0, 10.0
         for start, stop in contiguous_true_runs(mask_profile):
             ax.axvspan(radii[start], radii[stop], color="red", alpha=0.16, linewidth=0)
+        if spike_samples is not None and spike_samples.size == radii.size:
+            finite_spikes = spike_samples & np.isfinite(radii)
+            if np.any(finite_spikes):
+                ax.vlines(
+                    radii[finite_spikes],
+                    ymin,
+                    ymax,
+                    color="#2ca02c",
+                    linewidth=0.6,
+                    alpha=0.22,
+                    label="spike-gate samples",
+                )
         ax.semilogy(radii, intensity, color="#1f77b4", linewidth=1.4, label="original major-axis profile")
         ax.semilogy(radii, masked_intensity, color="#ff7f0e", linewidth=1.25, label="masked profile")
         ax.axvline(bar_sma_deproj, color="#1f77b4", linewidth=1.0)
@@ -880,7 +1049,7 @@ class ParameterTester(tk.Tk):
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Interactive global Photutils parameter tester.")
+    parser = argparse.ArgumentParser(description="Interactive Photutils parameter tester.")
     parser.add_argument(
         "--pc",
         choices=sorted(PC_RESEARCH_FOLDERS),
