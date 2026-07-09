@@ -40,6 +40,7 @@ from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_f
 
 DEFAULT_MANIFEST = S4G_PLOTTER_DIR / "geometry_output" / "s4g_image_geometry_manifest.csv"
 DEFAULT_PC = "Laptop"
+DEFAULT_GALAXY = "ESO120-012"
 PARAMETER_REDRAW_DEBOUNCE_MS = 500
 PROFILE_BRIDGE_MERGE_GAP_SAMPLES = 12
 MASKING_METHODS = {
@@ -850,7 +851,13 @@ class ParameterTester(tk.Tk):
         self.rows_by_name = {row["name"]: row for row in self.rows}
         self.data_cache.clear()
         self.galaxy_combo.configure(values=names)
-        self.galaxy_var.set(current if current in self.rows_by_name else names[0])
+        if current in self.rows_by_name:
+            selected = current
+        elif initial and DEFAULT_GALAXY in self.rows_by_name:
+            selected = DEFAULT_GALAXY
+        else:
+            selected = names[0]
+        self.galaxy_var.set(selected)
         if initial:
             self.status.set(f"{pc_name} input folder: {erwin_folder(pc_name) / 's4g_images_36um'}")
         self.load_selected_galaxy()
