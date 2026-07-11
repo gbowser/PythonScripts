@@ -14,6 +14,7 @@ import csv
 import math
 import sys
 import tkinter as tk
+import time
 from pathlib import Path
 from tkinter import messagebox, ttk
 
@@ -241,6 +242,24 @@ def integrated_flux_to_data_peak(
     )
 
 
+def data_model_to_integrated_magnitude(
+    model: np.ndarray,
+    zero_flux_jy: float,
+    geometry: dict[str, float],
+    header: fits.Header,
+) -> float | None:
+    flux_jy = model_integrated_flux_jy(model, geometry, header)
+    if flux_jy is not None and flux_jy > 0 and zero_flux_jy > 0:
+        return float(-2.5 * math.log10(flux_jy / zero_flux_jy))
+
+    zero_point_mag = header.get("MAGZP", header.get("MAGZERO", header.get("ZEROPOINT")))
+    if zero_point_mag is not None:
+        total_counts = float(np.nansum(model))
+        if total_counts > 0:
+            return float(float(zero_point_mag) - 2.5 * math.log10(total_counts))
+    return None
+
+
 def deproject_for_display(
     data: np.ndarray,
     geometry: dict[str, float],
@@ -325,8 +344,9 @@ def draw_bar_aligned_guides(
         "bbox": {"boxstyle": "round,pad=0.12", "facecolor": "white", "edgecolor": "none", "alpha": 0.78},
         "zorder": 7,
     }
-    ax.text(line_radius, 0, "+r", **label_kwargs)
-    ax.text(-line_radius, 0, "-r", **label_kwargs)
+    x_label_radius = min(100.0, 0.92 * max(abs(extent[0]), abs(extent[1])))
+    ax.text(x_label_radius, 0, "+r", **label_kwargs)
+    ax.text(-x_label_radius, 0, "-r", **label_kwargs)
 
 
 class ObjectRecoveryApp(tk.Tk):
@@ -344,14 +364,17 @@ class ObjectRecoveryApp(tk.Tk):
         self.status = tk.StringVar(value="Loading manifest...")
         self.after_id: str | None = None
         self.data_cache: dict[str, tuple[np.ndarray, dict[str, float], fits.Header]] = {}
+        self.baseline_products_cache: dict[tuple[str, tuple[tuple[str, object], ...]], dict[str, object]] = {}
+        self.display_cache: dict[str, dict[str, object]] = {}
 
         self.all_rows = read_manifest(manifest)
         self.rows: list[dict[str, str]] = []
         self.rows_by_name: dict[str, dict[str, str]] = {}
 
-        self.brightness_mode_var = tk.StringVar(value="Peak residual sigma")
-        self.x_deproj = tk.DoubleVar(value=60.0)
-        self.y_deproj = tk.DoubleVar(value=20.0)
+        self.brightness_mode_var = tk.StringVar(value="Integrated magnitude")
+        self.implied_mag_var = tk.StringVar(value="calculate to update")
+        self.x_deproj = tk.DoubleVar(value=75.0)
+        self.y_deproj = tk.DoubleVar(value=0.0)
         self.peak_sigma = tk.DoubleVar(value=30.0)
         self.integrated_mag = tk.DoubleVar(value=14.0)
         self.zero_flux_jy = tk.DoubleVar(value=IRAC_36_VEGA_ZERO_JY)
@@ -360,6 +383,7 @@ class ObjectRecoveryApp(tk.Tk):
         self.object_pa = tk.DoubleVar(value=25.0)
         self.moffat_beta = tk.DoubleVar(value=2.7)
         self.truth_dilation = tk.IntVar(value=2)
+        self.toy_parameter_rows: dict[str, tuple[ttk.Widget, ttk.Widget]] = {}
 
         defaults = baseline.METHOD_DEFAULTS["spike-gated"]
         self.smooth_sigma = tk.DoubleVar(value=float(defaults["smooth_sigma_pixels"]))
@@ -448,7 +472,7 @@ class ObjectRecoveryApp(tk.Tk):
             width=22,
         )
         type_combo.grid(row=row, column=1, sticky=tk.EW)
-        type_combo.bind("<<ComboboxSelected>>", lambda _event: self.mark_pending())
+        type_combo.bind("<<ComboboxSelected>>", lambda _event: self.on_toy_settings_changed())
         row += 1
 
         ttk.Label(parent, text="Brightness").grid(row=row, column=0, sticky=tk.W)
@@ -460,38 +484,48 @@ class ObjectRecoveryApp(tk.Tk):
             width=22,
         )
         brightness_combo.grid(row=row, column=1, sticky=tk.EW)
-        brightness_combo.bind("<<ComboboxSelected>>", lambda _event: self.mark_pending())
+        brightness_combo.bind("<<ComboboxSelected>>", lambda _event: self.on_toy_settings_changed())
         row += 1
 
-        for label, var, low, high, step in [
-            ("x deproj [arcsec]", self.x_deproj, -250.0, 250.0, 0.5),
-            ("y deproj [arcsec]", self.y_deproj, -250.0, 250.0, 0.5),
-            ("peak [resid sigma]", self.peak_sigma, 1.0, 80.0, 0.5),
-            ("integrated mag", self.integrated_mag, 5.0, 25.0, 0.1),
-            ("zero flux [Jy]", self.zero_flux_jy, 1.0, 5000.0, 1.0),
-            ("FWHM [arcsec]", self.fwhm_arcsec, 0.3, 12.0, 0.1),
-            ("axis ratio", self.axis_ratio, 0.15, 1.0, 0.05),
-            ("object PA [deg]", self.object_pa, -180.0, 180.0, 1.0),
-            ("Moffat beta", self.moffat_beta, 1.3, 8.0, 0.1),
+        implied_mag_label = ttk.Label(parent, text="implied integrated mag")
+        implied_mag_label.grid(row=row, column=0, sticky=tk.W)
+        implied_mag_value = ttk.Label(parent, textvariable=self.implied_mag_var, foreground="#5A5A5A")
+        implied_mag_value.grid(row=row, column=1, sticky=tk.EW)
+        self.toy_parameter_rows["implied_mag"] = (implied_mag_label, implied_mag_value)
+        row += 1
+
+        for key, label, var, low, high, step in [
+            ("x_deproj", "x deproj [arcsec]", self.x_deproj, -250.0, 250.0, 0.5),
+            ("y_deproj", "y deproj [arcsec]", self.y_deproj, -250.0, 250.0, 0.5),
+            ("peak_sigma", "peak [resid sigma]", self.peak_sigma, 1.0, 80.0, 0.5),
+            ("integrated_mag", "integrated mag", self.integrated_mag, 5.0, 25.0, 0.1),
+            ("zero_flux_jy", "zero flux [Jy]", self.zero_flux_jy, 1.0, 5000.0, 1.0),
+            ("fwhm_arcsec", "FWHM [arcsec]", self.fwhm_arcsec, 0.3, 12.0, 0.1),
+            ("axis_ratio", "axis ratio", self.axis_ratio, 0.15, 1.0, 0.05),
+            ("object_pa", "object PA [deg]", self.object_pa, -180.0, 180.0, 1.0),
+            ("moffat_beta", "Moffat beta", self.moffat_beta, 1.3, 8.0, 0.1),
         ]:
-            ttk.Label(parent, text=label).grid(row=row, column=0, sticky=tk.W)
+            label_widget = ttk.Label(parent, text=label)
+            label_widget.grid(row=row, column=0, sticky=tk.W)
             spin = ttk.Spinbox(parent, textvariable=var, from_=low, to=high, increment=step, width=10)
             spin.grid(row=row, column=1, sticky=tk.EW)
-            spin.bind("<Return>", lambda _event: self.mark_pending())
-            spin.bind("<FocusOut>", lambda _event: self.mark_pending())
+            spin.bind("<Return>", lambda _event: self.on_toy_numeric_changed())
+            spin.bind("<FocusOut>", lambda _event: self.on_toy_numeric_changed())
+            self.toy_parameter_rows[key] = (label_widget, spin)
             row += 1
 
         ttk.Label(parent, text="truth dilation [px]").grid(row=row, column=0, sticky=tk.W)
         truth_spin = ttk.Spinbox(parent, textvariable=self.truth_dilation, from_=0, to=20, increment=1, width=10)
         truth_spin.grid(row=row, column=1, sticky=tk.EW)
-        truth_spin.bind("<Return>", lambda _event: self.mark_pending())
-        truth_spin.bind("<FocusOut>", lambda _event: self.mark_pending())
+        truth_spin.bind("<Return>", lambda _event: self.on_toy_numeric_changed())
+        truth_spin.bind("<FocusOut>", lambda _event: self.on_toy_numeric_changed())
         row += 1
 
         ttk.Label(parent, text="Click either image panel to set the deprojected x,y location.", wraplength=270).grid(
             row=row, column=0, columnspan=2, sticky=tk.EW, pady=(4, 10)
         )
         row += 1
+        self.refresh_toy_parameter_visibility()
 
         ttk.Separator(parent).grid(row=row, column=0, columnspan=2, sticky=tk.EW, pady=5)
         row += 1
@@ -528,11 +562,46 @@ class ObjectRecoveryApp(tk.Tk):
             spin.bind("<FocusOut>", lambda _event: self.mark_pending())
             row += 1
 
+    def on_toy_settings_changed(self) -> None:
+        self.refresh_toy_parameter_visibility()
+        self.implied_mag_var.set("calculate to update")
+        self.mark_pending()
+
+    def on_toy_numeric_changed(self) -> None:
+        self.implied_mag_var.set("calculate to update")
+        self.mark_pending()
+
+    def refresh_toy_parameter_visibility(self) -> None:
+        object_type = OBJECT_TYPES.get(self.object_type_var.get(), "gaussian")
+        brightness_mode = BRIGHTNESS_MODES.get(self.brightness_mode_var.get(), "sigma")
+        visible_keys = {
+            "x_deproj",
+            "y_deproj",
+            "fwhm_arcsec",
+        }
+        if brightness_mode == "magnitude":
+            visible_keys.update({"integrated_mag", "zero_flux_jy"})
+        else:
+            visible_keys.update({"peak_sigma", "implied_mag"})
+        if object_type == "galaxy":
+            visible_keys.update({"axis_ratio", "object_pa"})
+        if object_type == "moffat":
+            visible_keys.add("moffat_beta")
+
+        for key, widgets in self.toy_parameter_rows.items():
+            for widget in widgets:
+                if key in visible_keys:
+                    widget.grid()
+                else:
+                    widget.grid_remove()
+
     def refresh_galaxy_list(self, initial: bool = False) -> None:
         pc_name = self.pc_var.get()
         self.rows = baseline.rows_with_images_for_pc(self.all_rows, pc_name)
         self.rows_by_name = {row["name"]: row for row in self.rows}
         self.data_cache.clear()
+        self.baseline_products_cache.clear()
+        self.display_cache.clear()
         names = [row["name"] for row in self.rows]
         self.galaxy_combo.configure(values=names)
         if not names:
@@ -574,8 +643,10 @@ class ObjectRecoveryApp(tk.Tk):
             data, geometry, _header = self.load_galaxy(name)
             params = self.current_mask_params()
             profile_width = max(1, int(params["profile_width"]))
-            deproj, extent, _, _ = deproject_for_display(data, geometry)
-            log_deproj, levels = baseline.robust_log_image(deproj)
+            display = self.display_products(name, data, geometry)
+            extent = display["extent"]
+            log_deproj = np.asarray(display["log_deproj"], dtype=float)
+            levels = np.asarray(display["levels"], dtype=float)
             for ax in (self.ax_baseline, self.ax_injected, self.ax_recovery, self.ax_profile):
                 ax.clear()
             self.ax_baseline.imshow(
@@ -645,6 +716,9 @@ class ObjectRecoveryApp(tk.Tk):
         )
         return defaults
 
+    def mask_params_cache_key(self, params: dict[str, float | int | bool | str]) -> tuple[tuple[str, object], ...]:
+        return tuple(sorted(params.items()))
+
     def load_galaxy(self, name: str) -> tuple[np.ndarray, dict[str, float], fits.Header]:
         if name in self.data_cache:
             return self.data_cache[name]
@@ -659,6 +733,61 @@ class ObjectRecoveryApp(tk.Tk):
             raise ValueError(f"{name} image is not 2D after squeezing: {data.shape}")
         self.data_cache[name] = (data, geometry, header)
         return data, geometry, header
+
+    def baseline_products(
+        self,
+        name: str,
+        data: np.ndarray,
+        geometry: dict[str, float],
+        params: dict[str, float | int | bool | str],
+    ) -> dict[str, object]:
+        key = (name, self.mask_params_cache_key(params))
+        cached = self.baseline_products_cache.get(key)
+        if cached is not None:
+            return cached
+
+        smooth = fgmask.make_smooth_galaxy_model(data, float(params["smooth_sigma_pixels"]))
+        sigma = robust_sigma(fgmask.make_residual_image(data, smooth))
+        baseline_mask, _, _, _ = baseline.mask_products(data, geometry, params)
+        radius_pix = baseline.profile_radius_pixels(data, geometry)
+        profile_width = max(1, int(params["profile_width"]))
+        radii, clean_profile = baseline.profile_at_pa(
+            data, geometry["xc"], geometry["yc"], geometry["bar_pa"], radius_pix, width=profile_width
+        )
+        radii_deproj = baseline.deprojected_profile_radius(
+            geometry["bar_pa"],
+            geometry["disk_pa"],
+            geometry["inclination"],
+            radii * geometry["pixel_scale"],
+        )
+        products = {
+            "sigma": sigma,
+            "baseline_mask": baseline_mask,
+            "radius_pix": radius_pix,
+            "profile_width": profile_width,
+            "radii": radii,
+            "clean_profile": clean_profile,
+            "radii_deproj": radii_deproj,
+        }
+        self.baseline_products_cache[key] = products
+        return products
+
+    def display_products(self, name: str, data: np.ndarray, geometry: dict[str, float]) -> dict[str, object]:
+        cached = self.display_cache.get(name)
+        if cached is not None:
+            return cached
+        deproj, extent, x_axis, y_axis = deproject_for_display(data, geometry)
+        log_deproj, levels = baseline.robust_log_image(deproj)
+        products = {
+            "deproj": deproj,
+            "extent": extent,
+            "x_axis": x_axis,
+            "y_axis": y_axis,
+            "log_deproj": log_deproj,
+            "levels": levels,
+        }
+        self.display_cache[name] = products
+        return products
 
     def schedule_redraw(self) -> None:
         self.mark_pending()
@@ -684,12 +813,12 @@ class ObjectRecoveryApp(tk.Tk):
                 )
             )
             ax.text(
-                0.5,
-                0.5,
+                0.03,
+                0.97,
                 "Calculating...",
                 transform=ax.transAxes,
-                ha="center",
-                va="center",
+                ha="left",
+                va="top",
                 fontsize=14,
                 fontweight="bold",
                 color="0.15",
@@ -709,9 +838,12 @@ class ObjectRecoveryApp(tk.Tk):
             self.calculate_button.configure(state=tk.DISABLED)
             self.mark_display_stale_during_calculation()
             self.update_idletasks()
+            start_time = time.perf_counter()
             data, geometry, header = self.load_galaxy(name)
-            result = self.calculate_recovery(data, geometry, header)
+            result = self.calculate_recovery(name, data, geometry, header)
             self.draw_result(name, data, geometry, result)
+            self.update_implied_mag_display(result)
+            result["elapsed_seconds"] = time.perf_counter() - start_time
             self.status.set(self.format_status(name, result))
         except Exception as exc:  # noqa: BLE001
             self.status.set(f"Error: {exc}")
@@ -721,14 +853,15 @@ class ObjectRecoveryApp(tk.Tk):
 
     def calculate_recovery(
         self,
+        name: str,
         data: np.ndarray,
         geometry: dict[str, float],
         header: fits.Header,
     ) -> dict[str, object]:
         params = self.current_mask_params()
         x0, y0 = deprojected_to_observed_pixel(float(self.x_deproj.get()), float(self.y_deproj.get()), geometry)
-        smooth = fgmask.make_smooth_galaxy_model(data, float(params["smooth_sigma_pixels"]))
-        sigma = robust_sigma(fgmask.make_residual_image(data, smooth))
+        baseline_products = self.baseline_products(name, data, geometry, params)
+        sigma = float(baseline_products["sigma"])
         fwhm_pixels = max(0.2, float(self.fwhm_arcsec.get()) / geometry["pixel_scale"])
         object_type = OBJECT_TYPES.get(self.object_type_var.get(), "gaussian")
         unit_peak_model = make_toy_object(
@@ -767,10 +900,16 @@ class ObjectRecoveryApp(tk.Tk):
             pa_deg=float(self.object_pa.get()),
             beta=float(self.moffat_beta.get()),
         )
+        implied_integrated_mag = data_model_to_integrated_magnitude(
+            model,
+            float(self.zero_flux_jy.get()),
+            geometry,
+            header,
+        )
         truth = truth_mask_from_model(model, peak, int(self.truth_dilation.get()))
         injected = data + model
 
-        baseline_mask, _, _, _ = baseline.mask_products(data, geometry, params)
+        baseline_mask = np.asarray(baseline_products["baseline_mask"], dtype=bool)
         recovered_mask, kept_rows, residual, spike_samples = baseline.mask_products(injected, geometry, params)
         incremental_mask = recovered_mask & ~baseline_mask
 
@@ -782,11 +921,10 @@ class ObjectRecoveryApp(tk.Tk):
         incremental_recall = incremental_overlap / truth_pixels if truth_pixels else 0.0
         incremental_precision = incremental_overlap / incremental_pixels if incremental_pixels else 0.0
 
-        radius_pix = baseline.profile_radius_pixels(data, geometry)
-        profile_width = max(1, int(params["profile_width"]))
-        radii, clean_profile = baseline.profile_at_pa(
-            data, geometry["xc"], geometry["yc"], geometry["bar_pa"], radius_pix, width=profile_width
-        )
+        radius_pix = int(baseline_products["radius_pix"])
+        profile_width = int(baseline_products["profile_width"])
+        radii = np.asarray(baseline_products["radii"], dtype=float)
+        clean_profile = np.asarray(baseline_products["clean_profile"], dtype=float)
         _, injected_profile = baseline.profile_at_pa(
             injected, geometry["xc"], geometry["yc"], geometry["bar_pa"], radius_pix, width=profile_width
         )
@@ -801,12 +939,7 @@ class ObjectRecoveryApp(tk.Tk):
             masked_profile,
             bridge_mask,
         )
-        radii_deproj = baseline.deprojected_profile_radius(
-            geometry["bar_pa"],
-            geometry["disk_pa"],
-            geometry["inclination"],
-            radii * geometry["pixel_scale"],
-        )
+        radii_deproj = np.asarray(baseline_products["radii_deproj"], dtype=float)
         valid_profile = np.isfinite(clean_profile) & np.isfinite(bridged_profile) & (clean_profile > 0)
         profile_fraction_error = np.full_like(clean_profile, np.nan, dtype=float)
         profile_fraction_error[valid_profile] = (bridged_profile[valid_profile] - clean_profile[valid_profile]) / clean_profile[
@@ -832,6 +965,7 @@ class ObjectRecoveryApp(tk.Tk):
             "brightness_mode": BRIGHTNESS_MODES.get(self.brightness_mode_var.get(), "sigma"),
             "target_magnitude": target_magnitude,
             "target_flux_jy": target_flux_jy,
+            "implied_integrated_mag": implied_integrated_mag,
             "zero_flux_jy": float(self.zero_flux_jy.get()),
             "bunit": str(header.get("BUNIT", "")),
             "truth_pixels": truth_pixels,
@@ -866,13 +1000,16 @@ class ObjectRecoveryApp(tk.Tk):
         params = result["params"]
         profile_width = max(1, int(params["profile_width"])) if isinstance(params, dict) else None
 
-        base_deproj, extent, _, _ = deproject_for_display(data, geometry)
+        display = self.display_products(name, data, geometry)
+        base_deproj = np.asarray(display["deproj"], dtype=float)
+        extent = display["extent"]
+        log_base = np.asarray(display["log_deproj"], dtype=float)
+        levels = np.asarray(display["levels"], dtype=float)
         inj_deproj, _, _, _ = deproject_for_display(injected, geometry)
         truth_deproj, _, _, _ = deproject_for_display(truth.astype(float), geometry)
         recovered_deproj, _, _, _ = deproject_for_display(recovered.astype(float), geometry)
         incremental_deproj, _, _, _ = deproject_for_display(incremental.astype(float), geometry)
 
-        log_base, levels = baseline.robust_log_image(base_deproj)
         log_inj, _ = baseline.robust_log_image(inj_deproj)
 
         self.ax_baseline.imshow(log_base, origin="lower", extent=extent, cmap="Greys", vmin=levels[0], vmax=levels[-1])
@@ -970,10 +1107,22 @@ class ObjectRecoveryApp(tk.Tk):
         ax.contour(mask_image, levels=[0.5], origin="lower", extent=extent, colors=[color], linewidths=1.2)
         ax.plot([], [], color=color, label=label)
 
+    def update_implied_mag_display(self, result: dict[str, object]) -> None:
+        implied_mag = result.get("implied_integrated_mag")
+        if implied_mag is None or not math.isfinite(float(implied_mag)):
+            self.implied_mag_var.set("unavailable from FITS header")
+            return
+        self.implied_mag_var.set(f"{float(implied_mag):.2f}")
+
     def format_status(self, name: str, result: dict[str, object]) -> str:
         method = self.method_var.get()
         x0 = float(result["x0"])
         y0 = float(result["y0"])
+        implied_mag = result.get("implied_integrated_mag")
+        if implied_mag is None or not math.isfinite(float(implied_mag)):
+            implied_text = "implied mag unavailable"
+        else:
+            implied_text = f"implied mag {float(implied_mag):.2f}"
         if result.get("brightness_mode") == "magnitude":
             brightness = (
                 f"mag {float(result['target_magnitude']):.2f} "
@@ -981,7 +1130,9 @@ class ObjectRecoveryApp(tk.Tk):
                 f"flux={float(result['target_flux_jy']):.3e} Jy, BUNIT={result['bunit']})"
             )
         else:
-            brightness = f"peak {float(self.peak_sigma.get()):.1f} residual sigma"
+            brightness = f"peak {float(self.peak_sigma.get()):.1f} residual sigma ({implied_text})"
+        elapsed = result.get("elapsed_seconds")
+        elapsed_text = f"; elapsed: {float(elapsed):.2f}s" if elapsed is not None else ""
         return (
             f"{self.pc_var.get()} | {name} | {method} | {self.object_type_var.get()} "
             f"| {brightness} "
@@ -991,7 +1142,7 @@ class ObjectRecoveryApp(tk.Tk):
             f"recall: {float(result['recall']):.1%}; "
             f"incremental recall: {float(result['incremental_recall']):.1%}; "
             f"incremental precision: {float(result['incremental_precision']):.1%}; "
-            f"kept segments: {len(result['kept_rows'])}"
+            f"kept segments: {len(result['kept_rows'])}{elapsed_text}"
         )
 
     def on_plot_click(self, event) -> None:
@@ -1001,6 +1152,7 @@ class ObjectRecoveryApp(tk.Tk):
             return
         self.x_deproj.set(round(float(event.xdata), 2))
         self.y_deproj.set(round(float(event.ydata), 2))
+        self.implied_mag_var.set("calculate to update")
         self.draw_preview()
         self.status.set(
             f"Object location set to deproj ({float(self.x_deproj.get()):.2f}, "
