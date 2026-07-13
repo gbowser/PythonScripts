@@ -164,7 +164,7 @@ def add_cover(doc: Document) -> None:
     add_note(
         doc,
         "Short answer",
-        "No. The UI displays all Toy object controls for every type, but the code only uses some controls for some object profiles. Location, brightness, FWHM, and truth dilation apply broadly. Moffat beta applies only to Moffat star. Axis ratio and object PA apply only to Compact galaxy.",
+        "The Toy object model now has three available profiles: Gaussian star, Star cluster, and Compact galaxy. Location, brightness, FWHM, and truth dilation apply broadly. Axis ratio and object PA apply only to Compact galaxy.",
     )
 
 
@@ -174,26 +174,20 @@ def add_object_type_section(doc: Document) -> None:
         [
             "Gaussian star",
             "Single circular 2D Gaussian profile.",
-            "A compact source with a smooth, symmetric PSF-like core.",
-            "Uses FWHM to set Gaussian sigma. Ignores axis ratio, object PA, and Moffat beta.",
-        ],
-        [
-            "Moffat star",
-            "Circular Moffat profile with broader wings than a Gaussian.",
-            "A star or PSF-like object where extended wings matter.",
-            "Uses FWHM and Moffat beta. Ignores axis ratio and object PA.",
+            "A compact point-source test object with a smooth, symmetric core.",
+            "Characterised by centroid, brightness, and FWHM. Uses FWHM to set Gaussian sigma. Ignores axis ratio and object PA.",
         ],
         [
             "Star cluster",
             "Blend of three offset circular Gaussian components.",
             "A small unresolved or barely resolved clump rather than a single isolated star.",
-            "Uses FWHM as the scale for all component offsets and widths. Ignores axis ratio, object PA, and Moffat beta.",
+            "Characterised by one centroid, brightness, and FWHM. FWHM sets the scale for all component offsets and widths. Ignores axis ratio and object PA.",
         ],
         [
             "Compact galaxy",
             "Single elliptical Gaussian profile.",
             "A small galaxy-like contaminant with an elongated shape.",
-            "Uses FWHM, axis ratio, and object PA. Ignores Moffat beta.",
+            "Characterised by centroid, brightness, major-axis FWHM, axis ratio, and object PA.",
         ],
     ]
     table = doc.add_table(rows=1, cols=4)
@@ -215,7 +209,7 @@ def add_parameter_glossary(doc: Document) -> None:
             "Type",
             "Chooses the mathematical profile used to generate the injected Toy object.",
             "All types",
-            "The internal values are gaussian, moffat, cluster, and galaxy.",
+            "The internal values are gaussian, cluster, and galaxy.",
         ),
         (
             "Brightness",
@@ -257,19 +251,13 @@ def add_parameter_glossary(doc: Document) -> None:
             "axis ratio",
             "Minor-axis width divided by major-axis width. A value of 1.0 is circular; smaller values are more elongated.",
             "Compact galaxy only",
-            "In the current code, Gaussian star, Moffat star, and Star cluster are circular and ignore this value.",
+            "In the current code, Gaussian star and Star cluster are circular and ignore this value.",
         ),
         (
             "object PA [deg]",
             "Position angle of the object's major axis, measured in image-pixel coordinates.",
             "Compact galaxy only",
             "Only matters when the model is elliptical. It is not used for circular profiles.",
-        ),
-        (
-            "Moffat beta",
-            "Shape parameter controlling how steeply the Moffat wings fall away from the centre.",
-            "Moffat star only",
-            "Lower beta gives broader, heavier wings. Higher beta makes the profile more Gaussian-like and concentrates more light near the core.",
         ),
         (
             "truth dilation [px]",
@@ -291,28 +279,27 @@ def add_parameter_glossary(doc: Document) -> None:
 def add_applicability_matrix(doc: Document) -> None:
     doc.add_page_break()
     doc.add_heading("Applicability Matrix", level=1)
-    headers = ["Parameter", "Gaussian star", "Moffat star", "Star cluster", "Compact galaxy"]
+    headers = ["Parameter", "Gaussian star", "Star cluster", "Compact galaxy"]
     rows = [
-        ["Type", "Yes", "Yes", "Yes", "Yes"],
-        ["Brightness mode", "Yes", "Yes", "Yes", "Yes"],
-        ["x/y deprojected location", "Yes", "Yes", "Yes", "Yes"],
-        ["peak residual sigma", "Yes", "Yes", "Yes", "Yes"],
-        ["integrated mag", "Yes", "Yes", "Yes", "Yes"],
-        ["zero flux [Jy]", "Magnitude mode", "Magnitude mode", "Magnitude mode", "Magnitude mode"],
-        ["FWHM [arcsec]", "Yes", "Yes", "Yes", "Yes"],
-        ["axis ratio", "No", "No", "No", "Yes"],
-        ["object PA [deg]", "No", "No", "No", "Yes"],
-        ["Moffat beta", "No", "Yes", "No", "No"],
-        ["truth dilation [px]", "Yes", "Yes", "Yes", "Yes"],
+        ["Type", "Yes", "Yes", "Yes"],
+        ["Brightness mode", "Yes", "Yes", "Yes"],
+        ["x/y deprojected location", "Yes", "Yes", "Yes"],
+        ["peak residual sigma", "Yes", "Yes", "Yes"],
+        ["integrated mag", "Yes", "Yes", "Yes"],
+        ["zero flux [Jy]", "Magnitude mode", "Magnitude mode", "Magnitude mode"],
+        ["FWHM [arcsec]", "Yes", "Yes", "Yes"],
+        ["axis ratio", "No", "No", "Yes"],
+        ["object PA [deg]", "No", "No", "Yes"],
+        ["truth dilation [px]", "Yes", "Yes", "Yes"],
     ]
-    table = doc.add_table(rows=1, cols=5)
+    table = doc.add_table(rows=1, cols=4)
     for i, text in enumerate(headers):
         table.cell(0, i).text = text
     for row in rows:
         cells = table.add_row().cells
         for i, text in enumerate(row):
             cells[i].text = text
-    style_table(table, [1.55, 1.25, 1.25, 1.25, 1.2])
+    style_table(table, [1.8, 1.55, 1.55, 1.6])
 
 
 def add_math_section(doc: Document) -> None:
@@ -326,21 +313,16 @@ def add_math_section(doc: Document) -> None:
         "A larger FWHM makes the object broader. For the Star cluster profile, FWHM also sets how far apart the three Gaussian components are placed."
     )
 
-    doc.add_heading("Moffat beta", level=2)
+    doc.add_heading("How the three object types are characterised", level=2)
     doc.add_paragraph(
-        "The Moffat profile is useful for point sources because real stellar PSFs often have broader wings than a Gaussian. The injected Moffat star is circular and follows:"
-    )
-    add_note(
-        doc,
-        "Formula",
-        "I(r) = peak * (1 + r^2 / alpha^2)^(-beta), where alpha is computed from FWHM and beta.",
+        "Each Toy object type is deliberately simple. The aim is to test recovery behaviour with controlled source shapes, not to fit a complete astrophysical model."
     )
     add_bullets(
         doc,
         [
-            "Lower beta, for example around 1.5-2.5, produces heavier wings and more light far from the centre.",
-            "Higher beta, for example 5-8, makes the profile fall off more steeply.",
-            "The code clamps beta to at least 1.2 internally; the UI range starts at 1.3.",
+            "Gaussian star: a single circular Gaussian. It is described by its deprojected position, brightness, and FWHM. It has no elongation or orientation.",
+            "Star cluster: a fixed three-Gaussian blend. It is described by one central position, one brightness scale, and one FWHM scale; the component offsets and relative intensities are fixed by the tool.",
+            "Compact galaxy: a single elliptical Gaussian. It is described by position, brightness, major-axis FWHM, axis ratio, and position angle.",
         ],
     )
 
@@ -373,7 +355,6 @@ def add_recommendations(doc: Document) -> None:
         doc,
         [
             "Use Gaussian star for a simple compact-source sensitivity test.",
-            "Use Moffat star when you want to test whether the mask catches PSF wings; adjust Moffat beta to make the wings broader or narrower.",
             "Use Star cluster when you want a blended compact contaminant rather than a single source.",
             "Use Compact galaxy when elongation and orientation matter; this is the only Toy object type that uses axis ratio and object PA.",
             "Use Peak residual sigma for quick recovery experiments. Use Integrated magnitude when you want physically calibrated brightness and the FITS header supports the conversion.",

@@ -18,6 +18,7 @@ import sqlite3
 import sys
 import tkinter as tk
 import time
+from datetime import datetime
 from pathlib import Path
 from tkinter import messagebox, ttk
 
@@ -43,6 +44,9 @@ from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_f
 DEFAULT_MANIFEST = baseline.DEFAULT_MANIFEST
 DEFAULT_PC = "Desktop"
 DEFAULT_GALAXY = "NGC0986"
+PNG_OUTPUT_DIR = Path(
+    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\interactive_object_recovery"
+)
 REDRAW_DEBOUNCE_MS = 450
 CACHE_SCHEMA_VERSION = 1
 IRAC_36_VEGA_ZERO_JY = 280.9
@@ -51,6 +55,23 @@ OBJECT_TYPES = {
     "Gaussian star": "gaussian",
     "Star cluster": "cluster",
     "Compact galaxy": "galaxy",
+}
+OBJECT_DESCRIPTIONS = {
+    "Gaussian star": (
+        "Model: one circular 2D Gaussian point source. Characterised by centroid x,y; peak residual-sigma "
+        "or integrated magnitude; and FWHM. It is radially symmetric, has no PA or axis ratio, and has no "
+        "extended stellar wings."
+    ),
+    "Star cluster": (
+        "Model: fixed blend of three compact circular Gaussian components. Characterised by one centroid x,y; "
+        "peak residual-sigma or integrated magnitude; and component FWHM. Fixed offsets and relative peaks make "
+        "it asymmetric and clumpy while still compact."
+    ),
+    "Compact galaxy": (
+        "Model: one smooth elliptical Gaussian extended source. Characterised by centroid x,y; peak residual-sigma "
+        "or integrated magnitude; major-axis FWHM; axis ratio; and object PA. It represents a flattened compact "
+        "background galaxy."
+    ),
 }
 METHOD_LABELS = {
     "Global": "global",
@@ -361,6 +382,7 @@ class ObjectRecoveryApp(tk.Tk):
         self.galaxy_var = tk.StringVar()
         self.method_var = tk.StringVar(value="Spike-gated")
         self.object_type_var = tk.StringVar(value="Gaussian star")
+        self.object_description_var = tk.StringVar(value=OBJECT_DESCRIPTIONS["Gaussian star"])
         self.status = tk.StringVar(value="Loading manifest...")
         self.after_id: str | None = None
         self.data_cache: dict[str, tuple[np.ndarray, dict[str, float], fits.Header]] = {}
@@ -587,8 +609,7 @@ class ObjectRecoveryApp(tk.Tk):
         row += 1
 
         self.calculate_button = ttk.Button(parent, text="Calculate", command=self.redraw_now)
-        self.calculate_button.grid(row=row, column=0, sticky=tk.EW, pady=(5, 10))
-        ttk.Button(parent, text="Save PNG", command=self.save_png).grid(row=row, column=1, sticky=tk.EW, pady=(5, 10))
+        self.calculate_button.grid(row=row, column=0, columnspan=2, sticky=tk.EW, pady=(5, 10))
         row += 1
 
         ttk.Separator(parent).grid(row=row, column=0, columnspan=2, sticky=tk.EW, pady=5)
@@ -608,6 +629,15 @@ class ObjectRecoveryApp(tk.Tk):
         )
         type_combo.grid(row=row, column=1, sticky=tk.EW)
         type_combo.bind("<<ComboboxSelected>>", lambda _event: self.on_toy_settings_changed())
+        row += 1
+
+        ttk.Label(
+            parent,
+            textvariable=self.object_description_var,
+            foreground="#5A5A5A",
+            wraplength=270,
+            justify=tk.LEFT,
+        ).grid(row=row, column=0, columnspan=2, sticky=tk.EW, pady=(0, 5))
         row += 1
 
         ttk.Label(parent, text="Brightness").grid(row=row, column=0, sticky=tk.W)
@@ -708,6 +738,9 @@ class ObjectRecoveryApp(tk.Tk):
     def refresh_toy_parameter_visibility(self) -> None:
         object_type = OBJECT_TYPES.get(self.object_type_var.get(), "gaussian")
         brightness_mode = BRIGHTNESS_MODES.get(self.brightness_mode_var.get(), "sigma")
+        self.object_description_var.set(
+            OBJECT_DESCRIPTIONS.get(self.object_type_var.get(), OBJECT_DESCRIPTIONS["Gaussian star"])
+        )
         visible_keys = {
             "x_deproj",
             "y_deproj",
@@ -986,7 +1019,8 @@ class ObjectRecoveryApp(tk.Tk):
             self.draw_result(name, data, geometry, result)
             self.update_implied_mag_display(result)
             result["elapsed_seconds"] = time.perf_counter() - start_time
-            self.status.set(self.format_status(name, result))
+            saved_path = self.save_png()
+            self.status.set(f"{self.format_status(name, result)}\nSaved PNG: {saved_path}")
         except Exception as exc:  # noqa: BLE001
             self.status.set(f"Error: {exc}")
             messagebox.showerror("Object recovery failed", str(exc))
@@ -1070,10 +1104,7 @@ class ObjectRecoveryApp(tk.Tk):
         recovered_profile_mask = baseline.profile_mask_at_pa(
             recovered_mask, geometry["xc"], geometry["yc"], geometry["bar_pa"], radius_pix, width=profile_width
         )
-        if spike_samples is not None and spike_samples.size == recovered_profile_mask.size:
-            bridge_mask = recovered_profile_mask & spike_samples
-        else:
-            bridge_mask = recovered_profile_mask
+        bridge_mask = recovered_profile_mask
         masked_profile = np.array(injected_profile, copy=True)
         masked_profile[bridge_mask] = np.nan
         bridged_profile, bridged_samples = baseline.fill_profile_with_log_linear_bridges(
@@ -1320,21 +1351,21 @@ class ObjectRecoveryApp(tk.Tk):
             f"{float(self.y_deproj.get()):.2f}) arcsec. Press Calculate to run recovery."
         )
 
-    def save_png(self) -> None:
+    def save_png(self) -> Path:
         name = baseline.safe_filename(self.galaxy_var.get())
         object_name = baseline.safe_filename(self.object_type_var.get().lower().replace(" ", "_"))
         if BRIGHTNESS_MODES.get(self.brightness_mode_var.get(), "sigma") == "magnitude":
             brightness = f"mag{float(self.integrated_mag.get()):.2f}"
         else:
             brightness = f"sig{float(self.peak_sigma.get()):.1f}"
-        output_dir = remove_foreground_folder(self.pc_var.get()) / "interactive_object_recovery"
-        output_dir.mkdir(parents=True, exist_ok=True)
-        path = output_dir / (
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        PNG_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        path = PNG_OUTPUT_DIR / (
             f"{name}_{object_name}_x{float(self.x_deproj.get()):.1f}_"
-            f"y{float(self.y_deproj.get()):.1f}_{brightness}.png"
+            f"y{float(self.y_deproj.get()):.1f}_{brightness}_{timestamp}.png"
         )
         self.figure.savefig(path, dpi=180)
-        self.status.set(f"Saved {path}")
+        return path
 
 
 def parse_args() -> argparse.Namespace:
