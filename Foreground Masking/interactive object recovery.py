@@ -609,7 +609,10 @@ class ObjectRecoveryApp(tk.Tk):
         row += 1
 
         self.calculate_button = ttk.Button(parent, text="Calculate", command=self.redraw_now)
-        self.calculate_button.grid(row=row, column=0, columnspan=2, sticky=tk.EW, pady=(5, 10))
+        self.calculate_button.grid(row=row, column=0, sticky=tk.EW, pady=(5, 10))
+        ttk.Button(parent, text="Open PNG Folder", command=self.open_png_folder).grid(
+            row=row, column=1, sticky=tk.EW, pady=(5, 10)
+        )
         row += 1
 
         ttk.Separator(parent).grid(row=row, column=0, columnspan=2, sticky=tk.EW, pady=5)
@@ -1404,6 +1407,16 @@ class ObjectRecoveryApp(tk.Tk):
         )
         self.figure.savefig(path, dpi=180)
         return path
+
+    def open_png_folder(self) -> None:
+        PNG_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        try:
+            import os
+
+            os.startfile(PNG_OUTPUT_DIR)
+        except OSError as exc:
+            self.status.set(f"Could not open PNG folder: {exc}")
+            messagebox.showerror("Open PNG folder failed", str(exc))
 
 
 def parse_args() -> argparse.Namespace:
