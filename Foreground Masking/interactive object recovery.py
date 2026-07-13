@@ -1134,6 +1134,12 @@ class ObjectRecoveryApp(tk.Tk):
             "y0": y0,
             "peak": peak,
             "sigma": sigma,
+            "object_type_label": self.object_type_var.get(),
+            "fwhm_arcsec": float(self.fwhm_arcsec.get()),
+            "peak_sigma": float(self.peak_sigma.get()),
+            "axis_ratio": float(self.axis_ratio.get()),
+            "object_pa": float(self.object_pa.get()),
+            "truth_dilation": int(self.truth_dilation.get()),
             "brightness_mode": BRIGHTNESS_MODES.get(self.brightness_mode_var.get(), "sigma"),
             "target_magnitude": target_magnitude,
             "target_flux_jy": target_flux_jy,
@@ -1281,6 +1287,21 @@ class ObjectRecoveryApp(tk.Tk):
         self.ax_profile.set_xlabel("deprojected bar-major radius [arcsec]")
         self.ax_profile.set_ylabel("intensity")
         self.ax_profile.grid(True, which="both", alpha=0.2)
+        self.ax_profile.text(
+            0.02,
+            0.98,
+            self.format_profile_annotation(result),
+            transform=self.ax_profile.transAxes,
+            ha="left",
+            va="top",
+            fontsize=8,
+            bbox={
+                "boxstyle": "round,pad=0.35",
+                "facecolor": "white",
+                "edgecolor": "0.75",
+                "alpha": 0.88,
+            },
+        )
         self.ax_profile.legend(loc="best", fontsize=8)
 
         for ax in (self.ax_baseline, self.ax_injected, self.ax_recovery):
@@ -1305,6 +1326,23 @@ class ObjectRecoveryApp(tk.Tk):
             self.implied_mag_var.set("unavailable from FITS header")
             return
         self.implied_mag_var.set(f"{float(implied_mag):.2f}")
+
+    def format_profile_annotation(self, result: dict[str, object]) -> str:
+        object_type = str(result.get("object_type_label", self.object_type_var.get()))
+        if result.get("brightness_mode") == "magnitude":
+            brightness = f"mag {float(result['target_magnitude']):.2f}"
+        else:
+            brightness = f"peak {float(result['peak_sigma']):.1f} sigma"
+
+        lines = [
+            object_type,
+            brightness,
+            f"FWHM {float(result['fwhm_arcsec']):.1f} arcsec",
+        ]
+        if OBJECT_TYPES.get(object_type) == "galaxy":
+            lines.append(f"q {float(result['axis_ratio']):.2f}, PA {float(result['object_pa']):.0f} deg")
+        lines.append(f"truth dilation {int(result['truth_dilation'])} px")
+        return "\n".join(lines)
 
     def format_status(self, name: str, result: dict[str, object]) -> str:
         method = self.method_var.get()
