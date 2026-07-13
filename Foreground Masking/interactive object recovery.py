@@ -11,7 +11,10 @@ from __future__ import annotations
 
 import argparse
 import csv
+import io
+import json
 import math
+import sqlite3
 import sys
 import tkinter as tk
 import time
@@ -41,6 +44,7 @@ DEFAULT_MANIFEST = baseline.DEFAULT_MANIFEST
 DEFAULT_PC = "Desktop"
 DEFAULT_GALAXY = "NGC0986"
 REDRAW_DEBOUNCE_MS = 450
+CACHE_SCHEMA_VERSION = 1
 IRAC_36_VEGA_ZERO_JY = 280.9
 AB_ZERO_JY = 3631.0
 OBJECT_TYPES = {
@@ -61,6 +65,21 @@ BRIGHTNESS_MODES = {
 def read_manifest(path: Path) -> list[dict[str, str]]:
     with path.open(newline="", encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
+
+
+def geometry_signature(geometry: dict[str, float]) -> str:
+    rounded = {key: round(float(value), 8) for key, value in sorted(geometry.items())}
+    return json.dumps(rounded, sort_keys=True, separators=(",", ":"))
+
+
+def array_blob(values: np.ndarray) -> bytes:
+    buffer = io.BytesIO()
+    np.save(buffer, np.asarray(values), allow_pickle=False)
+    return buffer.getvalue()
+
+
+def array_from_blob(blob: bytes) -> np.ndarray:
+    return np.load(io.BytesIO(blob), allow_pickle=False)
 
 
 def robust_sigma(data: np.ndarray) -> float:
@@ -347,6 +366,7 @@ class ObjectRecoveryApp(tk.Tk):
         self.data_cache: dict[str, tuple[np.ndarray, dict[str, float], fits.Header]] = {}
         self.baseline_products_cache: dict[tuple[str, tuple[tuple[str, object], ...]], dict[str, object]] = {}
         self.display_cache: dict[str, dict[str, object]] = {}
+        self.startup_cache_path = remove_foreground_folder(pc_name) / "interactive_object_recovery" / "startup_cache.sqlite3"
 
         self.all_rows = read_manifest(manifest)
         self.rows: list[dict[str, str]] = []
@@ -376,6 +396,141 @@ class ObjectRecoveryApp(tk.Tk):
 
         self._build_ui()
         self.refresh_galaxy_list(initial=True)
+
+    def ensure_startup_cache(self) -> None:
+        self.startup_cache_path.parent.mkdir(parents=True, exist_ok=True)
+        with sqlite3.connect(self.startup_cache_path) as connection:
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS display_products (
+                    schema_version INTEGER NOT NULL,
+                    pc_name TEXT NOT NULL,
+                    galaxy_name TEXT NOT NULL,
+                    image_path TEXT NOT NULL,
+                    image_mtime_ns INTEGER NOT NULL,
+                    image_size INTEGER NOT NULL,
+                    geometry_signature TEXT NOT NULL,
+                    deproj BLOB NOT NULL,
+                    extent BLOB NOT NULL,
+                    x_axis BLOB NOT NULL,
+                    y_axis BLOB NOT NULL,
+                    log_deproj BLOB NOT NULL,
+                    levels BLOB NOT NULL,
+                    updated_at REAL NOT NULL,
+                    PRIMARY KEY (
+                        schema_version,
+                        pc_name,
+                        galaxy_name,
+                        image_path,
+                        image_mtime_ns,
+                        image_size,
+                        geometry_signature
+                    )
+                )
+                """
+            )
+
+    def cache_lookup_metadata(self, name: str, geometry: dict[str, float]) -> tuple[Path, int, int, str]:
+        row = self.rows_by_name[name]
+        image_path = baseline.image_path_for_pc(row, self.pc_var.get())
+        stat = image_path.stat()
+        return image_path, int(stat.st_mtime_ns), int(stat.st_size), geometry_signature(geometry)
+
+    def load_display_products_from_startup_cache(
+        self,
+        name: str,
+        geometry: dict[str, float],
+    ) -> dict[str, object] | None:
+        try:
+            image_path, image_mtime_ns, image_size, signature = self.cache_lookup_metadata(name, geometry)
+            self.ensure_startup_cache()
+            with sqlite3.connect(self.startup_cache_path) as connection:
+                row = connection.execute(
+                    """
+                    SELECT deproj, extent, x_axis, y_axis, log_deproj, levels
+                    FROM display_products
+                    WHERE schema_version = ?
+                      AND pc_name = ?
+                      AND galaxy_name = ?
+                      AND image_path = ?
+                      AND image_mtime_ns = ?
+                      AND image_size = ?
+                      AND geometry_signature = ?
+                    """,
+                    (
+                        CACHE_SCHEMA_VERSION,
+                        self.pc_var.get(),
+                        name,
+                        str(image_path),
+                        image_mtime_ns,
+                        image_size,
+                        signature,
+                    ),
+                ).fetchone()
+            if row is None:
+                return None
+            products = {
+                "deproj": array_from_blob(row[0]),
+                "extent": array_from_blob(row[1]).tolist(),
+                "x_axis": array_from_blob(row[2]),
+                "y_axis": array_from_blob(row[3]),
+                "log_deproj": array_from_blob(row[4]),
+                "levels": array_from_blob(row[5]),
+            }
+            self.display_cache[name] = products
+            return products
+        except Exception:
+            return None
+
+    def save_display_products_to_startup_cache(
+        self,
+        name: str,
+        geometry: dict[str, float],
+        products: dict[str, object],
+    ) -> None:
+        try:
+            image_path, image_mtime_ns, image_size, signature = self.cache_lookup_metadata(name, geometry)
+            self.ensure_startup_cache()
+            with sqlite3.connect(self.startup_cache_path) as connection:
+                connection.execute(
+                    """
+                    INSERT OR REPLACE INTO display_products (
+                        schema_version,
+                        pc_name,
+                        galaxy_name,
+                        image_path,
+                        image_mtime_ns,
+                        image_size,
+                        geometry_signature,
+                        deproj,
+                        extent,
+                        x_axis,
+                        y_axis,
+                        log_deproj,
+                        levels,
+                        updated_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        CACHE_SCHEMA_VERSION,
+                        self.pc_var.get(),
+                        name,
+                        str(image_path),
+                        image_mtime_ns,
+                        image_size,
+                        signature,
+                        array_blob(np.asarray(products["deproj"], dtype=float)),
+                        array_blob(np.asarray(products["extent"], dtype=float)),
+                        array_blob(np.asarray(products["x_axis"], dtype=float)),
+                        array_blob(np.asarray(products["y_axis"], dtype=float)),
+                        array_blob(np.asarray(products["log_deproj"], dtype=float)),
+                        array_blob(np.asarray(products["levels"], dtype=float)),
+                        time.time(),
+                    ),
+                )
+        except Exception:
+            return
 
     def _build_ui(self) -> None:
         root = ttk.Frame(self, padding=8)
@@ -574,6 +729,7 @@ class ObjectRecoveryApp(tk.Tk):
 
     def refresh_galaxy_list(self, initial: bool = False) -> None:
         pc_name = self.pc_var.get()
+        self.startup_cache_path = remove_foreground_folder(pc_name) / "interactive_object_recovery" / "startup_cache.sqlite3"
         self.rows = baseline.rows_with_images_for_pc(self.all_rows, pc_name)
         self.rows_by_name = {row["name"]: row for row in self.rows}
         self.data_cache.clear()
@@ -617,10 +773,17 @@ class ObjectRecoveryApp(tk.Tk):
         if not name:
             return
         try:
-            data, geometry, _header = self.load_galaxy(name)
+            row = self.rows_by_name[name]
+            geometry = baseline.required_geometry(row)
+            if geometry is None:
+                raise ValueError(f"{name} has incomplete geometry in {self.manifest}.")
+            display = self.load_display_products_from_startup_cache(name, geometry)
+            loaded_from_cache = display is not None
+            if display is None:
+                data, geometry, _header = self.load_galaxy(name)
+                display = self.display_products(name, data, geometry)
             params = self.current_mask_params()
             profile_width = max(1, int(params["profile_width"]))
-            display = self.display_products(name, data, geometry)
             extent = display["extent"]
             log_deproj = np.asarray(display["log_deproj"], dtype=float)
             levels = np.asarray(display["levels"], dtype=float)
@@ -668,8 +831,9 @@ class ObjectRecoveryApp(tk.Tk):
                 ax.set_ylabel("deprojected y [arcsec]")
                 ax.grid(True, alpha=0.15)
             self.canvas.draw_idle()
+            cache_text = "cached baseline preview loaded" if loaded_from_cache else "baseline preview loaded and cached"
             self.status.set(
-                f"{self.pc_var.get()} | {name}: baseline preview loaded. "
+                f"{self.pc_var.get()} | {name}: {cache_text}. "
                 "Choose settings and press Calculate to run recovery."
             )
         except Exception as exc:  # noqa: BLE001
@@ -764,6 +928,7 @@ class ObjectRecoveryApp(tk.Tk):
             "levels": levels,
         }
         self.display_cache[name] = products
+        self.save_display_products_to_startup_cache(name, geometry, products)
         return products
 
     def schedule_redraw(self) -> None:
