@@ -45,7 +45,6 @@ IRAC_36_VEGA_ZERO_JY = 280.9
 AB_ZERO_JY = 3631.0
 OBJECT_TYPES = {
     "Gaussian star": "gaussian",
-    "Moffat star": "moffat",
     "Star cluster": "cluster",
     "Compact galaxy": "galaxy",
 }
@@ -146,21 +145,6 @@ def make_gaussian(
     return peak * np.exp(-0.5 * radius * radius)
 
 
-def make_moffat(
-    shape: tuple[int, int],
-    x0: float,
-    y0: float,
-    peak: float,
-    fwhm_pixels: float,
-    beta: float,
-) -> np.ndarray:
-    yy, xx = np.indices(shape, dtype=float)
-    beta = max(1.2, beta)
-    alpha = max(0.2, fwhm_pixels / (2.0 * math.sqrt(2.0 ** (1.0 / beta) - 1.0)))
-    radius2 = ((xx - x0) ** 2 + (yy - y0) ** 2) / (alpha * alpha)
-    return peak * (1.0 + radius2) ** (-beta)
-
-
 def make_toy_object(
     shape: tuple[int, int],
     x0: float,
@@ -171,11 +155,8 @@ def make_toy_object(
     fwhm_pixels: float,
     axis_ratio: float,
     pa_deg: float,
-    beta: float,
 ) -> np.ndarray:
     sigma = max(0.2, fwhm_pixels / 2.3548)
-    if object_type == "moffat":
-        return make_moffat(shape, x0, y0, peak, fwhm_pixels, beta)
     if object_type == "cluster":
         offsets = [(-0.55, -0.25, 0.75), (0.45, 0.18, 0.55), (0.05, 0.65, 0.38)]
         model = np.zeros(shape, dtype=float)
@@ -381,7 +362,6 @@ class ObjectRecoveryApp(tk.Tk):
         self.fwhm_arcsec = tk.DoubleVar(value=4.0)
         self.axis_ratio = tk.DoubleVar(value=0.65)
         self.object_pa = tk.DoubleVar(value=25.0)
-        self.moffat_beta = tk.DoubleVar(value=2.7)
         self.truth_dilation = tk.IntVar(value=2)
         self.toy_parameter_rows: dict[str, tuple[ttk.Widget, ttk.Widget]] = {}
 
@@ -503,7 +483,6 @@ class ObjectRecoveryApp(tk.Tk):
             ("fwhm_arcsec", "FWHM [arcsec]", self.fwhm_arcsec, 0.3, 12.0, 0.1),
             ("axis_ratio", "axis ratio", self.axis_ratio, 0.15, 1.0, 0.05),
             ("object_pa", "object PA [deg]", self.object_pa, -180.0, 180.0, 1.0),
-            ("moffat_beta", "Moffat beta", self.moffat_beta, 1.3, 8.0, 0.1),
         ]:
             label_widget = ttk.Label(parent, text=label)
             label_widget.grid(row=row, column=0, sticky=tk.W)
@@ -585,8 +564,6 @@ class ObjectRecoveryApp(tk.Tk):
             visible_keys.update({"peak_sigma", "implied_mag"})
         if object_type == "galaxy":
             visible_keys.update({"axis_ratio", "object_pa"})
-        if object_type == "moffat":
-            visible_keys.add("moffat_beta")
 
         for key, widgets in self.toy_parameter_rows.items():
             for widget in widgets:
@@ -873,7 +850,6 @@ class ObjectRecoveryApp(tk.Tk):
             fwhm_pixels=fwhm_pixels,
             axis_ratio=float(self.axis_ratio.get()),
             pa_deg=float(self.object_pa.get()),
-            beta=float(self.moffat_beta.get()),
         )
         target_flux_jy: float | None = None
         if BRIGHTNESS_MODES.get(self.brightness_mode_var.get(), "sigma") == "magnitude":
@@ -898,7 +874,6 @@ class ObjectRecoveryApp(tk.Tk):
             fwhm_pixels=fwhm_pixels,
             axis_ratio=float(self.axis_ratio.get()),
             pa_deg=float(self.object_pa.get()),
-            beta=float(self.moffat_beta.get()),
         )
         implied_integrated_mag = data_model_to_integrated_magnitude(
             model,
@@ -923,18 +898,19 @@ class ObjectRecoveryApp(tk.Tk):
 
         radius_pix = int(baseline_products["radius_pix"])
         profile_width = int(baseline_products["profile_width"])
-        radii = np.asarray(baseline_products["radii"], dtype=float)
         clean_profile = np.asarray(baseline_products["clean_profile"], dtype=float)
         _, injected_profile = baseline.profile_at_pa(
             injected, geometry["xc"], geometry["yc"], geometry["bar_pa"], radius_pix, width=profile_width
         )
-        masked_injected = np.where(recovered_mask, np.nan, injected)
-        _, masked_profile = baseline.profile_at_pa(
-            masked_injected, geometry["xc"], geometry["yc"], geometry["bar_pa"], radius_pix, width=profile_width
-        )
-        bridge_mask = baseline.profile_mask_at_pa(
+        recovered_profile_mask = baseline.profile_mask_at_pa(
             recovered_mask, geometry["xc"], geometry["yc"], geometry["bar_pa"], radius_pix, width=profile_width
         )
+        if spike_samples is not None and spike_samples.size == recovered_profile_mask.size:
+            bridge_mask = recovered_profile_mask & spike_samples
+        else:
+            bridge_mask = recovered_profile_mask
+        masked_profile = np.array(injected_profile, copy=True)
+        masked_profile[bridge_mask] = np.nan
         bridged_profile, bridged_samples = baseline.fill_profile_with_log_linear_bridges(
             masked_profile,
             bridge_mask,
@@ -1001,7 +977,6 @@ class ObjectRecoveryApp(tk.Tk):
         profile_width = max(1, int(params["profile_width"])) if isinstance(params, dict) else None
 
         display = self.display_products(name, data, geometry)
-        base_deproj = np.asarray(display["deproj"], dtype=float)
         extent = display["extent"]
         log_base = np.asarray(display["log_deproj"], dtype=float)
         levels = np.asarray(display["levels"], dtype=float)
@@ -1077,9 +1052,30 @@ class ObjectRecoveryApp(tk.Tk):
         clean_profile = np.asarray(result["clean_profile"], dtype=float)
         injected_profile = np.asarray(result["injected_profile"], dtype=float)
         bridged_profile = np.asarray(result["bridged_profile"], dtype=float)
+        bridged_samples = np.asarray(result["bridged_samples"], dtype=bool)
         self.ax_profile.semilogy(radii, clean_profile, color="#1f77b4", lw=1.4, label="baseline")
         self.ax_profile.semilogy(radii, injected_profile, color="#ff7f0e", lw=1.0, alpha=0.65, label="injected")
-        self.ax_profile.semilogy(radii, bridged_profile, color="#2ca02c", lw=1.3, ls="--", label="masked + bridge")
+        bridge_label = "masked + bridge"
+        for start, stop in baseline.contiguous_true_runs(bridged_samples):
+            plot_start = max(0, start - 1)
+            plot_stop = min(bridged_profile.size - 1, stop + 1)
+            bridge_slice = slice(plot_start, plot_stop + 1)
+            bridge_good = (
+                np.isfinite(radii[bridge_slice])
+                & np.isfinite(bridged_profile[bridge_slice])
+                & (bridged_profile[bridge_slice] > 0)
+            )
+            if np.count_nonzero(bridge_good) < 2:
+                continue
+            self.ax_profile.semilogy(
+                radii[bridge_slice][bridge_good],
+                bridged_profile[bridge_slice][bridge_good],
+                color="#2ca02c",
+                lw=1.3,
+                ls="--",
+                label=bridge_label,
+            )
+            bridge_label = "_nolegend_"
         self.ax_profile.axvline(float(self.x_deproj.get()), color="#d62728", lw=0.9, alpha=0.7)
         self.ax_profile.axvline(-float(self.x_deproj.get()), color="#d62728", lw=0.6, alpha=0.25)
         self.ax_profile.set_title(

@@ -448,6 +448,13 @@ def build_doc() -> None:
         "more gradually. The spike gate tries to separate those cases before deciding which residual-image "
         "segments should be used as a foreground mask.",
     )
+    add_paragraph(
+        doc,
+        "The two-dimensional candidate segments are detected on a residual image, not directly on the raw "
+        "science image. The pipeline first builds a broad Gaussian-smoothed galaxy model, then subtracts it "
+        "from the science image: residual = science image - Gaussian-smoothed galaxy model. Photutils is run "
+        "on this residual image so compact positive excesses stand out against the smooth galaxy background.",
+    )
     add_figure(doc, figures["flow"], "Figure 1. Overall spike-gated masking flow.", width=6.6)
 
     doc.add_heading("What is a spike sample?", level=1)
@@ -583,10 +590,37 @@ def build_doc() -> None:
         [
             ["detected spike index", "10", "The profile sample that passed the spike tests."],
             ["spike_window_samples", "2", "Expand to samples 8, 9, 10, 11, and 12."],
-            ["mask/profile intersection", "samples 8 to 13", "The mask covers all expanded spike samples."],
+            ["mask/profile intersection", "samples 8 to 12", "The mask covers all expanded spike samples."],
             ["coverage", "5 / 5 = 1.0", "Auto-tune treats the spike samples as fully covered."],
         ],
         [2600, 2100, 4660],
+    )
+
+    doc.add_heading("What nsigma means in the Photutils step", level=1)
+    add_paragraph(
+        doc,
+        "The nsigma value controls how high a residual-image pixel must be before it can seed a compact-source "
+        "segment. The code estimates the residual background level from the finite pixels, computes a robust "
+        "scatter using the median absolute deviation, and sets the detection threshold as:",
+    )
+    add_paragraph(
+        doc,
+        "threshold = median(residual image) + nsigma x robust_sigma(residual image).",
+    )
+    add_paragraph(
+        doc,
+        "The residual image is then passed to Photutils segmentation. In current Photutils versions this uses "
+        "photutils.segmentation.detect_sources with 8-connectivity and the configured npixels value. npixels is "
+        "the minimum connected area above threshold required for a detection. If deblending is enabled, the code "
+        "then calls photutils.segmentation.deblend_sources to split blended detections into separate segments "
+        "where possible.",
+    )
+    add_callout(
+        doc,
+        "Interpretation:",
+        "higher nsigma is more conservative and finds only brighter residual excesses; lower nsigma is more "
+        "aggressive and can recover fainter contaminants, but it also increases the risk of detecting galaxy "
+        "structure or noise residuals.",
     )
 
     doc.add_heading("How this affects auto-tune nsigma", level=1)
