@@ -59,7 +59,6 @@ DEFAULT_SPIKE_NEIGHBOUR_INNER_ARCSEC = 4.0
 DEFAULT_SPIKE_NEIGHBOUR_OUTER_ARCSEC = 15.0
 DEFAULT_SPIKE_SIDE_OFFSET_SAMPLES = 3
 DEFAULT_SPIKE_SIDE_DROP_FRACTION = 0.4
-DEFAULT_SPIKE_CENTER_EXCLUSION_ARCSEC = 8.0
 DEFAULT_SPIKE_WINDOW_SAMPLES = 2
 PROFILE_BRIDGE_MERGE_GAP_SAMPLES = 12
 PARAMETER_UNIT_LABELS = {
@@ -268,7 +267,7 @@ def detect_profile_spikes(
     neighbour_outer_arcsec: float = DEFAULT_SPIKE_NEIGHBOUR_OUTER_ARCSEC,
     side_offset_samples: int = DEFAULT_SPIKE_SIDE_OFFSET_SAMPLES,
     side_drop_fraction: float = DEFAULT_SPIKE_SIDE_DROP_FRACTION,
-    center_exclusion_arcsec: float = DEFAULT_SPIKE_CENTER_EXCLUSION_ARCSEC,
+    center_exclusion_arcsec: float,
 ) -> np.ndarray:
     radii = np.asarray(radii_arcsec, dtype=float)
     profile = np.asarray(values, dtype=float)
@@ -358,15 +357,24 @@ def spike_gated_sep_products(
     geometry: dict[str, float],
 ) -> dict[str, object]:
     gate_params = dict(params)
-    gate_params["detect_thresh"] = SPIKE_GATE_DETECT_THRESH
+    gate_params["detect_thresh"] = float(params["spike_gate_detect_thresh"])
     low_threshold_products = sep_products(data, gate_params, geometry)
 
     radius_arcsec = display.profile_radius_pixels(data, geometry) * geometry["pixel_scale"]
     original_view, x_axis, y_axis = display.deproject_bar_aligned_cutout(data, geometry, radius_arcsec)
     half_width = 0.5 * DEFAULT_PROFILE_WIDTH_PIXELS * geometry["pixel_scale"]
     radii, intensity = display.bar_major_axis_profile(original_view, x_axis, y_axis, half_width)
-    spike_samples = detect_profile_spikes(radii, intensity)
-    spike_samples = expand_boolean_mask(spike_samples, DEFAULT_SPIKE_WINDOW_SAMPLES)
+    spike_samples = detect_profile_spikes(
+        radii,
+        intensity,
+        excess_fraction=float(params["spike_excess_fraction"]),
+        neighbour_inner_arcsec=float(params["spike_neighbour_inner_arcsec"]),
+        neighbour_outer_arcsec=float(params["spike_neighbour_outer_arcsec"]),
+        side_offset_samples=int(params["spike_side_offset_samples"]),
+        side_drop_fraction=float(params["spike_side_drop_fraction"]),
+        center_exclusion_arcsec=float(params["exclude_center_pixels"]) * geometry["pixel_scale"],
+    )
+    spike_samples = expand_boolean_mask(spike_samples, int(params["spike_window_samples"]))
 
     selected_labels: set[int] = set()
     filtered = np.asarray(low_threshold_products["filtered_segmentation"])
@@ -401,7 +409,7 @@ def spike_gated_sep_products(
         "cleaned": cleaned,
         "rows": rows,
         "spike_samples": spike_samples,
-        "spike_gate_detect_thresh": SPIKE_GATE_DETECT_THRESH,
+        "spike_gate_detect_thresh": float(params["spike_gate_detect_thresh"]),
     }
 
 
@@ -509,16 +517,45 @@ class SEPTester(tk.Tk):
         self.readouts: dict[str, ttk.Label] = {}
         self.parameter_labels: dict[str, ttk.Label] = {}
         self.parameter_label_texts: dict[str, str] = {}
-        self._scale(control, "detect_thresh", "Detection threshold", 0.5, 10.0, 0.1, DEFAULT_DETECT_THRESH)
-        self._spin(control, "minarea", "Minimum area [px]", 1, 80, 1, DEFAULT_MINAREA)
-        self._spin(control, "deblend_nthresh", "Deblend thresholds", 8, 64, 1, DEFAULT_DEBLEND_NTHRESH)
-        self._scale(control, "deblend_cont", "Deblend contrast", 0.0001, 0.1, 0.0005, DEFAULT_DEBLEND_CONT)
-        self._spin(control, "back_size", "Background box [px]", 16, 256, 8, DEFAULT_BACK_SIZE)
-        self._spin(control, "filter_size", "Filter size [px]", 1, 9, 2, DEFAULT_FILTER_SIZE)
-        self._spin(control, "dilation_radius", "Mask dilation [px]", 0, 12, 1, DEFAULT_DILATION_RADIUS)
-        self._spin(control, "max_area", "Max segment area [px]", 10, 5000, 10, DEFAULT_MAX_AREA)
-        self._scale(control, "max_elongation", "Max elongation", 1.0, 20.0, 0.25, DEFAULT_MAX_ELONGATION)
-        self._scale(control, "exclude_center_pixels", "Central exclusion [px]", 0.0, 120.0, 1.0, DEFAULT_EXCLUDE_CENTER_PIXELS)
+
+        spike_frame = ttk.LabelFrame(control, text="Spike Gate", padding=8)
+        spike_frame.pack(fill=tk.X, pady=(4, 10))
+        self._scale(spike_frame, "spike_gate_detect_thresh", "Low-threshold SEP nsigma", 0.5, 3.0, 0.1, SPIKE_GATE_DETECT_THRESH)
+        self._scale(spike_frame, "spike_excess_fraction", "Spike excess fraction", 0.05, 1.0, 0.05, DEFAULT_SPIKE_EXCESS_FRACTION)
+        self._scale(
+            spike_frame,
+            "spike_neighbour_inner_arcsec",
+            "Neighbour inner [arcsec]",
+            1.0,
+            20.0,
+            0.5,
+            DEFAULT_SPIKE_NEIGHBOUR_INNER_ARCSEC,
+        )
+        self._scale(
+            spike_frame,
+            "spike_neighbour_outer_arcsec",
+            "Neighbour outer [arcsec]",
+            5.0,
+            40.0,
+            0.5,
+            DEFAULT_SPIKE_NEIGHBOUR_OUTER_ARCSEC,
+        )
+        self._spin(spike_frame, "spike_side_offset_samples", "Side offset [samples]", 1, 12, 1, DEFAULT_SPIKE_SIDE_OFFSET_SAMPLES)
+        self._scale(spike_frame, "spike_side_drop_fraction", "Side drop fraction", 0.05, 1.5, 0.05, DEFAULT_SPIKE_SIDE_DROP_FRACTION)
+        self._spin(spike_frame, "spike_window_samples", "Spike window [samples]", 0, 10, 1, DEFAULT_SPIKE_WINDOW_SAMPLES)
+
+        sep_frame = ttk.LabelFrame(control, text="SEP", padding=8)
+        sep_frame.pack(fill=tk.X, pady=(0, 8))
+        self._scale(sep_frame, "detect_thresh", "Detection threshold", 0.5, 10.0, 0.1, DEFAULT_DETECT_THRESH)
+        self._spin(sep_frame, "minarea", "Minimum area [px]", 1, 80, 1, DEFAULT_MINAREA)
+        self._spin(sep_frame, "deblend_nthresh", "Deblend thresholds", 8, 64, 1, DEFAULT_DEBLEND_NTHRESH)
+        self._scale(sep_frame, "deblend_cont", "Deblend contrast", 0.0001, 0.1, 0.0005, DEFAULT_DEBLEND_CONT)
+        self._spin(sep_frame, "back_size", "Background box [px]", 16, 256, 8, DEFAULT_BACK_SIZE)
+        self._spin(sep_frame, "filter_size", "Filter size [px]", 1, 9, 2, DEFAULT_FILTER_SIZE)
+        self._spin(sep_frame, "dilation_radius", "Mask dilation [px]", 0, 12, 1, DEFAULT_DILATION_RADIUS)
+        self._spin(sep_frame, "max_area", "Max segment area [px]", 10, 5000, 10, DEFAULT_MAX_AREA)
+        self._scale(sep_frame, "max_elongation", "Max elongation", 1.0, 20.0, 0.25, DEFAULT_MAX_ELONGATION)
+        self._scale(sep_frame, "exclude_center_pixels", "Central exclusion [px]", 0.0, 120.0, 1.0, DEFAULT_EXCLUDE_CENTER_PIXELS)
 
         button_row = ttk.Frame(control)
         button_row.pack(fill=tk.X, pady=(12, 4))
@@ -585,13 +622,13 @@ class SEPTester(tk.Tk):
         frame = ttk.Frame(self)
         frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         self.figure = Figure(figsize=(12.0, 15.6), dpi=100, constrained_layout=True)
-        grid = self.figure.add_gridspec(5, 2, height_ratios=[0.26, 1.0, 0.72, 0.72, 0.72])
+        grid = self.figure.add_gridspec(5, 2, height_ratios=[0.26, 1.0, 1.0, 1.0, 1.0])
         self.ax_parameters = self.figure.add_subplot(grid[0, :])
         self.ax_original = self.figure.add_subplot(grid[1, 0])
         self.ax_residual = self.figure.add_subplot(grid[1, 1])
         self.ax_original_isophote = self.figure.add_subplot(grid[2, 0])
         self.ax_original_profile = self.figure.add_subplot(grid[2, 1])
-        self.ax_cleaned_isophote = self.figure.add_subplot(grid[3:, 0])
+        self.ax_cleaned_isophote = self.figure.add_subplot(grid[3, 0])
         self.ax_cleaned_profile = self.figure.add_subplot(grid[3, 1])
         self.ax_cleaned = self.figure.add_subplot(grid[4, 1])
         self.ax_parameters.set_axis_off()
@@ -686,6 +723,13 @@ class SEPTester(tk.Tk):
             "exclude_center_pixels": self.convert_to_pixels(
                 "exclude_center_pixels", float(self.vars["exclude_center_pixels"].get())
             ),
+            "spike_gate_detect_thresh": float(self.vars["spike_gate_detect_thresh"].get()),
+            "spike_excess_fraction": float(self.vars["spike_excess_fraction"].get()),
+            "spike_neighbour_inner_arcsec": float(self.vars["spike_neighbour_inner_arcsec"].get()),
+            "spike_neighbour_outer_arcsec": float(self.vars["spike_neighbour_outer_arcsec"].get()),
+            "spike_side_offset_samples": int(self.vars["spike_side_offset_samples"].get()),
+            "spike_side_drop_fraction": float(self.vars["spike_side_drop_fraction"].get()),
+            "spike_window_samples": int(self.vars["spike_window_samples"].get()),
         }
 
     def reset_parameters(self) -> None:
@@ -700,6 +744,13 @@ class SEPTester(tk.Tk):
             "max_area": DEFAULT_MAX_AREA,
             "max_elongation": DEFAULT_MAX_ELONGATION,
             "exclude_center_pixels": DEFAULT_EXCLUDE_CENTER_PIXELS,
+            "spike_gate_detect_thresh": SPIKE_GATE_DETECT_THRESH,
+            "spike_excess_fraction": DEFAULT_SPIKE_EXCESS_FRACTION,
+            "spike_neighbour_inner_arcsec": DEFAULT_SPIKE_NEIGHBOUR_INNER_ARCSEC,
+            "spike_neighbour_outer_arcsec": DEFAULT_SPIKE_NEIGHBOUR_OUTER_ARCSEC,
+            "spike_side_offset_samples": DEFAULT_SPIKE_SIDE_OFFSET_SAMPLES,
+            "spike_side_drop_fraction": DEFAULT_SPIKE_SIDE_DROP_FRACTION,
+            "spike_window_samples": DEFAULT_SPIKE_WINDOW_SAMPLES,
         }
         for key, value in defaults.items():
             self.vars[key].set(self.convert_from_pixels(key, value))
@@ -913,7 +964,7 @@ class SEPTester(tk.Tk):
             half_width,
             bar_sma,
             central_exclusion_arcsec,
-            f"SEP & Spike Gate bar profile | thresh={SPIKE_GATE_DETECT_THRESH:.1f}",
+            f"SEP & Spike Gate bar profile | thresh={float(params['spike_gate_detect_thresh']):.1f}",
             mask_profile=spike_mask_profile,
             spike_samples=spike_samples,
             y_limits=profile_y_limits,
