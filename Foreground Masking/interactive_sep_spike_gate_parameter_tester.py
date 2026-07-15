@@ -247,6 +247,36 @@ def profile_mask_at_bar_major(mask_view: np.ndarray, y_axis: np.ndarray, half_wi
     return np.any(np.asarray(mask_view, dtype=bool)[aperture_rows, :], axis=0)
 
 
+def spike_samples_to_image_aperture(
+    shape: tuple[int, int],
+    geometry: dict[str, float],
+    spike_radii_arcsec: np.ndarray,
+    *,
+    half_width_arcsec: float,
+    sample_half_width_arcsec: float,
+) -> np.ndarray:
+    """Return original-image pixels lying in the bar aperture at spike radii."""
+    spike_radii = np.asarray(spike_radii_arcsec, dtype=float)
+    spike_radii = spike_radii[np.isfinite(spike_radii)]
+    if spike_radii.size == 0:
+        return np.zeros(shape, dtype=bool)
+
+    yy, xx = np.indices(shape, dtype=float)
+    pixel_scale = geometry["pixel_scale"]
+    x_arcsec = pixel_scale * (xx - (geometry["xc"] - 1.0))
+    y_arcsec = pixel_scale * (yy - (geometry["yc"] - 1.0))
+    transform_xy = display.image_transform(geometry["disk_pa"], geometry["inclination"], geometry["bar_pa"])
+    bar_x, bar_y = transform_xy @ np.vstack([x_arcsec.ravel(), y_arcsec.ravel()])
+    bar_x = bar_x.reshape(shape)
+    bar_y = bar_y.reshape(shape)
+
+    in_bar_strip = np.abs(bar_y) <= half_width_arcsec
+    in_spike_column = np.zeros(shape, dtype=bool)
+    for spike_radius in spike_radii:
+        in_spike_column |= np.abs(bar_x - spike_radius) <= sample_half_width_arcsec
+    return in_bar_strip & in_spike_column
+
+
 def expand_boolean_mask(mask: np.ndarray, radius: int) -> np.ndarray:
     expanded = np.asarray(mask, dtype=bool).copy()
     if radius <= 0 or not np.any(expanded):
@@ -379,15 +409,17 @@ def spike_gated_sep_products(
     selected_labels: set[int] = set()
     filtered = np.asarray(low_threshold_products["filtered_segmentation"])
     if np.any(spike_samples) and np.any(filtered > 0):
-        for label in np.unique(filtered):
-            label = int(label)
-            if label <= 0:
-                continue
-            label_mask = dilate_mask(filtered == label, int(params["dilation_radius"]))
-            label_view, _, _ = display.deproject_bar_aligned_cutout(label_mask.astype(float), geometry, radius_arcsec, order=0)
-            label_profile = profile_mask_at_bar_major(np.isfinite(label_view) & (label_view > 0.5), y_axis, half_width)
-            if np.any(label_profile & spike_samples):
-                selected_labels.add(label)
+        spike_aperture = spike_samples_to_image_aperture(
+            data.shape,
+            geometry,
+            radii[spike_samples],
+            half_width_arcsec=half_width,
+            sample_half_width_arcsec=0.5 * geometry["pixel_scale"],
+        )
+        # Equivalent to testing each dilated segment against the spike aperture,
+        # but vectorized: dilate the aperture once, then read intersecting labels.
+        aperture_for_labels = dilate_mask(spike_aperture, int(params["dilation_radius"]))
+        selected_labels = {int(label) for label in np.unique(filtered[aperture_for_labels]) if int(label) > 0}
 
     gated_segmentation = np.where(np.isin(filtered, list(selected_labels)), filtered, 0)
     gated_mask = dilate_mask(gated_segmentation > 0, int(params["dilation_radius"]))
@@ -625,12 +657,14 @@ class SEPTester(tk.Tk):
         grid = self.figure.add_gridspec(5, 2, height_ratios=[0.26, 1.0, 1.0, 1.0, 1.0])
         self.ax_parameters = self.figure.add_subplot(grid[0, :])
         self.ax_original = self.figure.add_subplot(grid[1, 0])
-        self.ax_residual = self.figure.add_subplot(grid[1, 1])
-        self.ax_original_isophote = self.figure.add_subplot(grid[2, 0])
-        self.ax_original_profile = self.figure.add_subplot(grid[2, 1])
-        self.ax_cleaned_isophote = self.figure.add_subplot(grid[3, 0])
-        self.ax_cleaned_profile = self.figure.add_subplot(grid[3, 1])
-        self.ax_cleaned = self.figure.add_subplot(grid[4, 1])
+        self.ax_original_profile = self.figure.add_subplot(grid[1, 1])
+        self.ax_residual = self.figure.add_subplot(grid[2, 0])
+        self.ax_cleaned_profile = self.figure.add_subplot(grid[2, 1])
+        self.ax_original_isophote = self.figure.add_subplot(grid[3, 0])
+        self.ax_cleaned = self.figure.add_subplot(grid[3, 1])
+        self.ax_cleaned_isophote = self.figure.add_subplot(grid[4, 0])
+        self.ax_blank = self.figure.add_subplot(grid[4, 1])
+        self.ax_blank.set_axis_off()
         self.ax_parameters.set_axis_off()
         self.canvas = FigureCanvasTkAgg(self.figure, master=frame)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
@@ -889,10 +923,12 @@ class SEPTester(tk.Tk):
             self.ax_original_profile,
             self.ax_cleaned_profile,
             self.ax_cleaned,
+            self.ax_blank,
         ]
         for ax in axes:
             ax.clear()
         self.ax_parameters.set_axis_off()
+        self.ax_blank.set_axis_off()
         self.draw_parameter_box(params, products)
         for ax in axes[1:]:
             ax.set_xlabel("bar-aligned arcsec")
