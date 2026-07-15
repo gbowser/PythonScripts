@@ -53,6 +53,20 @@ DEFAULT_MAX_AREA = 500
 DEFAULT_MAX_ELONGATION = 6.0
 DEFAULT_EXCLUDE_CENTER_PIXELS = 8.0
 DEFAULT_PROFILE_WIDTH_PIXELS = 3
+PARAMETER_UNIT_LABELS = {
+    "Pixels": "pixels",
+    "Arcsec": "arcsec",
+}
+PIXEL_LINEAR_PARAMS = {
+    "back_size",
+    "filter_size",
+    "dilation_radius",
+    "exclude_center_pixels",
+}
+PIXEL_AREA_PARAMS = {
+    "minarea",
+    "max_area",
+}
 
 
 def load_fits(path: Path) -> tuple[np.ndarray, fits.Header]:
@@ -222,6 +236,8 @@ class SEPTester(tk.Tk):
         self.manifest = manifest
         self.all_rows = display.read_manifest(manifest)
         self.pc_var = tk.StringVar(value=pc_name)
+        self.unit_var = tk.StringVar(value="Pixels")
+        self.display_units = "pixels"
         self.output_dir = remove_foreground_folder(pc_name) / "interactive_sep_parameter_tester"
         self.rows: list[dict[str, str]] = []
         self.rows_by_name: dict[str, dict[str, str]] = {}
@@ -253,8 +269,20 @@ class SEPTester(tk.Tk):
         detect_combo.pack(fill=tk.X, pady=(0, 8))
         detect_combo.bind("<<ComboboxSelected>>", lambda _event: self.mark_needs_calculation())
 
+        ttk.Label(control, text="Parameter units").pack(anchor=tk.W)
+        unit_combo = ttk.Combobox(
+            control,
+            textvariable=self.unit_var,
+            values=list(PARAMETER_UNIT_LABELS),
+            state="readonly",
+        )
+        unit_combo.pack(fill=tk.X, pady=(0, 8))
+        unit_combo.bind("<<ComboboxSelected>>", lambda _event: self.change_parameter_units())
+
         self.vars: dict[str, tk.Variable] = {}
         self.readouts: dict[str, ttk.Label] = {}
+        self.parameter_labels: dict[str, ttk.Label] = {}
+        self.parameter_label_texts: dict[str, str] = {}
         self._scale(control, "detect_thresh", "Detection threshold", 0.5, 10.0, 0.1, DEFAULT_DETECT_THRESH)
         self._spin(control, "minarea", "Minimum area [px]", 1, 80, 1, DEFAULT_MINAREA)
         self._spin(control, "deblend_nthresh", "Deblend thresholds", 8, 64, 1, DEFAULT_DEBLEND_NTHRESH)
@@ -278,10 +306,13 @@ class SEPTester(tk.Tk):
     def _scale(self, parent, key, label, minimum, maximum, resolution, default) -> None:
         frame = ttk.Frame(parent)
         frame.pack(fill=tk.X, pady=4)
-        ttk.Label(frame, text=label).pack(anchor=tk.W)
+        label_widget = ttk.Label(frame, text=self.label_for_display(key, label))
+        label_widget.pack(anchor=tk.W)
+        self.parameter_labels[key] = label_widget
+        self.parameter_label_texts[key] = label
         row = ttk.Frame(frame)
         row.pack(fill=tk.X)
-        var = tk.DoubleVar(value=default)
+        var = tk.DoubleVar(value=float(self.convert_from_pixels(key, default)))
         self.vars[key] = var
         readout = ttk.Label(row, width=9)
         readout.pack(side=tk.RIGHT)
@@ -302,10 +333,23 @@ class SEPTester(tk.Tk):
     def _spin(self, parent, key, label, minimum, maximum, increment, default) -> None:
         frame = ttk.Frame(parent)
         frame.pack(fill=tk.X, pady=4)
-        ttk.Label(frame, text=label).pack(side=tk.LEFT)
-        var = tk.IntVar(value=default)
+        label_widget = ttk.Label(frame, text=self.label_for_display(key, label))
+        label_widget.pack(side=tk.LEFT)
+        self.parameter_labels[key] = label_widget
+        self.parameter_label_texts[key] = label
+        if key in PIXEL_LINEAR_PARAMS or key in PIXEL_AREA_PARAMS:
+            var = tk.DoubleVar(value=float(self.convert_from_pixels(key, default)))
+        else:
+            var = tk.IntVar(value=default)
         self.vars[key] = var
-        spin = ttk.Spinbox(frame, textvariable=var, from_=minimum, to=maximum, increment=increment, width=10)
+        spin = ttk.Spinbox(
+            frame,
+            textvariable=var,
+            from_=self.convert_from_pixels(key, minimum),
+            to=self.convert_from_pixels(key, maximum),
+            increment=self.convert_from_pixels(key, increment),
+            width=10,
+        )
         spin.pack(side=tk.RIGHT)
         spin.configure(command=self.mark_needs_calculation)
         spin.bind("<Return>", lambda _event: self.mark_needs_calculation())
@@ -337,19 +381,86 @@ class SEPTester(tk.Tk):
         if mark:
             self.mark_needs_calculation()
 
+    def pixel_scale_for_units(self) -> float:
+        name = self.galaxy_var.get() if hasattr(self, "galaxy_var") else ""
+        if not name:
+            return 1.0
+        try:
+            _data, _header, geometry = self._load_galaxy(name)
+        except Exception:  # noqa: BLE001
+            return 1.0
+        return float(geometry.get("pixel_scale", 1.0)) or 1.0
+
+    def convert_from_pixels(self, key: str, value: float | int, units: str | None = None) -> float:
+        units = self.display_units if units is None else units
+        number = float(value)
+        if units != "arcsec":
+            return number
+        pixel_scale = self.pixel_scale_for_units()
+        if key in PIXEL_LINEAR_PARAMS:
+            return number * pixel_scale
+        if key in PIXEL_AREA_PARAMS:
+            return number * pixel_scale * pixel_scale
+        return number
+
+    def convert_to_pixels(self, key: str, value: float | int, units: str | None = None) -> float:
+        units = self.display_units if units is None else units
+        number = float(value)
+        if units != "arcsec":
+            return number
+        pixel_scale = self.pixel_scale_for_units()
+        if key in PIXEL_LINEAR_PARAMS:
+            return number / pixel_scale
+        if key in PIXEL_AREA_PARAMS:
+            return number / (pixel_scale * pixel_scale)
+        return number
+
+    def label_for_display(self, key: str, label: str) -> str:
+        if self.display_units != "arcsec":
+            return label
+        if key in PIXEL_AREA_PARAMS:
+            return label.replace("[px]", "[as^2]")
+        if key in PIXEL_LINEAR_PARAMS:
+            return label.replace("[px]", "[as]")
+        return label
+
+    def refresh_parameter_unit_labels(self) -> None:
+        for key, label in self.parameter_labels.items():
+            label.configure(text=self.label_for_display(key, self.parameter_label_texts[key]))
+
+    def change_parameter_units(self) -> None:
+        new_units = PARAMETER_UNIT_LABELS.get(self.unit_var.get(), "pixels")
+        old_units = self.display_units
+        if new_units == old_units:
+            return
+        for key, var in self.vars.items():
+            if key not in PIXEL_LINEAR_PARAMS and key not in PIXEL_AREA_PARAMS:
+                continue
+            pixel_value = self.convert_to_pixels(key, float(var.get()), old_units)
+            var.set(self.convert_from_pixels(key, pixel_value, new_units))
+            if key in self.readouts:
+                self.readouts[key].configure(text=f"{float(var.get()):.4g}")
+        self.display_units = new_units
+        self.refresh_parameter_unit_labels()
+        self.mark_needs_calculation()
+
     def current_params(self) -> dict[str, float | int | str]:
         return {
             "detect_on": self.detect_on_var.get(),
             "detect_thresh": float(self.vars["detect_thresh"].get()),
-            "minarea": int(self.vars["minarea"].get()),
+            "minarea": max(1, int(round(self.convert_to_pixels("minarea", float(self.vars["minarea"].get()))))),
             "deblend_nthresh": int(self.vars["deblend_nthresh"].get()),
             "deblend_cont": float(self.vars["deblend_cont"].get()),
-            "back_size": int(self.vars["back_size"].get()),
-            "filter_size": int(self.vars["filter_size"].get()),
-            "dilation_radius": int(self.vars["dilation_radius"].get()),
-            "max_area": int(self.vars["max_area"].get()),
+            "back_size": max(1, int(round(self.convert_to_pixels("back_size", float(self.vars["back_size"].get()))))),
+            "filter_size": max(1, int(round(self.convert_to_pixels("filter_size", float(self.vars["filter_size"].get()))))),
+            "dilation_radius": max(
+                0, int(round(self.convert_to_pixels("dilation_radius", float(self.vars["dilation_radius"].get()))))
+            ),
+            "max_area": max(1, int(round(self.convert_to_pixels("max_area", float(self.vars["max_area"].get()))))),
             "max_elongation": float(self.vars["max_elongation"].get()),
-            "exclude_center_pixels": float(self.vars["exclude_center_pixels"].get()),
+            "exclude_center_pixels": self.convert_to_pixels(
+                "exclude_center_pixels", float(self.vars["exclude_center_pixels"].get())
+            ),
         }
 
     def reset_parameters(self) -> None:
@@ -366,7 +477,7 @@ class SEPTester(tk.Tk):
             "exclude_center_pixels": DEFAULT_EXCLUDE_CENTER_PIXELS,
         }
         for key, value in defaults.items():
-            self.vars[key].set(value)
+            self.vars[key].set(self.convert_from_pixels(key, value))
             self.parameter_changed(key, mark=False)
         self.detect_on_var.set("residual")
         self.mark_needs_calculation()
@@ -472,6 +583,7 @@ class SEPTester(tk.Tk):
         extent = [x_axis[0], x_axis[-1], y_axis[0], y_axis[-1]]
         half_width = 0.5 * DEFAULT_PROFILE_WIDTH_PIXELS * geometry["pixel_scale"]
         bar_sma = display.bar_sma_deprojected_arcsec(geometry)
+        central_exclusion_arcsec = float(params["exclude_center_pixels"]) * geometry["pixel_scale"]
         axes = [
             self.ax_parameters,
             self.ax_original,
@@ -494,23 +606,47 @@ class SEPTester(tk.Tk):
         vmin, vmax = display.robust_limits(original_view)
         self.ax_original.imshow(original_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
         self.draw_bar_guides(self.ax_original, half_width, bar_sma)
+        self.draw_central_exclusion(self.ax_original, central_exclusion_arcsec)
         self.ax_original.set_title(f"{name} centered original")
         self.ax_cleaned.imshow(cleaned_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
         self.draw_bar_guides(self.ax_cleaned, half_width, bar_sma)
+        self.draw_central_exclusion(self.ax_cleaned, central_exclusion_arcsec)
         self.ax_cleaned.set_title("SEP masked preview")
 
         rvmin, rvmax = display.robust_limits(residual_view, 1.0, 99.0)
         limit = max(abs(rvmin), abs(rvmax))
         self.ax_residual.imshow(residual_view, origin="lower", cmap="coolwarm", vmin=-limit, vmax=limit, extent=extent)
         self.draw_bar_guides(self.ax_residual, half_width, bar_sma)
+        self.draw_central_exclusion(self.ax_residual, central_exclusion_arcsec)
         self.ax_residual.set_title("Residual detection image")
         self.ax_mask.imshow(original_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
         self.ax_mask.imshow(np.ma.masked_where(~mask_view, mask_view), origin="lower", cmap="autumn", alpha=0.55, extent=extent)
         self.draw_bar_guides(self.ax_mask, half_width, bar_sma)
+        self.draw_central_exclusion(self.ax_mask, central_exclusion_arcsec)
         self.ax_mask.set_title(f"Mask | thresh={float(params['detect_thresh']):.1f}, area={int(params['minarea'])}")
 
-        self.draw_isophote(self.ax_original_isophote, original_view, x_axis, y_axis, extent, f"{name} original isophotes", half_width, bar_sma)
-        self.draw_isophote(self.ax_cleaned_isophote, cleaned_view, x_axis, y_axis, extent, "SEP processed isophotes", half_width, bar_sma)
+        self.draw_isophote(
+            self.ax_original_isophote,
+            original_view,
+            x_axis,
+            y_axis,
+            extent,
+            f"{name} original isophotes",
+            half_width,
+            bar_sma,
+            central_exclusion_arcsec,
+        )
+        self.draw_isophote(
+            self.ax_cleaned_isophote,
+            cleaned_view,
+            x_axis,
+            y_axis,
+            extent,
+            "SEP processed isophotes",
+            half_width,
+            bar_sma,
+            central_exclusion_arcsec,
+        )
         self.draw_profile(self.ax_original_profile, original_view, x_axis, y_axis, half_width, bar_sma, f"{name} original bar-major profile")
         self.draw_profile(self.ax_cleaned_profile, cleaned_view, x_axis, y_axis, half_width, bar_sma, "SEP processed bar-major profile")
         self.canvas.draw_idle()
@@ -521,6 +657,7 @@ class SEPTester(tk.Tk):
         masked_fraction = np.count_nonzero(products["mask"]) / products["mask"].size
         text = (
             "SEP / SExtractor-style   "
+            f"units={self.unit_var.get()}   "
             f"detect_on={params['detect_on']}   "
             f"thresh={float(params['detect_thresh']):.1f}   "
             f"minarea={int(params['minarea'])}   "
@@ -548,11 +685,25 @@ class SEPTester(tk.Tk):
         ax.axvline(0.0, color="#d62728", linestyle="--", linewidth=1.0, alpha=0.8)
         ax.plot([-bar_sma, bar_sma], [0.0, 0.0], "o", color="#1f77b4", ms=4)
 
-    def draw_isophote(self, ax, image, x_axis, y_axis, extent, title, half_width, bar_sma) -> None:
+    def draw_central_exclusion(self, ax, radius_arcsec: float) -> None:
+        if radius_arcsec <= 0:
+            return
+        theta = np.linspace(0.0, 2.0 * np.pi, 241)
+        ax.plot(
+            radius_arcsec * np.cos(theta),
+            radius_arcsec * np.sin(theta),
+            color="#ffd400",
+            linestyle="--",
+            linewidth=1.4,
+            alpha=0.95,
+        )
+
+    def draw_isophote(self, ax, image, x_axis, y_axis, extent, title, half_width, bar_sma, central_exclusion_arcsec) -> None:
         log_image, levels = display.robust_log_image(image)
         ax.imshow(log_image, origin="lower", extent=extent, cmap="Greys", vmin=levels[0], vmax=levels[-1])
         ax.contour(x_axis, y_axis, log_image, levels=levels[1:-1], colors="0.25", linewidths=0.45)
         self.draw_bar_guides(ax, half_width, bar_sma)
+        self.draw_central_exclusion(ax, central_exclusion_arcsec)
         ax.set_aspect("equal", adjustable="box")
         ax.set_title(title)
 
