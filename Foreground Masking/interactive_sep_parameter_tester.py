@@ -49,10 +49,11 @@ DEFAULT_DEBLEND_CONT = 0.005
 DEFAULT_BACK_SIZE = 64
 DEFAULT_FILTER_SIZE = 3
 DEFAULT_DILATION_RADIUS = 2
-DEFAULT_MAX_AREA = 500
+DEFAULT_MAX_AREA = 230
 DEFAULT_MAX_ELONGATION = 6.0
 DEFAULT_EXCLUDE_CENTER_PIXELS = 8.0
 DEFAULT_PROFILE_WIDTH_PIXELS = 3
+PROFILE_BRIDGE_MERGE_GAP_SAMPLES = 12
 PARAMETER_UNIT_LABELS = {
     "Pixels": "pixels",
     "Arcsec": "arcsec",
@@ -138,6 +139,105 @@ def dilate_mask(mask: np.ndarray, radius_pixels: int) -> np.ndarray:
     if radius_pixels <= 0:
         return np.asarray(mask, dtype=bool)
     return ndimage.binary_dilation(np.asarray(mask, dtype=bool), structure=circular_footprint(int(radius_pixels)))
+
+
+def contiguous_true_runs(values: np.ndarray) -> list[tuple[int, int]]:
+    indices = np.flatnonzero(values)
+    if indices.size == 0:
+        return []
+    runs = []
+    start = previous = int(indices[0])
+    for index in indices[1:]:
+        index = int(index)
+        if index != previous + 1:
+            runs.append((start, previous))
+            start = index
+        previous = index
+    runs.append((start, previous))
+    return runs
+
+
+def merge_boolean_runs(masked: np.ndarray, max_gap: int) -> np.ndarray:
+    merged = np.asarray(masked, dtype=bool).copy()
+    if max_gap <= 0 or not np.any(merged):
+        return merged
+
+    indices = np.flatnonzero(merged)
+    start = previous = int(indices[0])
+    runs: list[tuple[int, int]] = []
+    for index in indices[1:]:
+        index = int(index)
+        if index - previous > max_gap + 1:
+            runs.append((start, previous))
+            start = index
+        previous = index
+    runs.append((start, previous))
+
+    merged[:] = False
+    for start, stop in runs:
+        merged[start : stop + 1] = True
+    return merged
+
+
+def fill_profile_with_log_linear_bridges(
+    profile: np.ndarray,
+    masked_samples: np.ndarray,
+    *,
+    merge_gap_samples: int = PROFILE_BRIDGE_MERGE_GAP_SAMPLES,
+) -> tuple[np.ndarray, np.ndarray]:
+    values = np.asarray(profile, dtype=float)
+    filled = np.array(values, copy=True)
+    replacement_mask = np.asarray(masked_samples, dtype=bool) | ~np.isfinite(values) | (values <= 0)
+    bridge_context = merge_boolean_runs(replacement_mask, merge_gap_samples)
+    replaced = np.zeros(values.size, dtype=bool)
+    indices = np.arange(values.size)
+
+    index = 0
+    while index < values.size:
+        if not bridge_context[index]:
+            index += 1
+            continue
+
+        start = index
+        while index + 1 < values.size and bridge_context[index + 1]:
+            index += 1
+        stop = index
+
+        left = start - 1
+        while left >= 0 and (~np.isfinite(values[left]) or values[left] <= 0):
+            left -= 1
+        right = stop + 1
+        while right < values.size and (~np.isfinite(values[right]) or values[right] <= 0):
+            right += 1
+
+        fill_indices = indices[start : stop + 1][replacement_mask[start : stop + 1]]
+        if fill_indices.size == 0:
+            index += 1
+            continue
+
+        if left >= 0 and right < values.size:
+            log_left = math.log(float(values[left]))
+            log_right = math.log(float(values[right]))
+            weight = (fill_indices - left) / (right - left)
+            filled[fill_indices] = np.exp(log_left + weight * (log_right - log_left))
+            replaced[fill_indices] = True
+        elif left >= 0:
+            filled[fill_indices] = values[left]
+            replaced[fill_indices] = True
+        elif right < values.size:
+            filled[fill_indices] = values[right]
+            replaced[fill_indices] = True
+
+        index += 1
+
+    return filled, replaced
+
+
+def profile_mask_at_bar_major(mask_view: np.ndarray, y_axis: np.ndarray, half_width: float) -> np.ndarray:
+    aperture_rows = np.abs(y_axis) <= half_width
+    if not np.any(aperture_rows):
+        aperture_rows[np.argmin(np.abs(y_axis))] = True
+    return np.any(np.asarray(mask_view, dtype=bool)[aperture_rows, :], axis=0)
 
 
 def sep_products(data: np.ndarray, params: dict[str, float | int | str], geometry: dict[str, float]):
@@ -582,6 +682,7 @@ class SEPTester(tk.Tk):
         mask_view = np.isfinite(mask_view) & (mask_view > 0.5)
         extent = [x_axis[0], x_axis[-1], y_axis[0], y_axis[-1]]
         half_width = 0.5 * DEFAULT_PROFILE_WIDTH_PIXELS * geometry["pixel_scale"]
+        mask_profile = profile_mask_at_bar_major(mask_view, y_axis, half_width)
         bar_sma = display.bar_sma_deprojected_arcsec(geometry)
         central_exclusion_arcsec = float(params["exclude_center_pixels"]) * geometry["pixel_scale"]
         axes = [
@@ -647,8 +748,27 @@ class SEPTester(tk.Tk):
             bar_sma,
             central_exclusion_arcsec,
         )
-        self.draw_profile(self.ax_original_profile, original_view, x_axis, y_axis, half_width, bar_sma, f"{name} original bar-major profile")
-        self.draw_profile(self.ax_cleaned_profile, cleaned_view, x_axis, y_axis, half_width, bar_sma, "SEP processed bar-major profile")
+        self.draw_profile(
+            self.ax_original_profile,
+            original_view,
+            x_axis,
+            y_axis,
+            half_width,
+            bar_sma,
+            central_exclusion_arcsec,
+            f"{name} original bar-major profile",
+        )
+        self.draw_profile(
+            self.ax_cleaned_profile,
+            original_view,
+            x_axis,
+            y_axis,
+            half_width,
+            bar_sma,
+            central_exclusion_arcsec,
+            "SEP processed bar-major profile",
+            mask_profile=mask_profile,
+        )
         self.canvas.draw_idle()
 
     def draw_parameter_box(self, params, products) -> None:
@@ -707,16 +827,63 @@ class SEPTester(tk.Tk):
         ax.set_aspect("equal", adjustable="box")
         ax.set_title(title)
 
-    def draw_profile(self, ax, image, x_axis, y_axis, half_width, bar_sma, title) -> None:
+    def draw_profile(
+        self,
+        ax,
+        image,
+        x_axis,
+        y_axis,
+        half_width,
+        bar_sma,
+        central_exclusion_arcsec,
+        title,
+        mask_profile: np.ndarray | None = None,
+    ) -> None:
         radii, intensity = display.bar_major_axis_profile(image, x_axis, y_axis, half_width)
+        if mask_profile is not None:
+            bridged_intensity, bridged_samples = fill_profile_with_log_linear_bridges(intensity, mask_profile)
+            displayed_intensity = np.array(intensity, copy=True)
+            displayed_intensity[bridged_samples] = np.nan
+        else:
+            bridged_intensity = None
+            bridged_samples = np.zeros(intensity.size, dtype=bool)
+            displayed_intensity = intensity
         positive = np.isfinite(intensity) & (intensity > 0)
+        if bridged_intensity is not None:
+            positive |= np.isfinite(bridged_intensity) & (bridged_intensity > 0)
         ymin, ymax = (1.0, 10.0)
         if np.any(positive):
-            ymin = max(float(np.nanpercentile(intensity[positive], 2)) * 0.8, np.finfo(float).tiny)
-            ymax = float(np.nanmax(intensity[positive])) * 1.25
-        ax.semilogy(radii, intensity, color="#1f77b4", linewidth=1.4)
+            reference = bridged_intensity if bridged_intensity is not None else intensity
+            ymin = max(float(np.nanpercentile(reference[positive], 2)) * 0.8, np.finfo(float).tiny)
+            ymax = float(np.nanmax(reference[positive])) * 1.25
+        ax.semilogy(radii, displayed_intensity, color="#1f77b4", linewidth=1.4)
+        if bridged_intensity is not None:
+            bridge_label = "log-linear interpolation"
+            for start, stop in contiguous_true_runs(bridged_samples):
+                plot_start = max(0, start - 1)
+                plot_stop = min(bridged_intensity.size - 1, stop + 1)
+                bridge_slice = slice(plot_start, plot_stop + 1)
+                bridge_good = (
+                    np.isfinite(radii[bridge_slice])
+                    & np.isfinite(bridged_intensity[bridge_slice])
+                    & (bridged_intensity[bridge_slice] > 0)
+                )
+                if np.count_nonzero(bridge_good) < 2:
+                    continue
+                ax.semilogy(
+                    radii[bridge_slice][bridge_good],
+                    bridged_intensity[bridge_slice][bridge_good],
+                    color="#1f77b4",
+                    linestyle="--",
+                    linewidth=1.4,
+                    label=bridge_label,
+                )
+                bridge_label = "_nolegend_"
         ax.axvline(bar_sma, color="#1f77b4", linewidth=1.0)
         ax.axvline(-bar_sma, color="#1f77b4", linewidth=1.0)
+        if central_exclusion_arcsec > 0:
+            ax.axvline(central_exclusion_arcsec, color="#b59b00", linestyle="--", linewidth=1.1, alpha=0.95)
+            ax.axvline(-central_exclusion_arcsec, color="#b59b00", linestyle="--", linewidth=1.1, alpha=0.95)
         ax.axvline(0.0, color="0.6", linewidth=0.7)
         ax.set_xlim(float(x_axis[0]), float(x_axis[-1]))
         ax.set_ylim(ymin, ymax)
