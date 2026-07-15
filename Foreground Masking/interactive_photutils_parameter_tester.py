@@ -921,7 +921,6 @@ class ParameterTester(tk.Tk):
         deblend = "deblend1" if bool(params["deblend"]) else "deblend0"
         stem = (
             f"{safe_filename(self.galaxy_var.get())}_"
-            f"{self.pc_var.get()}_"
             f"{safe_filename(str(params['masking_method']))}_"
             f"smooth{float(params['smooth_sigma_pixels']):.1f}_"
             f"nsigma{float(params['detection_nsigma']):.1f}_"
