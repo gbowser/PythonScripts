@@ -9,7 +9,9 @@ foreground candidates against the observed and deprojected bar-aligned views.
 from __future__ import annotations
 
 import csv
+from datetime import datetime
 import math
+import subprocess
 import sys
 import tkinter as tk
 import argparse
@@ -39,7 +41,7 @@ from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_f
 
 
 DEFAULT_MANIFEST = S4G_PLOTTER_DIR / "geometry_output" / "s4g_image_geometry_manifest.csv"
-DEFAULT_PC = "Laptop"
+DEFAULT_PC = "Desktop"
 DEFAULT_GALAXY = "ESO120-012"
 PARAMETER_REDRAW_DEBOUNCE_MS = 500
 PROFILE_BRIDGE_MERGE_GAP_SAMPLES = 12
@@ -511,7 +513,7 @@ class ParameterTester(tk.Tk):
         self.manifest = manifest
         self.all_rows = read_manifest(manifest)
         self.pc_var = tk.StringVar(value=pc_name)
-        self.method_var = tk.StringVar(value="Global")
+        self.method_var = tk.StringVar(value="Spike-gated")
         self.unit_var = tk.StringVar(value="Pixels")
         self.display_units = "pixels"
         self.output_dir = remove_foreground_folder(pc_name) / "interactive_photutils_parameter_tester"
@@ -520,6 +522,7 @@ class ParameterTester(tk.Tk):
         self.data_cache: dict[str, tuple[np.ndarray, dict[str, float]]] = {}
         self.after_id: str | None = None
         self.controls_canvas: tk.Canvas | None = None
+        self.calculating_overlay = None
 
         self._build_controls()
         self._build_figure()
@@ -599,9 +602,6 @@ class ParameterTester(tk.Tk):
         self.galaxy_combo.pack(fill=tk.X, pady=(0, 8))
         self.galaxy_combo.bind("<<ComboboxSelected>>", lambda _event: self.load_selected_galaxy())
 
-        self.auto_update = tk.BooleanVar(value=True)
-        ttk.Checkbutton(control, text="Auto redraw", variable=self.auto_update).pack(anchor=tk.W, pady=(0, 8))
-
         self.vars: dict[str, tk.Variable] = {}
         self.readouts: dict[str, ttk.Label] = {}
         self.parameter_labels: dict[str, ttk.Label] = {}
@@ -662,9 +662,9 @@ class ParameterTester(tk.Tk):
 
         button_row = ttk.Frame(control)
         button_row.pack(fill=tk.X, pady=(10, 4))
-        ttk.Button(button_row, text="Redraw", command=self.redraw_now).pack(side=tk.LEFT, fill=tk.X, expand=True)
+        ttk.Button(button_row, text="Calculate", command=self.redraw_now).pack(side=tk.LEFT, fill=tk.X, expand=True)
         ttk.Button(button_row, text="Reset", command=self.reset_parameters).pack(side=tk.LEFT, fill=tk.X, expand=True)
-        ttk.Button(control, text="Save PNG", command=self.save_current_png).pack(fill=tk.X, pady=(0, 4))
+        ttk.Button(control, text="Open PNG Folder", command=self.open_output_folder).pack(fill=tk.X, pady=(0, 4))
 
         self.status = tk.StringVar(value="")
         ttk.Label(control, textvariable=self.status, wraplength=250, justify=tk.LEFT).pack(fill=tk.X, pady=(10, 0))
@@ -866,11 +866,11 @@ class ParameterTester(tk.Tk):
         self.vars[key].set(self.default_for_display(key))
         if key in self.readouts:
             self.readouts[key].configure(text=f"{float(self.vars[key].get()):.2f}")
-        self.redraw_now()
+        self.mark_needs_calculation()
 
     def reset_parameters(self) -> None:
         self.apply_method_defaults()
-        self.redraw_now()
+        self.mark_needs_calculation()
 
     def apply_method_defaults(self) -> None:
         for key, value in self.active_defaults().items():
@@ -883,7 +883,7 @@ class ParameterTester(tk.Tk):
     def change_masking_method(self) -> None:
         self.cancel_scheduled_redraw()
         self.apply_method_defaults()
-        self.redraw()
+        self.mark_needs_calculation()
 
     def change_parameter_units(self) -> None:
         new_units = PARAMETER_UNIT_LABELS.get(self.unit_var.get(), "pixels")
@@ -900,7 +900,7 @@ class ParameterTester(tk.Tk):
                 self.readouts[key].configure(text=f"{float(var.get()):.2f}")
         self.display_units = new_units
         self.refresh_parameter_unit_labels()
-        self.redraw()
+        self.mark_needs_calculation()
 
     def current_params(self) -> dict[str, float | int | bool | str]:
         params: dict[str, float | int | bool | str] = {}
@@ -915,26 +915,48 @@ class ParameterTester(tk.Tk):
         params["masking_method"] = self.active_method()
         return params
 
-    def save_current_png(self) -> None:
+    def output_png_path(self, params: dict[str, float | int | bool | str]) -> Path:
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        params = self.current_params()
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        deblend = "deblend1" if bool(params["deblend"]) else "deblend0"
         stem = (
             f"{safe_filename(self.galaxy_var.get())}_"
             f"{self.pc_var.get()}_"
             f"{safe_filename(str(params['masking_method']))}_"
+            f"smooth{float(params['smooth_sigma_pixels']):.1f}_"
             f"nsigma{float(params['detection_nsigma']):.1f}_"
+            f"npix{int(params['npixels'])}_"
             f"dil{int(params['dilation_radius_pixels'])}_"
-            f"area{int(params['max_area'])}"
+            f"area{int(params['max_area'])}_"
+            f"elong{float(params['max_elongation']):.1f}_"
+            f"center{float(params['exclude_center_radius_pixels']):.1f}_"
+            f"peak{float(params['min_peak_residual_nsigma']):.1f}_"
+            f"width{int(params['profile_width'])}_"
+            f"{deblend}_"
+            f"{timestamp}"
         )
-        path = self.output_dir / f"{stem}.png"
+        path = self.output_dir / f"{safe_filename(stem)}.png"
+        counter = 1
+        while path.exists():
+            path = self.output_dir / f"{safe_filename(stem)}_{counter}.png"
+            counter += 1
+        return path
+
+    def save_calculation_png(self, params: dict[str, float | int | bool | str]) -> Path:
+        path = self.output_png_path(params)
         self.figure.savefig(path, dpi=180)
-        self.status.set(f"Saved {path}")
+        return path
+
+    def open_output_folder(self) -> None:
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            subprocess.Popen(["explorer", str(self.output_dir)])
+        except OSError as exc:
+            messagebox.showerror("Could not open PNG folder", str(exc))
 
     def schedule_redraw(self) -> None:
-        if not self.auto_update.get():
-            return
         self.cancel_scheduled_redraw()
-        self.after_id = self.after(PARAMETER_REDRAW_DEBOUNCE_MS, self.redraw)
+        self.mark_needs_calculation()
 
     def cancel_scheduled_redraw(self) -> None:
         if self.after_id is None:
@@ -952,9 +974,14 @@ class ParameterTester(tk.Tk):
     def load_selected_galaxy(self) -> None:
         try:
             self._load_galaxy(self.galaxy_var.get())
-            self.redraw_now()
+            self.mark_needs_calculation()
         except Exception as exc:  # noqa: BLE001
             messagebox.showerror("Could not load galaxy", str(exc))
+
+    def mark_needs_calculation(self) -> None:
+        name = self.galaxy_var.get()
+        if name:
+            self.status.set(f"{self.pc_var.get()} | {name}: click Calculate to update the output.")
 
     def _load_galaxy(self, name: str) -> tuple[np.ndarray, dict[str, float]]:
         if name in self.data_cache:
@@ -975,12 +1002,14 @@ class ParameterTester(tk.Tk):
         try:
             self._clear_calculation_summary()
             self.status.set(f"Calculating {name}...")
+            self._show_calculating_overlay()
             self.update_idletasks()
             data, geometry = self._load_galaxy(name)
             params = self.current_params()
             profile_width = max(1, int(params["profile_width"]))
             mask, kept_rows, residual, spike_samples = mask_products(data, geometry, params)
             self.draw_products(name, data, geometry, params, mask, kept_rows, residual, profile_width, spike_samples)
+            saved_path = self.save_calculation_png(params)
             masked_fraction = np.count_nonzero(mask) / mask.size
             method_label = MASKING_METHODS.get(str(params["masking_method"]), str(params["masking_method"]))
             spike_text = ""
@@ -991,11 +1020,13 @@ class ParameterTester(tk.Tk):
                 f"{spike_text}, "
                 f"{np.count_nonzero(mask)} masked pixels ({masked_fraction:.3%}).\n"
                 f"Input: {erwin_folder(self.pc_var.get()) / 's4g_images_36um'}\n"
-                f"Output: {self.output_dir}"
+                f"Output: {self.output_dir}\n"
+                f"Saved PNG: {saved_path.name}"
             )
         except Exception as exc:  # noqa: BLE001
+            self._remove_calculating_overlay()
             self.status.set(f"Error: {exc}")
-            messagebox.showerror("Photutils redraw failed", str(exc))
+            messagebox.showerror("Photutils calculation failed", str(exc))
 
     def draw_products(
         self,
@@ -1009,6 +1040,7 @@ class ParameterTester(tk.Tk):
         profile_width: int,
         spike_samples: np.ndarray | None,
     ) -> None:
+        self._remove_calculating_overlay()
         self.ax_residual.clear()
         self.ax_deprojected.clear()
         self.ax_profile.clear()
@@ -1097,6 +1129,33 @@ class ParameterTester(tk.Tk):
         self.ax_empty.set_axis_off()
         self.canvas.draw()
         self.canvas.flush_events()
+
+    def _show_calculating_overlay(self) -> None:
+        self._remove_calculating_overlay()
+        overlay = self.figure.add_axes((0, 0, 1, 1), zorder=1000)
+        overlay.set_axis_off()
+        overlay.patch.set_facecolor("black")
+        overlay.patch.set_alpha(0.34)
+        overlay.text(
+            0.5,
+            0.5,
+            "Calculating",
+            transform=overlay.transAxes,
+            ha="center",
+            va="center",
+            fontsize=30,
+            fontweight="bold",
+            color="white",
+        )
+        self.calculating_overlay = overlay
+        self.canvas.draw()
+        self.canvas.flush_events()
+
+    def _remove_calculating_overlay(self) -> None:
+        if self.calculating_overlay is None:
+            return
+        self.calculating_overlay.remove()
+        self.calculating_overlay = None
 
     def _display_parameter_value(self, key: str) -> float | int | bool:
         if key not in self.vars:

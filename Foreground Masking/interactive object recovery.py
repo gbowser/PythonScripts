@@ -47,6 +47,7 @@ DEFAULT_GALAXY = "NGC0986"
 PNG_OUTPUT_DIR = Path(
     r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\interactive_object_recovery"
 )
+STARTUP_CACHE_PATH = SCRIPT_DIR / "startup_cache.sqlite3"
 REDRAW_DEBOUNCE_MS = 450
 CACHE_SCHEMA_VERSION = 1
 IRAC_36_VEGA_ZERO_JY = 280.9
@@ -388,7 +389,7 @@ class ObjectRecoveryApp(tk.Tk):
         self.data_cache: dict[str, tuple[np.ndarray, dict[str, float], fits.Header]] = {}
         self.baseline_products_cache: dict[tuple[str, tuple[tuple[str, object], ...]], dict[str, object]] = {}
         self.display_cache: dict[str, dict[str, object]] = {}
-        self.startup_cache_path = remove_foreground_folder(pc_name) / "interactive_object_recovery" / "startup_cache.sqlite3"
+        self.startup_cache_path = STARTUP_CACHE_PATH
 
         self.all_rows = read_manifest(manifest)
         self.rows: list[dict[str, str]] = []
@@ -765,7 +766,7 @@ class ObjectRecoveryApp(tk.Tk):
 
     def refresh_galaxy_list(self, initial: bool = False) -> None:
         pc_name = self.pc_var.get()
-        self.startup_cache_path = remove_foreground_folder(pc_name) / "interactive_object_recovery" / "startup_cache.sqlite3"
+        self.startup_cache_path = STARTUP_CACHE_PATH
         self.rows = baseline.rows_with_images_for_pc(self.all_rows, pc_name)
         self.rows_by_name = {row["name"]: row for row in self.rows}
         self.data_cache.clear()
