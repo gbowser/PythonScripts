@@ -4,7 +4,7 @@
 This adapts the algorithm from astroferreira/galclean for the local S4G
 manifest/input-folder workflow used by the other foreground masking tools.
 GalClean replaces detected external sources with sampled sky pixels and saves
-both a cleaned FITS image and an inspection PNG for each calculation.
+an inspection PNG for each calculation.
 """
 
 from __future__ import annotations
@@ -601,17 +601,15 @@ class GalCleanTester(tk.Tk):
         )
         return safe_filename(stem)
 
-    def output_paths(self, params: dict[str, float | int]) -> tuple[Path, Path]:
+    def output_png_path(self, params: dict[str, float | int]) -> Path:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         stem = self.output_stem(params)
         png_path = self.output_dir / f"{stem}.png"
-        fits_path = self.output_dir / f"{stem}_seg.fits"
         counter = 1
-        while png_path.exists() or fits_path.exists():
+        while png_path.exists():
             png_path = self.output_dir / f"{stem}_{counter}.png"
-            fits_path = self.output_dir / f"{stem}_{counter}_seg.fits"
             counter += 1
-        return png_path, fits_path
+        return png_path
 
     def open_output_folder(self) -> None:
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -626,7 +624,7 @@ class GalCleanTester(tk.Tk):
             self.status.set(f"Calculating {name} with GalClean...")
             self._show_calculating_overlay()
             self.update_idletasks()
-            data, header, geometry = self._load_galaxy(name)
+            data, _header, geometry = self._load_galaxy(name)
             params = self.current_params()
             products = galclean_products(
                 data,
@@ -636,20 +634,15 @@ class GalCleanTester(tk.Tk):
                 random_seed=int(params["random_seed"]),
             )
             self.draw_products(name, data, products, params, geometry)
-            png_path, fits_path = self.output_paths(params)
+            png_path = self.output_png_path(params)
             self.figure.savefig(png_path, dpi=180)
-            output_header = header.copy()
-            output_header["HISTORY"] = "Cleaned with interactive_galclean_parameter_tester.py"
-            output_header["HISTORY"] = "Algorithm adapted from https://github.com/astroferreira/galclean"
-            fits.writeto(fits_path, np.asarray(products["cleaned"], dtype=float), output_header, overwrite=True)
             self.status.set(
                 f"{self.pc_var.get()} | {name} | GalClean replaced {int(products['replaced_pixels'])} pixels.\n"
                 f"threshold={float(products['threshold']):.6g}, "
                 f"sky median={float(products['background_median']):.6g}, "
                 f"sky std={float(products['background_std']):.6g}\n"
                 f"Output: {self.output_dir}\n"
-                f"Saved PNG: {png_path.name}\n"
-                f"Saved FITS: {fits_path.name}"
+                f"Saved PNG: {png_path.name}"
             )
         except Exception as exc:  # noqa: BLE001
             self._remove_calculating_overlay()
