@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Interactive SEP/SExtractor-style foreground-mask parameter tester.
+"""Interactive SEP plus Spike-Gate foreground-mask parameter tester.
 
 SEP is a Python library based on the core algorithms of SExtractor. This tester
-keeps the local S4G manifest workflow and deprojected diagnostics while avoiding
-an external SExtractor executable.
+keeps the local S4G manifest workflow and compares normal SEP profile masking
+against a low-threshold SEP pass gated by bar-profile spike detection.
 """
 
 from __future__ import annotations
@@ -43,6 +43,7 @@ DEFAULT_MANIFEST = display.DEFAULT_MANIFEST
 DEFAULT_PC = "Desktop"
 DEFAULT_GALAXY = "ESO120-012"
 DEFAULT_DETECT_THRESH = 3.0
+SPIKE_GATE_DETECT_THRESH = 0.5
 DEFAULT_MINAREA = 5
 DEFAULT_DEBLEND_NTHRESH = 32
 DEFAULT_DEBLEND_CONT = 0.005
@@ -53,6 +54,13 @@ DEFAULT_MAX_AREA = 230
 DEFAULT_MAX_ELONGATION = 6.0
 DEFAULT_EXCLUDE_CENTER_PIXELS = 8.0
 DEFAULT_PROFILE_WIDTH_PIXELS = 3
+DEFAULT_SPIKE_EXCESS_FRACTION = 0.25
+DEFAULT_SPIKE_NEIGHBOUR_INNER_ARCSEC = 4.0
+DEFAULT_SPIKE_NEIGHBOUR_OUTER_ARCSEC = 15.0
+DEFAULT_SPIKE_SIDE_OFFSET_SAMPLES = 3
+DEFAULT_SPIKE_SIDE_DROP_FRACTION = 0.4
+DEFAULT_SPIKE_CENTER_EXCLUSION_ARCSEC = 8.0
+DEFAULT_SPIKE_WINDOW_SAMPLES = 2
 PROFILE_BRIDGE_MERGE_GAP_SAMPLES = 12
 PARAMETER_UNIT_LABELS = {
     "Pixels": "pixels",
@@ -240,6 +248,71 @@ def profile_mask_at_bar_major(mask_view: np.ndarray, y_axis: np.ndarray, half_wi
     return np.any(np.asarray(mask_view, dtype=bool)[aperture_rows, :], axis=0)
 
 
+def expand_boolean_mask(mask: np.ndarray, radius: int) -> np.ndarray:
+    expanded = np.asarray(mask, dtype=bool).copy()
+    if radius <= 0 or not np.any(expanded):
+        return expanded
+    for index in np.flatnonzero(expanded):
+        start = max(0, int(index) - radius)
+        stop = min(expanded.size, int(index) + radius + 1)
+        expanded[start:stop] = True
+    return expanded
+
+
+def detect_profile_spikes(
+    radii_arcsec: np.ndarray,
+    values: np.ndarray,
+    *,
+    excess_fraction: float = DEFAULT_SPIKE_EXCESS_FRACTION,
+    neighbour_inner_arcsec: float = DEFAULT_SPIKE_NEIGHBOUR_INNER_ARCSEC,
+    neighbour_outer_arcsec: float = DEFAULT_SPIKE_NEIGHBOUR_OUTER_ARCSEC,
+    side_offset_samples: int = DEFAULT_SPIKE_SIDE_OFFSET_SAMPLES,
+    side_drop_fraction: float = DEFAULT_SPIKE_SIDE_DROP_FRACTION,
+    center_exclusion_arcsec: float = DEFAULT_SPIKE_CENTER_EXCLUSION_ARCSEC,
+) -> np.ndarray:
+    radii = np.asarray(radii_arcsec, dtype=float)
+    profile = np.asarray(values, dtype=float)
+    spikes = np.zeros(profile.size, dtype=bool)
+    good = np.isfinite(radii) & np.isfinite(profile) & (profile > 0)
+    if np.count_nonzero(good) < 12:
+        return spikes
+
+    side_offset_samples = max(1, int(side_offset_samples))
+    for index in range(side_offset_samples, profile.size - side_offset_samples):
+        if not good[index]:
+            continue
+        if abs(radii[index]) < center_exclusion_arcsec:
+            continue
+        if profile[index] < profile[index - 1] or profile[index] < profile[index + 1]:
+            continue
+
+        distance = np.abs(radii - radii[index])
+        neighbour = good & (distance >= neighbour_inner_arcsec) & (distance <= neighbour_outer_arcsec)
+        left_neighbour = neighbour & (radii < radii[index])
+        right_neighbour = neighbour & (radii > radii[index])
+        if np.count_nonzero(left_neighbour) >= 2 and np.count_nonzero(right_neighbour) >= 2:
+            neighbour_values = np.concatenate([profile[left_neighbour], profile[right_neighbour]])
+        elif np.count_nonzero(neighbour) >= 4:
+            neighbour_values = profile[neighbour]
+        else:
+            continue
+
+        neighbour_level = np.nanmedian(neighbour_values)
+        if not np.isfinite(neighbour_level) or neighbour_level <= 0:
+            continue
+        if profile[index] < (1.0 + excess_fraction) * neighbour_level:
+            continue
+
+        side_level = np.nanmedian([profile[index - side_offset_samples], profile[index + side_offset_samples]])
+        if not np.isfinite(side_level) or side_level <= 0:
+            continue
+        if profile[index] < (1.0 + side_drop_fraction) * side_level:
+            continue
+
+        spikes[index] = True
+    return spikes
+
+
 def sep_products(data: np.ndarray, params: dict[str, float | int | str], geometry: dict[str, float]):
     detection, residual, nonfinite_mask = prepare_detection_image(data, str(params["detect_on"]))
     bw = bh = max(8, int(params["back_size"]))
@@ -276,6 +349,59 @@ def sep_products(data: np.ndarray, params: dict[str, float | int | str], geometr
         "background_rms": float(background.globalrms),
         "background_level": float(background.globalback),
         "rows": rows,
+    }
+
+
+def spike_gated_sep_products(
+    data: np.ndarray,
+    params: dict[str, float | int | str],
+    geometry: dict[str, float],
+) -> dict[str, object]:
+    gate_params = dict(params)
+    gate_params["detect_thresh"] = SPIKE_GATE_DETECT_THRESH
+    low_threshold_products = sep_products(data, gate_params, geometry)
+
+    radius_arcsec = display.profile_radius_pixels(data, geometry) * geometry["pixel_scale"]
+    original_view, x_axis, y_axis = display.deproject_bar_aligned_cutout(data, geometry, radius_arcsec)
+    half_width = 0.5 * DEFAULT_PROFILE_WIDTH_PIXELS * geometry["pixel_scale"]
+    radii, intensity = display.bar_major_axis_profile(original_view, x_axis, y_axis, half_width)
+    spike_samples = detect_profile_spikes(radii, intensity)
+    spike_samples = expand_boolean_mask(spike_samples, DEFAULT_SPIKE_WINDOW_SAMPLES)
+
+    selected_labels: set[int] = set()
+    filtered = np.asarray(low_threshold_products["filtered_segmentation"])
+    if np.any(spike_samples) and np.any(filtered > 0):
+        for label in np.unique(filtered):
+            label = int(label)
+            if label <= 0:
+                continue
+            label_mask = dilate_mask(filtered == label, int(params["dilation_radius"]))
+            label_view, _, _ = display.deproject_bar_aligned_cutout(label_mask.astype(float), geometry, radius_arcsec, order=0)
+            label_profile = profile_mask_at_bar_major(np.isfinite(label_view) & (label_view > 0.5), y_axis, half_width)
+            if np.any(label_profile & spike_samples):
+                selected_labels.add(label)
+
+    gated_segmentation = np.where(np.isin(filtered, list(selected_labels)), filtered, 0)
+    gated_mask = dilate_mask(gated_segmentation > 0, int(params["dilation_radius"]))
+    cleaned = np.array(data, copy=True)
+    finite_unmasked = np.isfinite(data) & ~gated_mask
+    replacement = float(np.nanmedian(data[finite_unmasked])) if np.any(finite_unmasked) else 0.0
+    cleaned[gated_mask] = replacement
+
+    rows = []
+    for row in low_threshold_products["rows"]:
+        updated = dict(row)
+        updated["kept"] = int(row["label"]) in selected_labels
+        rows.append(updated)
+
+    return {
+        **low_threshold_products,
+        "filtered_segmentation": gated_segmentation,
+        "mask": gated_mask,
+        "cleaned": cleaned,
+        "rows": rows,
+        "spike_samples": spike_samples,
+        "spike_gate_detect_thresh": SPIKE_GATE_DETECT_THRESH,
     }
 
 
@@ -330,7 +456,7 @@ def filter_segmentation(segmentation: np.ndarray, rows: list[dict[str, float | i
 class SEPTester(tk.Tk):
     def __init__(self, manifest: Path, pc_name: str):
         super().__init__()
-        self.title("SEP SExtractor-Style Parameter Tester")
+        self.title("SEP + Spike Gate Parameter Tester")
         self.geometry("1760x1320")
         self.minsize(1400, 950)
         self.manifest = manifest
@@ -338,7 +464,7 @@ class SEPTester(tk.Tk):
         self.pc_var = tk.StringVar(value=pc_name)
         self.unit_var = tk.StringVar(value="Pixels")
         self.display_units = "pixels"
-        self.output_dir = remove_foreground_folder(pc_name) / "interactive_sep_parameter_tester"
+        self.output_dir = remove_foreground_folder(pc_name) / "interactive_sep_spike_gate_parameter_tester"
         self.rows: list[dict[str, str]] = []
         self.rows_by_name: dict[str, dict[str, str]] = {}
         self.data_cache: dict[str, tuple[np.ndarray, fits.Header, dict[str, float]]] = {}
@@ -459,16 +585,15 @@ class SEPTester(tk.Tk):
         frame = ttk.Frame(self)
         frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         self.figure = Figure(figsize=(12.0, 15.6), dpi=100, constrained_layout=True)
-        grid = self.figure.add_gridspec(5, 2, height_ratios=[0.26, 1.0, 1.0, 1.0, 0.72])
+        grid = self.figure.add_gridspec(5, 2, height_ratios=[0.26, 1.0, 0.72, 0.72, 0.72])
         self.ax_parameters = self.figure.add_subplot(grid[0, :])
         self.ax_original = self.figure.add_subplot(grid[1, 0])
-        self.ax_cleaned = self.figure.add_subplot(grid[1, 1])
-        self.ax_residual = self.figure.add_subplot(grid[2, 0])
-        self.ax_mask = self.figure.add_subplot(grid[2, 1])
-        self.ax_original_isophote = self.figure.add_subplot(grid[3, 0])
-        self.ax_cleaned_isophote = self.figure.add_subplot(grid[3, 1])
-        self.ax_original_profile = self.figure.add_subplot(grid[4, 0])
-        self.ax_cleaned_profile = self.figure.add_subplot(grid[4, 1])
+        self.ax_residual = self.figure.add_subplot(grid[1, 1])
+        self.ax_original_isophote = self.figure.add_subplot(grid[2, 0])
+        self.ax_original_profile = self.figure.add_subplot(grid[2, 1])
+        self.ax_cleaned_isophote = self.figure.add_subplot(grid[3:, 0])
+        self.ax_cleaned_profile = self.figure.add_subplot(grid[3, 1])
+        self.ax_cleaned = self.figure.add_subplot(grid[4, 1])
         self.ax_parameters.set_axis_off()
         self.canvas = FigureCanvasTkAgg(self.figure, master=frame)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
@@ -584,7 +709,7 @@ class SEPTester(tk.Tk):
 
     def refresh_pc_paths(self, initial: bool = False) -> None:
         pc_name = self.pc_var.get()
-        self.output_dir = remove_foreground_folder(pc_name) / "interactive_sep_parameter_tester"
+        self.output_dir = remove_foreground_folder(pc_name) / "interactive_sep_spike_gate_parameter_tester"
         self.rows = display.rows_with_images_for_pc(self.all_rows, pc_name)
         if not self.rows:
             raise RuntimeError(f"No FITS images were found for {pc_name} in {erwin_folder(pc_name) / 's4g_images_36um'}.")
@@ -654,14 +779,20 @@ class SEPTester(tk.Tk):
             data, _header, geometry = self._load_galaxy(name)
             params = self.current_params()
             products = sep_products(data, params, geometry)
-            self.draw_products(name, data, products, params, geometry)
+            spike_products = spike_gated_sep_products(data, params, geometry)
+            self.draw_products(name, data, products, spike_products, params, geometry)
             png_path = self.output_png_path(params)
             self.figure.savefig(png_path, dpi=180)
             kept = sum(1 for row in products["rows"] if row.get("kept"))
+            spike_kept = sum(1 for row in spike_products["rows"] if row.get("kept"))
+            spike_count = int(np.count_nonzero(spike_products["spike_samples"]))
             masked_fraction = np.count_nonzero(products["mask"]) / products["mask"].size
+            spike_masked_fraction = np.count_nonzero(spike_products["mask"]) / spike_products["mask"].size
             self.status.set(
                 f"{self.pc_var.get()} | {name} | SEP kept {kept} segments, "
-                f"masked {masked_fraction:.2%} of pixels.\n"
+                f"masked {masked_fraction:.2%} of pixels. "
+                f"Spike gate kept {spike_kept} low-threshold segments from {spike_count} spike samples, "
+                f"masked {spike_masked_fraction:.2%}.\n"
                 f"Output: {self.output_dir}\nSaved PNG: {png_path.name}"
             )
         except Exception as exc:  # noqa: BLE001
@@ -669,32 +800,44 @@ class SEPTester(tk.Tk):
             self.status.set(f"Error: {exc}")
             messagebox.showerror("SEP calculation failed", str(exc))
 
-    def draw_products(self, name, original, products, params, geometry) -> None:
+    def draw_products(self, name, original, products, spike_products, params, geometry) -> None:
         self._remove_calculating_overlay()
         cleaned = np.asarray(products["cleaned"], dtype=float)
         residual = np.asarray(products["residual"], dtype=float)
         mask = np.asarray(products["mask"], dtype=bool)
+        spike_mask = np.asarray(spike_products["mask"], dtype=bool)
+        spike_samples = np.asarray(spike_products["spike_samples"], dtype=bool)
         radius_arcsec = display.profile_radius_pixels(original, geometry) * geometry["pixel_scale"]
         original_view, x_axis, y_axis = display.deproject_bar_aligned_cutout(original, geometry, radius_arcsec)
         cleaned_view, _, _ = display.deproject_bar_aligned_cutout(cleaned, geometry, radius_arcsec)
         residual_view, _, _ = display.deproject_bar_aligned_cutout(residual, geometry, radius_arcsec)
         mask_view, _, _ = display.deproject_bar_aligned_cutout(mask.astype(float), geometry, radius_arcsec, order=0)
         mask_view = np.isfinite(mask_view) & (mask_view > 0.5)
+        spike_mask_view, _, _ = display.deproject_bar_aligned_cutout(spike_mask.astype(float), geometry, radius_arcsec, order=0)
+        spike_mask_view = np.isfinite(spike_mask_view) & (spike_mask_view > 0.5)
         extent = [x_axis[0], x_axis[-1], y_axis[0], y_axis[-1]]
         half_width = 0.5 * DEFAULT_PROFILE_WIDTH_PIXELS * geometry["pixel_scale"]
         mask_profile = profile_mask_at_bar_major(mask_view, y_axis, half_width)
+        spike_mask_profile = profile_mask_at_bar_major(spike_mask_view, y_axis, half_width)
         bar_sma = display.bar_sma_deprojected_arcsec(geometry)
         central_exclusion_arcsec = float(params["exclude_center_pixels"]) * geometry["pixel_scale"]
+        profile_y_limits = self.shared_profile_y_limits(
+            original_view,
+            x_axis,
+            y_axis,
+            half_width,
+            mask_profile,
+            spike_mask_profile,
+        )
         axes = [
             self.ax_parameters,
             self.ax_original,
-            self.ax_cleaned,
             self.ax_residual,
-            self.ax_mask,
             self.ax_original_isophote,
             self.ax_cleaned_isophote,
             self.ax_original_profile,
             self.ax_cleaned_profile,
+            self.ax_cleaned,
         ]
         for ax in axes:
             ax.clear()
@@ -709,10 +852,6 @@ class SEPTester(tk.Tk):
         self.draw_bar_guides(self.ax_original, half_width, bar_sma)
         self.draw_central_exclusion(self.ax_original, central_exclusion_arcsec)
         self.ax_original.set_title(f"{name} centered original")
-        self.ax_cleaned.imshow(cleaned_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
-        self.draw_bar_guides(self.ax_cleaned, half_width, bar_sma)
-        self.draw_central_exclusion(self.ax_cleaned, central_exclusion_arcsec)
-        self.ax_cleaned.set_title("SEP masked preview")
 
         rvmin, rvmax = display.robust_limits(residual_view, 1.0, 99.0)
         limit = max(abs(rvmin), abs(rvmax))
@@ -720,11 +859,6 @@ class SEPTester(tk.Tk):
         self.draw_bar_guides(self.ax_residual, half_width, bar_sma)
         self.draw_central_exclusion(self.ax_residual, central_exclusion_arcsec)
         self.ax_residual.set_title("Residual detection image")
-        self.ax_mask.imshow(original_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
-        self.ax_mask.imshow(np.ma.masked_where(~mask_view, mask_view), origin="lower", cmap="autumn", alpha=0.55, extent=extent)
-        self.draw_bar_guides(self.ax_mask, half_width, bar_sma)
-        self.draw_central_exclusion(self.ax_mask, central_exclusion_arcsec)
-        self.ax_mask.set_title(f"Mask | thresh={float(params['detect_thresh']):.1f}, area={int(params['minarea'])}")
 
         self.draw_isophote(
             self.ax_original_isophote,
@@ -757,6 +891,7 @@ class SEPTester(tk.Tk):
             bar_sma,
             central_exclusion_arcsec,
             f"{name} original bar-major profile",
+            y_limits=profile_y_limits,
         )
         self.draw_profile(
             self.ax_cleaned_profile,
@@ -768,6 +903,20 @@ class SEPTester(tk.Tk):
             central_exclusion_arcsec,
             "SEP processed bar-major profile",
             mask_profile=mask_profile,
+            y_limits=profile_y_limits,
+        )
+        self.draw_profile(
+            self.ax_cleaned,
+            original_view,
+            x_axis,
+            y_axis,
+            half_width,
+            bar_sma,
+            central_exclusion_arcsec,
+            f"SEP & Spike Gate bar profile | thresh={SPIKE_GATE_DETECT_THRESH:.1f}",
+            mask_profile=spike_mask_profile,
+            spike_samples=spike_samples,
+            y_limits=profile_y_limits,
         )
         self.canvas.draw_idle()
 
@@ -818,6 +967,28 @@ class SEPTester(tk.Tk):
             alpha=0.95,
         )
 
+    def shared_profile_y_limits(
+        self,
+        image,
+        x_axis,
+        y_axis,
+        half_width,
+        *mask_profiles: np.ndarray,
+    ) -> tuple[float, float]:
+        _radii, intensity = display.bar_major_axis_profile(image, x_axis, y_axis, half_width)
+        values = [intensity]
+        for mask_profile in mask_profiles:
+            bridged_intensity, _bridged_samples = fill_profile_with_log_linear_bridges(intensity, mask_profile)
+            values.append(bridged_intensity)
+        finite_positive = np.concatenate([item[np.isfinite(item) & (item > 0)] for item in values])
+        if finite_positive.size == 0:
+            return (1.0, 10.0)
+        ymin = max(float(np.nanpercentile(finite_positive, 2)) * 0.8, np.finfo(float).tiny)
+        ymax = float(np.nanmax(finite_positive)) * 1.25
+        if not math.isfinite(ymin) or not math.isfinite(ymax) or ymax <= ymin:
+            return (1.0, 10.0)
+        return ymin, ymax
+
     def draw_isophote(self, ax, image, x_axis, y_axis, extent, title, half_width, bar_sma, central_exclusion_arcsec) -> None:
         log_image, levels = display.robust_log_image(image)
         ax.imshow(log_image, origin="lower", extent=extent, cmap="Greys", vmin=levels[0], vmax=levels[-1])
@@ -838,6 +1009,8 @@ class SEPTester(tk.Tk):
         central_exclusion_arcsec,
         title,
         mask_profile: np.ndarray | None = None,
+        spike_samples: np.ndarray | None = None,
+        y_limits: tuple[float, float] | None = None,
     ) -> None:
         radii, intensity = display.bar_major_axis_profile(image, x_axis, y_axis, half_width)
         if mask_profile is not None:
@@ -856,6 +1029,23 @@ class SEPTester(tk.Tk):
             reference = bridged_intensity if bridged_intensity is not None else intensity
             ymin = max(float(np.nanpercentile(reference[positive], 2)) * 0.8, np.finfo(float).tiny)
             ymax = float(np.nanmax(reference[positive])) * 1.25
+        if y_limits is not None:
+            ymin, ymax = y_limits
+        if mask_profile is not None:
+            for start, stop in contiguous_true_runs(mask_profile):
+                ax.axvspan(radii[start], radii[stop], color="red", alpha=0.14, linewidth=0)
+        if spike_samples is not None and spike_samples.size == radii.size:
+            finite_spikes = spike_samples & np.isfinite(radii)
+            if np.any(finite_spikes):
+                ax.vlines(
+                    radii[finite_spikes],
+                    ymin,
+                    ymax,
+                    color="#2ca02c",
+                    linewidth=0.7,
+                    alpha=0.28,
+                    label="spike-gate samples",
+                )
         ax.semilogy(radii, displayed_intensity, color="#1f77b4", linewidth=1.4)
         if bridged_intensity is not None:
             bridge_label = "log-linear interpolation"
@@ -891,6 +1081,8 @@ class SEPTester(tk.Tk):
         ax.set_ylabel("intensity")
         ax.set_title(title)
         ax.grid(True, which="both", alpha=0.2)
+        if spike_samples is not None:
+            ax.legend(loc="best", fontsize=8)
 
     def _show_calculating_overlay(self) -> None:
         self._remove_calculating_overlay()
