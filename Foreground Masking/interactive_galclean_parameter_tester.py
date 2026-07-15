@@ -47,9 +47,9 @@ from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_f
 DEFAULT_MANIFEST = S4G_PLOTTER_DIR / "geometry_output" / "s4g_image_geometry_manifest.csv"
 DEFAULT_PC = "Desktop"
 DEFAULT_GALAXY = "ESO120-012"
-DEFAULT_SIGLEVEL = 4.0
-DEFAULT_MIN_SIZE = 0.01
-DEFAULT_SCALE_FACTOR = 4.0
+DEFAULT_SIGLEVEL = 12.0
+DEFAULT_MIN_SIZE = 0.02
+DEFAULT_SCALE_FACTOR = 1.0
 DEFAULT_PROFILE_WIDTH_PIXELS = 3
 
 
@@ -421,7 +421,7 @@ class GalCleanTester(tk.Tk):
 
         self.vars: dict[str, tk.Variable] = {}
         self.readouts: dict[str, ttk.Label] = {}
-        self._scale(control, "siglevel", "Detection sigma level", 1.0, 12.0, 0.1, DEFAULT_SIGLEVEL)
+        self._scale(control, "siglevel", "Detection sigma level", 1.0, 20.0, 0.1, DEFAULT_SIGLEVEL)
         self._scale(control, "min_size", "Minimum source size fraction", 0.001, 0.05, 0.001, DEFAULT_MIN_SIZE)
         self._scale(control, "scale_factor", "Upscale factor", 1.0, 6.0, 0.25, DEFAULT_SCALE_FACTOR)
         self._spin(control, "random_seed", "Replacement random seed", 0, 999999, 1, 0)
@@ -499,16 +499,18 @@ class GalCleanTester(tk.Tk):
     def _build_figure(self) -> None:
         frame = ttk.Frame(self)
         frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
-        self.figure = Figure(figsize=(12.0, 15.0), dpi=100, constrained_layout=True)
-        grid = self.figure.add_gridspec(4, 2, height_ratios=[1.0, 1.0, 1.0, 0.72])
-        self.ax_original = self.figure.add_subplot(grid[0, 0])
-        self.ax_cleaned = self.figure.add_subplot(grid[0, 1])
-        self.ax_residual = self.figure.add_subplot(grid[1, 0])
-        self.ax_mask = self.figure.add_subplot(grid[1, 1])
-        self.ax_original_isophote = self.figure.add_subplot(grid[2, 0])
-        self.ax_cleaned_isophote = self.figure.add_subplot(grid[2, 1])
-        self.ax_original_profile = self.figure.add_subplot(grid[3, 0])
-        self.ax_cleaned_profile = self.figure.add_subplot(grid[3, 1])
+        self.figure = Figure(figsize=(12.0, 15.6), dpi=100, constrained_layout=True)
+        grid = self.figure.add_gridspec(5, 2, height_ratios=[0.26, 1.0, 1.0, 1.0, 0.72])
+        self.ax_parameters = self.figure.add_subplot(grid[0, :])
+        self.ax_original = self.figure.add_subplot(grid[1, 0])
+        self.ax_cleaned = self.figure.add_subplot(grid[1, 1])
+        self.ax_residual = self.figure.add_subplot(grid[2, 0])
+        self.ax_mask = self.figure.add_subplot(grid[2, 1])
+        self.ax_original_isophote = self.figure.add_subplot(grid[3, 0])
+        self.ax_cleaned_isophote = self.figure.add_subplot(grid[3, 1])
+        self.ax_original_profile = self.figure.add_subplot(grid[4, 0])
+        self.ax_cleaned_profile = self.figure.add_subplot(grid[4, 1])
+        self.ax_parameters.set_axis_off()
         self.canvas = FigureCanvasTkAgg(self.figure, master=frame)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         toolbar = NavigationToolbar2Tk(self.canvas, frame)
@@ -673,6 +675,7 @@ class GalCleanTester(tk.Tk):
         bar_sma_deproj = bar_sma_deprojected_arcsec(geometry)
 
         axes = (
+            self.ax_parameters,
             self.ax_original,
             self.ax_cleaned,
             self.ax_residual,
@@ -684,6 +687,10 @@ class GalCleanTester(tk.Tk):
         )
         for ax in axes:
             ax.clear()
+        self.ax_parameters.set_axis_off()
+        self.draw_parameter_box(self.ax_parameters, params, products, mask)
+
+        for ax in axes[1:]:
             ax.set_xlabel("bar-aligned arcsec")
             ax.set_ylabel("deprojected arcsec")
 
@@ -765,6 +772,43 @@ class GalCleanTester(tk.Tk):
 
         self.canvas.draw_idle()
 
+    def draw_parameter_box(
+        self,
+        ax,
+        params: dict[str, float | int],
+        products: dict[str, np.ndarray | float | int],
+        mask: np.ndarray,
+    ) -> None:
+        replaced = int(products["replaced_pixels"])
+        mask_fraction = replaced / mask.size if mask.size else 0.0
+        text = (
+            "GalClean parameters   "
+            f"sigma={float(params['siglevel']):.1f}   "
+            f"min_size={float(params['min_size']):.3f}   "
+            f"scale={float(params['scale_factor']):.2f}   "
+            f"seed={int(params['random_seed'])}   |   "
+            f"threshold={float(products['threshold']):.4g}   "
+            f"sky median={float(products['background_median']):.4g}   "
+            f"sky std={float(products['background_std']):.4g}   "
+            f"replaced={replaced} ({mask_fraction:.2%})"
+        )
+        ax.text(
+            0.5,
+            0.5,
+            text,
+            transform=ax.transAxes,
+            ha="center",
+            va="center",
+            fontsize=9.5,
+            color="0.12",
+            bbox={
+                "boxstyle": "round,pad=0.45",
+                "facecolor": "#F4F6F9",
+                "edgecolor": "#6B7280",
+                "linewidth": 0.8,
+            },
+        )
+
     def draw_bar_major_guides(self, ax, half_profile_width_arcsec: float, bar_sma_deproj: float) -> None:
         ax.axhline(0.0, color="#1f77b4", linewidth=1.5)
         ax.axhline(
@@ -836,8 +880,8 @@ class GalCleanTester(tk.Tk):
         self._remove_calculating_overlay()
         overlay = self.figure.add_axes((0, 0, 1, 1), zorder=1000)
         overlay.set_axis_off()
-        overlay.patch.set_facecolor("black")
-        overlay.patch.set_alpha(0.34)
+        overlay.patch.set_facecolor("0.78")
+        overlay.patch.set_alpha(0.68)
         overlay.text(
             0.5,
             0.5,
@@ -847,7 +891,13 @@ class GalCleanTester(tk.Tk):
             va="center",
             fontsize=30,
             fontweight="bold",
-            color="white",
+            color="0.12",
+            bbox={
+                "boxstyle": "round,pad=0.45",
+                "facecolor": "white",
+                "edgecolor": "0.35",
+                "alpha": 0.92,
+            },
         )
         self.calculating_overlay = overlay
         self.canvas.draw()
