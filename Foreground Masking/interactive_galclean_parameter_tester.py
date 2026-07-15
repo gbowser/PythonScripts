@@ -47,8 +47,8 @@ from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_f
 DEFAULT_MANIFEST = S4G_PLOTTER_DIR / "geometry_output" / "s4g_image_geometry_manifest.csv"
 DEFAULT_PC = "Desktop"
 DEFAULT_GALAXY = "ESO120-012"
-DEFAULT_SIGLEVEL = 12.0
-DEFAULT_MIN_SIZE = 0.02
+DEFAULT_SIGLEVEL = 14.0
+DEFAULT_MIN_SIZE = 0.012
 DEFAULT_SCALE_FACTOR = 1.0
 DEFAULT_PROFILE_WIDTH_PIXELS = 3
 
