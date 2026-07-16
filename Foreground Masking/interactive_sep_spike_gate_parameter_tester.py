@@ -75,6 +75,9 @@ PIXEL_AREA_PARAMS = {
     "minarea",
     "max_area",
 }
+FLOAT_SPIN_PARAMS = {
+    "detect_thresh",
+}
 
 
 def load_fits(path: Path) -> tuple[np.ndarray, fits.Header]:
@@ -515,8 +518,9 @@ class SEPTester(tk.Tk):
         self.refresh_pc_paths(initial=True)
 
     def _build_controls(self) -> None:
-        control = ttk.Frame(self, padding=10)
+        control = ttk.Frame(self, width=340, padding=10)
         control.pack(side=tk.LEFT, fill=tk.Y)
+        control.pack_propagate(False)
 
         ttk.Label(control, text="Machine").pack(anchor=tk.W)
         pc_combo = ttk.Combobox(control, textvariable=self.pc_var, values=sorted(PC_RESEARCH_FOLDERS), state="readonly")
@@ -578,7 +582,7 @@ class SEPTester(tk.Tk):
 
         sep_frame = ttk.LabelFrame(control, text="SEP", padding=8)
         sep_frame.pack(fill=tk.X, pady=(0, 8))
-        self._scale(sep_frame, "detect_thresh", "Detection threshold", 0.5, 10.0, 0.1, DEFAULT_DETECT_THRESH)
+        self._spin(sep_frame, "detect_thresh", "Detection threshold", 0.5, 10.0, 0.1, DEFAULT_DETECT_THRESH)
         self._spin(sep_frame, "minarea", "Minimum area [px]", 1, 80, 1, DEFAULT_MINAREA)
         self._spin(sep_frame, "deblend_nthresh", "Deblend thresholds", 8, 64, 1, DEFAULT_DEBLEND_NTHRESH)
         self._scale(sep_frame, "deblend_cont", "Deblend contrast", 0.0001, 0.1, 0.0005, DEFAULT_DEBLEND_CONT)
@@ -632,10 +636,13 @@ class SEPTester(tk.Tk):
         label_widget.pack(side=tk.LEFT)
         self.parameter_labels[key] = label_widget
         self.parameter_label_texts[key] = label
-        if key in PIXEL_LINEAR_PARAMS or key in PIXEL_AREA_PARAMS:
+        if key in PIXEL_LINEAR_PARAMS or key in PIXEL_AREA_PARAMS or key in FLOAT_SPIN_PARAMS:
             var = tk.DoubleVar(value=float(self.convert_from_pixels(key, default)))
         else:
             var = tk.IntVar(value=default)
+        spin_options = {}
+        if key in FLOAT_SPIN_PARAMS:
+            spin_options["format"] = "%.1f"
         self.vars[key] = var
         spin = ttk.Spinbox(
             frame,
@@ -644,6 +651,7 @@ class SEPTester(tk.Tk):
             to=self.convert_from_pixels(key, maximum),
             increment=self.convert_from_pixels(key, increment),
             width=10,
+            **spin_options,
         )
         spin.pack(side=tk.RIGHT)
         spin.configure(command=self.mark_needs_calculation)
@@ -655,16 +663,15 @@ class SEPTester(tk.Tk):
         frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         self.figure = Figure(figsize=(12.0, 15.6), dpi=100, constrained_layout=True)
         grid = self.figure.add_gridspec(5, 2, height_ratios=[0.26, 1.0, 1.0, 1.0, 1.0])
+        profile_grid = grid[1:, 1].subgridspec(3, 1)
         self.ax_parameters = self.figure.add_subplot(grid[0, :])
         self.ax_original = self.figure.add_subplot(grid[1, 0])
-        self.ax_original_profile = self.figure.add_subplot(grid[1, 1])
         self.ax_residual = self.figure.add_subplot(grid[2, 0])
-        self.ax_cleaned_profile = self.figure.add_subplot(grid[2, 1])
         self.ax_original_isophote = self.figure.add_subplot(grid[3, 0])
-        self.ax_cleaned = self.figure.add_subplot(grid[3, 1])
         self.ax_cleaned_isophote = self.figure.add_subplot(grid[4, 0])
-        self.ax_blank = self.figure.add_subplot(grid[4, 1])
-        self.ax_blank.set_axis_off()
+        self.ax_original_profile = self.figure.add_subplot(profile_grid[0, 0])
+        self.ax_cleaned_profile = self.figure.add_subplot(profile_grid[1, 0])
+        self.ax_cleaned = self.figure.add_subplot(profile_grid[2, 0])
         self.ax_parameters.set_axis_off()
         self.canvas = FigureCanvasTkAgg(self.figure, master=frame)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
@@ -673,7 +680,7 @@ class SEPTester(tk.Tk):
 
     def parameter_changed(self, key: str, mark: bool = True) -> None:
         if key in self.readouts:
-            self.readouts[key].configure(text=f"{float(self.vars[key].get()):.4g}")
+            self.readouts[key].configure(text=f"{float(self.vars[key].get()):.1f}")
         if mark:
             self.mark_needs_calculation()
 
@@ -735,7 +742,7 @@ class SEPTester(tk.Tk):
             pixel_value = self.convert_to_pixels(key, float(var.get()), old_units)
             var.set(self.convert_from_pixels(key, pixel_value, new_units))
             if key in self.readouts:
-                self.readouts[key].configure(text=f"{float(var.get()):.4g}")
+                self.readouts[key].configure(text=f"{float(var.get()):.1f}")
         self.display_units = new_units
         self.refresh_parameter_unit_labels()
         self.mark_needs_calculation()
@@ -923,12 +930,10 @@ class SEPTester(tk.Tk):
             self.ax_original_profile,
             self.ax_cleaned_profile,
             self.ax_cleaned,
-            self.ax_blank,
         ]
         for ax in axes:
             ax.clear()
         self.ax_parameters.set_axis_off()
-        self.ax_blank.set_axis_off()
         self.draw_parameter_box(params, products)
         for ax in axes[1:]:
             ax.set_xlabel("bar-aligned arcsec")
