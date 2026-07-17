@@ -55,6 +55,18 @@ MTOBJECTS_ROOT_CANDIDATES = [
     Path.home() / "Documents" / "Github" / "mtobjects",
     Path.home() / "Documents" / "GitHub" / "mtobjects",
 ]
+MTOBJECTS_REQUIRED_LIBS = (
+    "maxtree.so",
+    "maxtree_double.so",
+    "mt_objects.so",
+    "mt_objects_double.so",
+)
+MTOBJECTS_DLL_DIR_CANDIDATES = [
+    Path(os.environ["MTOBJECTS_DLL_DIR"]).expanduser() if os.environ.get("MTOBJECTS_DLL_DIR") else None,
+    Path("C:/msys64/ucrt64/bin"),
+    Path("C:/msys64/mingw64/bin"),
+]
+_MTOBJECTS_DLL_DIRECTORY_HANDLES = []
 DEFAULT_ALPHA = 1.0e-6
 DEFAULT_MOVE_FACTOR = 0.5
 SPIKE_GATE_MOVE_FACTOR = 0.3
@@ -344,6 +356,33 @@ def mtobjects_setup_message(explicit_root: Path | None = None) -> str:
     )
 
 
+def mtobjects_missing_libraries(root: Path) -> list[Path]:
+    lib_dir = root / "mtolib" / "lib"
+    return [lib_dir / name for name in MTOBJECTS_REQUIRED_LIBS if not (lib_dir / name).is_file()]
+
+
+def mtobjects_library_message(root: Path) -> str:
+    missing = mtobjects_missing_libraries(root)
+    missing_text = "\n  - ".join(str(path) for path in missing)
+    return (
+        "MTObjects found, but its compiled C libraries are missing.\n\n"
+        f"MTObjects root:\n  {root}\n\n"
+        "Missing:\n  - "
+        f"{missing_text}\n\n"
+        "Compile MTObjects with a Windows-native gcc/MinGW toolchain, then restart this tester. "
+        "The repository script is recompile.sh; WSL-built Linux .so files will not load into Windows Python."
+    )
+
+
+def add_mtobjects_dll_directories() -> None:
+    if os.name != "nt" or not hasattr(os, "add_dll_directory"):
+        return
+    for candidate in MTOBJECTS_DLL_DIR_CANDIDATES:
+        if candidate is None or not candidate.is_dir():
+            continue
+        _MTOBJECTS_DLL_DIRECTORY_HANDLES.append(os.add_dll_directory(str(candidate.resolve())))
+
+
 def expand_boolean_mask(mask: np.ndarray, radius: int) -> np.ndarray:
     expanded = np.asarray(mask, dtype=bool).copy()
     if radius <= 0 or not np.any(expanded):
@@ -422,6 +461,9 @@ def mtobjects_context(mtobjects_root: Path | None):
     root = find_mtobjects_root(mtobjects_root)
     if root is None:
         raise ModuleNotFoundError(mtobjects_setup_message(mtobjects_root))
+    if mtobjects_missing_libraries(root):
+        raise RuntimeError(mtobjects_library_message(root))
+    add_mtobjects_dll_directories()
     if str(root) not in sys.path:
         sys.path.insert(0, str(root))
     os.chdir(root)
@@ -460,6 +502,22 @@ def mtobjects_parameter_namespace(params: dict[str, float | int | str], image: n
     )
 
 
+def stabilize_mtobjects_background(params: SimpleNamespace, image: np.ndarray) -> None:
+    variance = float(params.bg_variance)
+    if not math.isfinite(variance) or variance <= 0:
+        sigma = robust_sigma(image)
+        params.bg_variance = max(float(sigma * sigma), 1.0e-12)
+    gain = float(params.gain)
+    if not math.isfinite(gain) or gain <= 0:
+        params.gain = 1.0
+
+
+def init_mtobjects_ctype_classes(mt_classes, d_type) -> None:
+    if getattr(mt_classes.MtImageLocation, "_fields_", None):
+        return
+    mt_classes.init_classes(d_type)
+
+
 def mtobjects_products(
     data: np.ndarray,
     params: dict[str, float | int | str],
@@ -480,7 +538,7 @@ def mtobjects_products(
         mto_params = mtobjects_parameter_namespace(params, mt_image)
         if mto_params.d_type == ctypes.c_double:
             init_double_filtering(mto_params)
-        mt_classes.init_classes(mto_params.d_type)
+        init_mtobjects_ctype_classes(mt_classes, mto_params.d_type)
         processed = preprocess_image(
             np.array(mt_image, copy=True),
             mto_params,
@@ -488,6 +546,7 @@ def mtobjects_products(
             n=float(params["gaussian_fwhm"]),
             nan_value=np.inf,
         )
+        stabilize_mtobjects_background(mto_params, mt_image)
         mt = maxtree.OriginalMaxTree(processed, mto_params.verbosity, mto_params)
         try:
             mt.flood()
@@ -507,7 +566,7 @@ def mtobjects_products(
     replacement = float(np.nanmedian(data[finite_unmasked])) if np.any(finite_unmasked) else 0.0
     cleaned[mask] = replacement
     return {
-        "objects": objects,
+        "objects": rows,
         "raw_segmentation": segmentation,
         "filtered_segmentation": filtered,
         "mask": mask,
