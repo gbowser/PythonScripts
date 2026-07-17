@@ -19,7 +19,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import filedialog, messagebox, ttk
 from types import SimpleNamespace
 
 import matplotlib
@@ -47,6 +47,14 @@ DEFAULT_MANIFEST = display.DEFAULT_MANIFEST
 DEFAULT_PC = "Desktop"
 DEFAULT_GALAXY = "ESO120-012"
 DEFAULT_MTOBJECTS_ROOT = os.environ.get("MTOBJECTS_ROOT")
+MTOBJECTS_ROOT_CANDIDATES = [
+    Path(DEFAULT_MTOBJECTS_ROOT).expanduser() if DEFAULT_MTOBJECTS_ROOT else None,
+    SCRIPT_DIR / "mtobjects",
+    PROJECT_ROOT / "mtobjects",
+    PROJECT_ROOT.parent / "mtobjects",
+    Path.home() / "Documents" / "Github" / "mtobjects",
+    Path.home() / "Documents" / "GitHub" / "mtobjects",
+]
 DEFAULT_ALPHA = 1.0e-6
 DEFAULT_MOVE_FACTOR = 0.5
 SPIKE_GATE_MOVE_FACTOR = 0.3
@@ -294,6 +302,48 @@ def spike_samples_to_image_aperture(
     return in_bar_strip & in_spike_column
 
 
+def is_mtobjects_root(path: Path) -> bool:
+    return (path / "mtolib").is_dir()
+
+
+def find_mtobjects_root(explicit_root: Path | None = None) -> Path | None:
+    candidates = [explicit_root] if explicit_root is not None else []
+    candidates.extend(candidate for candidate in MTOBJECTS_ROOT_CANDIDATES if candidate is not None)
+    seen: set[Path] = set()
+    for candidate in candidates:
+        root = candidate.expanduser()
+        try:
+            root = root.resolve()
+        except OSError:
+            continue
+        if root in seen:
+            continue
+        seen.add(root)
+        if is_mtobjects_root(root):
+            return root
+    return None
+
+
+def mtobjects_setup_message(explicit_root: Path | None = None) -> str:
+    checked = []
+    for candidate in MTOBJECTS_ROOT_CANDIDATES:
+        if candidate is not None:
+            checked.append(str(candidate))
+    if explicit_root is not None:
+        checked.insert(0, str(explicit_root))
+    checked_text = "\n  - ".join(checked) if checked else "(none)"
+    return (
+        "Could not find the MTObjects Python package 'mtolib'.\n\n"
+        "Clone CarolineHaigh/mtobjects locally, then either:\n"
+        "  1. Start this tester with --mtobjects-root C:\\path\\to\\mtobjects, or\n"
+        "  2. Set the MTOBJECTS_ROOT environment variable, or\n"
+        "  3. Use the MTObjects root picker in the tester sidebar.\n\n"
+        "Checked:\n  - "
+        f"{checked_text}\n\n"
+        "Note: MTObjects also needs its compiled libraries under mtolib/lib."
+    )
+
+
 def expand_boolean_mask(mask: np.ndarray, radius: int) -> np.ndarray:
     expanded = np.asarray(mask, dtype=bool).copy()
     if radius <= 0 or not np.any(expanded):
@@ -369,15 +419,18 @@ def mtobjects_context(mtobjects_root: Path | None):
     folder.
     """
     previous_cwd = Path.cwd()
-    if mtobjects_root is not None:
-        root = mtobjects_root.expanduser().resolve()
-        if not (root / "mtolib").is_dir():
-            raise FileNotFoundError(f"Could not find an mtolib folder in MTObjects root: {root}")
-        if str(root) not in sys.path:
-            sys.path.insert(0, str(root))
-        os.chdir(root)
+    root = find_mtobjects_root(mtobjects_root)
+    if root is None:
+        raise ModuleNotFoundError(mtobjects_setup_message(mtobjects_root))
+    if str(root) not in sys.path:
+        sys.path.insert(0, str(root))
+    os.chdir(root)
     try:
         yield
+    except ModuleNotFoundError as exc:
+        if exc.name == "mtolib":
+            raise ModuleNotFoundError(mtobjects_setup_message(mtobjects_root)) from exc
+        raise
     except OSError as exc:
         raise RuntimeError(
             "MTObjects could not load its compiled C libraries. Set --mtobjects-root "
@@ -606,9 +659,10 @@ class MTObjectsTester(tk.Tk):
         self.geometry("1760x1320")
         self.minsize(1400, 950)
         self.manifest = manifest
-        self.mtobjects_root = mtobjects_root
+        self.mtobjects_root = find_mtobjects_root(mtobjects_root)
         self.all_rows = display.read_manifest(manifest)
         self.pc_var = tk.StringVar(value=pc_name)
+        self.mtobjects_root_var = tk.StringVar(value=str(self.mtobjects_root) if self.mtobjects_root else "Not found")
         self.unit_var = tk.StringVar(value="Pixels")
         self.display_units = "pixels"
         self.output_dir = remove_foreground_folder(pc_name) / "interactive_mtobjects_parameter_tester"
@@ -630,6 +684,15 @@ class MTObjectsTester(tk.Tk):
         pc_combo = ttk.Combobox(control, textvariable=self.pc_var, values=sorted(PC_RESEARCH_FOLDERS), state="readonly")
         pc_combo.pack(fill=tk.X, pady=(0, 8))
         pc_combo.bind("<<ComboboxSelected>>", lambda _event: self.refresh_pc_paths())
+
+        ttk.Label(control, text="MTObjects root").pack(anchor=tk.W)
+        mtobjects_row = ttk.Frame(control)
+        mtobjects_row.pack(fill=tk.X, pady=(0, 8))
+        mtobjects_entry = ttk.Entry(mtobjects_row, textvariable=self.mtobjects_root_var)
+        mtobjects_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        mtobjects_entry.bind("<Return>", lambda _event: self.set_mtobjects_root_from_entry())
+        mtobjects_entry.bind("<FocusOut>", lambda _event: self.set_mtobjects_root_from_entry(silent=True))
+        ttk.Button(mtobjects_row, text="Browse", command=self.browse_mtobjects_root).pack(side=tk.LEFT, padx=(4, 0))
 
         ttk.Label(control, text="Galaxy").pack(anchor=tk.W)
         self.galaxy_var = tk.StringVar()
@@ -787,6 +850,29 @@ class MTObjectsTester(tk.Tk):
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         toolbar = NavigationToolbar2Tk(self.canvas, frame)
         toolbar.update()
+
+    def browse_mtobjects_root(self) -> None:
+        initial_dir = str(self.mtobjects_root) if self.mtobjects_root else str(Path.home() / "Documents" / "Github")
+        selected = filedialog.askdirectory(title="Select CarolineHaigh/mtobjects checkout", initialdir=initial_dir)
+        if not selected:
+            return
+        self.mtobjects_root_var.set(selected)
+        self.set_mtobjects_root_from_entry()
+
+    def set_mtobjects_root_from_entry(self, silent: bool = False) -> None:
+        value = self.mtobjects_root_var.get().strip()
+        if not value or value == "Not found":
+            self.mtobjects_root = None
+            return
+        root = Path(value).expanduser()
+        if is_mtobjects_root(root):
+            self.mtobjects_root = root.resolve()
+            self.mtobjects_root_var.set(str(self.mtobjects_root))
+            self.mark_needs_calculation()
+            return
+        self.mtobjects_root = None
+        if not silent:
+            messagebox.showerror("Invalid MTObjects root", f"Could not find an mtolib folder in:\n{root}")
 
     def parameter_changed(self, key: str, mark: bool = True) -> None:
         if key in self.readouts:
@@ -958,7 +1044,12 @@ class MTObjectsTester(tk.Tk):
     def mark_needs_calculation(self) -> None:
         name = self.galaxy_var.get()
         if name:
-            self.status.set(f"{self.pc_var.get()} | {name}: click Calculate to run MTObjects.")
+            if self.mtobjects_root is None:
+                self.status.set(
+                    f"{self.pc_var.get()} | {name}: select a CarolineHaigh/mtobjects checkout before calculating."
+                )
+            else:
+                self.status.set(f"{self.pc_var.get()} | {name}: click Calculate to run MTObjects.")
 
     def output_png_path(self, params: dict[str, float | int | str]) -> Path:
         self.output_dir.mkdir(parents=True, exist_ok=True)
