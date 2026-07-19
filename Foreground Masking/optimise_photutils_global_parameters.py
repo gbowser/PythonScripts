@@ -20,7 +20,7 @@ if str(PROJECT_ROOT) not in sys.path:
 BAR_SCRIPT = SCRIPT_DIR / "bar_spike_gated_foreground_report.py"
 from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
 
-DEFAULT_PC = "Desktop"
+DEFAULT_PC = "Laptop"
 DEFAULT_OUTPUT = remove_foreground_folder(DEFAULT_PC) / "optimisation"
 DEFAULT_SPIKE_NAMES = ["ESO120-012", "ESO357-012", "ESO358-020", "ESO359-031", "ESO440-044"]
 DEFAULT_CONTROL_NAMES = ["NGC1187", "NGC1640", "NGC3726", "ESO420-009"]

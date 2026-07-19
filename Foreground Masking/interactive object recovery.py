@@ -42,11 +42,9 @@ from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_f
 
 
 DEFAULT_MANIFEST = baseline.DEFAULT_MANIFEST
-DEFAULT_PC = "Desktop"
+DEFAULT_PC = "Laptop"
 DEFAULT_GALAXY = "NGC0986"
-PNG_OUTPUT_DIR = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\interactive_object_recovery"
-)
+PNG_OUTPUT_DIR = remove_foreground_folder(DEFAULT_PC) / "interactive_object_recovery"
 STARTUP_CACHE_PATH = SCRIPT_DIR / "startup_cache.sqlite3"
 REDRAW_DEBOUNCE_MS = 450
 CACHE_SCHEMA_VERSION = 1

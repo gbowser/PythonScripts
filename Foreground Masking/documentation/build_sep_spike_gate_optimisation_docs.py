@@ -222,7 +222,7 @@ def build_doc() -> None:
     add_callout(
         doc,
         "Purpose",
-        "This project repeats the Spike Gate plus Optuna optimisation idea, but uses SEP/SExtractor-style "
+        "This project repeats the Spike Gate plus Optuna optimisation idea, but uses SEP "
         "segmentation instead of MTObjects. The result is a resumable optimiser that chooses SEP parameters "
         "based on spike coverage and data-loss penalties.",
     )

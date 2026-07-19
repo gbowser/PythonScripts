@@ -253,7 +253,7 @@ def build_sep_method_doc() -> Path:
     )
     doc.add_heading("What SEP Does Here", level=1)
     doc.add_paragraph(
-        "SEP exposes the core Source Extractor source-detection workflow directly in Python. In this tool it is used to detect compact foreground or background contaminants in S4G galaxy images without calling an external SExtractor executable."
+        "SEP exposes source-detection and segmentation tools directly in Python. In this tool it is used to detect compact foreground or background contaminants in S4G galaxy images without calling an external source-extraction executable."
     )
     add_common_sep_method(doc)
     doc.add_heading("Profile Treatment", level=1)
@@ -279,7 +279,7 @@ def build_sep_method_doc() -> Path:
         [
             "SEP documentation: https://sep.readthedocs.io/",
             "SEP extract API: https://sep.readthedocs.io/en/stable/api/sep.extract.html",
-            "Bertin, E. and Arnouts, S. 1996, SExtractor: Software for source extraction, A&AS, 117, 393-404.",
+            "Barbary, K. 2016, SEP: Source Extraction and Photometry in Python.",
         ],
     )
     doc.save(DOCS["sep_method"])

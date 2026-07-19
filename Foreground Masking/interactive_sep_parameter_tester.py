@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Interactive SEP/SExtractor-style foreground-mask parameter tester.
+"""Interactive SEP foreground-mask parameter tester.
 
-SEP is a Python library based on the core algorithms of SExtractor. This tester
+SEP is a Python library for source detection and segmentation. This tester
 keeps the local S4G manifest workflow and deprojected diagnostics while avoiding
-an external SExtractor executable.
+an external source-extraction executable.
 """
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_f
 
 
 DEFAULT_MANIFEST = display.DEFAULT_MANIFEST
-DEFAULT_PC = "Desktop"
+DEFAULT_PC = "Laptop"
 DEFAULT_GALAXY = "ESO120-012"
 DEFAULT_DETECT_THRESH = 3.0
 DEFAULT_MINAREA = 5
@@ -330,7 +330,7 @@ def filter_segmentation(segmentation: np.ndarray, rows: list[dict[str, float | i
 class SEPTester(tk.Tk):
     def __init__(self, manifest: Path, pc_name: str):
         super().__init__()
-        self.title("SEP SExtractor-Style Parameter Tester")
+        self.title("SEP Parameter Tester")
         self.geometry("1760x1320")
         self.minsize(1400, 950)
         self.manifest = manifest
@@ -776,7 +776,7 @@ class SEPTester(tk.Tk):
         raw = len(products["rows"])
         masked_fraction = np.count_nonzero(products["mask"]) / products["mask"].size
         text = (
-            "SEP / SExtractor-style   "
+            "SEP foreground detection   "
             f"units={self.unit_var.get()}   "
             f"detect_on={params['detect_on']}   "
             f"thresh={float(params['detect_thresh']):.1f}   "

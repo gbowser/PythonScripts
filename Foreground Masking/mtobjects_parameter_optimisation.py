@@ -35,7 +35,6 @@ import interactive_mtobjects_parameter_tester as mto  # noqa: E402
 from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
 
 
-DEFAULT_OUTPUT_DIR = remove_foreground_folder("Desktop") / "mtobjects toy optimisation"
 DEFAULT_MAX_IMAGES = 20
 DEFAULT_TOYS_PER_IMAGE = 6
 DEFAULT_INITIAL_POINTS = 8
@@ -578,7 +577,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--manifest", type=Path, default=mto.DEFAULT_MANIFEST)
     parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=mto.DEFAULT_PC)
     parser.add_argument("--mtobjects-root", type=Path, default=Path(mto.DEFAULT_MTOBJECTS_ROOT) if mto.DEFAULT_MTOBJECTS_ROOT else None)
-    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--names", nargs="*", help="Optional explicit galaxy names. Defaults to the first usable images.")
     parser.add_argument("--max-images", type=int, default=DEFAULT_MAX_IMAGES)
     parser.add_argument("--toys-per-image", type=int, default=DEFAULT_TOYS_PER_IMAGE)
@@ -594,8 +593,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    output_parent = args.output_dir or (remove_foreground_folder(args.pc) / "mtobjects toy optimisation")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    args.output_dir = args.output_dir / timestamp
+    args.output_dir = output_parent / timestamp
     args.output_dir.mkdir(parents=True, exist_ok=True)
     config = {key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()}
     (args.output_dir / "mtobjects_parameter_optimisation_config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import sys
 
 from docx import Document
 from docx.enum.section import WD_SECTION
@@ -13,11 +14,14 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
 
-OUTPUT = Path(
-    r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects"
-    r"\documentation\Photutils Optimisation Parameters Explained.docx"
-)
+from machine_paths import remove_foreground_folder  # noqa: E402
+
+
+OUTPUT = remove_foreground_folder("Laptop") / "documentation" / "Photutils Optimisation Parameters Explained.docx"
 
 BLUE = "2E74B5"
 DARK_BLUE = "1F4D78"

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Interactive SEP plus Spike-Gate foreground-mask parameter tester.
 
-SEP is a Python library based on the core algorithms of SExtractor. This tester
+SEP is a Python library for source detection and segmentation. This tester
 keeps the local S4G manifest workflow and compares normal SEP profile masking
 against a low-threshold SEP pass gated by bar-profile spike detection.
 """
@@ -40,7 +40,7 @@ from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_f
 
 
 DEFAULT_MANIFEST = display.DEFAULT_MANIFEST
-DEFAULT_PC = "Desktop"
+DEFAULT_PC = "Laptop"
 DEFAULT_GALAXY = "ESO120-012"
 DEFAULT_DETECT_THRESH = 3.0
 SPIKE_GATE_DETECT_THRESH = 0.5
@@ -1017,7 +1017,7 @@ class SEPTester(tk.Tk):
         raw = len(products["rows"])
         masked_fraction = np.count_nonzero(products["mask"]) / products["mask"].size
         text = (
-            "SEP / SExtractor-style   "
+            "SEP foreground detection   "
             f"units={self.unit_var.get()}   "
             f"detect_on={params['detect_on']}   "
             f"thresh={float(params['detect_thresh']):.1f}   "

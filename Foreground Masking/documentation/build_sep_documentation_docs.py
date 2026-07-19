@@ -194,11 +194,11 @@ def build_method_doc() -> None:
 
     doc.add_heading("1. What SEP Is", level=1)
     doc.add_paragraph(
-        "SEP is a Python library that exposes the core Source Extractor algorithms as functions that operate directly on NumPy arrays. "
-        "In this project it is used as a practical replacement for the classic external SExtractor executable on Windows."
+        "SEP is a Python library that exposes source-detection and segmentation functions that operate directly on NumPy arrays. "
+        "In this project it is used as a direct Python foreground-detection backend on Windows."
     )
     doc.add_paragraph(
-        "The original Source Extractor method detects sources above a locally estimated sky background, separates blended detections, "
+        "The SEP detection method detects sources above a locally estimated sky background, separates blended detections, "
         "and returns a segmentation map in which detected pixels are assigned to object labels."
     )
 
@@ -210,7 +210,7 @@ def build_method_doc() -> None:
             "Build a smooth galaxy model with a broad Gaussian filter and subtract it to form a residual detection image.",
             "Estimate the sky/background on the selected detection image with sep.Background.",
             "Subtract the background map and detect connected objects with sep.extract.",
-            "Deblend overlapping detections with the SEP/SExtractor deblending parameters.",
+            "Deblend overlapping detections with SEP deblending parameters.",
             "Reject detections that are too large, too elongated, or inside the central exclusion radius.",
             "Dilate the retained segmentation mask to include object wings and nearby affected pixels.",
             "Create a preview image by replacing masked pixels with a median unmasked value.",
@@ -297,7 +297,7 @@ def build_method_doc() -> None:
 
     doc.add_heading("4. Defaults and Rationale", level=1)
     doc.add_paragraph(
-        "The core SEP defaults were selected from standard Source Extractor-style starting values, then adapted empirically for the ESO120-012 test case. "
+        "The core SEP defaults were selected from standard source-detection starting values, then adapted empirically for the ESO120-012 test case. "
         "The added limits and central exclusion were introduced to reduce the risk of masking true galaxy light."
     )
     add_table(
@@ -306,7 +306,7 @@ def build_method_doc() -> None:
         [
             ["3.0 sigma threshold", "A conventional starting point that detects significant compact peaks without immediately eating into low-contrast galaxy structure."],
             ["5 pixel minimum area", "Large enough to suppress isolated noise but small enough to retain compact foreground stars or spike artefacts."],
-            ["32 / 0.005 deblend", "Classic SExtractor-like deblending behaviour: reasonably aggressive splitting without disabling object separation."],
+            ["32 / 0.005 deblend", "Reasonably aggressive splitting without disabling object separation."],
             ["64 pixel background box, 3 pixel filter", "Moderate background estimation and light smoothing for stable source detection."],
             ["2 pixel dilation", "A small safety margin around accepted detections so object wings are included."],
             ["500 pixel max area, elongation 6.0", "Guards against removing broad or strongly elongated galaxy features."],
@@ -328,8 +328,7 @@ def build_method_doc() -> None:
         [
             "SEP documentation: https://sep.readthedocs.io/",
             "SEP extract API: https://sep.readthedocs.io/en/stable/api/sep.extract.html",
-            "Bertin, E. and Arnouts, S. 1996, SExtractor: Software for source extraction, A&AS, 117, 393-404.",
-            "Astromatic SExtractor project page: https://www.astromatic.net/software/sextractor/",
+            "Barbary, K. 2016, SEP: Source Extraction and Photometry in Python.",
         ],
     )
 

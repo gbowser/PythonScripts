@@ -191,7 +191,7 @@ def draw_products(name: str, original: np.ndarray, products: dict, params: dict,
     ax_parameters.text(
         0.5,
         0.5,
-        "SEP / SExtractor-style   "
+        "SEP foreground detection   "
         f"units=Pixels   detect_on={params['detect_on']}   "
         f"thresh={float(params['detect_thresh']):.1f}   minarea={int(params['minarea'])}   "
         f"deblend={int(params['deblend_nthresh'])}/{float(params['deblend_cont']):.4f}   "

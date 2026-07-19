@@ -41,7 +41,7 @@ from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_f
 
 
 DEFAULT_MANIFEST = S4G_PLOTTER_DIR / "geometry_output" / "s4g_image_geometry_manifest.csv"
-DEFAULT_PC = "Desktop"
+DEFAULT_PC = "Laptop"
 DEFAULT_GALAXY = "ESO120-012"
 PARAMETER_REDRAW_DEBOUNCE_MS = 500
 PROFILE_BRIDGE_MERGE_GAP_SAMPLES = 12
