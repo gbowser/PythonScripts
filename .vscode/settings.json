@@ -1,15 +1,20 @@
-﻿{
-    "python.defaultInterpreterPath":  "C:\\Users\\gordo\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
-    "python.terminal.activateEnvironment":  false,
-    "workbench.colorTheme":  "Light+",
-    "[python]":  {
-                     "editor.formatOnSave":  true,
-                     "editor.codeActionsOnSave":  {
-                                                      "source.fixAll":  "explicit",
-                                                      "source.organizeImports":  "explicit"
-                                                  },
-                     "editor.defaultFormatter":  "charliermarsh.ruff"
-                 },
-    "r.lsp.promptToInstall":  false,
-    "terminal.integrated.cwd":  "${workspaceFolder}"
+{
+    "python.defaultInterpreterPath": "C:\\Users\\gordo\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+    "python.terminal.activateEnvironment": false,
+    "workbench.colorTheme": "Light+",
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        },
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
+    "r.lsp.promptToInstall": false,
+    "terminal.integrated.cwd": "${workspaceFolder}",
+    "claudeCode.allowDangerouslySkipPermissions": true,
+    "claudeCode.disableLoginPrompt": true,
+    "claudeCode.enableNewConversationShortcut": true,
+    "claudeCode.hideOnboarding": true,
+    "claudeCode.initialPermissionMode": "acceptEdits"
 }

@@ -6,6 +6,7 @@ imageio>=2.37.0
 matplotlib>=3.10.7
 numpy>=2.3.0
 openpyxl>=3.1.5
+optuna>=4.5.0
 pandas>=3.0.0
 photutils>=2.2.0
 pvextractor>=0.4
