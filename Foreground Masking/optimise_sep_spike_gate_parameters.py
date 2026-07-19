@@ -35,7 +35,6 @@ import interactive_sep_spike_gate_parameter_tester as sep_tool  # noqa: E402
 from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
 
 
-DEFAULT_OUTPUT_DIR = remove_foreground_folder("Desktop") / "sep spike optimisation"
 DEFAULT_MAX_IMAGES = 20
 DEFAULT_INITIAL_POINTS = 16
 DEFAULT_MAX_ITER = 64
@@ -436,7 +435,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, default=sep_tool.DEFAULT_MANIFEST)
     parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=sep_tool.DEFAULT_PC)
-    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument(
         "--resume-output-dir",
         type=Path,
@@ -473,8 +472,9 @@ def prepare_output_dir(args: argparse.Namespace) -> None:
             raise FileNotFoundError(f"Cannot resume because Optuna study database does not exist: {study_path}")
         return
 
+    output_parent = args.output_dir or (remove_foreground_folder(args.pc) / "sep spike optimisation")
     timestamp_dir = datetime.now().strftime("%Y%m%d_%H%M%S")
-    args.output_dir = args.output_dir / timestamp_dir
+    args.output_dir = output_parent / timestamp_dir
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
 
