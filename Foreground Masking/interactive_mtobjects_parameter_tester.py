@@ -738,10 +738,14 @@ class MTObjectsTester(tk.Tk):
     def _configure_window_size(self) -> None:
         screen_width = max(900, self.winfo_screenwidth())
         screen_height = max(700, self.winfo_screenheight())
-        width = min(1280, max(1000, screen_width - 80))
-        height = min(850, max(650, screen_height - 120))
-        self.geometry(f"{width}x{height}")
-        self.minsize(1000, 650)
+        width = min(1760, max(960, int(screen_width * 0.82)))
+        height = min(1320, max(680, int(screen_height * 0.82)))
+        x_pos = max(0, min(40, (screen_width - width) // 2))
+        y_pos = max(0, min(40, (screen_height - height) // 2))
+        self.geometry(f"{width}x{height}+{x_pos}+{y_pos}")
+        self.minsize(900, 620)
+        self.maxsize(screen_width * 2, screen_height * 2)
+        self.resizable(True, True)
 
     def _build_controls(self) -> None:
         control_outer = ttk.Frame(self, width=370)
@@ -805,12 +809,12 @@ class MTObjectsTester(tk.Tk):
 
         spike_frame = ttk.LabelFrame(control, text="Spike Gate", padding=8)
         spike_frame.pack(fill=tk.X, pady=(4, 10))
-        self._scale(spike_frame, "spike_gate_move_factor", "Gate move factor", 0.0, 1.0, 0.05, SPIKE_GATE_MOVE_FACTOR)
-        self._scale(spike_frame, "spike_excess_fraction", "Spike excess fraction", 0.05, 1.0, 0.05, DEFAULT_SPIKE_EXCESS_FRACTION)
+        self._scale(spike_frame, "spike_gate_move_factor", "spike_gate_move_factor (higher = more aggressive gate)", 0.0, 1.0, 0.05, SPIKE_GATE_MOVE_FACTOR)
+        self._scale(spike_frame, "spike_excess_fraction", "spike_excess_fraction (lower = more sensitive)", 0.05, 1.0, 0.05, DEFAULT_SPIKE_EXCESS_FRACTION)
         self._scale(
             spike_frame,
             "spike_neighbour_inner_arcsec",
-            "Neighbour inner [arcsec]",
+            "spike_neighbour_inner_arcsec",
             1.0,
             20.0,
             0.5,
@@ -819,22 +823,22 @@ class MTObjectsTester(tk.Tk):
         self._scale(
             spike_frame,
             "spike_neighbour_outer_arcsec",
-            "Neighbour outer [arcsec]",
+            "spike_neighbour_outer_arcsec",
             5.0,
             40.0,
             0.5,
             DEFAULT_SPIKE_NEIGHBOUR_OUTER_ARCSEC,
         )
-        self._spin(spike_frame, "spike_side_offset_samples", "Side offset [samples]", 1, 12, 1, DEFAULT_SPIKE_SIDE_OFFSET_SAMPLES)
-        self._scale(spike_frame, "spike_side_drop_fraction", "Side drop fraction", 0.05, 1.5, 0.05, DEFAULT_SPIKE_SIDE_DROP_FRACTION)
-        self._spin(spike_frame, "spike_window_samples", "Spike window [samples]", 0, 10, 1, DEFAULT_SPIKE_WINDOW_SAMPLES)
+        self._spin(spike_frame, "spike_side_offset_samples", "spike_side_offset_samples", 1, 12, 1, DEFAULT_SPIKE_SIDE_OFFSET_SAMPLES)
+        self._scale(spike_frame, "spike_side_drop_fraction", "spike_side_drop_fraction (lower = more sensitive)", 0.05, 1.5, 0.05, DEFAULT_SPIKE_SIDE_DROP_FRACTION)
+        self._spin(spike_frame, "spike_window_samples", "spike_window_samples (higher = wider removal)", 0, 10, 1, DEFAULT_SPIKE_WINDOW_SAMPLES)
 
         mto_frame = ttk.LabelFrame(control, text="MTObjects", padding=8)
         mto_frame.pack(fill=tk.X, pady=(0, 8))
         self._spin(mto_frame, "alpha", "Significance alpha", 1.0e-8, 1.0e-3, 1.0e-6, DEFAULT_ALPHA)
-        self._spin(mto_frame, "move_factor", "Move factor", 0.0, 1.0, 0.05, DEFAULT_MOVE_FACTOR)
-        self._spin(mto_frame, "min_distance", "Minimum brightness distance", 0.0, 100.0, 0.5, DEFAULT_MIN_DISTANCE)
-        self._spin(mto_frame, "gaussian_fwhm", "Gaussian FWHM [px]", 0.0, 8.0, 0.25, DEFAULT_GAUSSIAN_FWHM)
+        self._spin(mto_frame, "move_factor", "move_factor (higher = more aggressive)", 0.0, 1.0, 0.05, DEFAULT_MOVE_FACTOR)
+        self._spin(mto_frame, "min_distance", "min_distance (lower = more aggressive)", 0.0, 100.0, 0.5, DEFAULT_MIN_DISTANCE)
+        self._spin(mto_frame, "gaussian_fwhm", "gaussian_fwhm [px] (higher = smoother/broader)", 0.0, 8.0, 0.25, DEFAULT_GAUSSIAN_FWHM)
         self._spin(mto_frame, "soft_bias", "Soft bias", -1000.0, 1000.0, 1.0, DEFAULT_SOFT_BIAS)
         self._spin(mto_frame, "gain", "Gain (-1=estimate)", -1.0, 50.0, 0.5, DEFAULT_GAIN)
         self._spin(mto_frame, "bg_mean", "Background mean (NaN=estimate)", -1000.0, 1000.0, 1.0, DEFAULT_BG_MEAN)
@@ -842,11 +846,11 @@ class MTObjectsTester(tk.Tk):
 
         filter_frame = ttk.LabelFrame(control, text="Post-filter", padding=8)
         filter_frame.pack(fill=tk.X, pady=(0, 8))
-        self._spin(filter_frame, "minarea", "Minimum area [px]", 1, 80, 1, DEFAULT_MINAREA)
-        self._spin(filter_frame, "dilation_radius", "Mask dilation [px]", 0, 12, 1, DEFAULT_DILATION_RADIUS)
-        self._spin(filter_frame, "max_area", "Max segment area [px]", 10, 5000, 10, DEFAULT_MAX_AREA)
-        self._scale(filter_frame, "max_elongation", "Max elongation", 1.0, 20.0, 0.25, DEFAULT_MAX_ELONGATION)
-        self._scale(filter_frame, "exclude_center_pixels", "Central exclusion [px]", 0.0, 120.0, 1.0, DEFAULT_EXCLUDE_CENTER_PIXELS)
+        self._spin(filter_frame, "minarea", "minarea [px] (lower = more aggressive)", 1, 80, 1, DEFAULT_MINAREA)
+        self._spin(filter_frame, "dilation_radius", "dilation_radius [px] (higher = more aggressive)", 0, 12, 1, DEFAULT_DILATION_RADIUS)
+        self._spin(filter_frame, "max_area", "max_area [px] (higher = more aggressive)", 10, 5000, 10, DEFAULT_MAX_AREA)
+        self._scale(filter_frame, "max_elongation", "max_elongation (higher = more aggressive)", 1.0, 20.0, 0.25, DEFAULT_MAX_ELONGATION)
+        self._scale(filter_frame, "exclude_center_pixels", "exclude_center_pixels [px] (lower = more aggressive)", 0.0, 120.0, 1.0, DEFAULT_EXCLUDE_CENTER_PIXELS)
 
         button_row = ttk.Frame(control)
         button_row.pack(fill=tk.X, pady=(12, 4))
@@ -860,7 +864,7 @@ class MTObjectsTester(tk.Tk):
     def _scale(self, parent, key, label, minimum, maximum, resolution, default) -> None:
         frame = ttk.Frame(parent)
         frame.pack(fill=tk.X, pady=4)
-        label_widget = ttk.Label(frame, text=self.label_for_display(key, label))
+        label_widget = ttk.Label(frame, text=self.label_for_display(key, label), wraplength=315, justify=tk.LEFT)
         label_widget.pack(anchor=tk.W)
         self.parameter_labels[key] = label_widget
         self.parameter_label_texts[key] = label
@@ -887,8 +891,8 @@ class MTObjectsTester(tk.Tk):
     def _spin(self, parent, key, label, minimum, maximum, increment, default) -> None:
         frame = ttk.Frame(parent)
         frame.pack(fill=tk.X, pady=4)
-        label_widget = ttk.Label(frame, text=self.label_for_display(key, label))
-        label_widget.pack(side=tk.LEFT)
+        label_widget = ttk.Label(frame, text=self.label_for_display(key, label), wraplength=315, justify=tk.LEFT)
+        label_widget.pack(anchor=tk.W)
         self.parameter_labels[key] = label_widget
         self.parameter_label_texts[key] = label
         if key in PIXEL_LINEAR_PARAMS or key in PIXEL_AREA_PARAMS or key in FLOAT_SPIN_PARAMS:
@@ -908,7 +912,7 @@ class MTObjectsTester(tk.Tk):
             width=10,
             **spin_options,
         )
-        spin.pack(side=tk.RIGHT)
+        spin.pack(anchor=tk.E, pady=(2, 0))
         spin.configure(command=self.mark_needs_calculation)
         spin.bind("<Return>", lambda _event: self.mark_needs_calculation())
         spin.bind("<FocusOut>", lambda _event: self.mark_needs_calculation())
