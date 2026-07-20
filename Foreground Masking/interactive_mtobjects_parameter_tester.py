@@ -44,7 +44,7 @@ from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_f
 
 
 DEFAULT_MANIFEST = display.DEFAULT_MANIFEST
-DEFAULT_PC = "Laptop"
+DEFAULT_PC = "Desktop"
 DEFAULT_GALAXY = "ESO120-012"
 DEFAULT_MTOBJECTS_ROOT = os.environ.get("MTOBJECTS_ROOT")
 MTOBJECTS_ROOT_CANDIDATES = [
