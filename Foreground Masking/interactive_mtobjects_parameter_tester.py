@@ -715,8 +715,7 @@ class MTObjectsTester(tk.Tk):
     def __init__(self, manifest: Path, pc_name: str, mtobjects_root: Path | None):
         super().__init__()
         self.title("MTObjects Parameter Tester")
-        self.geometry("1760x1320")
-        self.minsize(1400, 950)
+        self._configure_window_size()
         self.manifest = manifest
         self.mtobjects_root = find_mtobjects_root(mtobjects_root)
         self.all_rows = display.read_manifest(manifest)
@@ -729,15 +728,39 @@ class MTObjectsTester(tk.Tk):
         self.rows_by_name: dict[str, dict[str, str]] = {}
         self.data_cache: dict[str, tuple[np.ndarray, fits.Header, dict[str, float]]] = {}
         self.calculating_overlay = None
+        self.control_canvas: tk.Canvas | None = None
+        self.control_canvas_window: int | None = None
 
         self._build_controls()
         self._build_figure()
         self.refresh_pc_paths(initial=True)
 
+    def _configure_window_size(self) -> None:
+        screen_width = max(900, self.winfo_screenwidth())
+        screen_height = max(700, self.winfo_screenheight())
+        width = min(1760, max(960, screen_width - 80))
+        height = min(1320, max(680, screen_height - 120))
+        self.geometry(f"{width}x{height}")
+        self.minsize(900, 620)
+
     def _build_controls(self) -> None:
-        control = ttk.Frame(self, width=340, padding=10)
-        control.pack(side=tk.LEFT, fill=tk.Y)
-        control.pack_propagate(False)
+        control_outer = ttk.Frame(self, width=370)
+        control_outer.pack(side=tk.LEFT, fill=tk.Y)
+        control_outer.pack_propagate(False)
+
+        self.control_canvas = tk.Canvas(control_outer, width=350, highlightthickness=0)
+        control_scrollbar = ttk.Scrollbar(control_outer, orient=tk.VERTICAL, command=self.control_canvas.yview)
+        self.control_canvas.configure(yscrollcommand=control_scrollbar.set)
+        control_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.control_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        control = ttk.Frame(self.control_canvas, padding=10)
+        self.control_canvas_window = self.control_canvas.create_window((0, 0), window=control, anchor=tk.NW)
+        control.bind("<Configure>", self._update_control_scroll_region)
+        self.control_canvas.bind("<Configure>", self._fit_control_width)
+        self.bind_all("<MouseWheel>", self._scroll_controls_with_mousewheel, add="+")
+        self.bind_all("<Button-4>", self._scroll_controls_with_mousewheel, add="+")
+        self.bind_all("<Button-5>", self._scroll_controls_with_mousewheel, add="+")
 
         ttk.Label(control, text="Machine").pack(anchor=tk.W)
         pc_combo = ttk.Combobox(control, textvariable=self.pc_var, values=sorted(PC_RESEARCH_FOLDERS), state="readonly")
@@ -893,7 +916,7 @@ class MTObjectsTester(tk.Tk):
     def _build_figure(self) -> None:
         frame = ttk.Frame(self)
         frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
-        self.figure = Figure(figsize=(12.0, 15.6), dpi=100, constrained_layout=True)
+        self.figure = Figure(figsize=(11.0, 8.0), dpi=100, constrained_layout=True)
         grid = self.figure.add_gridspec(5, 2, height_ratios=[0.26, 1.0, 1.0, 1.0, 1.0])
         profile_grid = grid[1:, 1].subgridspec(3, 1)
         self.ax_parameters = self.figure.add_subplot(grid[0, :])
@@ -909,6 +932,51 @@ class MTObjectsTester(tk.Tk):
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         toolbar = NavigationToolbar2Tk(self.canvas, frame)
         toolbar.update()
+        frame.bind("<Configure>", self._resize_figure_to_panel)
+
+    def _update_control_scroll_region(self, _event: tk.Event) -> None:
+        if self.control_canvas is not None:
+            self.control_canvas.configure(scrollregion=self.control_canvas.bbox("all"))
+
+    def _fit_control_width(self, event: tk.Event) -> None:
+        if self.control_canvas is not None and self.control_canvas_window is not None:
+            self.control_canvas.itemconfigure(self.control_canvas_window, width=max(1, int(event.width)))
+
+    def _pointer_is_over_controls(self) -> bool:
+        if self.control_canvas is None:
+            return False
+        pointer_x = self.control_canvas.winfo_pointerx()
+        pointer_y = self.control_canvas.winfo_pointery()
+        left = self.control_canvas.winfo_rootx()
+        top = self.control_canvas.winfo_rooty()
+        right = left + self.control_canvas.winfo_width()
+        bottom = top + self.control_canvas.winfo_height()
+        return left <= pointer_x <= right and top <= pointer_y <= bottom
+
+    def _scroll_controls_with_mousewheel(self, event: tk.Event) -> str | None:
+        if self.control_canvas is None or not self._pointer_is_over_controls():
+            return None
+        if getattr(event, "num", None) == 4:
+            units = -3
+        elif getattr(event, "num", None) == 5:
+            units = 3
+        else:
+            delta = int(getattr(event, "delta", 0))
+            units = -1 * (delta // 120) if delta else 0
+        if units:
+            self.control_canvas.yview_scroll(units, "units")
+        return "break"
+
+    def _resize_figure_to_panel(self, event: tk.Event) -> None:
+        if not hasattr(self, "figure") or not hasattr(self, "canvas"):
+            return
+        toolbar_allowance = 44
+        width_inches = max(6.0, float(event.width) / self.figure.dpi)
+        height_inches = max(5.0, float(max(1, event.height - toolbar_allowance)) / self.figure.dpi)
+        current_width, current_height = self.figure.get_size_inches()
+        if abs(current_width - width_inches) > 0.1 or abs(current_height - height_inches) > 0.1:
+            self.figure.set_size_inches(width_inches, height_inches, forward=False)
+            self.canvas.draw_idle()
 
     def browse_mtobjects_root(self) -> None:
         initial_dir = str(self.mtobjects_root) if self.mtobjects_root else str(Path.home() / "Documents" / "Github")
