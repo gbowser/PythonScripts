@@ -717,12 +717,12 @@ class SEPTester(tk.Tk):
         frame = ttk.Frame(self)
         frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         self.figure = Figure(figsize=(13.0, 11.0), dpi=100, constrained_layout=False)
-        self.figure.subplots_adjust(left=0.025, right=0.995, top=0.990, bottom=0.030, wspace=0.08, hspace=0.26)
+        self.figure.subplots_adjust(left=0.025, right=0.995, top=0.990, bottom=0.030, wspace=0.06, hspace=0.26)
         grid = self.figure.add_gridspec(
             5,
             2,
             height_ratios=[0.12, 1.18, 1.18, 1.18, 1.18],
-            width_ratios=[1.0, 1.0],
+            width_ratios=[1.0, 1.55],
         )
         profile_grid = grid[1:, 1].subgridspec(3, 1, hspace=0.34)
         self.ax_parameters = self.figure.add_subplot(grid[0, :])
@@ -1166,13 +1166,6 @@ class SEPTester(tk.Tk):
         for ax in image_axes:
             ax.set_box_aspect(1.0)
         self.canvas.draw()
-
-        image_position = self.ax_original.get_position()
-        for profile_ax in (self.ax_original_profile, self.ax_cleaned_profile, self.ax_cleaned):
-            profile_position = profile_ax.get_position()
-            profile_ax.set_position(
-                [profile_position.x0, profile_position.y0, image_position.width, profile_position.height]
-            )
 
     def draw_parameter_box(self, params, products) -> None:
         kept = sum(1 for row in products["rows"] if row.get("kept"))
