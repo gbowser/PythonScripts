@@ -582,7 +582,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-images", type=int, default=DEFAULT_MAX_IMAGES)
     parser.add_argument("--toys-per-image", type=int, default=DEFAULT_TOYS_PER_IMAGE)
     parser.add_argument("--truth-dilation", type=int, default=1)
-    parser.add_argument("--detect-on", choices=["original", "residual"], default="original")
+    parser.add_argument(
+        "--mtobjects-detect-on",
+        "--detect-on",
+        dest="detect_on",
+        choices=["original", "residual"],
+        default="original",
+        help=(
+            "Image MTObjects uses during toy-object optimisation. "
+            "Use 'original' for the science image or 'residual' for the smooth-model residual. "
+            "The older --detect-on spelling is kept as an alias."
+        ),
+    )
     parser.add_argument("--initial-points", type=int, default=DEFAULT_INITIAL_POINTS)
     parser.add_argument("--max-iter", type=int, default=DEFAULT_MAX_ITER)
     parser.add_argument("--seed", type=int, default=DEFAULT_RANDOM_SEED)

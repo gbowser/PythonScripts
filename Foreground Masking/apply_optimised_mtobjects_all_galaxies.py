@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """Apply optimised MTObjects foreground removal to S4G galaxies.
 
-This batch runner loads an Optuna/MTObjects best-parameter JSON, applies the
-global MTObjects mask to each usable galaxy, and writes one PNG report per
-galaxy with:
+This batch runner loads an Optuna/MTObjects best-parameter JSON from either
+the Spike Gate or toy-object optimiser, applies the global MTObjects mask to
+each usable galaxy, and writes one PNG report per galaxy with:
 
 1. galaxy-centred original image,
-2. original isophotes,
-3. MTObjects processed isophotes,
-4. original bar-major profile,
-5. MTObjects processed bar-major profile.
+2. MTObjects mask,
+3. original isophotes,
+4. MTObjects processed isophotes,
+5. original bar-major profile,
+6. MTObjects processed bar-major profile.
 """
 
 from __future__ import annotations
@@ -68,11 +69,14 @@ def log(message: str) -> None:
     print(f"[{timestamp()}] {message}", flush=True)
 
 
-def latest_best_json(pc_name: str) -> Path | None:
-    root = remove_foreground_folder(pc_name) / "mtobjects spike optimisation"
-    if not root.is_dir():
-        return None
-    candidates = sorted(root.glob("*/mtobjects_spike_optimisation_best.json"), key=lambda path: path.stat().st_mtime)
+def latest_best_json(pc_name: str, source: str) -> Path | None:
+    root = remove_foreground_folder(pc_name)
+    candidates = []
+    if source in {"latest", "spike-gate"}:
+        candidates.extend((root / "mtobjects spike optimisation").glob("*/mtobjects_spike_optimisation_best.json"))
+    if source in {"latest", "toy-object"}:
+        candidates.extend((root / "mtobjects toy optimisation").glob("*/mtobjects_parameter_optimisation_best.json"))
+    candidates = sorted([path for path in candidates if path.is_file()], key=lambda path: path.stat().st_mtime)
     return candidates[-1] if candidates else None
 
 
@@ -85,6 +89,7 @@ def load_best_params(path: Path) -> dict[str, float | int | str]:
 
     defaults = {
         "detect_on": "residual",
+        "spike_gate_detect_on": "residual",
         "alpha": mto.DEFAULT_ALPHA,
         "move_factor": mto.DEFAULT_MOVE_FACTOR,
         "min_distance": mto.DEFAULT_MIN_DISTANCE,
@@ -266,10 +271,12 @@ def draw_report(
     processed_profile, _replaced = mto.fill_profile_with_log_linear_bridges(original_profile, mask_profile)
     y_limits = profile_y_limits([original_profile, processed_profile])
 
-    figure = Figure(figsize=(12.2, 14.0), dpi=100, constrained_layout=True)
+    figure = Figure(figsize=(11.2, 14.6), dpi=100, constrained_layout=False)
     FigureCanvasAgg(figure)
-    grid = figure.add_gridspec(3, 2, height_ratios=[1.12, 1.0, 0.78])
-    ax_original = figure.add_subplot(grid[0, :])
+    figure.subplots_adjust(left=0.075, right=0.965, top=0.915, bottom=0.055, wspace=0.28, hspace=0.36)
+    grid = figure.add_gridspec(3, 2, height_ratios=[1.0, 1.0, 0.78])
+    ax_original = figure.add_subplot(grid[0, 0])
+    ax_mask = figure.add_subplot(grid[0, 1])
     ax_original_isophote = figure.add_subplot(grid[1, 0])
     ax_processed_isophote = figure.add_subplot(grid[1, 1])
     ax_original_profile = figure.add_subplot(grid[2, 0])
@@ -282,11 +289,16 @@ def draw_report(
     ax_original.set_aspect("equal", adjustable="box")
     ax_original.set_xlabel("deprojected arcsec")
     ax_original.set_ylabel("deprojected arcsec")
-    kept = sum(1 for row in products["rows"] if row.get("kept"))
     masked_fraction = np.count_nonzero(mask) / mask.size
-    ax_original.set_title(
-        f"{name} galaxy-centred original | MTObjects kept {kept} segments, masked {masked_fraction:.2%}"
-    )
+    ax_original.set_title(f"{name} galaxy-centred original")
+
+    ax_mask.imshow(mask_view.astype(float), origin="lower", cmap="Reds", vmin=0.0, vmax=1.0, extent=extent, alpha=0.86)
+    draw_bar_guides(ax_mask, half_width, bar_sma)
+    draw_central_exclusion(ax_mask, central_exclusion_arcsec)
+    ax_mask.set_aspect("equal", adjustable="box")
+    ax_mask.set_xlabel("deprojected arcsec")
+    ax_mask.set_ylabel("deprojected arcsec")
+    ax_mask.set_title(f"MTObjects mask | masked {masked_fraction:.2%}")
 
     draw_isophote(
         ax_original_isophote,
@@ -334,12 +346,37 @@ def draw_report(
         y_limits=y_limits,
     )
 
+    image_axes = [ax_original, ax_mask, ax_original_isophote, ax_processed_isophote]
+    for ax in image_axes:
+        ax.set_xlim(float(x_axis[0]), float(x_axis[-1]))
+        ax.set_ylim(float(y_axis[0]), float(y_axis[-1]))
+        ax.set_box_aspect(1.0)
+
+    FigureCanvasAgg(figure).draw()
+    left_image_position = ax_original.get_position()
+    right_image_position = ax_mask.get_position()
+    left_profile_position = ax_original_profile.get_position()
+    right_profile_position = ax_processed_profile.get_position()
+    ax_original_profile.set_position(
+        [left_image_position.x0, left_profile_position.y0, left_image_position.width, left_profile_position.height]
+    )
+    ax_processed_profile.set_position(
+        [right_image_position.x0, right_profile_position.y0, right_image_position.width, right_profile_position.height]
+    )
+
+    kept = sum(1 for row in products["rows"] if row.get("kept"))
+    source_label = str(params.get("_source_label", "optimised MTObjects parameters"))
+    if len(source_label) > 58:
+        source_label = source_label[:55] + "..."
     figure.suptitle(
-        "Optimised global MTObjects foreground removal "
-        f"| detect_on={params['detect_on']} move={float(params['move_factor']):.3f} "
-        f"minarea={int(params['minarea'])} dilation={int(params['dilation_radius'])}",
-        fontsize=12,
+        f"{name} | {source_label} | detect_on={params['detect_on']} | segments={kept}/{len(products['rows'])}\n"
+        f"move_factor={float(params['move_factor']):.2f}, min_distance={float(params['min_distance']):.2f}, "
+        f"gaussian_fwhm={float(params['gaussian_fwhm']):.2f}, minarea={int(params['minarea'])}, "
+        f"dilation_radius={int(params['dilation_radius'])}, max_area={int(params['max_area'])}, "
+        f"max_elongation={float(params['max_elongation']):.2f}",
+        fontsize=9.5,
         fontweight="bold",
+        y=0.985,
     )
     return figure
 
@@ -422,7 +459,18 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         help="Alias for --best-json, useful when the best-parameter file has been copied or renamed.",
     )
+    parser.add_argument(
+        "--source",
+        choices=["latest", "spike-gate", "toy-object"],
+        default="latest",
+        help="Which optimiser family to search when --best-json is not supplied.",
+    )
     parser.add_argument("--output-dir", type=Path, default=None)
+    parser.add_argument(
+        "--run-label",
+        default=None,
+        help="Short label shown in report titles and used in the default output folder name.",
+    )
     parser.add_argument("--names", nargs="*", help="Optional explicit galaxy names. Defaults to all usable galaxies.")
     parser.add_argument("--max-images", type=int, help="Optional limit for smoke tests.")
     parser.add_argument("--dpi", type=int, default=DEFAULT_DPI)
@@ -432,18 +480,20 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    best_json = args.best_json or args.params_json or latest_best_json(args.pc)
+    best_json = args.best_json or args.params_json or latest_best_json(args.pc, args.source)
     if best_json is None:
         raise FileNotFoundError(
-            "No best-parameter JSON found. Pass --best-json path\\to\\mtobjects_spike_optimisation_best.json."
+            "No best-parameter JSON found. Pass --best-json, or use --source spike-gate/toy-object after that optimiser has a best JSON."
         )
     params = load_best_params(best_json)
+    params["_source_label"] = args.run_label or best_json.parent.name
     mtobjects_root = mto.find_mtobjects_root(args.mtobjects_root)
     if mtobjects_root is None:
         raise ModuleNotFoundError(mto.mtobjects_setup_message(args.mtobjects_root))
 
     timestamp_dir = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_dir = args.output_dir or (remove_foreground_folder(args.pc) / DEFAULT_OUTPUT_SUBDIR / timestamp_dir)
+    label_slug = mto.display.safe_filename(args.run_label or args.source)
+    output_dir = args.output_dir or (remove_foreground_folder(args.pc) / DEFAULT_OUTPUT_SUBDIR / label_slug / timestamp_dir)
     reports_dir = output_dir / "reports"
     fits_dir = output_dir / "cleaned_fits"
     reports_dir.mkdir(parents=True, exist_ok=True)

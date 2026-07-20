@@ -365,7 +365,7 @@ def build_flow_doc() -> None:
             "increases masking; direction is not shown for parameters where the effect is not simply more/less aggressive "
             "(gaussian_fwhm) or that characterise the noise model rather than detection strictness (soft_bias, gain, bg_mean, bg_variance).",
             "Output folder renamed from interactive_mtobjects_parameter_tester to interactive_mtobjects_parameter_tester_no_spike_gate.",
-            "mtobjects_parameter_optimisation.py's default_params() no longer sets the seven spike_* keys, which were always "
+            "mtobjects_toy_object_parameter_optimisation.py's default_params() no longer sets the seven spike_* keys, which were always "
             "unused there (only mtobjects_products was ever called, never spike_gated_mtobjects_products).",
         ],
     )
