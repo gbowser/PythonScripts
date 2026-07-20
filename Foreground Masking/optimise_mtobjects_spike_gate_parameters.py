@@ -78,11 +78,13 @@ class GalaxyCase:
     radii: np.ndarray
     original_profile: np.ndarray
     spike_samples: np.ndarray
+    spike_gate_detect_on: str
 
 
-def default_params(detect_on: str) -> dict[str, float | int | str]:
+def default_params(detect_on: str, spike_gate_detect_on: str) -> dict[str, float | int | str]:
     return {
         "detect_on": detect_on,
+        "spike_gate_detect_on": spike_gate_detect_on,
         "alpha": mto.DEFAULT_ALPHA,
         "move_factor": mto.DEFAULT_MOVE_FACTOR,
         "min_distance": mto.DEFAULT_MIN_DISTANCE,
@@ -106,8 +108,8 @@ def default_params(detect_on: str) -> dict[str, float | int | str]:
     }
 
 
-def optuna_trial_to_params(trial: optuna.Trial, detect_on: str) -> dict[str, float | int | str]:
-    params = default_params(detect_on)
+def optuna_trial_to_params(trial: optuna.Trial, detect_on: str, spike_gate_detect_on: str) -> dict[str, float | int | str]:
+    params = default_params(detect_on, spike_gate_detect_on)
     params["move_factor"] = trial.suggest_float("move_factor", 0.05, 0.95)
     params["min_distance"] = trial.suggest_float("min_distance", 0.0, 1.0)
     params["gaussian_fwhm"] = trial.suggest_float("gaussian_fwhm", 0.0, 5.0)
@@ -159,11 +161,21 @@ def spike_profile_for_case(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     radius_arcsec = mto.display.profile_radius_pixels(data, geometry) * geometry["pixel_scale"]
     original_view, x_axis, y_axis = mto.display.deproject_bar_aligned_cutout(data, geometry, radius_arcsec)
+    if args.spike_gate_detect_on == "residual":
+        spike_gate_image, _residual, _nonfinite = mto.prepare_detection_image(data, "residual")
+    else:
+        spike_gate_image = data
+    spike_gate_view, _spike_x_axis, _spike_y_axis = mto.display.deproject_bar_aligned_cutout(
+        spike_gate_image,
+        geometry,
+        radius_arcsec,
+    )
     half_width = 0.5 * int(args.profile_width_pixels) * geometry["pixel_scale"]
-    radii, intensity = mto.display.bar_major_axis_profile(original_view, x_axis, y_axis, half_width)
+    radii, original_intensity = mto.display.bar_major_axis_profile(original_view, x_axis, y_axis, half_width)
+    _spike_radii, spike_gate_intensity = mto.display.bar_major_axis_profile(spike_gate_view, x_axis, y_axis, half_width)
     spikes = mto.detect_profile_spikes(
         radii,
-        intensity,
+        spike_gate_intensity,
         excess_fraction=float(args.spike_excess_fraction),
         neighbour_inner_arcsec=float(args.spike_neighbour_inner_arcsec),
         neighbour_outer_arcsec=float(args.spike_neighbour_outer_arcsec),
@@ -172,7 +184,7 @@ def spike_profile_for_case(
         center_exclusion_arcsec=float(args.spike_center_exclusion_arcsec),
     )
     spikes = mto.expand_boolean_mask(spikes, int(args.spike_window_samples))
-    return radii, intensity, spikes
+    return radii, original_intensity, spikes
 
 
 def build_cases(args: argparse.Namespace) -> list[GalaxyCase]:
@@ -190,7 +202,7 @@ def build_cases(args: argparse.Namespace) -> list[GalaxyCase]:
         if spike_count == 0 and args.require_spikes:
             log(f"Skipping {name}: Spike Gate found no spike samples.")
             continue
-        cases.append(GalaxyCase(name, data, geometry, radii, profile, spikes))
+        cases.append(GalaxyCase(name, data, geometry, radii, profile, spikes, args.spike_gate_detect_on))
         log(f"Prepared {name}: {spike_count} Spike Gate samples.")
         if len(cases) >= int(args.max_images):
             break
@@ -350,6 +362,8 @@ class OptimisationRun:
             "mean_profile_change": aggregate.get("mean_profile_change", math.nan),
             "elapsed_seconds": elapsed,
             "error": error,
+            "detect_on": params["detect_on"],
+            "spike_gate_detect_on": params["spike_gate_detect_on"],
             **parameter_values,
         }
         append_csv(
@@ -367,6 +381,8 @@ class OptimisationRun:
                 "mean_profile_change",
                 "elapsed_seconds",
                 "error",
+                "detect_on",
+                "spike_gate_detect_on",
                 *OPTIMISED_PARAMETER_NAMES,
             ],
         )
@@ -412,7 +428,7 @@ class OptimisationRun:
         return objective
 
     def evaluate_trial(self, trial: optuna.Trial) -> float:
-        params = optuna_trial_to_params(trial, self.args.detect_on)
+        params = optuna_trial_to_params(trial, self.args.detect_on, self.args.spike_gate_detect_on)
         objective = self.evaluate_params(params, trial.number)
         trial.set_user_attr("best_json", str(self.best_path))
         return objective
@@ -458,7 +474,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--names", nargs="*", help="Optional explicit galaxy names. Defaults to first usable manifest images.")
     parser.add_argument("--max-images", type=int, default=DEFAULT_MAX_IMAGES)
     parser.add_argument("--require-spikes", action=argparse.BooleanOptionalAction, default=True)
-    parser.add_argument("--detect-on", choices=["original", "residual"], default="residual")
+    parser.add_argument(
+        "--mtobjects-detect-on",
+        "--detect-on",
+        dest="detect_on",
+        choices=["original", "residual"],
+        default="residual",
+        help=(
+            "Image MTObjects uses for the optimised foreground-mask pass. "
+            "The older --detect-on spelling is kept as an alias."
+        ),
+    )
+    parser.add_argument(
+        "--spike-gate-detect-on",
+        choices=["original", "residual"],
+        default="original",
+        help="Image used to find Spike Gate profile samples before optimisation.",
+    )
     parser.add_argument("--profile-width-pixels", type=int, default=mto.DEFAULT_PROFILE_WIDTH_PIXELS)
     parser.add_argument("--spike-excess-fraction", type=float, default=mto.DEFAULT_SPIKE_EXCESS_FRACTION)
     parser.add_argument("--spike-neighbour-inner-arcsec", type=float, default=mto.DEFAULT_SPIKE_NEIGHBOUR_INNER_ARCSEC)
@@ -515,10 +547,11 @@ def write_cases(path: Path, cases: list[GalaxyCase], append: bool) -> None:
             "image": case.name,
             "spike_samples": int(np.count_nonzero(case.spike_samples)),
             "profile_samples": int(case.spike_samples.size),
+            "spike_gate_detect_on": case.spike_gate_detect_on,
         }
         for case in cases
     ]
-    append_csv(path, case_rows, ["image", "spike_samples", "profile_samples"])
+    append_csv(path, case_rows, ["image", "spike_samples", "profile_samples", "spike_gate_detect_on"])
 
 
 def main() -> None:
