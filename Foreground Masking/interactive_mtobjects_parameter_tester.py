@@ -738,10 +738,10 @@ class MTObjectsTester(tk.Tk):
     def _configure_window_size(self) -> None:
         screen_width = max(900, self.winfo_screenwidth())
         screen_height = max(700, self.winfo_screenheight())
-        width = min(1760, max(960, screen_width - 80))
-        height = min(1320, max(680, screen_height - 120))
+        width = min(1280, max(1000, screen_width - 80))
+        height = min(850, max(650, screen_height - 120))
         self.geometry(f"{width}x{height}")
-        self.minsize(900, 620)
+        self.minsize(1000, 650)
 
     def _build_controls(self) -> None:
         control_outer = ttk.Frame(self, width=370)
