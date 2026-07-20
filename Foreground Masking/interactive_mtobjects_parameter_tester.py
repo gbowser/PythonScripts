@@ -796,16 +796,8 @@ class MTObjectsTester(tk.Tk):
         detect_row.columnconfigure(0, weight=1)
         detect_row.columnconfigure(1, weight=1)
 
-        mtobjects_detect_frame = ttk.Frame(detect_row)
-        mtobjects_detect_frame.grid(row=0, column=0, sticky=tk.EW, padx=(0, 4))
-        ttk.Label(mtobjects_detect_frame, text="MTObjects detects on").pack(anchor=tk.W)
-        self.detect_on_var = tk.StringVar(value="original")
-        detect_combo = ttk.Combobox(mtobjects_detect_frame, textvariable=self.detect_on_var, values=["original", "residual"], state="readonly")
-        detect_combo.pack(fill=tk.X)
-        detect_combo.bind("<<ComboboxSelected>>", lambda _event: self.mark_needs_calculation())
-
         spike_gate_detect_frame = ttk.Frame(detect_row)
-        spike_gate_detect_frame.grid(row=0, column=1, sticky=tk.EW, padx=(4, 0))
+        spike_gate_detect_frame.grid(row=0, column=0, sticky=tk.EW, padx=(0, 4))
         ttk.Label(spike_gate_detect_frame, text="Spike Gate detects on").pack(anchor=tk.W)
         self.spike_gate_detect_on_var = tk.StringVar(value="residual")
         spike_gate_detect_combo = ttk.Combobox(
@@ -816,6 +808,14 @@ class MTObjectsTester(tk.Tk):
         )
         spike_gate_detect_combo.pack(fill=tk.X)
         spike_gate_detect_combo.bind("<<ComboboxSelected>>", lambda _event: self.mark_needs_calculation())
+
+        mtobjects_detect_frame = ttk.Frame(detect_row)
+        mtobjects_detect_frame.grid(row=0, column=1, sticky=tk.EW, padx=(4, 0))
+        ttk.Label(mtobjects_detect_frame, text="MTObjects detects on").pack(anchor=tk.W)
+        self.detect_on_var = tk.StringVar(value="original")
+        detect_combo = ttk.Combobox(mtobjects_detect_frame, textvariable=self.detect_on_var, values=["original", "residual"], state="readonly")
+        detect_combo.pack(fill=tk.X)
+        detect_combo.bind("<<ComboboxSelected>>", lambda _event: self.mark_needs_calculation())
 
         ttk.Label(control, text="Parameter units").pack(anchor=tk.W)
         unit_combo = ttk.Combobox(
@@ -947,8 +947,14 @@ class MTObjectsTester(tk.Tk):
     def _build_figure(self) -> None:
         frame = ttk.Frame(self)
         frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
-        self.figure = Figure(figsize=(11.0, 8.0), dpi=100, constrained_layout=True)
-        grid = self.figure.add_gridspec(5, 2, height_ratios=[0.26, 1.0, 1.0, 1.0, 1.0])
+        self.figure = Figure(figsize=(11.0, 8.0), dpi=100, constrained_layout=False)
+        self.figure.subplots_adjust(left=0.06, right=0.985, top=0.965, bottom=0.065, wspace=0.34, hspace=0.62)
+        grid = self.figure.add_gridspec(
+            5,
+            2,
+            height_ratios=[0.30, 1.0, 1.0, 1.0, 1.0],
+            width_ratios=[1.05, 1.75],
+        )
         profile_grid = grid[1:, 1].subgridspec(3, 1)
         self.ax_parameters = self.figure.add_subplot(grid[0, :])
         self.ax_original = self.figure.add_subplot(grid[1, 0])
@@ -1435,19 +1441,18 @@ class MTObjectsTester(tk.Tk):
         raw = len(products["rows"])
         masked_fraction = np.count_nonzero(products["mask"]) / products["mask"].size
         text = (
-            "MTObjects max-tree filtering   "
             f"units={self.unit_var.get()}   "
-            f"mtobjects_detect_on={params['detect_on']}   "
-            f"spike_gate_detect_on={params['spike_gate_detect_on']}   "
-            f"alpha={float(params['alpha']):.0e}   "
-            f"move={float(params['move_factor']):.2f}   "
-            f"min_distance={float(params['min_distance']):.2g}   "
+            f"MTObjects detects on={params['detect_on']}   "
+            f"Spike Gate detects on={params['spike_gate_detect_on']}   "
+            f"alpha={float(params['alpha']):.0e}\n"
+            f"move_factor={float(params['move_factor']):.2f}   "
+            f"min_distance={float(params['min_distance']):.2f}   "
             f"minarea={int(params['minarea'])}   "
-            f"dilation={int(params['dilation_radius'])}   "
-            f"bkg={float(products['background_level']):.4g}, rms={float(products['background_rms']):.4g}   |   "
+            f"dilation_radius={int(params['dilation_radius'])}   "
+            f"bkg={float(products['background_level']):.3g}, rms={float(products['background_rms']):.3g}   |   "
             f"segments={kept}/{raw}   masked={masked_fraction:.2%}"
         )
-        self.ax_parameters.text(
+        label = self.ax_parameters.text(
             0.5,
             0.5,
             text,
@@ -1458,6 +1463,7 @@ class MTObjectsTester(tk.Tk):
             color="0.12",
             bbox={"boxstyle": "round,pad=0.45", "facecolor": "#F4F6F9", "edgecolor": "#6B7280", "linewidth": 0.8},
         )
+        label.set_in_layout(False)
 
     def draw_bar_guides(self, ax, half_width: float, bar_sma: float) -> None:
         ax.axhline(0.0, color="#1f77b4", linewidth=1.5)
