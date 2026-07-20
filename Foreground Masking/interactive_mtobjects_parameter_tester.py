@@ -112,6 +112,10 @@ FLOAT_SPIN_PARAMS = {
     "bg_mean",
     "bg_variance",
 }
+INTEGER_SPIN_PARAMS = {
+    "spike_side_offset_samples",
+    "spike_window_samples",
+}
 
 
 def load_fits(path: Path) -> tuple[np.ndarray, fits.Header]:
@@ -586,6 +590,7 @@ def spike_gated_mtobjects_products(
     mtobjects_root: Path | None,
 ) -> dict[str, object]:
     gate_params = dict(params)
+    gate_params["detect_on"] = "residual"
     gate_params["move_factor"] = float(params["spike_gate_move_factor"])
     low_threshold_products = mtobjects_products(data, gate_params, geometry, mtobjects_root)
 
@@ -786,9 +791,9 @@ class MTObjectsTester(tk.Tk):
         self.galaxy_combo.pack(fill=tk.X, pady=(0, 10))
         self.galaxy_combo.bind("<<ComboboxSelected>>", lambda _event: self.load_selected_galaxy())
 
-        ttk.Label(control, text="Detect on").pack(anchor=tk.W)
-        self.detect_on_var = tk.StringVar(value="residual")
-        detect_combo = ttk.Combobox(control, textvariable=self.detect_on_var, values=["residual", "original"], state="readonly")
+        ttk.Label(control, text="MTObjects detects on").pack(anchor=tk.W)
+        self.detect_on_var = tk.StringVar(value="original")
+        detect_combo = ttk.Combobox(control, textvariable=self.detect_on_var, values=["original", "residual"], state="readonly")
         detect_combo.pack(fill=tk.X, pady=(0, 8))
         detect_combo.bind("<<ComboboxSelected>>", lambda _event: self.mark_needs_calculation())
 
@@ -804,6 +809,7 @@ class MTObjectsTester(tk.Tk):
 
         self.vars: dict[str, tk.Variable] = {}
         self.readouts: dict[str, ttk.Label] = {}
+        self.spinboxes: dict[str, ttk.Spinbox] = {}
         self.parameter_labels: dict[str, ttk.Label] = {}
         self.parameter_label_texts: dict[str, str] = {}
 
@@ -899,9 +905,7 @@ class MTObjectsTester(tk.Tk):
             var = tk.DoubleVar(value=float(self.convert_from_pixels(key, default)))
         else:
             var = tk.IntVar(value=default)
-        spin_options = {}
-        if key in FLOAT_SPIN_PARAMS:
-            spin_options["format"] = "%.6g"
+        spin_options = {"format": self.spinbox_format_for_key(key)}
         self.vars[key] = var
         spin = ttk.Spinbox(
             frame,
@@ -912,10 +916,12 @@ class MTObjectsTester(tk.Tk):
             width=10,
             **spin_options,
         )
+        self.spinboxes[key] = spin
         spin.pack(anchor=tk.E, pady=(2, 0))
-        spin.configure(command=self.mark_needs_calculation)
-        spin.bind("<Return>", lambda _event: self.mark_needs_calculation())
-        spin.bind("<FocusOut>", lambda _event: self.mark_needs_calculation())
+        self.format_spinbox_value(key)
+        spin.configure(command=lambda k=key: self.spinbox_parameter_changed(k))
+        spin.bind("<Return>", lambda _event, k=key: self.spinbox_parameter_changed(k))
+        spin.bind("<FocusOut>", lambda _event, k=key: self.spinbox_parameter_changed(k))
 
     def _build_figure(self) -> None:
         frame = ttk.Frame(self)
@@ -1011,12 +1017,52 @@ class MTObjectsTester(tk.Tk):
         if mark:
             self.mark_needs_calculation()
 
+    def spinbox_parameter_changed(self, key: str, mark: bool = True) -> None:
+        self.format_spinbox_value(key)
+        if mark:
+            self.mark_needs_calculation()
+
+    def format_spinbox_value(self, key: str) -> None:
+        spinbox = self.spinboxes.get(key)
+        if spinbox is None:
+            return
+        raw_value = self.vars[key].get()
+        if isinstance(raw_value, str):
+            if raw_value.casefold() == "nan":
+                display_value = "NaN"
+            else:
+                try:
+                    display_value = self.format_parameter_value(key, float(raw_value))
+                except ValueError:
+                    return
+        else:
+            value = float(raw_value)
+            display_value = "NaN" if math.isnan(value) else self.format_parameter_value(key, value)
+        current = spinbox.get()
+        if current != display_value:
+            spinbox.delete(0, tk.END)
+            spinbox.insert(0, display_value)
+
     def format_parameter_value(self, key: str, value: float) -> str:
+        if math.isnan(value):
+            return "NaN"
         if key == "alpha":
-            return f"{value:.0e}"
-        if abs(value) >= 1000 or (0 < abs(value) < 0.01):
-            return f"{value:.3g}"
-        return f"{value:.2f}".rstrip("0").rstrip(".")
+            return f"{value:.2e}"
+        if self.parameter_uses_integer_display(key):
+            return f"{int(round(value))}"
+        return f"{value:.2f}"
+
+    def parameter_uses_integer_display(self, key: str) -> bool:
+        if key in INTEGER_SPIN_PARAMS:
+            return True
+        return self.display_units == "pixels" and (key in PIXEL_LINEAR_PARAMS or key in PIXEL_AREA_PARAMS)
+
+    def spinbox_format_for_key(self, key: str) -> str:
+        if key == "alpha":
+            return "%.2e"
+        if self.parameter_uses_integer_display(key):
+            return "%.0f"
+        return "%.2f"
 
     def pixel_scale_for_units(self) -> float:
         name = self.galaxy_var.get() if hasattr(self, "galaxy_var") else ""
@@ -1075,9 +1121,12 @@ class MTObjectsTester(tk.Tk):
                 continue
             pixel_value = self.convert_to_pixels(key, float(var.get()), old_units)
             var.set(self.convert_from_pixels(key, pixel_value, new_units))
-            if key in self.readouts:
-                self.readouts[key].configure(text=self.format_parameter_value(key, float(var.get())))
         self.display_units = new_units
+        for key, spinbox in self.spinboxes.items():
+            spinbox.configure(format=self.spinbox_format_for_key(key))
+            self.format_spinbox_value(key)
+        for key, readout in self.readouts.items():
+            readout.configure(text=self.format_parameter_value(key, float(self.vars[key].get())))
         self.refresh_parameter_unit_labels()
         self.mark_needs_calculation()
 
@@ -1136,7 +1185,8 @@ class MTObjectsTester(tk.Tk):
         for key, value in defaults.items():
             self.vars[key].set(self.convert_from_pixels(key, value))
             self.parameter_changed(key, mark=False)
-        self.detect_on_var.set("residual")
+            self.format_spinbox_value(key)
+        self.detect_on_var.set("original")
         self.mark_needs_calculation()
 
     def refresh_pc_paths(self, initial: bool = False) -> None:

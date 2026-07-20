@@ -1,6 +1,9 @@
 {
     "python.defaultInterpreterPath": "C:\\Users\\gordo\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
     "python.terminal.activateEnvironment": false,
+    "python.analysis.extraPaths": [
+        "C:\\Users\\gordo\\Documents\\Github\\mtobjects"
+    ],
     "workbench.colorTheme": "Light+",
     "[python]": {
         "editor.formatOnSave": true,
