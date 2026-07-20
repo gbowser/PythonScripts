@@ -590,7 +590,7 @@ def spike_gated_mtobjects_products(
     mtobjects_root: Path | None,
 ) -> dict[str, object]:
     gate_params = dict(params)
-    gate_params["detect_on"] = "residual"
+    gate_params["detect_on"] = str(params.get("spike_gate_detect_on", "residual"))
     gate_params["move_factor"] = float(params["spike_gate_move_factor"])
     low_threshold_products = mtobjects_products(data, gate_params, geometry, mtobjects_root)
 
@@ -791,11 +791,31 @@ class MTObjectsTester(tk.Tk):
         self.galaxy_combo.pack(fill=tk.X, pady=(0, 10))
         self.galaxy_combo.bind("<<ComboboxSelected>>", lambda _event: self.load_selected_galaxy())
 
-        ttk.Label(control, text="MTObjects detects on").pack(anchor=tk.W)
+        detect_row = ttk.Frame(control)
+        detect_row.pack(fill=tk.X, pady=(0, 6))
+        detect_row.columnconfigure(0, weight=1)
+        detect_row.columnconfigure(1, weight=1)
+
+        mtobjects_detect_frame = ttk.Frame(detect_row)
+        mtobjects_detect_frame.grid(row=0, column=0, sticky=tk.EW, padx=(0, 4))
+        ttk.Label(mtobjects_detect_frame, text="MTObjects detects on").pack(anchor=tk.W)
         self.detect_on_var = tk.StringVar(value="original")
-        detect_combo = ttk.Combobox(control, textvariable=self.detect_on_var, values=["original", "residual"], state="readonly")
-        detect_combo.pack(fill=tk.X, pady=(0, 8))
+        detect_combo = ttk.Combobox(mtobjects_detect_frame, textvariable=self.detect_on_var, values=["original", "residual"], state="readonly")
+        detect_combo.pack(fill=tk.X)
         detect_combo.bind("<<ComboboxSelected>>", lambda _event: self.mark_needs_calculation())
+
+        spike_gate_detect_frame = ttk.Frame(detect_row)
+        spike_gate_detect_frame.grid(row=0, column=1, sticky=tk.EW, padx=(4, 0))
+        ttk.Label(spike_gate_detect_frame, text="Spike Gate detects on").pack(anchor=tk.W)
+        self.spike_gate_detect_on_var = tk.StringVar(value="residual")
+        spike_gate_detect_combo = ttk.Combobox(
+            spike_gate_detect_frame,
+            textvariable=self.spike_gate_detect_on_var,
+            values=["original", "residual"],
+            state="readonly",
+        )
+        spike_gate_detect_combo.pack(fill=tk.X)
+        spike_gate_detect_combo.bind("<<ComboboxSelected>>", lambda _event: self.mark_needs_calculation())
 
         ttk.Label(control, text="Parameter units").pack(anchor=tk.W)
         unit_combo = ttk.Combobox(
@@ -813,8 +833,8 @@ class MTObjectsTester(tk.Tk):
         self.parameter_labels: dict[str, ttk.Label] = {}
         self.parameter_label_texts: dict[str, str] = {}
 
-        spike_frame = ttk.LabelFrame(control, text="Spike Gate", padding=8)
-        spike_frame.pack(fill=tk.X, pady=(4, 10))
+        spike_frame = ttk.LabelFrame(control, text="Spike Gate", padding=6)
+        spike_frame.pack(fill=tk.X, pady=(2, 6))
         self._scale(spike_frame, "spike_gate_move_factor", "spike_gate_move_factor (↑ = aggressive gate)", 0.0, 1.0, 0.05, SPIKE_GATE_MOVE_FACTOR)
         self._scale(spike_frame, "spike_excess_fraction", "spike_excess_fraction (↓ = aggressive)", 0.05, 1.0, 0.05, DEFAULT_SPIKE_EXCESS_FRACTION)
         self._scale(
@@ -839,8 +859,8 @@ class MTObjectsTester(tk.Tk):
         self._scale(spike_frame, "spike_side_drop_fraction", "spike_side_drop_fraction (↓ = aggressive)", 0.05, 1.5, 0.05, DEFAULT_SPIKE_SIDE_DROP_FRACTION)
         self._spin(spike_frame, "spike_window_samples", "spike_window_samples (↑ = aggressive)", 0, 10, 1, DEFAULT_SPIKE_WINDOW_SAMPLES)
 
-        mto_frame = ttk.LabelFrame(control, text="MTObjects", padding=8)
-        mto_frame.pack(fill=tk.X, pady=(0, 8))
+        mto_frame = ttk.LabelFrame(control, text="MTObjects", padding=6)
+        mto_frame.pack(fill=tk.X, pady=(0, 6))
         self._spin(mto_frame, "alpha", "Significance alpha", 1.0e-8, 1.0e-3, 1.0e-6, DEFAULT_ALPHA)
         self._spin(mto_frame, "move_factor", "move_factor (↑ = aggressive)", 0.0, 1.0, 0.05, DEFAULT_MOVE_FACTOR)
         self._spin(mto_frame, "min_distance", "min_distance (↓ = aggressive)", 0.0, 100.0, 0.5, DEFAULT_MIN_DISTANCE)
@@ -850,8 +870,8 @@ class MTObjectsTester(tk.Tk):
         self._spin(mto_frame, "bg_mean", "Background mean (NaN=estimate)", -1000.0, 1000.0, 1.0, DEFAULT_BG_MEAN)
         self._spin(mto_frame, "bg_variance", "Background variance (-1=estimate)", -1.0, 10000.0, 10.0, DEFAULT_BG_VARIANCE)
 
-        filter_frame = ttk.LabelFrame(control, text="Post-filter", padding=8)
-        filter_frame.pack(fill=tk.X, pady=(0, 8))
+        filter_frame = ttk.LabelFrame(control, text="Post-filter", padding=6)
+        filter_frame.pack(fill=tk.X, pady=(0, 6))
         self._spin(filter_frame, "minarea", "minarea [px] (↓ = aggressive)", 1, 80, 1, DEFAULT_MINAREA)
         self._spin(filter_frame, "dilation_radius", "dilation_radius [px] (↑ = aggressive)", 0, 12, 1, DEFAULT_DILATION_RADIUS)
         self._spin(filter_frame, "max_area", "max_area [px] (↑ = aggressive)", 10, 5000, 10, DEFAULT_MAX_AREA)
@@ -859,17 +879,17 @@ class MTObjectsTester(tk.Tk):
         self._scale(filter_frame, "exclude_center_pixels", "exclude_center_pixels [px] (↓ = aggressive)", 0.0, 120.0, 1.0, DEFAULT_EXCLUDE_CENTER_PIXELS)
 
         button_row = ttk.Frame(control)
-        button_row.pack(fill=tk.X, pady=(12, 4))
+        button_row.pack(fill=tk.X, pady=(8, 3))
         ttk.Button(button_row, text="Calculate", command=self.calculate_now).pack(side=tk.LEFT, fill=tk.X, expand=True)
         ttk.Button(button_row, text="Reset", command=self.reset_parameters).pack(side=tk.LEFT, fill=tk.X, expand=True)
         ttk.Button(control, text="Open PNG Folder", command=self.open_output_folder).pack(fill=tk.X, pady=(0, 4))
 
         self.status = tk.StringVar(value="")
-        ttk.Label(control, textvariable=self.status, wraplength=310, justify=tk.LEFT).pack(fill=tk.X, pady=(10, 0))
+        ttk.Label(control, textvariable=self.status, wraplength=310, justify=tk.LEFT).pack(fill=tk.X, pady=(6, 0))
 
     def _scale(self, parent, key, label, minimum, maximum, resolution, default) -> None:
         frame = ttk.Frame(parent)
-        frame.pack(fill=tk.X, pady=4)
+        frame.pack(fill=tk.X, pady=2)
         label_widget = ttk.Label(frame, text=self.label_for_display(key, label), wraplength=315, justify=tk.LEFT)
         label_widget.pack(anchor=tk.W)
         self.parameter_labels[key] = label_widget
@@ -896,9 +916,10 @@ class MTObjectsTester(tk.Tk):
 
     def _spin(self, parent, key, label, minimum, maximum, increment, default) -> None:
         frame = ttk.Frame(parent)
-        frame.pack(fill=tk.X, pady=4)
-        label_widget = ttk.Label(frame, text=self.label_for_display(key, label), wraplength=315, justify=tk.LEFT)
-        label_widget.pack(anchor=tk.W)
+        frame.pack(fill=tk.X, pady=2)
+        frame.columnconfigure(0, weight=1)
+        label_widget = ttk.Label(frame, text=self.label_for_display(key, label), wraplength=210, justify=tk.LEFT)
+        label_widget.grid(row=0, column=0, sticky=tk.NW, padx=(0, 6))
         self.parameter_labels[key] = label_widget
         self.parameter_label_texts[key] = label
         if key in PIXEL_LINEAR_PARAMS or key in PIXEL_AREA_PARAMS or key in FLOAT_SPIN_PARAMS:
@@ -917,7 +938,7 @@ class MTObjectsTester(tk.Tk):
             **spin_options,
         )
         self.spinboxes[key] = spin
-        spin.pack(anchor=tk.E, pady=(2, 0))
+        spin.grid(row=0, column=1, sticky=tk.NE)
         self.format_spinbox_value(key)
         spin.configure(command=lambda k=key: self.spinbox_parameter_changed(k))
         spin.bind("<Return>", lambda _event, k=key: self.spinbox_parameter_changed(k))
@@ -1133,6 +1154,7 @@ class MTObjectsTester(tk.Tk):
     def current_params(self) -> dict[str, float | int | str]:
         return {
             "detect_on": self.detect_on_var.get(),
+            "spike_gate_detect_on": self.spike_gate_detect_on_var.get(),
             "alpha": float(self.vars["alpha"].get()),
             "move_factor": float(self.vars["move_factor"].get()),
             "min_distance": float(self.vars["min_distance"].get()),
@@ -1187,6 +1209,7 @@ class MTObjectsTester(tk.Tk):
             self.parameter_changed(key, mark=False)
             self.format_spinbox_value(key)
         self.detect_on_var.set("original")
+        self.spike_gate_detect_on_var.set("residual")
         self.mark_needs_calculation()
 
     def refresh_pc_paths(self, initial: bool = False) -> None:
@@ -1414,7 +1437,8 @@ class MTObjectsTester(tk.Tk):
         text = (
             "MTObjects max-tree filtering   "
             f"units={self.unit_var.get()}   "
-            f"detect_on={params['detect_on']}   "
+            f"mtobjects_detect_on={params['detect_on']}   "
+            f"spike_gate_detect_on={params['spike_gate_detect_on']}   "
             f"alpha={float(params['alpha']):.0e}   "
             f"move={float(params['move_factor']):.2f}   "
             f"min_distance={float(params['min_distance']):.2g}   "
