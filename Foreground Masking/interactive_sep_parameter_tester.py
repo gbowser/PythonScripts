@@ -40,7 +40,7 @@ from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_f
 
 
 DEFAULT_MANIFEST = display.DEFAULT_MANIFEST
-DEFAULT_PC = "Laptop"
+DEFAULT_PC = "Desktop"
 DEFAULT_GALAXY = "ESO120-012"
 DEFAULT_DETECT_THRESH = 3.0
 DEFAULT_MINAREA = 5
@@ -67,6 +67,12 @@ PIXEL_LINEAR_PARAMS = {
 PIXEL_AREA_PARAMS = {
     "minarea",
     "max_area",
+}
+FLOAT_SPIN_PARAMS = {
+    "detect_thresh",
+}
+INTEGER_SPIN_PARAMS = {
+    "deblend_nthresh",
 }
 
 
@@ -331,8 +337,7 @@ class SEPTester(tk.Tk):
     def __init__(self, manifest: Path, pc_name: str):
         super().__init__()
         self.title("SEP Parameter Tester")
-        self.geometry("1760x1320")
-        self.minsize(1400, 950)
+        self._configure_window_size()
         self.manifest = manifest
         self.all_rows = display.read_manifest(manifest)
         self.pc_var = tk.StringVar(value=pc_name)
@@ -343,14 +348,43 @@ class SEPTester(tk.Tk):
         self.rows_by_name: dict[str, dict[str, str]] = {}
         self.data_cache: dict[str, tuple[np.ndarray, fits.Header, dict[str, float]]] = {}
         self.calculating_overlay = None
+        self.control_canvas: tk.Canvas | None = None
+        self.control_canvas_window: int | None = None
 
         self._build_controls()
         self._build_figure()
         self.refresh_pc_paths(initial=True)
 
+    def _configure_window_size(self) -> None:
+        screen_width = max(900, self.winfo_screenwidth())
+        screen_height = max(700, self.winfo_screenheight())
+        width = min(2100, max(1100, int(screen_width * 0.96)))
+        height = min(1600, max(760, int(screen_height * 0.94)))
+        x_pos = max(0, min(40, (screen_width - width) // 2))
+        y_pos = max(0, min(40, (screen_height - height) // 2))
+        self.geometry(f"{width}x{height}+{x_pos}+{y_pos}")
+        self.minsize(900, 620)
+        self.maxsize(screen_width * 2, screen_height * 2)
+        self.resizable(True, True)
+
     def _build_controls(self) -> None:
-        control = ttk.Frame(self, padding=10)
-        control.pack(side=tk.LEFT, fill=tk.Y)
+        control_outer = ttk.Frame(self, width=305)
+        control_outer.pack(side=tk.LEFT, fill=tk.Y)
+        control_outer.pack_propagate(False)
+
+        self.control_canvas = tk.Canvas(control_outer, width=285, highlightthickness=0)
+        control_scrollbar = ttk.Scrollbar(control_outer, orient=tk.VERTICAL, command=self.control_canvas.yview)
+        self.control_canvas.configure(yscrollcommand=control_scrollbar.set)
+        control_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.control_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        control = ttk.Frame(self.control_canvas, padding=10)
+        self.control_canvas_window = self.control_canvas.create_window((0, 0), window=control, anchor=tk.NW)
+        control.bind("<Configure>", self._update_control_scroll_region)
+        self.control_canvas.bind("<Configure>", self._fit_control_width)
+        self.bind_all("<MouseWheel>", self._scroll_controls_with_mousewheel, add="+")
+        self.bind_all("<Button-4>", self._scroll_controls_with_mousewheel, add="+")
+        self.bind_all("<Button-5>", self._scroll_controls_with_mousewheel, add="+")
 
         ttk.Label(control, text="Machine").pack(anchor=tk.W)
         pc_combo = ttk.Combobox(control, textvariable=self.pc_var, values=sorted(PC_RESEARCH_FOLDERS), state="readonly")
@@ -363,9 +397,9 @@ class SEPTester(tk.Tk):
         self.galaxy_combo.pack(fill=tk.X, pady=(0, 10))
         self.galaxy_combo.bind("<<ComboboxSelected>>", lambda _event: self.load_selected_galaxy())
 
-        ttk.Label(control, text="Detect on").pack(anchor=tk.W)
-        self.detect_on_var = tk.StringVar(value="residual")
-        detect_combo = ttk.Combobox(control, textvariable=self.detect_on_var, values=["residual", "original"], state="readonly")
+        ttk.Label(control, text="SEP detects on").pack(anchor=tk.W)
+        self.detect_on_var = tk.StringVar(value="original")
+        detect_combo = ttk.Combobox(control, textvariable=self.detect_on_var, values=["original", "residual"], state="readonly")
         detect_combo.pack(fill=tk.X, pady=(0, 8))
         detect_combo.bind("<<ComboboxSelected>>", lambda _event: self.mark_needs_calculation())
 
@@ -381,32 +415,35 @@ class SEPTester(tk.Tk):
 
         self.vars: dict[str, tk.Variable] = {}
         self.readouts: dict[str, ttk.Label] = {}
+        self.spinboxes: dict[str, ttk.Spinbox] = {}
         self.parameter_labels: dict[str, ttk.Label] = {}
         self.parameter_label_texts: dict[str, str] = {}
-        self._scale(control, "detect_thresh", "Detection threshold", 0.5, 10.0, 0.1, DEFAULT_DETECT_THRESH)
-        self._spin(control, "minarea", "Minimum area [px]", 1, 80, 1, DEFAULT_MINAREA)
-        self._spin(control, "deblend_nthresh", "Deblend thresholds", 8, 64, 1, DEFAULT_DEBLEND_NTHRESH)
-        self._scale(control, "deblend_cont", "Deblend contrast", 0.0001, 0.1, 0.0005, DEFAULT_DEBLEND_CONT)
-        self._spin(control, "back_size", "Background box [px]", 16, 256, 8, DEFAULT_BACK_SIZE)
-        self._spin(control, "filter_size", "Filter size [px]", 1, 9, 2, DEFAULT_FILTER_SIZE)
-        self._spin(control, "dilation_radius", "Mask dilation [px]", 0, 12, 1, DEFAULT_DILATION_RADIUS)
-        self._spin(control, "max_area", "Max segment area [px]", 10, 5000, 10, DEFAULT_MAX_AREA)
-        self._scale(control, "max_elongation", "Max elongation", 1.0, 20.0, 0.25, DEFAULT_MAX_ELONGATION)
-        self._scale(control, "exclude_center_pixels", "Central exclusion [px]", 0.0, 120.0, 1.0, DEFAULT_EXCLUDE_CENTER_PIXELS)
+        sep_frame = ttk.LabelFrame(control, text="SEP", padding=6)
+        sep_frame.pack(fill=tk.X, pady=(2, 6))
+        self._spin(sep_frame, "detect_thresh", "detect_thresh (↓ = aggressive)", 0.5, 10.0, 0.1, DEFAULT_DETECT_THRESH)
+        self._spin(sep_frame, "minarea", "minarea [px] (↓ = aggressive)", 1, 80, 1, DEFAULT_MINAREA)
+        self._spin(sep_frame, "deblend_nthresh", "deblend_nthresh", 8, 64, 1, DEFAULT_DEBLEND_NTHRESH)
+        self._scale(sep_frame, "deblend_cont", "deblend_cont (↓ = aggressive split)", 0.0001, 0.1, 0.0005, DEFAULT_DEBLEND_CONT)
+        self._spin(sep_frame, "back_size", "back_size [px]", 16, 256, 8, DEFAULT_BACK_SIZE)
+        self._spin(sep_frame, "filter_size", "filter_size [px] (↑ = smoother/broader)", 1, 9, 2, DEFAULT_FILTER_SIZE)
+        self._spin(sep_frame, "dilation_radius", "dilation_radius [px] (↑ = aggressive)", 0, 12, 1, DEFAULT_DILATION_RADIUS)
+        self._spin(sep_frame, "max_area", "max_area [px] (↑ = aggressive)", 10, 5000, 10, DEFAULT_MAX_AREA)
+        self._scale(sep_frame, "max_elongation", "max_elongation (↑ = aggressive)", 1.0, 20.0, 0.25, DEFAULT_MAX_ELONGATION)
+        self._scale(sep_frame, "exclude_center_pixels", "exclude_center_pixels [px] (↓ = aggressive)", 0.0, 120.0, 1.0, DEFAULT_EXCLUDE_CENTER_PIXELS)
 
         button_row = ttk.Frame(control)
-        button_row.pack(fill=tk.X, pady=(12, 4))
+        button_row.pack(fill=tk.X, pady=(8, 3))
         ttk.Button(button_row, text="Calculate", command=self.calculate_now).pack(side=tk.LEFT, fill=tk.X, expand=True)
         ttk.Button(button_row, text="Reset", command=self.reset_parameters).pack(side=tk.LEFT, fill=tk.X, expand=True)
         ttk.Button(control, text="Open PNG Folder", command=self.open_output_folder).pack(fill=tk.X, pady=(0, 4))
 
         self.status = tk.StringVar(value="")
-        ttk.Label(control, textvariable=self.status, wraplength=310, justify=tk.LEFT).pack(fill=tk.X, pady=(10, 0))
+        ttk.Label(control, textvariable=self.status, wraplength=250, justify=tk.LEFT).pack(fill=tk.X, pady=(6, 0))
 
     def _scale(self, parent, key, label, minimum, maximum, resolution, default) -> None:
         frame = ttk.Frame(parent)
-        frame.pack(fill=tk.X, pady=4)
-        label_widget = ttk.Label(frame, text=self.label_for_display(key, label))
+        frame.pack(fill=tk.X, pady=2)
+        label_widget = ttk.Label(frame, text=self.label_for_display(key, label), wraplength=250, justify=tk.LEFT)
         label_widget.pack(anchor=tk.W)
         self.parameter_labels[key] = label_widget
         self.parameter_label_texts[key] = label
@@ -432,15 +469,17 @@ class SEPTester(tk.Tk):
 
     def _spin(self, parent, key, label, minimum, maximum, increment, default) -> None:
         frame = ttk.Frame(parent)
-        frame.pack(fill=tk.X, pady=4)
-        label_widget = ttk.Label(frame, text=self.label_for_display(key, label))
-        label_widget.pack(side=tk.LEFT)
+        frame.pack(fill=tk.X, pady=2)
+        frame.columnconfigure(0, weight=1)
+        label_widget = ttk.Label(frame, text=self.label_for_display(key, label), wraplength=145, justify=tk.LEFT)
+        label_widget.grid(row=0, column=0, sticky=tk.NW, padx=(0, 6))
         self.parameter_labels[key] = label_widget
         self.parameter_label_texts[key] = label
-        if key in PIXEL_LINEAR_PARAMS or key in PIXEL_AREA_PARAMS:
+        if key in PIXEL_LINEAR_PARAMS or key in PIXEL_AREA_PARAMS or key in FLOAT_SPIN_PARAMS:
             var = tk.DoubleVar(value=float(self.convert_from_pixels(key, default)))
         else:
             var = tk.IntVar(value=default)
+        spin_options = {"format": self.spinbox_format_for_key(key)}
         self.vars[key] = var
         spin = ttk.Spinbox(
             frame,
@@ -449,17 +488,26 @@ class SEPTester(tk.Tk):
             to=self.convert_from_pixels(key, maximum),
             increment=self.convert_from_pixels(key, increment),
             width=10,
+            **spin_options,
         )
-        spin.pack(side=tk.RIGHT)
-        spin.configure(command=self.mark_needs_calculation)
-        spin.bind("<Return>", lambda _event: self.mark_needs_calculation())
-        spin.bind("<FocusOut>", lambda _event: self.mark_needs_calculation())
+        self.spinboxes[key] = spin
+        spin.grid(row=0, column=1, sticky=tk.NE)
+        self.format_spinbox_value(key)
+        spin.configure(command=lambda k=key: self.spinbox_parameter_changed(k))
+        spin.bind("<Return>", lambda _event, k=key: self.spinbox_parameter_changed(k))
+        spin.bind("<FocusOut>", lambda _event, k=key: self.spinbox_parameter_changed(k))
 
     def _build_figure(self) -> None:
         frame = ttk.Frame(self)
         frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
-        self.figure = Figure(figsize=(12.0, 15.6), dpi=100, constrained_layout=True)
-        grid = self.figure.add_gridspec(5, 2, height_ratios=[0.26, 1.0, 1.0, 1.0, 0.72])
+        self.figure = Figure(figsize=(13.0, 11.0), dpi=100, constrained_layout=False)
+        self.figure.subplots_adjust(left=0.025, right=0.995, top=0.990, bottom=0.030, wspace=0.08, hspace=0.26)
+        grid = self.figure.add_gridspec(
+            5,
+            2,
+            height_ratios=[0.12, 1.18, 1.18, 1.18, 1.00],
+            width_ratios=[1.0, 1.0],
+        )
         self.ax_parameters = self.figure.add_subplot(grid[0, :])
         self.ax_original = self.figure.add_subplot(grid[1, 0])
         self.ax_cleaned = self.figure.add_subplot(grid[1, 1])
@@ -474,12 +522,87 @@ class SEPTester(tk.Tk):
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         toolbar = NavigationToolbar2Tk(self.canvas, frame)
         toolbar.update()
+        frame.bind("<Configure>", self._resize_figure_to_panel)
+
+    def _update_control_scroll_region(self, _event: tk.Event) -> None:
+        if self.control_canvas is not None:
+            self.control_canvas.configure(scrollregion=self.control_canvas.bbox("all"))
+
+    def _fit_control_width(self, event: tk.Event) -> None:
+        if self.control_canvas is not None and self.control_canvas_window is not None:
+            self.control_canvas.itemconfigure(self.control_canvas_window, width=max(1, int(event.width)))
+
+    def _pointer_is_over_controls(self) -> bool:
+        if self.control_canvas is None:
+            return False
+        pointer_x = self.control_canvas.winfo_pointerx()
+        pointer_y = self.control_canvas.winfo_pointery()
+        left = self.control_canvas.winfo_rootx()
+        top = self.control_canvas.winfo_rooty()
+        right = left + self.control_canvas.winfo_width()
+        bottom = top + self.control_canvas.winfo_height()
+        return left <= pointer_x <= right and top <= pointer_y <= bottom
+
+    def _scroll_controls_with_mousewheel(self, event: tk.Event) -> str | None:
+        if self.control_canvas is None or not self._pointer_is_over_controls():
+            return None
+        if getattr(event, "num", None) == 4:
+            units = -3
+        elif getattr(event, "num", None) == 5:
+            units = 3
+        else:
+            delta = int(getattr(event, "delta", 0))
+            units = -1 * (delta // 120) if delta else 0
+        if units:
+            self.control_canvas.yview_scroll(units, "units")
+        return "break"
+
+    def _resize_figure_to_panel(self, event: tk.Event) -> None:
+        if not hasattr(self, "figure") or not hasattr(self, "canvas"):
+            return
+        toolbar_allowance = 44
+        width_inches = max(6.0, float(event.width) / self.figure.dpi)
+        height_inches = max(5.0, float(max(1, event.height - toolbar_allowance)) / self.figure.dpi)
+        current_width, current_height = self.figure.get_size_inches()
+        if abs(current_width - width_inches) > 0.1 or abs(current_height - height_inches) > 0.1:
+            self.figure.set_size_inches(width_inches, height_inches, forward=False)
+            self.canvas.draw_idle()
 
     def parameter_changed(self, key: str, mark: bool = True) -> None:
         if key in self.readouts:
-            self.readouts[key].configure(text=f"{float(self.vars[key].get()):.4g}")
+            self.readouts[key].configure(text=self.format_parameter_value(key, float(self.vars[key].get())))
         if mark:
             self.mark_needs_calculation()
+
+    def spinbox_parameter_changed(self, key: str, mark: bool = True) -> None:
+        self.format_spinbox_value(key)
+        if mark:
+            self.mark_needs_calculation()
+
+    def format_spinbox_value(self, key: str) -> None:
+        spinbox = self.spinboxes.get(key)
+        if spinbox is None:
+            return
+        value = float(self.vars[key].get())
+        display_value = self.format_parameter_value(key, value)
+        if spinbox.get() != display_value:
+            spinbox.delete(0, tk.END)
+            spinbox.insert(0, display_value)
+
+    def format_parameter_value(self, key: str, value: float) -> str:
+        if self.parameter_uses_integer_display(key):
+            return f"{int(round(value))}"
+        return f"{value:.2f}"
+
+    def parameter_uses_integer_display(self, key: str) -> bool:
+        if key in INTEGER_SPIN_PARAMS:
+            return True
+        return self.display_units == "pixels" and (key in PIXEL_LINEAR_PARAMS or key in PIXEL_AREA_PARAMS)
+
+    def spinbox_format_for_key(self, key: str) -> str:
+        if self.parameter_uses_integer_display(key):
+            return "%.0f"
+        return "%.2f"
 
     def pixel_scale_for_units(self) -> float:
         name = self.galaxy_var.get() if hasattr(self, "galaxy_var") else ""
@@ -538,9 +661,12 @@ class SEPTester(tk.Tk):
                 continue
             pixel_value = self.convert_to_pixels(key, float(var.get()), old_units)
             var.set(self.convert_from_pixels(key, pixel_value, new_units))
-            if key in self.readouts:
-                self.readouts[key].configure(text=f"{float(var.get()):.4g}")
         self.display_units = new_units
+        for key, spinbox in self.spinboxes.items():
+            spinbox.configure(format=self.spinbox_format_for_key(key))
+            self.format_spinbox_value(key)
+        for key, readout in self.readouts.items():
+            readout.configure(text=self.format_parameter_value(key, float(self.vars[key].get())))
         self.refresh_parameter_unit_labels()
         self.mark_needs_calculation()
 
@@ -579,7 +705,8 @@ class SEPTester(tk.Tk):
         for key, value in defaults.items():
             self.vars[key].set(self.convert_from_pixels(key, value))
             self.parameter_changed(key, mark=False)
-        self.detect_on_var.set("residual")
+            self.format_spinbox_value(key)
+        self.detect_on_var.set("original")
         self.mark_needs_calculation()
 
     def refresh_pc_paths(self, initial: bool = False) -> None:
@@ -701,30 +828,31 @@ class SEPTester(tk.Tk):
         self.ax_parameters.set_axis_off()
         self.draw_parameter_box(params, products)
         for ax in axes[1:]:
-            ax.set_xlabel("bar-aligned arcsec")
-            ax.set_ylabel("deprojected arcsec")
+            ax.set_xlabel("bar-aligned arcsec", fontsize=8, labelpad=1)
+            ax.set_ylabel("deprojected arcsec", fontsize=8, labelpad=1)
+            ax.tick_params(labelsize=8, pad=1)
 
         vmin, vmax = display.robust_limits(original_view)
         self.ax_original.imshow(original_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
         self.draw_bar_guides(self.ax_original, half_width, bar_sma)
         self.draw_central_exclusion(self.ax_original, central_exclusion_arcsec)
-        self.ax_original.set_title(f"{name} centered original")
+        self.ax_original.set_title(f"{name} centered original", fontsize=10, pad=2)
         self.ax_cleaned.imshow(cleaned_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
         self.draw_bar_guides(self.ax_cleaned, half_width, bar_sma)
         self.draw_central_exclusion(self.ax_cleaned, central_exclusion_arcsec)
-        self.ax_cleaned.set_title("SEP masked preview")
+        self.ax_cleaned.set_title("SEP masked preview", fontsize=10, pad=2)
 
         rvmin, rvmax = display.robust_limits(residual_view, 1.0, 99.0)
         limit = max(abs(rvmin), abs(rvmax))
         self.ax_residual.imshow(residual_view, origin="lower", cmap="coolwarm", vmin=-limit, vmax=limit, extent=extent)
         self.draw_bar_guides(self.ax_residual, half_width, bar_sma)
         self.draw_central_exclusion(self.ax_residual, central_exclusion_arcsec)
-        self.ax_residual.set_title("Residual detection image")
+        self.ax_residual.set_title("Residual detection image", fontsize=10, pad=2)
         self.ax_mask.imshow(original_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
         self.ax_mask.imshow(np.ma.masked_where(~mask_view, mask_view), origin="lower", cmap="autumn", alpha=0.55, extent=extent)
         self.draw_bar_guides(self.ax_mask, half_width, bar_sma)
         self.draw_central_exclusion(self.ax_mask, central_exclusion_arcsec)
-        self.ax_mask.set_title(f"Mask | thresh={float(params['detect_thresh']):.1f}, area={int(params['minarea'])}")
+        self.ax_mask.set_title(f"Mask | thresh={float(params['detect_thresh']):.1f}, area={int(params['minarea'])}", fontsize=10, pad=2)
 
         self.draw_isophote(
             self.ax_original_isophote,
@@ -769,24 +897,48 @@ class SEPTester(tk.Tk):
             "SEP processed bar-major profile",
             mask_profile=mask_profile,
         )
+        self.match_profile_axes_to_image_columns()
         self.canvas.draw_idle()
+
+    def match_profile_axes_to_image_columns(self) -> None:
+        image_axes = [
+            self.ax_original,
+            self.ax_cleaned,
+            self.ax_residual,
+            self.ax_mask,
+            self.ax_original_isophote,
+            self.ax_cleaned_isophote,
+        ]
+        for ax in image_axes:
+            ax.set_box_aspect(1.0)
+        self.canvas.draw()
+
+        left_image_position = self.ax_original.get_position()
+        right_image_position = self.ax_cleaned.get_position()
+        left_profile_position = self.ax_original_profile.get_position()
+        right_profile_position = self.ax_cleaned_profile.get_position()
+        self.ax_original_profile.set_position(
+            [left_image_position.x0, left_profile_position.y0, left_image_position.width, left_profile_position.height]
+        )
+        self.ax_cleaned_profile.set_position(
+            [right_image_position.x0, right_profile_position.y0, right_image_position.width, right_profile_position.height]
+        )
 
     def draw_parameter_box(self, params, products) -> None:
         kept = sum(1 for row in products["rows"] if row.get("kept"))
         raw = len(products["rows"])
         masked_fraction = np.count_nonzero(products["mask"]) / products["mask"].size
         text = (
-            "SEP foreground detection   "
             f"units={self.unit_var.get()}   "
-            f"detect_on={params['detect_on']}   "
-            f"thresh={float(params['detect_thresh']):.1f}   "
+            f"SEP detects on={params['detect_on']}   "
+            f"detect_thresh={float(params['detect_thresh']):.2f}\n"
             f"minarea={int(params['minarea'])}   "
             f"deblend={int(params['deblend_nthresh'])}/{float(params['deblend_cont']):.4f}   "
-            f"dilation={int(params['dilation_radius'])}   "
-            f"bkg={float(products['background_level']):.4g}, rms={float(products['background_rms']):.4g}   |   "
+            f"dilation_radius={int(params['dilation_radius'])}   "
+            f"bkg={float(products['background_level']):.3g}, rms={float(products['background_rms']):.3g}   |   "
             f"segments={kept}/{raw}   masked={masked_fraction:.2%}"
         )
-        self.ax_parameters.text(
+        label = self.ax_parameters.text(
             0.5,
             0.5,
             text,
@@ -797,6 +949,7 @@ class SEPTester(tk.Tk):
             color="0.12",
             bbox={"boxstyle": "round,pad=0.45", "facecolor": "#F4F6F9", "edgecolor": "#6B7280", "linewidth": 0.8},
         )
+        label.set_in_layout(False)
 
     def draw_bar_guides(self, ax, half_width: float, bar_sma: float) -> None:
         ax.axhline(0.0, color="#1f77b4", linewidth=1.5)
@@ -825,7 +978,7 @@ class SEPTester(tk.Tk):
         self.draw_bar_guides(ax, half_width, bar_sma)
         self.draw_central_exclusion(ax, central_exclusion_arcsec)
         ax.set_aspect("equal", adjustable="box")
-        ax.set_title(title)
+        ax.set_title(title, fontsize=10, pad=2)
 
     def draw_profile(
         self,
@@ -887,9 +1040,10 @@ class SEPTester(tk.Tk):
         ax.axvline(0.0, color="0.6", linewidth=0.7)
         ax.set_xlim(float(x_axis[0]), float(x_axis[-1]))
         ax.set_ylim(ymin, ymax)
-        ax.set_xlabel("deprojected bar-major radius [arcsec]")
-        ax.set_ylabel("intensity")
-        ax.set_title(title)
+        ax.set_xlabel("deprojected bar-major radius [arcsec]", fontsize=8, labelpad=1)
+        ax.set_ylabel("intensity", fontsize=8, labelpad=1)
+        ax.tick_params(labelsize=8, pad=1)
+        ax.set_title(title, fontsize=10, pad=2)
         ax.grid(True, which="both", alpha=0.2)
 
     def _show_calculating_overlay(self) -> None:
