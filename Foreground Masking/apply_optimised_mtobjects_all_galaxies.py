@@ -48,6 +48,7 @@ from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa:
 
 DEFAULT_OUTPUT_SUBDIR = "mtobjects optimised foreground removal"
 DEFAULT_DPI = 180
+DEFAULT_SOURCE = "spike-gate"
 
 
 def timestamp() -> str:
@@ -88,7 +89,7 @@ def load_best_params(path: Path) -> dict[str, float | int | str]:
         raise ValueError(f"Best-parameter JSON does not contain a parameter dictionary: {path}")
 
     defaults = {
-        "detect_on": "residual",
+        "detect_on": "original",
         "spike_gate_detect_on": "residual",
         "alpha": mto.DEFAULT_ALPHA,
         "move_factor": mto.DEFAULT_MOVE_FACTOR,
@@ -452,7 +453,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--best-json",
         type=Path,
-        help="Path to mtobjects_spike_optimisation_best.json. Defaults to latest best JSON in the optimisation output folder.",
+        help="Path to mtobjects_spike_optimisation_best.json. Defaults to the latest Spike Gate best JSON.",
     )
     parser.add_argument(
         "--params-json",
@@ -462,7 +463,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--source",
         choices=["latest", "spike-gate", "toy-object"],
-        default="latest",
+        default=DEFAULT_SOURCE,
         help="Which optimiser family to search when --best-json is not supplied.",
     )
     parser.add_argument("--output-dir", type=Path, default=None)

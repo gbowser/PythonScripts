@@ -42,15 +42,15 @@ from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_f
 DEFAULT_MANIFEST = display.DEFAULT_MANIFEST
 DEFAULT_PC = "Desktop"
 DEFAULT_GALAXY = "ESO120-012"
-DEFAULT_DETECT_THRESH = 3.0
-DEFAULT_MINAREA = 5
-DEFAULT_DEBLEND_NTHRESH = 32
-DEFAULT_DEBLEND_CONT = 0.005
-DEFAULT_BACK_SIZE = 64
-DEFAULT_FILTER_SIZE = 3
-DEFAULT_DILATION_RADIUS = 2
-DEFAULT_MAX_AREA = 230
-DEFAULT_MAX_ELONGATION = 6.0
+DEFAULT_DETECT_THRESH = 0.8360157721831125
+DEFAULT_MINAREA = 33
+DEFAULT_DEBLEND_NTHRESH = 28
+DEFAULT_DEBLEND_CONT = 0.09095153819167372
+DEFAULT_BACK_SIZE = 24
+DEFAULT_FILTER_SIZE = 9
+DEFAULT_DILATION_RADIUS = 0
+DEFAULT_MAX_AREA = 2801
+DEFAULT_MAX_ELONGATION = 11.321888809495562
 DEFAULT_EXCLUDE_CENTER_PIXELS = 8.0
 DEFAULT_PROFILE_WIDTH_PIXELS = 3
 PROFILE_BRIDGE_MERGE_GAP_SAMPLES = 12
@@ -398,7 +398,7 @@ class SEPTester(tk.Tk):
         self.galaxy_combo.bind("<<ComboboxSelected>>", lambda _event: self.load_selected_galaxy())
 
         ttk.Label(control, text="SEP detects on").pack(anchor=tk.W)
-        self.detect_on_var = tk.StringVar(value="original")
+        self.detect_on_var = tk.StringVar(value="residual")
         detect_combo = ttk.Combobox(control, textvariable=self.detect_on_var, values=["original", "residual"], state="readonly")
         detect_combo.pack(fill=tk.X, pady=(0, 8))
         detect_combo.bind("<<ComboboxSelected>>", lambda _event: self.mark_needs_calculation())
@@ -706,7 +706,7 @@ class SEPTester(tk.Tk):
             self.vars[key].set(self.convert_from_pixels(key, value))
             self.parameter_changed(key, mark=False)
             self.format_spinbox_value(key)
-        self.detect_on_var.set("original")
+        self.detect_on_var.set("residual")
         self.mark_needs_calculation()
 
     def refresh_pc_paths(self, initial: bool = False) -> None:
