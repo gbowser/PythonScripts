@@ -242,8 +242,8 @@ def build_doc() -> None:
     doc.add_paragraph(
         "The batch optimiser is implemented in "
         "Foreground Masking/optimise_mtobjects_spike_gate_parameters.py. It reuses the MTObjects "
-        "runner, Spike Gate detector, profile extraction, and mask-profile utilities from "
-        "Foreground Masking/interactive_mtobjects_parameter_tester.py."
+        "runner, Spike Gate detector, profile extraction, and mask-profile utilities exposed through "
+        "Foreground Masking/interactive_mtobjects_spike_gate_parameter_tester.py."
     )
     add_table(
         doc,

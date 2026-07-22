@@ -378,7 +378,7 @@ def draw_products(name: str, original: np.ndarray, products: dict, params: dict,
     return figure
 
 
-def output_png_path(reports_dir: Path, name: str, params: dict[str, float | int | str]) -> Path:
+def output_png_path(report_dir: Path, name: str, params: dict[str, float | int | str]) -> Path:
     stem = (
         f"{display.safe_filename(name)}_sep_"
         f"thr{float(params['detect_thresh']):.1f}_"
@@ -386,7 +386,7 @@ def output_png_path(reports_dir: Path, name: str, params: dict[str, float | int 
         f"deb{float(params['deblend_cont']):.4f}_"
         f"dil{int(params['dilation_radius'])}"
     )
-    return reports_dir / f"{display.safe_filename(stem)}.png"
+    return report_dir / f"{display.safe_filename(stem)}.png"
 
 
 def selected_rows(args: argparse.Namespace) -> list[dict[str, str]]:
@@ -438,7 +438,7 @@ def run_one(
     row: dict[str, str],
     args: argparse.Namespace,
     params: dict[str, float | int | str],
-    reports_dir: Path,
+    report_dir: Path,
     fits_dir: Path,
 ) -> dict[str, str | int | float]:
     name = row["name"]
@@ -448,7 +448,7 @@ def run_one(
     data, header = sep_gui.load_fits(display.image_path_for_pc(row, args.pc))
     products = sep_gui.sep_products(data, params, geometry)
     figure = draw_products(name, data, products, params, geometry)
-    png_path = output_png_path(reports_dir, name, params)
+    png_path = output_png_path(report_dir, name, params)
     figure.savefig(png_path, dpi=args.dpi)
 
     cleaned_fits_path = ""
@@ -550,9 +550,9 @@ def main() -> None:
     output_dir = args.resume_output_dir or args.output_dir or (
         remove_foreground_folder(args.pc) / DEFAULT_OUTPUT_SUBDIR / f"{label_slug}_{timestamp_dir}"
     )
-    reports_dir = output_dir / "reports"
+    report_dir = output_dir
     fits_dir = output_dir / "cleaned_fits"
-    reports_dir.mkdir(parents=True, exist_ok=True)
+    report_dir.mkdir(parents=True, exist_ok=True)
     if args.save_cleaned_fits:
         fits_dir.mkdir(parents=True, exist_ok=True)
 
@@ -601,7 +601,7 @@ def main() -> None:
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
-                result = run_one(row, args, params, reports_dir, fits_dir)
+                result = run_one(row, args, params, report_dir, fits_dir)
             ok_count += 1
         except Exception as exc:  # noqa: BLE001
             failed_count += 1

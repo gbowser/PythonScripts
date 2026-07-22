@@ -31,7 +31,7 @@ for path in (SCRIPT_DIR, PROJECT_ROOT):
     if str(path) not in sys.path:
         sys.path.append(str(path))
 
-import interactive_mtobjects_parameter_tester as mto  # noqa: E402
+import mtobjects_spike_gate_processing as mto  # noqa: E402
 from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
 from optimisation_results_workbook import append_run_to_workbook  # noqa: E402
 

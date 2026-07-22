@@ -77,7 +77,7 @@ def add_intro(doc: Document) -> None:
     doc.add_heading("High-Level Overview", level=1)
     add_text(
         doc,
-        "This script creates one-page portrait PDF reports that compare S4G bar and minor-axis intensity profiles before and after spike-gated compact-source masking. "
+        "This script creates one-page portrait PNG reports that compare S4G bar and minor-axis intensity profiles before and after spike-gated compact-source masking. "
         "It was developed to remove narrow foreground-object-like spikes in bar-major-axis profiles without applying an aggressive global mask that can suppress valid galaxy light.",
     )
     add_text(
@@ -391,8 +391,8 @@ def add_code_flow(doc: Document) -> None:
             ["profile_mask_at_pa", "Sample the two-dimensional mask along a profile axis to determine which profile samples are affected."],
             ["fill_masked_profile_with_log_linear_bridges", "Fill affected profile samples with straight bridges in log-intensity space."],
             ["choose_spike_gated_detection_nsigma", "Auto-tune the residual detection threshold so all detected spike samples are covered while staying conservative."],
-            ["make_report", "Generate one portrait PDF for one galaxy."],
-            ["parse_args / main", "Parse command-line options, select galaxies, and write one output PDF per selected galaxy."],
+            ["make_report", "Generate one portrait PNG for one galaxy."],
+            ["parse_args / main", "Parse command-line options, select galaxies, and write one output PNG per selected galaxy."],
         ],
         [3200, 6160],
     )

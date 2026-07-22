@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build documentation for the interactive MTObjects parameter tester."""
+"""Build documentation for the MTObjects Spike Gate interactive tester."""
 
 from __future__ import annotations
 
@@ -14,9 +14,10 @@ from docx.shared import Inches, Pt, RGBColor
 
 
 OUT_DIR = Path(__file__).resolve().parent
-CODE_PATH = OUT_DIR.parent / "interactive_mtobjects_parameter_tester.py"
-ALGORITHM_DOC = OUT_DIR / "interactive_mtobjects_algorithm_and_parameters.docx"
-FLOW_DOC = OUT_DIR / "interactive_mtobjects_code_process_and_flow.docx"
+LAUNCHER_PATH = OUT_DIR.parent / "interactive_mtobjects_spike_gate_parameter_tester.py"
+CORE_PATH = OUT_DIR.parent / "mtobjects_spike_gate_processing.py"
+ALGORITHM_DOC = OUT_DIR / "MTObjects_Spike_Gate_Interactive_Methodology_and_Parameters.docx"
+FLOW_DOC = OUT_DIR / "MTObjects_Spike_Gate_Interactive_Program_Documentation.docx"
 
 
 def set_cell_shading(cell, fill: str) -> None:
@@ -180,12 +181,12 @@ def build_algorithm_doc() -> None:
     doc = Document()
     style_doc(
         doc,
-        "Interactive MTObjects Tester: Algorithm and Parameters",
-        "Reference guide for the MTObjects foreground-mask backend and tuning controls.",
+        "MTObjects Spike Gate Interactive Methodology and Parameters",
+        "Reference guide for the MTObjects foreground-mask backend and Spike Gate tuning controls.",
     )
     add_note(
         doc,
-        "Scope: this document describes the new MTObjects tester, not the SEP implementation. "
+        "Scope: this document describes the MTObjects Spike Gate interactive tester, not the SEP implementation. "
         "It keeps the same manifest, geometry, profile, and PNG review workflow so future comparisons are straightforward.",
     )
 
@@ -276,7 +277,8 @@ def build_algorithm_doc() -> None:
         [
             "CarolineHaigh/mtobjects README: source detection, segmentation maps, dependencies, and command-line parameters.",
             "CarolineHaigh/mtobjects source files: main.py, preprocessing.py, tree_filtering.py, maxtree.py, and postprocessing.py.",
-            f"Local implementation: {CODE_PATH.name}.",
+            f"Local launcher: {LAUNCHER_PATH.name}.",
+            f"Local implementation: {CORE_PATH.name}.",
         ],
     )
     doc.save(ALGORITHM_DOC)
@@ -298,7 +300,8 @@ def build_flow_doc() -> None:
     add_numbered(
         doc,
         [
-            "parse_args reads --manifest, --pc, and --mtobjects-root.",
+            "The labelled launcher starts the MTObjects Spike Gate tool.",
+            "parse_args in the core module reads --manifest, --pc, and --mtobjects-root.",
             "main creates MTObjectsTester with the selected manifest, machine, and MTObjects checkout path.",
             "MTObjectsTester loads the local manifest through foreground_display_helpers.",
             "The Tkinter UI exposes machine, galaxy, detection surface, units, MTObjects parameters, spike-gate controls, and post-filters.",

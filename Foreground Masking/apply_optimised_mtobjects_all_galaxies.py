@@ -42,7 +42,7 @@ for path in (SCRIPT_DIR, PROJECT_ROOT):
     if str(path) not in sys.path:
         sys.path.append(str(path))
 
-import interactive_mtobjects_parameter_tester as mto  # noqa: E402
+import mtobjects_spike_gate_processing as mto  # noqa: E402
 from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
 
 
@@ -421,7 +421,7 @@ def process_one(
     args: argparse.Namespace,
     params: dict[str, float | int | str],
     mtobjects_root: Path | None,
-    reports_dir: Path,
+    report_dir: Path,
     fits_dir: Path,
 ) -> dict[str, object]:
     name = row["name"]
@@ -431,7 +431,7 @@ def process_one(
     data, header = mto.load_fits(mto.display.image_path_for_pc(row, args.pc))
     products = mto.mtobjects_products(data, params, geometry, mtobjects_root)
 
-    report_path = reports_dir / f"{mto.display.safe_filename(name)}_mtobjects_optimised_report.png"
+    report_path = report_dir / f"{mto.display.safe_filename(name)}_mtobjects_optimised_report.png"
     figure = draw_report(name, data, products, params, geometry)
     figure.savefig(report_path, dpi=int(args.dpi))
 
@@ -517,9 +517,9 @@ def main() -> int:
     output_dir = args.resume_output_dir or args.output_dir or (
         remove_foreground_folder(args.pc) / DEFAULT_OUTPUT_SUBDIR / label_slug / timestamp_dir
     )
-    reports_dir = output_dir / "reports"
+    report_dir = output_dir
     fits_dir = output_dir / "cleaned_fits"
-    reports_dir.mkdir(parents=True, exist_ok=True)
+    report_dir.mkdir(parents=True, exist_ok=True)
     if args.save_cleaned_fits:
         fits_dir.mkdir(parents=True, exist_ok=True)
 
@@ -560,7 +560,7 @@ def main() -> int:
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
-                summary = process_one(row, args, params, mtobjects_root, reports_dir, fits_dir)
+                summary = process_one(row, args, params, mtobjects_root, report_dir, fits_dir)
             made += 1
         except Exception as exc:  # noqa: BLE001
             failed += 1

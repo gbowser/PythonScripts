@@ -27,8 +27,9 @@ from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa:
 WORKBOOK_NAME = "Foreground Masking Optimisation Results.xlsx"
 SHEET_TO_TOOL = {
     "MTObjects Spike Gate": "mtobjects_spike_gate",
-    "MTObjects Toy Object": "mtobjects",
+    "MTObjects Toy Object": "mtobjects_toy",
     "SEP Spike Gate": "sep_spike_gate",
+    "SEP Toy Object": "sep_toy",
 }
 PARAMETER_KEYS = {
     "mtobjects": {
@@ -45,6 +46,26 @@ PARAMETER_KEYS = {
         "min_distance",
         "gaussian_fwhm",
         "minarea",
+        "dilation_radius",
+        "max_area",
+        "max_elongation",
+    },
+    "mtobjects_toy": {
+        "move_factor",
+        "min_distance",
+        "gaussian_fwhm",
+        "minarea",
+        "dilation_radius",
+        "max_area",
+        "max_elongation",
+    },
+    "sep_toy": {
+        "detect_thresh",
+        "minarea",
+        "deblend_nthresh",
+        "deblend_cont",
+        "back_size",
+        "filter_size",
         "dilation_radius",
         "max_area",
         "max_elongation",
@@ -155,21 +176,30 @@ def launch_interactive(row: dict[str, Any], pc: str, manifest: Path | None, mtob
     tool = str(row["_tool"])
 
     if tool == "mtobjects_spike_gate":
-        import interactive_mtobjects_parameter_tester as module
+        import mtobjects_spike_gate_processing as module
 
         app = module.MTObjectsTester(manifest or module.DEFAULT_MANIFEST, pc, mtobjects_root)
     elif tool == "mtobjects":
-        import interactive_mtobjects_parameter_tester as module
+        import mtobjects_spike_gate_processing as module
 
         app = module.MTObjectsTester(manifest or module.DEFAULT_MANIFEST, pc, mtobjects_root)
+    elif tool == "mtobjects_toy":
+        import toy_object_interactive_core as module
+
+        app = module.ToyObjectTester("MTObjects", manifest or module.display.DEFAULT_MANIFEST, pc, None, mtobjects_root)
     elif tool == "sep_spike_gate":
         import interactive_sep_spike_gate_parameter_tester as module
 
         app = module.SEPTester(manifest or module.DEFAULT_MANIFEST, pc)
+    elif tool == "sep_toy":
+        import toy_object_interactive_core as module
+
+        app = module.ToyObjectTester("SEP", manifest or module.display.DEFAULT_MANIFEST, pc, None, None)
     else:
         raise ValueError(f"Unsupported tool type: {tool}")
 
-    apply_parameters(app, params, row)
+    if tool not in {"mtobjects_toy", "sep_toy"}:
+        apply_parameters(app, params, row)
     app.status.set(
         f"Loaded {row['_sheet']} row {row['_excel_row']} from optimisation workbook."
     )

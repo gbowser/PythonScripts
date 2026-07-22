@@ -719,7 +719,7 @@ def filter_segmentation(segmentation: np.ndarray, rows: list[dict[str, float | i
 class MTObjectsTester(tk.Tk):
     def __init__(self, manifest: Path, pc_name: str, mtobjects_root: Path | None):
         super().__init__()
-        self.title("MTObjects Parameter Tester")
+        self.title("MTObjects Spike Gate Interactive Tester")
         self._configure_window_size()
         self.manifest = manifest
         self.mtobjects_root = find_mtobjects_root(mtobjects_root)
@@ -728,7 +728,7 @@ class MTObjectsTester(tk.Tk):
         self.mtobjects_root_var = tk.StringVar(value=str(self.mtobjects_root) if self.mtobjects_root else "Not found")
         self.unit_var = tk.StringVar(value="Pixels")
         self.display_units = "pixels"
-        self.output_dir = remove_foreground_folder(pc_name) / "interactive_mtobjects_parameter_tester"
+        self.output_dir = remove_foreground_folder(pc_name) / "interactive_mtobjects_spike_gate_parameter_tester"
         self.rows: list[dict[str, str]] = []
         self.rows_by_name: dict[str, dict[str, str]] = {}
         self.data_cache: dict[str, tuple[np.ndarray, fits.Header, dict[str, float]]] = {}
@@ -1220,7 +1220,7 @@ class MTObjectsTester(tk.Tk):
 
     def refresh_pc_paths(self, initial: bool = False) -> None:
         pc_name = self.pc_var.get()
-        self.output_dir = remove_foreground_folder(pc_name) / "interactive_mtobjects_parameter_tester"
+        self.output_dir = remove_foreground_folder(pc_name) / "interactive_mtobjects_spike_gate_parameter_tester"
         self.rows = display.rows_with_images_for_pc(self.all_rows, pc_name)
         if not self.rows:
             raise RuntimeError(f"No FITS images were found for {pc_name} in {erwin_folder(pc_name) / 's4g_images_36um'}.")
