@@ -341,7 +341,7 @@ def add_interpolation(doc: Document) -> None:
 
 
 def add_report_layout(doc: Document) -> None:
-    doc.add_heading("PDF Report Layout", level=1)
+    doc.add_heading("PNG Report Layout", level=1)
     add_table(
         doc,
         ["Panel", "Contents"],
@@ -469,8 +469,8 @@ def add_outputs(doc: Document) -> None:
         ["Output", "Meaning"],
         [
             [
-                "{galaxy_name}_fg_removed_sp-gated.pdf and .png",
-                "Portrait report and PNG preview for one galaxy. The method suffix identifies the spike-gated masking run.",
+                "{galaxy_name}_fg_removed_sp-gated.png",
+                "Portrait PNG report for one galaxy. The method suffix identifies the spike-gated masking run.",
             ],
             [
                 "Default output folder",
@@ -478,7 +478,7 @@ def add_outputs(doc: Document) -> None:
             ],
             [
                 "One-galaxy default output",
-                "Foreground Masking/ESO120-012_portrait_mask_report/ESO120-012_fg_removed_sp-gated.pdf when no --names or --all selection is supplied.",
+                "Foreground Masking/ESO120-012_portrait_mask_report/png/ESO120-012_fg_removed_sp-gated.png when no --names or --all selection is supplied.",
             ],
         ],
         [2800, 6560],

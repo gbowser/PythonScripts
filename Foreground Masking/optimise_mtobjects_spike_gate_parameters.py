@@ -33,6 +33,7 @@ for path in (SCRIPT_DIR, PROJECT_ROOT):
 
 import interactive_mtobjects_parameter_tester as mto  # noqa: E402
 from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
+from optimisation_results_workbook import append_run_to_workbook  # noqa: E402
 
 
 DEFAULT_MAX_IMAGES = 20
@@ -504,6 +505,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=DEFAULT_RANDOM_SEED)
     parser.add_argument("--study-name", default=DEFAULT_STUDY_NAME)
     parser.add_argument(
+        "--results-workbook",
+        type=Path,
+        default=None,
+        help="Optional shared XLSX workbook to append this run's trial results to.",
+    )
+    parser.add_argument(
         "--progress-galaxies",
         action=argparse.BooleanOptionalAction,
         default=True,
@@ -572,6 +579,17 @@ def main() -> None:
     run = OptimisationRun(args, cases)
     run_optuna(run)
     log(f"Best result: {run.best_path}")
+    try:
+        workbook_path = append_run_to_workbook(
+            algorithm="MTObjects",
+            method="Spike Gate",
+            run_dir=args.output_dir,
+            prefix="mtobjects_spike_optimisation",
+            workbook_path=args.results_workbook,
+        )
+        log(f"Results workbook: {workbook_path}")
+    except Exception as exc:
+        log(f"Could not update results workbook: {exc}")
 
 
 if __name__ == "__main__":

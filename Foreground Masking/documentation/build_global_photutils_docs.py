@@ -215,7 +215,7 @@ def add_bar_spike_calibration_experiment(doc: Document) -> None:
             ],
             [
                 "Output reports",
-                "Writes {galaxy_name}_fg_removed_global.pdf and {galaxy_name}_fg_removed_global.png for the selected calibration/test galaxies.",
+                "Writes {galaxy_name}_fg_removed_global.png for the selected calibration/test galaxies.",
             ],
         ],
         [3000, 6360],
@@ -253,7 +253,7 @@ def add_parameters(doc: Document) -> None:
 
 
 def add_report_layout(doc: Document) -> None:
-    doc.add_heading("PDF Report Layout", level=1)
+    doc.add_heading("PNG Report Layout", level=1)
     add_table(
         doc,
         ["Panel", "Contents"],
@@ -276,7 +276,7 @@ def add_outputs(doc: Document) -> None:
         ["Output", "Meaning"],
         [
             [
-                "global_photutils_auto_tuned/{galaxy_name}_fg_removed_global.pdf and .png",
+                "global_photutils_auto_tuned/png/{galaxy_name}_fg_removed_global.png",
                 "Current all-galaxy global Photutils comparison reports. The method suffix distinguishes these from spike-gated outputs.",
             ],
             [
@@ -284,7 +284,7 @@ def add_outputs(doc: Document) -> None:
                 "Calibration CSV produced by the experimental calibration script when that script is run.",
             ],
             [
-                "{galaxy_name}_fg_removed_global.pdf and .png",
+                "{galaxy_name}_fg_removed_global.png",
                 "Calibration-script report filename used for the selected calibration/test galaxies.",
             ],
             [

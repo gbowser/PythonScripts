@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create portrait bar-spike-gated foreground-candidate profile PDFs."""
+"""Create portrait bar-spike-gated foreground-candidate profile PNGs."""
 
 from __future__ import annotations
 
@@ -7,7 +7,6 @@ import argparse
 import csv
 import importlib.metadata
 import math
-import shutil
 import sys
 from pathlib import Path
 
@@ -43,30 +42,15 @@ DEFAULT_PC = "Laptop"
 DEFAULT_OUTPUT_DIR = remove_foreground_folder(DEFAULT_PC) / "calibrated spike_rule"
 
 
-def ensure_report_output_folders(output_dir: Path) -> tuple[Path, Path]:
-    pdf_dir = output_dir / "pdf"
+def ensure_report_output_folders(output_dir: Path) -> Path:
     png_dir = output_dir / "png"
-    pdf_dir.mkdir(parents=True, exist_ok=True)
     png_dir.mkdir(parents=True, exist_ok=True)
-    for old_pdf in output_dir.glob("*.pdf"):
-        target = pdf_dir / old_pdf.name
-        if target.resolve() == old_pdf.resolve():
-            continue
-        if target.exists():
-            suffix = 1
-            while True:
-                candidate = pdf_dir / f"{old_pdf.stem}_{suffix}{old_pdf.suffix}"
-                if not candidate.exists():
-                    target = candidate
-                    break
-                suffix += 1
-        shutil.move(str(old_pdf), str(target))
-    return pdf_dir, png_dir
+    return png_dir
 
 
-def report_output_paths(output_dir: Path, filename_stem: str) -> tuple[Path, Path]:
-    pdf_dir, png_dir = ensure_report_output_folders(output_dir)
-    return pdf_dir / f"{filename_stem}.pdf", png_dir / f"{filename_stem}.png"
+def report_output_path(output_dir: Path, filename_stem: str) -> Path:
+    png_dir = ensure_report_output_folders(output_dir)
+    return png_dir / f"{filename_stem}.png"
 
 
 def foreground_removed_stem(galaxy_name: str, masking_mode: str) -> str:
@@ -840,7 +824,6 @@ def make_report(
     args: argparse.Namespace,
     row: dict[str, str],
     output: Path,
-    output_png: Path | None = None,
 ) -> Path:
     galaxy_name = row["name"]
     geometry = s4g_plot.required_geometry(row)
@@ -1300,18 +1283,14 @@ def make_report(
             cell.set_facecolor("0.92")
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    if not output.exists():
-        fig.savefig(output)
-    if output_png is not None:
-        output_png.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(output_png, dpi=200)
+    fig.savefig(output, dpi=200)
     plt.close(fig)
     return output
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Create portrait bar-spike-gated foreground-candidate comparison PDFs and PNGs."
+        description="Create portrait bar-spike-gated foreground-candidate comparison PNGs."
     )
     parser.add_argument(
         "--pc",
@@ -1396,16 +1375,15 @@ def main() -> int:
         galaxy_name = row["name"]
         default_stem = foreground_removed_stem(galaxy_name, args.masking_mode)
         stem = args.output.stem if args.output is not None and not multiple else default_stem
-        output, output_png = report_output_paths(args.output_dir, stem)
+        output = report_output_path(args.output_dir, stem)
         try:
-            written = make_report(args, row, output, output_png)
+            written = make_report(args, row, output)
         except Exception as exc:
             failed.append((galaxy_name, str(exc)))
             print(f"Failed {galaxy_name}: {exc}")
             continue
         made += 1
         print(f"Wrote {written}")
-        print(f"Wrote {output_png}")
 
     print(f"Made {made} foreground-removal reports")
     if failed:
