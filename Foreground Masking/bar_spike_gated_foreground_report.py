@@ -43,14 +43,13 @@ DEFAULT_OUTPUT_DIR = remove_foreground_folder(DEFAULT_PC) / "calibrated spike_ru
 
 
 def ensure_report_output_folders(output_dir: Path) -> Path:
-    png_dir = output_dir / "png"
-    png_dir.mkdir(parents=True, exist_ok=True)
-    return png_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+    return output_dir
 
 
 def report_output_path(output_dir: Path, filename_stem: str) -> Path:
-    png_dir = ensure_report_output_folders(output_dir)
-    return png_dir / f"{filename_stem}.png"
+    report_dir = ensure_report_output_folders(output_dir)
+    return report_dir / f"{filename_stem}.png"
 
 
 def foreground_removed_stem(galaxy_name: str, masking_mode: str) -> str:

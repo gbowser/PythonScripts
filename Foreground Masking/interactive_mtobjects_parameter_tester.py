@@ -39,7 +39,7 @@ for path in (PROJECT_ROOT, SCRIPT_DIR):
     if str(path) not in sys.path:
         sys.path.append(str(path))
 
-import interactive_galclean_parameter_tester as display  # noqa: E402
+import foreground_display_helpers as display  # noqa: E402
 from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_folder  # noqa: E402
 
 

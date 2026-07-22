@@ -300,7 +300,7 @@ def build_flow_doc() -> None:
         [
             "parse_args reads --manifest, --pc, and --mtobjects-root.",
             "main creates MTObjectsTester with the selected manifest, machine, and MTObjects checkout path.",
-            "MTObjectsTester loads the local manifest through interactive_galclean_parameter_tester helpers.",
+            "MTObjectsTester loads the local manifest through foreground_display_helpers.",
             "The Tkinter UI exposes machine, galaxy, detection surface, units, MTObjects parameters, spike-gate controls, and post-filters.",
         ],
     )

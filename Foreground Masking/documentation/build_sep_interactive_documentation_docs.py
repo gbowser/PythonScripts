@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build documentation for SEP Interactive and SEP + Spike Gate Interactive."""
+"""Build documentation for SEP + Spike Gate Interactive."""
 
 from __future__ import annotations
 
@@ -17,8 +17,6 @@ from docx.shared import Inches, Pt, RGBColor
 OUT_DIR = Path(__file__).resolve().parent
 
 DOCS = {
-    "sep_method": OUT_DIR / "SEP_Interactive_Methodology_and_Parameters.docx",
-    "sep_program": OUT_DIR / "SEP_Interactive_Program_Documentation.docx",
     "spike_method": OUT_DIR / "SEP_Spike_Gate_Interactive_Methodology_and_Parameters.docx",
     "spike_program": OUT_DIR / "SEP_Spike_Gate_Interactive_Program_Documentation.docx",
 }
@@ -240,130 +238,6 @@ def add_common_sep_method(doc: Document) -> None:
     )
 
 
-def build_sep_method_doc() -> Path:
-    doc = Document()
-    style_document(
-        doc,
-        "SEP Interactive Methodology and Parameter Guide",
-        "Methodology and parameter descriptions for interactive_sep_parameter_tester.py",
-    )
-    add_callout(
-        doc,
-        "Purpose: tune standard SEP foreground-object masking interactively while protecting real galaxy structure and the bar-major-axis profile.",
-    )
-    doc.add_heading("What SEP Does Here", level=1)
-    doc.add_paragraph(
-        "SEP exposes source-detection and segmentation tools directly in Python. In this tool it is used to detect compact foreground or background contaminants in S4G galaxy images without calling an external source-extraction executable."
-    )
-    add_common_sep_method(doc)
-    doc.add_heading("Profile Treatment", level=1)
-    doc.add_paragraph(
-        "The image preview replaces masked pixels with the median finite unmasked value. The processed bar-major profile does not use that median-replacement trough directly: masked profile samples are hidden, and a dashed log-linear bridge is drawn across them using neighbouring valid positive samples."
-    )
-    doc.add_heading("Parameter Descriptions", level=1)
-    add_table(doc, ["Parameter", "Default", "Meaning", "Effect of increasing"], SEP_PARAMETERS, [1.45, 0.9, 2.25, 1.9])
-    doc.add_heading("Recommended Use", level=1)
-    add_numbered(
-        doc,
-        [
-            "Start with residual detection and the default threshold.",
-            "Check whether the mask panel highlights compact contaminants rather than galaxy arms, bars, rings, or the nucleus.",
-            "Use the processed profile to judge whether masked samples correspond to real profile spikes.",
-            "Increase central exclusion, reduce max area, or reduce max elongation when real galaxy structure is being accepted.",
-            "Save PNG diagnostics for parameter settings worth comparing later.",
-        ],
-    )
-    doc.add_heading("References", level=1)
-    add_bullets(
-        doc,
-        [
-            "SEP documentation: https://sep.readthedocs.io/",
-            "SEP extract API: https://sep.readthedocs.io/en/stable/api/sep.extract.html",
-            "Barbary, K. 2016, SEP: Source Extraction and Photometry in Python.",
-        ],
-    )
-    doc.save(DOCS["sep_method"])
-    return DOCS["sep_method"]
-
-
-def build_sep_program_doc() -> Path:
-    doc = Document()
-    style_document(
-        doc,
-        "SEP Interactive Program Documentation",
-        "Program documentation for interactive_sep_parameter_tester.py",
-    )
-    add_callout(doc, "Program: Foreground Masking/interactive_sep_parameter_tester.py")
-    doc.add_heading("How to Run", level=1)
-    add_code(doc, 'python "Foreground Masking/interactive_sep_parameter_tester.py"')
-    add_bullets(doc, ["--manifest PATH overrides the default manifest.", "--pc Desktop or --pc Laptop selects configured machine-specific image and output paths."])
-    doc.add_heading("Inputs", level=1)
-    add_table(
-        doc,
-        ["Input", "Source", "Use"],
-        [
-            ["Manifest", "DEFAULT_MANIFEST from the GalClean display helper", "Galaxy names, image filenames, and geometry columns."],
-            ["FITS image", "image_path_for_pc(row, pc)", "Primary image loaded with astropy.io.fits."],
-            ["Geometry", "required_geometry(row)", "Centre, pixel scale, disk PA, inclination, bar PA, and bar semimajor axis."],
-            ["Machine paths", "machine_paths.py", "Maps PC selection to local Dropbox research folders and output directories."],
-        ],
-        [1.35, 2.35, 2.8],
-    )
-    doc.add_heading("Control Panel", level=1)
-    add_table(
-        doc,
-        ["Control", "Function"],
-        [
-            ["Machine", "Reloads galaxy/image paths for the selected configured PC."],
-            ["Galaxy", "Selects an available FITS image from the manifest."],
-            ["Detect on", "Chooses residual or original detection image."],
-            ["Parameter units", "Displays size/area controls in pixels or arcsec; processing converts back to pixels."],
-            ["SEP parameters", "Threshold, area, deblend, background, filter, dilation, max area, elongation, and central exclusion."],
-            ["Calculate", "Runs SEP and saves a timestamped PNG diagnostic."],
-            ["Reset", "Restores SEP defaults."],
-            ["Open PNG Folder", "Opens the machine-specific output directory."],
-        ],
-        [1.8, 4.7],
-    )
-    doc.add_heading("Outputs", level=1)
-    add_table(
-        doc,
-        ["Output", "Location", "Description"],
-        [
-            ["PNG diagnostic", r"{Remove foreground objects}\interactive_sep_parameter_tester", "Saved after each calculation. Filename includes galaxy, threshold, area, deblend contrast, dilation, and timestamp."],
-            ["Status line", "Control panel", "Reports segment count, masked fraction, output folder, and saved file name."],
-            ["No FITS output", "Not written", "The program is currently diagnostic-only and does not save a cleaned FITS image."],
-        ],
-        [1.45, 2.2, 2.85],
-    )
-    doc.add_heading("Figure Layout", level=1)
-    add_table(
-        doc,
-        ["Panel", "Purpose"],
-        [
-            ["Centered original", "Original image in deprojected, bar-aligned coordinates."],
-            ["SEP masked preview", "Median-filled image preview showing the visual effect of the accepted SEP mask."],
-            ["Residual detection image", "Residual image used for residual-mode detection."],
-            ["Mask", "Accepted SEP mask overlaid on the original image."],
-            ["Original and SEP processed isophotes", "Contour checks before and after median-fill preview masking."],
-            ["Original and SEP processed profiles", "Bar-major profiles with masked samples bridged by dashed log-linear interpolation."],
-        ],
-        [2.2, 4.3],
-    )
-    doc.add_heading("Implementation Notes", level=1)
-    add_bullets(
-        doc,
-        [
-            "The detection and filtering operate in image pixel coordinates; display and profiles are deprojected after products are built.",
-            "The unit selector is display-facing: pixel values are recovered before calling SEP.",
-            "Masked image preview uses one global median replacement value, not local interpolation.",
-            "Profile interpolation is a plotting aid, not a data product written to disk.",
-        ],
-    )
-    doc.save(DOCS["sep_program"])
-    return DOCS["sep_program"]
-
-
 def build_spike_method_doc() -> Path:
     doc = Document()
     style_document(
@@ -438,7 +312,7 @@ def build_spike_program_doc() -> Path:
         doc,
         ["Input", "Source", "Use"],
         [
-            ["Manifest and FITS image", "Same sources as SEP Interactive", "Select and load a galaxy image plus geometry."],
+            ["Manifest and FITS image", "Shared foreground manifest sources", "Select and load a galaxy image plus geometry."],
             ["SEP controls", "SEP labelled box", "Build the standard SEP baseline and define filtering/dilation shared by the low-threshold pass."],
             ["Spike Gate controls", "Spike Gate labelled box", "Define low-threshold candidate detection and profile-spike acceptance criteria."],
             ["Shared central exclusion", "SEP Central exclusion [px]", "Used both for SEP candidate filtering and spike-profile exclusion after conversion to arcsec."],
@@ -515,8 +389,6 @@ def build_spike_program_doc() -> Path:
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     paths = [
-        build_sep_method_doc(),
-        build_sep_program_doc(),
         build_spike_method_doc(),
         build_spike_program_doc(),
     ]

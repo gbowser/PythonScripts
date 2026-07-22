@@ -29,7 +29,6 @@ SHEET_TO_TOOL = {
     "MTObjects Spike Gate": "mtobjects_spike_gate",
     "MTObjects Toy Object": "mtobjects",
     "SEP Spike Gate": "sep_spike_gate",
-    "SEP Toy Object": "sep",
 }
 PARAMETER_KEYS = {
     "mtobjects": {
@@ -46,17 +45,6 @@ PARAMETER_KEYS = {
         "min_distance",
         "gaussian_fwhm",
         "minarea",
-        "dilation_radius",
-        "max_area",
-        "max_elongation",
-    },
-    "sep": {
-        "detect_thresh",
-        "minarea",
-        "deblend_nthresh",
-        "deblend_cont",
-        "back_size",
-        "filter_size",
         "dilation_radius",
         "max_area",
         "max_elongation",
@@ -176,10 +164,6 @@ def launch_interactive(row: dict[str, Any], pc: str, manifest: Path | None, mtob
         app = module.MTObjectsTester(manifest or module.DEFAULT_MANIFEST, pc, mtobjects_root)
     elif tool == "sep_spike_gate":
         import interactive_sep_spike_gate_parameter_tester as module
-
-        app = module.SEPTester(manifest or module.DEFAULT_MANIFEST, pc)
-    elif tool == "sep":
-        import interactive_sep_parameter_tester as module
 
         app = module.SEPTester(manifest or module.DEFAULT_MANIFEST, pc)
     else:

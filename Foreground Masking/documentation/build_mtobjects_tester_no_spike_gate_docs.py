@@ -216,7 +216,9 @@ def build_algorithm_doc() -> None:
     doc.add_paragraph(
         "Every GUI control label now states which direction increases masking aggressiveness, so the effect of a change "
         "is visible without leaving the sidebar. Defaults reflect the Optuna toy-object-recovery optimisation run of "
-        "2026-07-19 (objective = -0.304658)."
+        "2026-07-19 (objective = -0.304658). Toy-object optimisation runs created before 2026-07-22 are superseded, "
+        "because the current optimiser injects toys only into the same deprojected, bar-aligned galaxy investigation cutout "
+        "used for the normal image/profile reports."
     )
     add_table(
         doc,
@@ -307,7 +309,7 @@ def build_flow_doc() -> None:
         [
             "parse_args reads --manifest, --pc, and --mtobjects-root.",
             "main creates MTObjectsTester with the selected manifest, machine, and MTObjects checkout path.",
-            "MTObjectsTester loads the local manifest through interactive_galclean_parameter_tester helpers.",
+            "MTObjectsTester loads the local manifest through foreground_display_helpers.",
             "The Tkinter UI exposes machine, galaxy, detection surface, units, MTObjects parameters, and post-filters; "
             "every slider/spinbox label states which direction is more aggressive.",
         ],

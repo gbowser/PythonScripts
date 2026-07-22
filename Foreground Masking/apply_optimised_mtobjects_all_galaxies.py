@@ -405,6 +405,17 @@ def append_csv(path: Path, rows: list[dict[str, object]], fieldnames: list[str])
         writer.writerows(rows)
 
 
+def completed_names_from_summary(path: Path) -> set[str]:
+    if not path.exists():
+        return set()
+    completed: set[str] = set()
+    with path.open(newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            if row.get("status") == "ok" and row.get("name"):
+                completed.add(str(row["name"]))
+    return completed
+
+
 def process_one(
     row: dict[str, str],
     args: argparse.Namespace,
@@ -468,6 +479,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument(
+        "--resume-output-dir",
+        type=Path,
+        default=None,
+        help="Continue a stopped batch folder, skipping galaxies already marked ok in the summary CSV.",
+    )
+    parser.add_argument(
         "--run-label",
         default=None,
         help="Short label shown in report titles and used in the default output folder name.",
@@ -492,9 +509,14 @@ def main() -> int:
     if mtobjects_root is None:
         raise ModuleNotFoundError(mto.mtobjects_setup_message(args.mtobjects_root))
 
+    if args.resume_output_dir is not None and args.output_dir is not None:
+        raise ValueError("Use either --resume-output-dir or --output-dir, not both.")
+
     timestamp_dir = datetime.now().strftime("%Y%m%d_%H%M%S")
     label_slug = mto.display.safe_filename(args.run_label or args.source)
-    output_dir = args.output_dir or (remove_foreground_folder(args.pc) / DEFAULT_OUTPUT_SUBDIR / label_slug / timestamp_dir)
+    output_dir = args.resume_output_dir or args.output_dir or (
+        remove_foreground_folder(args.pc) / DEFAULT_OUTPUT_SUBDIR / label_slug / timestamp_dir
+    )
     reports_dir = output_dir / "reports"
     fits_dir = output_dir / "cleaned_fits"
     reports_dir.mkdir(parents=True, exist_ok=True)
@@ -512,6 +534,11 @@ def main() -> int:
     log(f"Prepared {len(rows)} galaxies. Output: {output_dir}")
 
     summary_path = output_dir / "mtobjects_optimised_apply_summary.csv"
+    completed_names = completed_names_from_summary(summary_path) if args.resume_output_dir is not None else set()
+    if completed_names:
+        rows = [row for row in rows if row["name"] not in completed_names]
+        log(f"Resume mode: skipping {len(completed_names)} galaxies already marked ok; {len(rows)} remain.")
+
     fieldnames = [
         "name",
         "status",

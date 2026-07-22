@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Batch-run the SEP foreground-mask routine for S4G galaxies.
 
-This uses the same SEP product generation and deprojected diagnostics as
-``interactive_sep_parameter_tester.py`` but runs without opening the Tk GUI.
+This uses the shared SEP processing and deprojected diagnostics directly,
+without opening a Tk GUI.
 """
 
 from __future__ import annotations
@@ -10,14 +10,19 @@ from __future__ import annotations
 import argparse
 import csv
 from datetime import datetime
+import json
+import math
 from pathlib import Path
 import sys
+import time
 import traceback
+import warnings
 
 import matplotlib
 
 matplotlib.use("Agg", force=True)
 
+from astropy.io import fits
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 import numpy as np
@@ -29,12 +34,96 @@ for path in (PROJECT_ROOT, SCRIPT_DIR):
     if str(path) not in sys.path:
         sys.path.append(str(path))
 
-import interactive_galclean_parameter_tester as display  # noqa: E402
-import interactive_sep_parameter_tester as sep_gui  # noqa: E402
+import foreground_display_helpers as display  # noqa: E402
+import sep_processing as sep_gui  # noqa: E402
 from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
 
 
-DEFAULT_OUTPUT_SUBDIR = "batch_sep_parameter_tester"
+DEFAULT_OUTPUT_SUBDIR = "SEP all galaxy batch"
+DEFAULT_DPI = 180
+DEFAULT_SOURCE = "latest"
+
+
+def timestamp() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def format_duration(seconds: float) -> str:
+    seconds = max(0.0, float(seconds))
+    hours, remainder = divmod(int(round(seconds)), 3600)
+    minutes, secs = divmod(remainder, 60)
+    if hours:
+        return f"{hours}h {minutes:02d}m {secs:02d}s"
+    if minutes:
+        return f"{minutes}m {secs:02d}s"
+    return f"{secs}s"
+
+
+def log(message: str) -> None:
+    print(f"[{timestamp()}] {message}", flush=True)
+
+
+def latest_best_json(pc_name: str, source: str) -> Path | None:
+    root = remove_foreground_folder(pc_name)
+    candidates = []
+    if source in {"latest", "spike-gate"}:
+        candidates.extend((root / "sep spike optimisation").glob("*/sep_spike_optimisation_best.json"))
+    if source in {"latest", "toy-object"}:
+        candidates.extend((root / "sep toy optimisation").glob("*/sep_toy_object_optimisation_best.json"))
+    candidates = sorted([path for path in candidates if path.is_file()], key=lambda path: path.stat().st_mtime)
+    return candidates[-1] if candidates else None
+
+
+def load_best_params(path: Path) -> dict[str, float | int | str]:
+    with path.open("r", encoding="utf-8") as handle:
+        payload = json.load(handle)
+    params = payload.get("params", payload)
+    if not isinstance(params, dict):
+        raise ValueError(f"Best-parameter JSON does not contain a parameter dictionary: {path}")
+
+    loaded = {
+        "detect_on": "residual",
+        "detect_thresh": sep_gui.DEFAULT_DETECT_THRESH,
+        "minarea": sep_gui.DEFAULT_MINAREA,
+        "deblend_nthresh": sep_gui.DEFAULT_DEBLEND_NTHRESH,
+        "deblend_cont": sep_gui.DEFAULT_DEBLEND_CONT,
+        "back_size": sep_gui.DEFAULT_BACK_SIZE,
+        "filter_size": sep_gui.DEFAULT_FILTER_SIZE,
+        "dilation_radius": sep_gui.DEFAULT_DILATION_RADIUS,
+        "max_area": sep_gui.DEFAULT_MAX_AREA,
+        "max_elongation": sep_gui.DEFAULT_MAX_ELONGATION,
+        "exclude_center_pixels": sep_gui.DEFAULT_EXCLUDE_CENTER_PIXELS,
+    }
+    for key, value in params.items():
+        if key in loaded:
+            loaded[key] = math.nan if value == "NaN" else value
+    return loaded
+
+
+def best_json_source(path: Path) -> str:
+    name = path.name.casefold()
+    if "spike" in name:
+        return "spike-gate"
+    if "toy" in name:
+        return "toy-object"
+    return "best-json"
+
+
+def params_from_args(args: argparse.Namespace) -> dict[str, float | int | str]:
+    best_json = args.best_json or args.params_json or latest_best_json(args.pc, args.source)
+    if best_json is not None:
+        params = load_best_params(best_json)
+        params["_source_label"] = args.run_label or best_json.parent.name
+        params["_best_json"] = str(best_json)
+        params["_best_json_source"] = best_json_source(best_json)
+        return params
+    if args.require_best_json:
+        raise FileNotFoundError(
+            "No SEP best-parameter JSON found. Pass --best-json, or use --source spike-gate/toy-object after that optimiser has a best JSON."
+        )
+    params = default_params(args)
+    params["_source_label"] = args.run_label or "manual SEP parameters"
+    return params
 
 
 def default_params(args: argparse.Namespace) -> dict[str, float | int | str]:
@@ -289,7 +378,7 @@ def draw_products(name: str, original: np.ndarray, products: dict, params: dict,
     return figure
 
 
-def output_png_path(output_dir: Path, name: str, params: dict[str, float | int | str]) -> Path:
+def output_png_path(reports_dir: Path, name: str, params: dict[str, float | int | str]) -> Path:
     stem = (
         f"{display.safe_filename(name)}_sep_"
         f"thr{float(params['detect_thresh']):.1f}_"
@@ -297,7 +386,7 @@ def output_png_path(output_dir: Path, name: str, params: dict[str, float | int |
         f"deb{float(params['deblend_cont']):.4f}_"
         f"dil{int(params['dilation_radius'])}"
     )
-    return output_dir / f"{display.safe_filename(stem)}.png"
+    return reports_dir / f"{display.safe_filename(stem)}.png"
 
 
 def selected_rows(args: argparse.Namespace) -> list[dict[str, str]]:
@@ -305,22 +394,67 @@ def selected_rows(args: argparse.Namespace) -> list[dict[str, str]]:
     if args.names:
         wanted = {name.casefold() for name in args.names}
         rows = [row for row in rows if row["name"].casefold() in wanted]
-    if args.limit is not None:
-        rows = rows[: args.limit]
+    max_images = args.max_images if args.max_images is not None else args.limit
+    if max_images is not None:
+        rows = rows[: max_images]
     return rows
 
 
-def run_one(row: dict[str, str], args: argparse.Namespace, output_dir: Path) -> dict[str, str | int | float]:
+def write_cleaned_fits(path: Path, data: np.ndarray, header: fits.Header, mask: np.ndarray, params: dict) -> None:
+    output_header = header.copy()
+    output_header["FGMASK"] = ("SEP", "Foreground removal method")
+    output_header["SEPTHR"] = (float(params["detect_thresh"]), "SEP detection threshold")
+    output_header["SEPMINA"] = (int(params["minarea"]), "SEP minimum area")
+    output_header["SEPDEBN"] = (int(params["deblend_nthresh"]), "SEP deblend thresholds")
+    output_header["SEPDEBC"] = (float(params["deblend_cont"]), "SEP deblend contrast")
+    output_header["SEPDIL"] = (int(params["dilation_radius"]), "SEP dilation radius")
+    fits.PrimaryHDU(np.asarray(data, dtype=np.float32), header=output_header).writeto(path, overwrite=True)
+    mask_path = path.with_name(path.stem + "_mask.fits")
+    fits.PrimaryHDU(np.asarray(mask, dtype=np.uint8), header=header).writeto(mask_path, overwrite=True)
+
+
+def append_csv(path: Path, rows: list[dict[str, object]], fieldnames: list[str]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    exists = path.exists()
+    with path.open("a", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
+        if not exists:
+            writer.writeheader()
+        writer.writerows(rows)
+
+
+def completed_names_from_summary(path: Path) -> set[str]:
+    if not path.exists():
+        return set()
+    completed: set[str] = set()
+    with path.open(newline="", encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            if row.get("status") == "ok" and row.get("name"):
+                completed.add(str(row["name"]))
+    return completed
+
+
+def run_one(
+    row: dict[str, str],
+    args: argparse.Namespace,
+    params: dict[str, float | int | str],
+    reports_dir: Path,
+    fits_dir: Path,
+) -> dict[str, str | int | float]:
     name = row["name"]
     geometry = display.required_geometry(row)
     if geometry is None:
         raise ValueError(f"{name} has incomplete geometry in {args.manifest}.")
-    data, _header = sep_gui.load_fits(display.image_path_for_pc(row, args.pc))
-    params = default_params(args)
+    data, header = sep_gui.load_fits(display.image_path_for_pc(row, args.pc))
     products = sep_gui.sep_products(data, params, geometry)
     figure = draw_products(name, data, products, params, geometry)
-    png_path = output_png_path(output_dir, name, params)
+    png_path = output_png_path(reports_dir, name, params)
     figure.savefig(png_path, dpi=args.dpi)
+
+    cleaned_fits_path = ""
+    if args.save_cleaned_fits:
+        cleaned_fits_path = str(fits_dir / f"{display.safe_filename(name)}_sep_optimised_cleaned.fits")
+        write_cleaned_fits(Path(cleaned_fits_path), np.asarray(products["cleaned"], dtype=float), header, products["mask"], params)
 
     kept = sum(1 for product_row in products["rows"] if product_row.get("kept"))
     raw = len(products["rows"])
@@ -328,7 +462,8 @@ def run_one(row: dict[str, str], args: argparse.Namespace, output_dir: Path) -> 
     return {
         "name": name,
         "status": "ok",
-        "png": str(png_path),
+        "report_png": str(png_path),
+        "cleaned_fits": cleaned_fits_path,
         "raw_segments": raw,
         "kept_segments": kept,
         "masked_fraction": masked_fraction,
@@ -343,9 +478,43 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--manifest", type=Path, default=sep_gui.DEFAULT_MANIFEST)
     parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=sep_gui.DEFAULT_PC)
     parser.add_argument("--output-dir", type=Path, default=None)
+    parser.add_argument(
+        "--resume-output-dir",
+        type=Path,
+        default=None,
+        help="Continue a stopped batch folder, skipping galaxies already marked ok in the summary CSV.",
+    )
+    parser.add_argument(
+        "--best-json",
+        type=Path,
+        help="Path to sep_spike_optimisation_best.json or sep_toy_object_optimisation_best.json.",
+    )
+    parser.add_argument(
+        "--params-json",
+        type=Path,
+        help="Alias for --best-json, useful when the best-parameter file has been copied or renamed.",
+    )
+    parser.add_argument(
+        "--source",
+        choices=["latest", "spike-gate", "toy-object", "manual"],
+        default=DEFAULT_SOURCE,
+        help="Which SEP optimiser family to search when --best-json is not supplied.",
+    )
+    parser.add_argument(
+        "--run-label",
+        default=None,
+        help="Short label shown in diagnostics and used in the default output folder name.",
+    )
+    parser.add_argument(
+        "--require-best-json",
+        action="store_true",
+        help="Fail if no SEP optimiser best JSON can be found.",
+    )
     parser.add_argument("--names", nargs="*", default=[])
-    parser.add_argument("--limit", type=int, default=None)
-    parser.add_argument("--dpi", type=int, default=180)
+    parser.add_argument("--limit", type=int, default=None, help="Deprecated alias for --max-images.")
+    parser.add_argument("--max-images", type=int, default=None)
+    parser.add_argument("--dpi", type=int, default=DEFAULT_DPI)
+    parser.add_argument("--save-cleaned-fits", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--detect-on", choices=["residual", "original"], default="residual")
     parser.add_argument("--detect-thresh", type=float, default=sep_gui.DEFAULT_DETECT_THRESH)
     parser.add_argument("--minarea", type=int, default=sep_gui.DEFAULT_MINAREA)
@@ -362,32 +531,85 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    output_dir = args.output_dir or (remove_foreground_folder(args.pc) / DEFAULT_OUTPUT_SUBDIR)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    if args.resume_output_dir is not None and args.output_dir is not None:
+        raise ValueError("Use either --resume-output-dir or --output-dir, not both.")
+
+    params = params_from_args(args)
+    timestamp_dir = datetime.now().strftime("%Y%m%d_%H%M%S")
+    label_source = args.run_label or params.get("_source_label", args.source)
+    best_json_kind = str(params.get("_best_json_source", args.source))
+    if best_json_kind == "spike-gate":
+        default_label = "sep_spike_gate"
+    elif best_json_kind == "toy-object":
+        default_label = "sep_toy_object"
+    elif args.best_json or args.params_json:
+        default_label = display.safe_filename(str(label_source))
+    else:
+        default_label = "sep_manual"
+    label_slug = display.safe_filename(default_label)
+    output_dir = args.resume_output_dir or args.output_dir or (
+        remove_foreground_folder(args.pc) / DEFAULT_OUTPUT_SUBDIR / f"{label_slug}_{timestamp_dir}"
+    )
+    reports_dir = output_dir / "reports"
+    fits_dir = output_dir / "cleaned_fits"
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    if args.save_cleaned_fits:
+        fits_dir.mkdir(parents=True, exist_ok=True)
+
+    config = {key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()}
+    config["params"] = {
+        key: ("NaN" if isinstance(value, float) and math.isnan(value) else value)
+        for key, value in params.items()
+    }
+    (output_dir / "sep_optimised_apply_config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
+
     rows = selected_rows(args)
     if not rows:
         raise RuntimeError("No matching galaxies with available FITS images were found.")
 
-    started = datetime.now()
-    print(f"Batch SEP run started {started:%Y-%m-%d %H:%M:%S}")
-    print(f"Galaxies: {len(rows)}")
-    print(f"Output: {output_dir}")
+    summary_path = output_dir / "sep_optimised_apply_summary.csv"
+    completed_names = completed_names_from_summary(summary_path) if args.resume_output_dir is not None else set()
+    if completed_names:
+        rows = [row for row in rows if row["name"] not in completed_names]
+        log(f"Resume mode: skipping {len(completed_names)} galaxies already marked ok; {len(rows)} remain.")
 
-    summary_rows: list[dict[str, str | int | float]] = []
+    started = datetime.now()
+    log(f"Batch SEP run started {started:%Y-%m-%d %H:%M:%S}")
+    log(f"Galaxies: {len(rows)}")
+    log(f"Output: {output_dir}")
+
+    fieldnames = [
+        "name",
+        "status",
+        "report_png",
+        "cleaned_fits",
+        "raw_segments",
+        "kept_segments",
+        "masked_fraction",
+        "background_level",
+        "background_rms",
+        "elapsed_seconds",
+        "error",
+    ]
+    ok_count = 0
+    failed_count = 0
+    run_started = time.perf_counter()
     for index, row in enumerate(rows, start=1):
         name = row["name"]
-        print(f"[{index}/{len(rows)}] {name} ...", flush=True)
+        item_started = time.perf_counter()
+        log(f"[{index}/{len(rows)}] {name} ...")
         try:
-            result = run_one(row, args, output_dir)
-            print(
-                f"  ok: kept {result['kept_segments']}/{result['raw_segments']} segments, "
-                f"masked {float(result['masked_fraction']):.2%}"
-            )
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", RuntimeWarning)
+                result = run_one(row, args, params, reports_dir, fits_dir)
+            ok_count += 1
         except Exception as exc:  # noqa: BLE001
+            failed_count += 1
             result = {
                 "name": name,
                 "status": "failed",
-                "png": "",
+                "report_png": "",
+                "cleaned_fits": "",
                 "raw_segments": "",
                 "kept_segments": "",
                 "masked_fraction": "",
@@ -395,35 +617,54 @@ def main() -> None:
                 "background_rms": "",
                 "error": str(exc),
             }
-            print(f"  failed: {exc}")
+            log(f"  failed: {exc}")
             traceback.print_exc()
-        summary_rows.append(result)
+        elapsed = time.perf_counter() - item_started
+        result["elapsed_seconds"] = elapsed
+        append_csv(summary_path, [result], fieldnames)
+        remaining = len(rows) - index
+        average = (time.perf_counter() - run_started) / index
+        if result["status"] == "ok":
+            log(
+                f"  ok: kept {result['kept_segments']}/{result['raw_segments']} segments, "
+                f"masked {float(result['masked_fraction']):.2%} elapsed={format_duration(elapsed)} "
+                f"remaining={remaining} rough_eta={format_duration(remaining * average)}"
+            )
+        else:
+            log(
+                f"  failed elapsed={format_duration(elapsed)} "
+                f"remaining={remaining} rough_eta={format_duration(remaining * average)}"
+            )
 
-    summary_path = output_dir / "sep_batch_summary.csv"
-    with summary_path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(
-            handle,
-            fieldnames=[
-                "name",
-                "status",
-                "png",
-                "raw_segments",
-                "kept_segments",
-                "masked_fraction",
-                "background_level",
-                "background_rms",
-                "error",
-            ],
-        )
-        writer.writeheader()
-        writer.writerows(summary_rows)
-
-    ok_count = sum(1 for row in summary_rows if row["status"] == "ok")
-    failed_count = len(summary_rows) - ok_count
     finished = datetime.now()
-    print(f"Batch SEP run finished {finished:%Y-%m-%d %H:%M:%S}")
-    print(f"Successful: {ok_count}; failed: {failed_count}")
-    print(f"Summary: {summary_path}")
+    legacy_summary_path = output_dir / "sep_batch_summary.csv"
+    if not legacy_summary_path.exists() and summary_path.exists():
+        with summary_path.open(newline="", encoding="utf-8") as src, legacy_summary_path.open(
+            "w", newline="", encoding="utf-8"
+        ) as dst:
+            reader = csv.DictReader(src)
+            writer = csv.DictWriter(
+                dst,
+                fieldnames=[
+                    "name",
+                    "status",
+                    "png",
+                    "raw_segments",
+                    "kept_segments",
+                    "masked_fraction",
+                    "background_level",
+                    "background_rms",
+                    "error",
+                ],
+                extrasaction="ignore",
+            )
+            writer.writeheader()
+            for row in reader:
+                row["png"] = row.get("report_png", "")
+                writer.writerow(row)
+    log(f"Batch SEP run finished {finished:%Y-%m-%d %H:%M:%S}")
+    log(f"Successful: {ok_count}; failed: {failed_count}")
+    log(f"Summary: {summary_path}")
 
 
 if __name__ == "__main__":

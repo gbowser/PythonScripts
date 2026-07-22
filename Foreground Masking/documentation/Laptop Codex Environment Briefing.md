@@ -68,6 +68,18 @@ SEP Spike Gate optimiser:
 Foreground Masking\optimise_sep_spike_gate_parameters.py
 ```
 
+MTObjects toy-object optimiser:
+
+```text
+Foreground Masking\mtobjects_toy_object_parameter_optimisation.py
+```
+
+SEP toy-object optimiser:
+
+```text
+Foreground Masking\sep_toy_object_parameter_optimisation.py
+```
+
 ## Documentation Files
 
 MTObjects optimiser documentation:
@@ -134,6 +146,30 @@ Default output parent:
 D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\sep spike optimisation
 ```
 
+## Toy-Object Optimisation Logic
+
+The toy-object optimisers inject known synthetic sources into real S4G images and score how well the foreground-removal mask recovers those known objects while minimising new masking away from the injected truth masks.
+
+Current rule: toy objects must be introduced only inside the galaxy area being investigated. This is the same deprojected, bar-aligned cutout used by the normal image/profile reports, with the x-axis along the bar major axis and the y-axis along the bar minor axis.
+
+Placement constraints:
+
+- The toy-object centre must lie inside the investigated cutout.
+- The complete toy-object truth mask, after the 8 percent model threshold and truth-mask dilation, must also remain inside the investigated cutout.
+- Toy-object optimisation outputs produced before this rule was added on 2026-07-22 should be treated as superseded, because those older runs could place toys anywhere in the finite FITS footprint.
+
+Corrected MTObjects toy-object run:
+
+```powershell
+python "Foreground Masking\mtobjects_toy_object_parameter_optimisation.py" --max-images 20 --toys-per-image 6 --initial-points 8 --max-iter 32 --mtobjects-detect-on original
+```
+
+Corrected SEP toy-object run:
+
+```powershell
+python "Foreground Masking\sep_toy_object_parameter_optimisation.py" --max-images 20 --toys-per-image 6 --initial-points 8 --max-iter 32 --detect-on residual
+```
+
 ## Spike Gate Optimisation Logic
 
 Both optimisers use Spike Gate samples from the intensity/bar-major profile as the target evidence for spike removal.
@@ -191,6 +227,31 @@ Optuna varies SEP-related parameters including:
 
 SEP is expected to be faster than MTObjects, but it may be more sensitive to galaxy structure, deblending behaviour, and background-estimation settings.
 
+The SEP all-galaxy batch runner is:
+
+```text
+Foreground Masking\batch_sep_all_galaxies.py
+```
+
+By default it now writes structured runs under:
+
+```text
+D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy batch
+```
+
+Each new run folder contains `reports`, `cleaned_fits`, `sep_optimised_apply_config.json`, `sep_optimised_apply_summary.csv`, and a legacy-compatible `sep_batch_summary.csv`. The old flat `batch_sep_parameter_tester` run from 2026-07-15 has been copied into `SEP all galaxy batch\sep_default_20260715_173501\reports`.
+
+Use optimiser best JSONs like this:
+
+```powershell
+python "Foreground Masking\batch_sep_all_galaxies.py" --source spike-gate --require-best-json
+python "Foreground Masking\batch_sep_all_galaxies.py" --source toy-object --require-best-json
+```
+
+Explicit best-JSON paths can be supplied with `--best-json`. Interrupted all-galaxy SEP runs can be continued with `--resume-output-dir`; completed galaxies listed as `ok` in `sep_optimised_apply_summary.csv` are skipped.
+
+The helper script `Foreground Masking\schedule_sep_followup_jobs.ps1` mirrors the MTObjects follow-up helper and can append the SEP toy-object optimisation to the workbook before launching spike-gate and toy-object all-galaxy SEP batches.
+
 ## Running Both Optimisers Together
 
 The MTObjects and SEP optimisers can run at the same time because they use separate scripts, separate default output folders, and separate Optuna SQLite study databases.
@@ -201,6 +262,10 @@ Use the matching resume folder:
 
 - MTObjects resumes under `mtobjects spike optimisation`.
 - SEP resumes under `sep spike optimisation`.
+- MTObjects toy-object runs write under `mtobjects toy optimisation`.
+- SEP toy-object runs write under `sep toy optimisation`.
+- MTObjects all-galaxy application runs write under `mtobjects all galaxy batch` when scheduled or explicitly directed there.
+- SEP all-galaxy application runs write under `SEP all galaxy batch`.
 
 Running both together is safe in normal use, but it may make the machine slower because both scripts repeatedly read FITS files and perform image-processing passes.
 
@@ -209,7 +274,7 @@ Running both together is safe in normal use, but it may make the machine slower 
 Both optimisers write timestamped output folders containing:
 
 - Configuration JSON.
-- Prepared galaxy/case CSV.
+- Prepared galaxy/case CSV, or a toy-object catalogue CSV for toy-object runs.
 - Trial summary CSV.
 - Trial detail CSV.
 - Best-parameter JSON.

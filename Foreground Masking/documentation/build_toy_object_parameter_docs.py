@@ -164,7 +164,7 @@ def add_cover(doc: Document) -> None:
     add_note(
         doc,
         "Short answer",
-        "The Toy object model now has three available profiles: Gaussian star, Star cluster, and Compact galaxy. Location, brightness, FWHM, and truth dilation apply broadly. Axis ratio and object PA apply only to Compact galaxy.",
+        "The Toy object model now has three available profiles: Gaussian star, Star cluster, and Compact galaxy. Location, brightness, FWHM, and truth dilation apply broadly. Axis ratio and object PA apply only to Compact galaxy. Toy objects must sit wholly inside the same deprojected, bar-aligned galaxy investigation area used by the normal image/profile reports.",
     )
 
 
@@ -221,7 +221,7 @@ def add_parameter_glossary(doc: Document) -> None:
             "x deproj [arcsec], y deproj [arcsec]",
             "Position of the Toy object in the deprojected, bar-aligned coordinate system.",
             "All types",
-            "The code converts this deprojected position back to observed image pixels before injecting the model.",
+            "The code converts this deprojected position back to observed image pixels before injecting the model, then rejects placements outside the investigated bar-aligned cutout.",
         ),
         (
             "peak [resid sigma]",
@@ -326,6 +326,19 @@ def add_math_section(doc: Document) -> None:
         ],
     )
 
+    doc.add_heading("Investigation-area constraint", level=2)
+    doc.add_paragraph(
+        "Toy objects are only valid inside the galaxy area actually being investigated. In practice this is the same deprojected, bar-aligned square cutout used by the interactive displays, PNG reports, isophote views, and bar-major profiles. The horizontal axis is the deprojected bar-major axis and the vertical axis is the deprojected bar-minor axis."
+    )
+    add_bullets(
+        doc,
+        [
+            "The toy centre must fall inside this cutout.",
+            "The full truth mask, after the 8 percent model threshold and optional truth dilation, must also remain inside the cutout.",
+            "Toy-object optimisation results produced before this constraint was added should be treated as superseded, because those older runs could place toys anywhere in the finite FITS footprint.",
+        ],
+    )
+
     doc.add_heading("Integrated magnitude mode", level=2)
     doc.add_paragraph(
         "Magnitude mode first builds the chosen object profile with peak = 1, then scales that unit model so the total integrated flux matches the requested magnitude."
@@ -358,6 +371,7 @@ def add_recommendations(doc: Document) -> None:
             "Use Star cluster when you want a blended compact contaminant rather than a single source.",
             "Use Compact galaxy when elongation and orientation matter; this is the only Toy object type that uses axis ratio and object PA.",
             "Use Peak residual sigma for quick recovery experiments. Use Integrated magnitude when you want physically calibrated brightness and the FITS header supports the conversion.",
+            "Place Toy objects inside the displayed bar-aligned investigation area; if the model or truth mask spills outside that area, the tool rejects the placement.",
             "Remember that truth dilation changes the scoring mask, not the injected object itself.",
         ],
     )

@@ -261,7 +261,7 @@ def main() -> int:
         print("No galaxies selected.")
         return 1
 
-    png_dir = bar.ensure_report_output_folders(args.output_dir)
+    report_dir = bar.ensure_report_output_folders(args.output_dir)
     calibration, fallback_nsigma = calibrate_detection_thresholds(selected, args)
     calibration_csv = args.output_dir / "photutils_global_calibration_from_bar_spikes.csv"
     write_calibration_csv(calibration_csv, calibration, fallback_nsigma)
@@ -273,7 +273,7 @@ def main() -> int:
         nsigma = float(calibration[name]["calibrated_nsigma"])
         report_args = make_global_report_args(args, nsigma)
         stem = bar.foreground_removed_stem(name, "global")
-        output_png = png_dir / f"{stem}.png"
+        output_png = report_dir / f"{stem}.png"
         print(f"Writing global Photutils report for {name} at nsigma={nsigma:g}...", flush=True)
         bar.make_report(report_args, row, output_png)
         made += 1

@@ -478,7 +478,7 @@ def add_outputs(doc: Document) -> None:
             ],
             [
                 "One-galaxy default output",
-                "Foreground Masking/ESO120-012_portrait_mask_report/png/ESO120-012_fg_removed_sp-gated.png when no --names or --all selection is supplied.",
+                "Foreground Masking/ESO120-012_portrait_mask_report/ESO120-012_fg_removed_sp-gated.png when no --names or --all selection is supplied.",
             ],
         ],
         [2800, 6560],

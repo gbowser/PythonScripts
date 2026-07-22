@@ -276,7 +276,7 @@ def add_outputs(doc: Document) -> None:
         ["Output", "Meaning"],
         [
             [
-                "global_photutils_auto_tuned/png/{galaxy_name}_fg_removed_global.png",
+                "global_photutils_auto_tuned/{galaxy_name}_fg_removed_global.png",
                 "Current all-galaxy global Photutils comparison reports. The method suffix distinguishes these from spike-gated outputs.",
             ],
             [
