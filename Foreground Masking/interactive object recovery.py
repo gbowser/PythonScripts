@@ -291,6 +291,18 @@ def deproject_for_display(
     return deprojected, extent, x_axis, y_axis
 
 
+def investigated_region_mask(data: np.ndarray, geometry: dict[str, float]) -> np.ndarray:
+    radius_pix = baseline.profile_radius_pixels(data, geometry)
+    yy, xx = np.indices(data.shape, dtype=float)
+    x_arcsec, y_arcsec = observed_pixel_to_deprojected_arcsec(xx, yy, geometry)
+    radius_arcsec = radius_pix * geometry["pixel_scale"]
+    return (
+        np.isfinite(data)
+        & (np.abs(x_arcsec) <= radius_arcsec)
+        & (np.abs(y_arcsec) <= radius_arcsec)
+    )
+
+
 def bar_sma_deprojected_arcsec(geometry: dict[str, float]) -> float:
     factor = baseline.angles.deprojectr(
         geometry["bar_pa"] - geometry["disk_pa"],
@@ -1083,6 +1095,13 @@ class ObjectRecoveryApp(tk.Tk):
             header,
         )
         truth = truth_mask_from_model(model, peak, int(self.truth_dilation.get()))
+        analysis_region = investigated_region_mask(data, geometry)
+        ix = int(round(x0))
+        iy = int(round(y0))
+        if ix < 0 or ix >= data.shape[1] or iy < 0 or iy >= data.shape[0] or not analysis_region[iy, ix]:
+            raise ValueError("Toy-object centre is outside the investigated bar-aligned galaxy area.")
+        if np.any(truth & ~analysis_region):
+            raise ValueError("Toy-object truth mask extends outside the investigated bar-aligned galaxy area.")
         injected = data + model
 
         baseline_mask = np.asarray(baseline_products["baseline_mask"], dtype=bool)

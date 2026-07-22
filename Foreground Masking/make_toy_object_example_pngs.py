@@ -19,16 +19,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.io import fits
 from matplotlib.patches import Circle
-from scipy.ndimage import binary_dilation
+from scipy.ndimage import binary_dilation, map_coordinates
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 S4G_PLOTTER_DIR = PROJECT_ROOT / "Erwin_s4g_image_downloader"
-for path in (PROJECT_ROOT, SCRIPT_DIR, S4G_PLOTTER_DIR):
+BARPROFILES_DIR = PROJECT_ROOT / "Erwin_barprofiles_paper_GB_working_copy"
+for path in (PROJECT_ROOT, SCRIPT_DIR, S4G_PLOTTER_DIR, BARPROFILES_DIR):
     if str(path) not in sys.path:
         sys.path.append(str(path))
 
+import angle_utils as angles  # noqa: E402
 from machine_paths import erwin_folder  # noqa: E402
 
 
@@ -50,6 +52,91 @@ def image_path_for_pc(row: dict[str, str], pc_name: str) -> Path:
 
 def safe_filename(value: str) -> str:
     return "".join(char if char.isalnum() or char in "._-" else "_" for char in value)
+
+
+def finite_float(value: str | float | int | None) -> float | None:
+    if value in (None, ""):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) else None
+
+
+def required_geometry(row: dict[str, str]) -> dict[str, float] | None:
+    keys = {
+        "xc": "center_x_pix",
+        "yc": "center_y_pix",
+        "disk_pa": "disk_pa_deg",
+        "inclination": "inclination_deg",
+        "bar_pa": "bar_pa_deg",
+        "bar_sma": "bar_sma_arcsec",
+        "pixel_scale": "pixel_scale_arcsec_y",
+    }
+    values = {name: finite_float(row.get(column)) for name, column in keys.items()}
+    if any(values[name] is None for name in keys):
+        return None
+    values["pixel_scale"] = abs(values["pixel_scale"]) or 0.75
+    values["bar_pa"] = angles.RectifyPA(values["bar_pa"], 180.0)
+    values["disk_pa"] = angles.RectifyPA(values["disk_pa"], 180.0)
+    return values  # type: ignore[return-value]
+
+
+def profile_radius_pixels(data: np.ndarray, geometry: dict[str, float]) -> int:
+    xc = geometry["xc"]
+    yc = geometry["yc"]
+    bar_sma = geometry["bar_sma"]
+    pixel_scale = geometry["pixel_scale"]
+    max_radius_pix = int(max(20, min(xc - 1, yc - 1, data.shape[1] - xc, data.shape[0] - yc)))
+    target_radius_arcsec = max(3.0 * bar_sma, 45.0)
+    radius = min(max_radius_pix, int(math.ceil(target_radius_arcsec / pixel_scale)))
+    return max(radius, int(math.ceil(1.4 * bar_sma / pixel_scale)))
+
+
+def image_transform(disk_pa: float, inclination: float, bar_pa: float) -> np.ndarray:
+    disk = np.radians(disk_pa)
+    bar = np.radians(bar_pa)
+    disk_major = np.array([-np.sin(disk), np.cos(disk)])
+    disk_minor = np.array([np.cos(disk), np.sin(disk)])
+    deproject = np.outer(disk_major, disk_major) + np.outer(disk_minor, disk_minor) / np.cos(
+        np.radians(inclination)
+    )
+    observed_bar = np.array([-np.sin(bar), np.cos(bar)])
+    face_on_bar = deproject @ observed_bar
+    angle = math.atan2(face_on_bar[1], face_on_bar[0])
+    rotate = np.array([[math.cos(angle), math.sin(angle)], [-math.sin(angle), math.cos(angle)]])
+    return rotate @ deproject
+
+
+def deproject_bar_aligned_cutout(
+    data: np.ndarray,
+    geometry: dict[str, float],
+    radius_arcsec: float,
+    *,
+    order: int = 1,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    pixel_scale = geometry["pixel_scale"]
+    radius_pix = max(8, int(math.ceil(radius_arcsec / pixel_scale)))
+    offsets_pix = np.arange(-radius_pix, radius_pix + 1, dtype=float)
+    xx_pix, yy_pix = np.meshgrid(offsets_pix, offsets_pix)
+    transform_xy = image_transform(geometry["disk_pa"], geometry["inclination"], geometry["bar_pa"])
+    inverse_xy = np.linalg.inv(transform_xy)
+    input_offsets = inverse_xy @ np.vstack([xx_pix.ravel(), yy_pix.ravel()])
+    input_x = (geometry["xc"] - 1.0) + input_offsets[0].reshape(xx_pix.shape)
+    input_y = (geometry["yc"] - 1.0) + input_offsets[1].reshape(yy_pix.shape)
+    valid = np.isfinite(data)
+    filled = np.where(valid, data, 0.0)
+    sampled = map_coordinates(filled, [input_y, input_x], order=order, mode="constant", cval=0.0)
+    support = map_coordinates(valid.astype(float), [input_y, input_x], order=0, mode="constant", cval=0.0)
+    cutout = np.divide(
+        sampled,
+        support,
+        out=np.full_like(sampled, np.nan, dtype=float),
+        where=support > 0.5,
+    )
+    axis_arcsec = offsets_pix * pixel_scale
+    return cutout, axis_arcsec, axis_arcsec
 
 
 def robust_sigma(data: np.ndarray) -> float:
@@ -186,11 +273,16 @@ def build_toy_arrays(data: np.ndarray, toy_rows: list[dict[str, str]], truth_dil
     return toy_sum, truth_mask, truth_labels
 
 
-def annotate_toys(ax: plt.Axes, toy_rows: list[dict[str, str]], scale: float) -> None:
+def toy_bar_aligned_arcsec(row: dict[str, str], geometry: dict[str, float]) -> tuple[float, float]:
+    transform_xy = image_transform(geometry["disk_pa"], geometry["inclination"], geometry["bar_pa"])
+    aligned = transform_xy @ np.array([float(row["x"]) - (geometry["xc"] - 1.0), float(row["y"]) - (geometry["yc"] - 1.0)])
+    return float(aligned[0] * geometry["pixel_scale"]), float(aligned[1] * geometry["pixel_scale"])
+
+
+def annotate_toys(ax: plt.Axes, toy_rows: list[dict[str, str]], geometry: dict[str, float]) -> None:
     for row in toy_rows:
-        x = float(row["x"])
-        y = float(row["y"])
-        radius = max(10.0, float(row["fwhm_pixels"]) * 1.8) * scale
+        x, y = toy_bar_aligned_arcsec(row, geometry)
+        radius = max(7.0, float(row["fwhm_pixels"]) * geometry["pixel_scale"] * 1.8)
         ax.add_patch(Circle((x, y), radius=radius, fill=False, edgecolor="tab:red", linewidth=1.4))
         ax.text(x + radius + 3, y, row["toy_id"], color="white", fontsize=8, weight="bold")
 
@@ -209,6 +301,7 @@ def render_example(
     output_path: Path,
     name: str,
     data: np.ndarray,
+    geometry: dict[str, float],
     toy_rows: list[dict[str, str]],
     truth_dilation: int,
     algorithm: str,
@@ -216,11 +309,19 @@ def render_example(
 ) -> None:
     toy_sum, truth_mask, truth_labels = build_toy_arrays(data, toy_rows, truth_dilation)
     injected = data + toy_sum
+    radius_arcsec = profile_radius_pixels(data, geometry) * geometry["pixel_scale"]
 
-    original_log = robust_log_image(data)
-    injected_log = robust_log_image(injected)
+    original_view, x_axis, y_axis = deproject_bar_aligned_cutout(data, geometry, radius_arcsec)
+    injected_view, _, _ = deproject_bar_aligned_cutout(injected, geometry, radius_arcsec)
+    toy_view, _, _ = deproject_bar_aligned_cutout(toy_sum, geometry, radius_arcsec)
+    truth_view, _, _ = deproject_bar_aligned_cutout(truth_labels.astype(float), geometry, radius_arcsec, order=0)
+    truth_view = np.where(truth_view > 0.5, truth_view, np.nan)
+    extent = [float(x_axis[0]), float(x_axis[-1]), float(y_axis[0]), float(y_axis[-1])]
+
+    original_log = robust_log_image(original_view)
+    injected_log = robust_log_image(injected_view)
     image_vmin, image_vmax = percentile_limits(original_log, injected_log, low=8.0, high=99.5)
-    toy_vmin, toy_vmax = percentile_limits(toy_sum[toy_sum > 0], low=1.0, high=99.8)
+    toy_vmin, toy_vmax = percentile_limits(toy_view[toy_view > 0], low=1.0, high=99.8)
 
     fig = plt.figure(figsize=(14, 10), dpi=160, constrained_layout=True)
     grid = fig.add_gridspec(2, 3, height_ratios=[1.0, 0.7])
@@ -236,18 +337,18 @@ def render_example(
     panels = [
         (axes[0], original_log, "Original image", "gray", image_vmin, image_vmax),
         (axes[1], injected_log, "Original plus injected toys", "gray", image_vmin, image_vmax),
-        (axes[2], toy_sum, "Toy-object signal only", "magma", toy_vmin, toy_vmax),
-        (axes[3], np.where(truth_mask, truth_labels, np.nan), "Toy-object truth mask", "tab20", None, None),
+        (axes[2], toy_view, "Toy-object signal only", "magma", toy_vmin, toy_vmax),
+        (axes[3], truth_view, "Toy-object truth mask", "tab20", None, None),
     ]
     for ax, image, title, cmap, vmin, vmax in panels:
-        ax.imshow(image, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax)
+        ax.imshow(image, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax, extent=extent)
         ax.set_title(title, fontsize=10)
-        ax.set_xticks([])
-        ax.set_yticks([])
-    annotate_toys(axes[0], toy_rows, 1.0)
-    annotate_toys(axes[1], toy_rows, 1.0)
-    annotate_toys(axes[2], toy_rows, 1.0)
-    annotate_toys(axes[3], toy_rows, 1.0)
+        ax.set_aspect("equal", adjustable="box")
+        ax.set_xlabel("bar-major axis [arcsec]")
+        ax.set_ylabel("bar-minor axis [arcsec]")
+    annotate_toys(axes[1], toy_rows, geometry)
+    annotate_toys(axes[2], toy_rows, geometry)
+    annotate_toys(axes[3], toy_rows, geometry)
 
     axes[4].axis("off")
     axes[4].text(0.0, 1.0, format_table(toy_rows), va="top", family="monospace", fontsize=9)
@@ -313,6 +414,10 @@ def main() -> None:
         if row is None:
             print(f"Skipping {name}: not found in manifest.")
             continue
+        geometry = required_geometry(row)
+        if geometry is None:
+            print(f"Skipping {name}: geometry is incomplete.")
+            continue
         image_path = image_path_for_pc(row, pc_name)
         if not image_path.exists():
             print(f"Skipping {name}: FITS image not found at {image_path}.")
@@ -320,7 +425,7 @@ def main() -> None:
         with fits.open(image_path, memmap=False) as hdul:
             data = np.asarray(hdul[0].data, dtype=float)
         output_path = output_dir / f"{safe_filename(name)}_toy_object_example.png"
-        render_example(output_path, name, data, toy_rows, truth_dilation, algorithm, detect_on)
+        render_example(output_path, name, data, geometry, toy_rows, truth_dilation, algorithm, detect_on)
         written += 1
         print(f"Wrote {output_path}")
 
