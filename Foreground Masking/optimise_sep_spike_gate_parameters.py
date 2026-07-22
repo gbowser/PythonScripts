@@ -69,6 +69,10 @@ def format_duration(seconds: float) -> str:
     return f"{secs}s"
 
 
+def expected_completion_text(seconds_remaining: float) -> str:
+    return datetime.fromtimestamp(time.time() + max(0.0, float(seconds_remaining))).strftime("%Y-%m-%d %H:%M:%S")
+
+
 def log(message: str) -> None:
     print(f"[{timestamp()}] {message}", flush=True)
 
@@ -395,7 +399,11 @@ class OptimisationRun:
             completed_after = self.completed_before_run + self.evaluation_index
             remaining_trials = max(0, self.total_trials - completed_after)
             average = float(np.mean(self.trial_durations)) if self.trial_durations else elapsed
-            remaining_text = f" remaining={remaining_trials}, rough_eta={format_duration(remaining_trials * average)}"
+            seconds_remaining = remaining_trials * average
+            remaining_text = (
+                f" remaining={remaining_trials}, rough_eta={format_duration(seconds_remaining)}, "
+                f"expected_completion={expected_completion_text(seconds_remaining)}"
+            )
 
         log(
             f"eval {self.evaluation_index:03d}: objective={objective:.5g} "

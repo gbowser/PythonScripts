@@ -36,6 +36,25 @@ from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa:
 from optimisation_results_workbook import append_run_to_workbook  # noqa: E402
 
 
+def timestamp() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def format_duration(seconds: float) -> str:
+    seconds = max(0.0, float(seconds))
+    hours, remainder = divmod(int(round(seconds)), 3600)
+    minutes, secs = divmod(remainder, 60)
+    if hours:
+        return f"{hours}h {minutes:02d}m {secs:02d}s"
+    if minutes:
+        return f"{minutes}m {secs:02d}s"
+    return f"{secs}s"
+
+
+def expected_completion_text(seconds_remaining: float) -> str:
+    return datetime.fromtimestamp(time.time() + max(0.0, float(seconds_remaining))).strftime("%Y-%m-%d %H:%M:%S")
+
+
 DEFAULT_MAX_IMAGES = 20
 DEFAULT_TOYS_PER_IMAGE = 6
 DEFAULT_INITIAL_POINTS = 8
@@ -450,6 +469,9 @@ class OptimisationRun:
         self.best_path = self.output_dir / "sep_toy_object_optimisation_best.json"
         self.evaluation_index = 0
         self.best: dict[str, object] | None = None
+        self.total_trials = 0
+        self.completed_before_run = 0
+        self.trial_durations: list[float] = []
 
     def evaluate_params(
         self,
@@ -540,7 +562,23 @@ class OptimisationRun:
             self.best = dict(summary)
             self.best["params"] = params_to_jsonable(params)
             self.best_path.write_text(json.dumps(self.best, indent=2), encoding="utf-8")
-        print(f"eval {self.evaluation_index:03d}: score={float(aggregate.get('score', -1)):.4f} status={status} elapsed={elapsed:.1f}s")
+        self.trial_durations.append(elapsed)
+        remaining_text = ""
+        if self.total_trials:
+            completed_after = self.completed_before_run + self.evaluation_index
+            remaining_trials = max(0, self.total_trials - completed_after)
+            average = float(np.mean(self.trial_durations)) if self.trial_durations else elapsed
+            seconds_remaining = remaining_trials * average
+            remaining_text = (
+                f" remaining={remaining_trials}, rough_eta={format_duration(seconds_remaining)}, "
+                f"expected_completion={expected_completion_text(seconds_remaining)}"
+            )
+        print(
+            f"[{timestamp()}] eval {self.evaluation_index:03d}: "
+            f"score={float(aggregate.get('score', -1)):.4f} status={status} "
+            f"elapsed={format_duration(elapsed)}{remaining_text}",
+            flush=True,
+        )
         return objective
 
     def evaluate_trial(self, trial: optuna.Trial) -> float:
@@ -561,6 +599,7 @@ class OptimisationRun:
 
 def run_optuna(run: OptimisationRun) -> None:
     total_trials = int(run.args.initial_points) + int(run.args.max_iter)
+    run.total_trials = total_trials
     sampler = optuna.samplers.TPESampler(
         seed=int(run.args.seed),
         n_startup_trials=int(run.args.initial_points),
@@ -573,6 +612,7 @@ def run_optuna(run: OptimisationRun) -> None:
         storage=storage_url,
         load_if_exists=True,
     )
+    run.completed_before_run = len(study.trials)
     remaining = max(0, total_trials - len(study.trials))
     print(
         f"Optuna study '{study.study_name}' using TPESampler: "

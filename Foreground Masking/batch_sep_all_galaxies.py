@@ -59,6 +59,10 @@ def format_duration(seconds: float) -> str:
     return f"{secs}s"
 
 
+def expected_completion_text(seconds_remaining: float) -> str:
+    return datetime.fromtimestamp(time.time() + max(0.0, float(seconds_remaining))).strftime("%Y-%m-%d %H:%M:%S")
+
+
 def log(message: str) -> None:
     print(f"[{timestamp()}] {message}", flush=True)
 
@@ -624,16 +628,19 @@ def main() -> None:
         append_csv(summary_path, [result], fieldnames)
         remaining = len(rows) - index
         average = (time.perf_counter() - run_started) / index
+        seconds_remaining = remaining * average
         if result["status"] == "ok":
             log(
                 f"  ok: kept {result['kept_segments']}/{result['raw_segments']} segments, "
                 f"masked {float(result['masked_fraction']):.2%} elapsed={format_duration(elapsed)} "
-                f"remaining={remaining} rough_eta={format_duration(remaining * average)}"
+                f"remaining={remaining} rough_eta={format_duration(seconds_remaining)} "
+                f"expected_completion={expected_completion_text(seconds_remaining)}"
             )
         else:
             log(
                 f"  failed elapsed={format_duration(elapsed)} "
-                f"remaining={remaining} rough_eta={format_duration(remaining * average)}"
+                f"remaining={remaining} rough_eta={format_duration(seconds_remaining)} "
+                f"expected_completion={expected_completion_text(seconds_remaining)}"
             )
 
     finished = datetime.now()
