@@ -225,9 +225,25 @@ def select_rows(manifest: Path, pc_name: str, names: list[str] | None, max_image
     return selected
 
 
+def investigated_region_mask(data: np.ndarray, geometry: dict[str, float]) -> np.ndarray:
+    radius_pix = sep_tool.display.profile_radius_pixels(data, geometry)
+    yy, xx = np.indices(data.shape, dtype=float)
+    offsets = np.vstack([(xx - (geometry["xc"] - 1.0)).ravel(), (yy - (geometry["yc"] - 1.0)).ravel()])
+    transform_xy = sep_tool.display.image_transform(geometry["disk_pa"], geometry["inclination"], geometry["bar_pa"])
+    aligned = transform_xy @ offsets
+    aligned_x = aligned[0].reshape(data.shape)
+    aligned_y = aligned[1].reshape(data.shape)
+    return (
+        np.isfinite(data)
+        & (np.abs(aligned_x) <= radius_pix)
+        & (np.abs(aligned_y) <= radius_pix)
+    )
+
+
 def inject_toys(
     name: str,
     data: np.ndarray,
+    geometry: dict[str, float],
     *,
     toys_per_image: int,
     rng: np.random.Generator,
@@ -238,9 +254,9 @@ def inject_toys(
     truth_mask = np.zeros(data.shape, dtype=bool)
     truth_labels = np.zeros(data.shape, dtype=np.int32)
     toys: list[ToyObject] = []
-    finite = np.isfinite(data)
+    analysis_region = investigated_region_mask(data, geometry)
     margin = max(16, int(round(min(data.shape) * 0.04)))
-    valid_y, valid_x = np.nonzero(finite)
+    valid_y, valid_x = np.nonzero(analysis_region)
     valid = (
         (valid_x >= margin)
         & (valid_x < data.shape[1] - margin)
@@ -249,26 +265,35 @@ def inject_toys(
     )
     candidates = np.flatnonzero(valid)
     if candidates.size == 0:
-        raise ValueError(f"{name} has no finite injection candidates inside the image margin.")
+        raise ValueError(f"{name} has no injection candidates inside the investigated galaxy area.")
 
     for toy_id in range(1, toys_per_image + 1):
-        for _attempt in range(200):
+        selected: tuple[str, float, float, float, float, float, float, np.ndarray, np.ndarray] | None = None
+        for _attempt in range(1000):
             chosen = int(rng.choice(candidates))
             x0 = float(valid_x[chosen])
             y0 = float(valid_y[chosen])
+            toy_type = str(rng.choice(["star", "cluster", "galaxy"], p=[0.5, 0.2, 0.3]))
+            peak_sigma = float(rng.uniform(5.0, 25.0))
+            fwhm_pixels = float(rng.uniform(2.0, 10.0) if toy_type != "galaxy" else rng.uniform(5.0, 22.0))
+            axis_ratio = float(rng.uniform(0.35, 0.95) if toy_type == "galaxy" else 1.0)
+            pa_deg = float(rng.uniform(0.0, 180.0))
+            model = toy_model(data.shape, toy_type, x0, y0, peak_sigma * sigma, fwhm_pixels, axis_ratio, pa_deg)
+            truth = truth_from_model(model, truth_dilation)
+            if np.any(truth & ~analysis_region):
+                continue
+            local_radius = max(8, int(math.ceil(2.5 * fwhm_pixels + truth_dilation)))
             local = truth_mask[
-                max(0, int(y0) - margin) : min(data.shape[0], int(y0) + margin + 1),
-                max(0, int(x0) - margin) : min(data.shape[1], int(x0) + margin + 1),
+                max(0, int(y0) - local_radius) : min(data.shape[0], int(y0) + local_radius + 1),
+                max(0, int(x0) - local_radius) : min(data.shape[1], int(x0) + local_radius + 1),
             ]
-            if not np.any(local):
-                break
-        toy_type = str(rng.choice(["star", "cluster", "galaxy"], p=[0.5, 0.2, 0.3]))
-        peak_sigma = float(rng.uniform(5.0, 25.0))
-        fwhm_pixels = float(rng.uniform(2.0, 10.0) if toy_type != "galaxy" else rng.uniform(5.0, 22.0))
-        axis_ratio = float(rng.uniform(0.35, 0.95) if toy_type == "galaxy" else 1.0)
-        pa_deg = float(rng.uniform(0.0, 180.0))
-        model = toy_model(data.shape, toy_type, x0, y0, peak_sigma * sigma, fwhm_pixels, axis_ratio, pa_deg)
-        truth = truth_from_model(model, truth_dilation)
+            if np.any(local):
+                continue
+            selected = (toy_type, x0, y0, peak_sigma, fwhm_pixels, axis_ratio, pa_deg, model, truth)
+            break
+        if selected is None:
+            raise ValueError(f"{name} could not place toy {toy_id} wholly inside the investigated galaxy area.")
+        toy_type, x0, y0, peak_sigma, fwhm_pixels, axis_ratio, pa_deg, model, truth = selected
         injected += model
         label = len(toys) + 1
         truth_mask |= truth
@@ -307,6 +332,7 @@ def build_cases(args: argparse.Namespace) -> list[ImageCase]:
         injected, truth_mask, truth_labels, toys = inject_toys(
             name,
             data,
+            geometry,
             toys_per_image=int(args.toys_per_image),
             rng=rng,
             truth_dilation=int(args.truth_dilation),
