@@ -60,6 +60,9 @@ DEFAULT_TOYS_PER_IMAGE = 6
 DEFAULT_INITIAL_POINTS = 8
 DEFAULT_MAX_ITER = 32
 DEFAULT_RANDOM_SEED = 20260719
+DEFAULT_MAX_MASKED_FRACTION = 0.15
+DEFAULT_DATA_LOSS_PENALTY = 0.35
+DEFAULT_FALSE_POSITIVE_PENALTY = 0.05
 OPTIMISED_PARAMETER_NAMES = [
     "detect_thresh",
     "minarea",
@@ -72,15 +75,15 @@ OPTIMISED_PARAMETER_NAMES = [
     "max_elongation",
 ]
 PARAMETER_BOUNDS = {
-    "detect_thresh": (0.5, 8.0),
-    "minarea": (1, 80),
+    "detect_thresh": (0.2, 5.0),
+    "minarea": (1, 50),
     "deblend_nthresh": (8, 64),
-    "deblend_cont": (0.0001, 0.1),
+    "deblend_cont": (0.00001, 0.1),
     "back_size": [16, 24, 32, 48, 64, 96, 128, 192, 256],
     "filter_size": [1, 3, 5, 7, 9],
-    "dilation_radius": (0, 8),
-    "max_area": (20, 3000),
-    "max_elongation": (1.5, 20.0),
+    "dilation_radius": (1, 6),
+    "max_area": (20, 8000),
+    "max_elongation": (1.5, 30.0),
 }
 
 
@@ -383,6 +386,7 @@ def score_case(
     truth_pixels = int(np.count_nonzero(truth))
     incremental_pixels = int(np.count_nonzero(incremental))
     overlap = int(np.count_nonzero(incremental & truth))
+    masked_fraction = incremental_pixels / incremental.size if incremental.size else 0.0
     recall = overlap / truth_pixels if truth_pixels else 0.0
     precision = overlap / incremental_pixels if incremental_pixels else 0.0
     f_score = 2.0 * recall * precision / (recall + precision) if recall + precision > 0 else 0.0
@@ -402,6 +406,7 @@ def score_case(
         "truth_pixels": truth_pixels,
         "incremental_pixels": incremental_pixels,
         "overlap_pixels": overlap,
+        "masked_fraction": masked_fraction,
         "recall": recall,
         "precision": precision,
         "f_score": f_score,
@@ -413,26 +418,45 @@ def score_case(
     }
 
 
-def aggregate_score(case_rows: list[dict[str, float | int | str]]) -> dict[str, float]:
+def aggregate_score(
+    case_rows: list[dict[str, float | int | str]],
+    *,
+    max_masked_fraction: float,
+    data_loss_penalty: float,
+    false_positive_penalty: float,
+) -> dict[str, float]:
     if not case_rows:
         return {"objective": 1.0, "score": 0.0}
     mean_recall = float(np.mean([float(row["recall"]) for row in case_rows]))
     mean_precision = float(np.mean([float(row["precision"]) for row in case_rows]))
     mean_f = float(np.mean([float(row["f_score"]) for row in case_rows]))
     mean_toy_recall = float(np.mean([float(row["mean_toy_recall"]) for row in case_rows]))
+    mean_masked = float(np.mean([float(row["masked_fraction"]) for row in case_rows]))
+    max_masked = float(np.max([float(row["masked_fraction"]) for row in case_rows]))
     false_positive = float(np.mean([float(row["false_positive_fraction"]) for row in case_rows]))
     recovered = sum(int(row["recovered_toys"]) for row in case_rows)
     toy_count = sum(int(row["toy_count"]) for row in case_rows)
     toy_detection_rate = recovered / toy_count if toy_count else 0.0
-    score = 0.45 * mean_f + 0.35 * mean_toy_recall + 0.20 * toy_detection_rate - 0.15 * min(false_positive, 1.0)
+    recovery_score = 0.45 * mean_recall + 0.20 * mean_f + 0.25 * mean_toy_recall + 0.20 * toy_detection_rate
+    data_loss = data_loss_penalty * mean_masked + false_positive_penalty * min(false_positive, 1.0)
+    score = recovery_score - data_loss
+    cap_excess = max(0.0, max_masked - max_masked_fraction)
+    if cap_excess > 0.0:
+        objective = 10.0 + 100.0 * cap_excess + data_loss - recovery_score
+    else:
+        objective = -score
     return {
-        "objective": -score,
+        "objective": objective,
         "score": score,
         "mean_recall": mean_recall,
         "mean_precision": mean_precision,
         "mean_f_score": mean_f,
         "mean_toy_recall": mean_toy_recall,
         "toy_detection_rate": toy_detection_rate,
+        "mean_masked_fraction": mean_masked,
+        "max_masked_fraction": max_masked,
+        "max_masked_fraction_limit": max_masked_fraction,
+        "masked_fraction_cap_excess": cap_excess,
         "false_positive_fraction": false_positive,
     }
 
@@ -487,7 +511,12 @@ class OptimisationRun:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
                 case_rows = [score_case(case, params) for case in self.cases]
-            aggregate = aggregate_score(case_rows)
+            aggregate = aggregate_score(
+                case_rows,
+                max_masked_fraction=float(self.args.max_masked_fraction),
+                data_loss_penalty=float(self.args.data_loss_penalty),
+                false_positive_penalty=float(self.args.false_positive_penalty),
+            )
             objective = float(aggregate["objective"])
             status = "ok"
             error = ""
@@ -510,6 +539,10 @@ class OptimisationRun:
             "mean_f_score": aggregate.get("mean_f_score", math.nan),
             "mean_toy_recall": aggregate.get("mean_toy_recall", math.nan),
             "toy_detection_rate": aggregate.get("toy_detection_rate", math.nan),
+            "mean_masked_fraction": aggregate.get("mean_masked_fraction", math.nan),
+            "max_masked_fraction": aggregate.get("max_masked_fraction", math.nan),
+            "max_masked_fraction_limit": aggregate.get("max_masked_fraction_limit", math.nan),
+            "masked_fraction_cap_excess": aggregate.get("masked_fraction_cap_excess", math.nan),
             "false_positive_fraction": aggregate.get("false_positive_fraction", math.nan),
             "elapsed_seconds": elapsed,
             "error": error,
@@ -530,6 +563,10 @@ class OptimisationRun:
                 "mean_f_score",
                 "mean_toy_recall",
                 "toy_detection_rate",
+                "mean_masked_fraction",
+                "max_masked_fraction",
+                "max_masked_fraction_limit",
+                "masked_fraction_cap_excess",
                 "false_positive_fraction",
                 "elapsed_seconds",
                 "error",
@@ -548,6 +585,7 @@ class OptimisationRun:
                     "truth_pixels",
                     "incremental_pixels",
                     "overlap_pixels",
+                    "masked_fraction",
                     "recall",
                     "precision",
                     "f_score",
@@ -576,6 +614,8 @@ class OptimisationRun:
         print(
             f"[{timestamp()}] eval {self.evaluation_index:03d}: "
             f"score={float(aggregate.get('score', -1)):.4f} status={status} "
+            f"mean_masked={float(aggregate.get('mean_masked_fraction', math.nan)):.3%} "
+            f"max_masked={float(aggregate.get('max_masked_fraction', math.nan)):.3%} "
             f"elapsed={format_duration(elapsed)}{remaining_text}",
             flush=True,
         )
@@ -647,6 +687,24 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-iter", type=int, default=DEFAULT_MAX_ITER)
     parser.add_argument("--seed", type=int, default=DEFAULT_RANDOM_SEED)
     parser.add_argument("--study-name", default="sep-toy-object-optimisation")
+    parser.add_argument(
+        "--max-masked-fraction",
+        type=float,
+        default=DEFAULT_MAX_MASKED_FRACTION,
+        help="Hard worst-image masked-fraction ceiling for a trial.",
+    )
+    parser.add_argument(
+        "--data-loss-penalty",
+        type=float,
+        default=DEFAULT_DATA_LOSS_PENALTY,
+        help="Penalty weight applied to the mean masked fraction.",
+    )
+    parser.add_argument(
+        "--false-positive-penalty",
+        type=float,
+        default=DEFAULT_FALSE_POSITIVE_PENALTY,
+        help="Penalty weight applied to foreground-mask pixels outside injected toy-object truth.",
+    )
     parser.add_argument(
         "--results-workbook",
         type=Path,

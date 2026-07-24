@@ -38,6 +38,7 @@ else {
     Write-MasterLog "PID $WaitPid is not running; rendering immediately."
 }
 
+New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 & $Python $Compositor --output-dir $OutputDir 2>&1 | Tee-Object -FilePath (Join-Path $OutputDir "terminal_log.txt") -Append
 $exitCode = $LASTEXITCODE
 if ($exitCode -eq 0) {

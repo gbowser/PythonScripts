@@ -111,15 +111,15 @@ def default_params(detect_on: str) -> dict[str, float | int | str]:
 
 def optuna_trial_to_params(trial: optuna.Trial, detect_on: str) -> dict[str, float | int | str]:
     params = default_params(detect_on)
-    params["detect_thresh"] = trial.suggest_float("detect_thresh", 0.5, 8.0)
-    params["minarea"] = trial.suggest_int("minarea", 1, 80)
+    params["detect_thresh"] = trial.suggest_float("detect_thresh", 0.2, 5.0)
+    params["minarea"] = trial.suggest_int("minarea", 1, 50)
     params["deblend_nthresh"] = trial.suggest_int("deblend_nthresh", 8, 64)
-    params["deblend_cont"] = trial.suggest_float("deblend_cont", 0.0001, 0.1, log=True)
+    params["deblend_cont"] = trial.suggest_float("deblend_cont", 0.00001, 0.1, log=True)
     params["back_size"] = trial.suggest_categorical("back_size", [16, 24, 32, 48, 64, 96, 128, 192, 256])
     params["filter_size"] = trial.suggest_categorical("filter_size", [1, 3, 5, 7, 9])
-    params["dilation_radius"] = trial.suggest_int("dilation_radius", 0, 8)
-    params["max_area"] = trial.suggest_int("max_area", 20, 5000)
-    params["max_elongation"] = trial.suggest_float("max_elongation", 1.5, 20.0)
+    params["dilation_radius"] = trial.suggest_int("dilation_radius", 1, 6)
+    params["max_area"] = trial.suggest_int("max_area", 20, 8000)
+    params["max_elongation"] = trial.suggest_float("max_elongation", 1.5, 30.0)
     return params
 
 
@@ -257,20 +257,23 @@ def aggregate_score(case_rows: list[dict[str, float | int | str]]) -> dict[str, 
     spike_rows = [row for row in case_rows if int(row["spike_samples"]) > 0]
     rows_for_coverage = spike_rows if spike_rows else case_rows
     mean_spike_coverage = float(np.mean([float(row["spike_coverage"]) for row in rows_for_coverage]))
+    min_spike_coverage = float(np.min([float(row["spike_coverage"]) for row in rows_for_coverage]))
     mean_masked_fraction = float(np.mean([float(row["masked_fraction"]) for row in case_rows]))
     mean_profile_affected = float(np.mean([float(row["profile_affected_fraction"]) for row in case_rows]))
     mean_non_spike_profile = float(np.mean([float(row["non_spike_profile_fraction"]) for row in case_rows]))
     mean_profile_change = float(np.mean([float(row["profile_change"]) for row in case_rows]))
     objective = (
-        12.0 * (1.0 - mean_spike_coverage)
-        + 4.0 * mean_non_spike_profile
-        + 2.0 * mean_masked_fraction
-        + 1.5 * mean_profile_affected
-        + 1.0 * mean_profile_change
+        24.0 * (1.0 - mean_spike_coverage)
+        + 12.0 * (1.0 - min_spike_coverage)
+        + 1.5 * mean_non_spike_profile
+        + 0.6 * mean_masked_fraction
+        + 0.6 * mean_profile_affected
+        + 0.5 * mean_profile_change
     )
     return {
         "objective": objective,
         "mean_spike_coverage": mean_spike_coverage,
+        "min_spike_coverage": min_spike_coverage,
         "mean_masked_fraction": mean_masked_fraction,
         "mean_profile_affected_fraction": mean_profile_affected,
         "mean_non_spike_profile_fraction": mean_non_spike_profile,
@@ -343,6 +346,7 @@ class OptimisationRun:
             "status": status,
             "objective": objective,
             "mean_spike_coverage": aggregate.get("mean_spike_coverage", math.nan),
+            "min_spike_coverage": aggregate.get("min_spike_coverage", math.nan),
             "mean_masked_fraction": aggregate.get("mean_masked_fraction", math.nan),
             "mean_profile_affected_fraction": aggregate.get("mean_profile_affected_fraction", math.nan),
             "mean_non_spike_profile_fraction": aggregate.get("mean_non_spike_profile_fraction", math.nan),
@@ -360,6 +364,7 @@ class OptimisationRun:
                 "status",
                 "objective",
                 "mean_spike_coverage",
+                "min_spike_coverage",
                 "mean_masked_fraction",
                 "mean_profile_affected_fraction",
                 "mean_non_spike_profile_fraction",
@@ -408,6 +413,7 @@ class OptimisationRun:
         log(
             f"eval {self.evaluation_index:03d}: objective={objective:.5g} "
             f"coverage={float(summary['mean_spike_coverage']):.3f} "
+            f"min_coverage={float(summary['min_spike_coverage']):.3f} "
             f"masked={float(summary['mean_masked_fraction']):.3%} "
             f"status={status} elapsed={format_duration(elapsed)}{remaining_text}"
         )
