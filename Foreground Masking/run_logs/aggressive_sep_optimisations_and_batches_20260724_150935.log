@@ -1,0 +1,6 @@
+[2026-07-24 15:09:35] Aggressive SEP optimisation and batch run started.
+[2026-07-24 15:09:35] Master log: C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\run_logs\aggressive_sep_optimisations_and_batches_20260724_150935.log
+[2026-07-24 15:09:35] START Aggressive SEP Spike Gate optimisation
+[2026-07-24 15:09:35] COMMAND C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\optimise_sep_spike_gate_parameters.py --max-images 20 --initial-points 12 --max-iter 48 --detect-on residual --progress-galaxies
+[2026-07-24 15:28:16] DONE Aggressive SEP Spike Gate optimisation
+[2026-07-24 15:28:16] Stopping because SEP Spike Gate optimisation failed.

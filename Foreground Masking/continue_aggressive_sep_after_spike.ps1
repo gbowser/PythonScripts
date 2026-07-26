@@ -7,13 +7,14 @@ $ErrorActionPreference = "Continue"
 $Python = "C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe"
 $Repo = "C:\Users\gordo\Documents\Github\PythonScripts"
 $ForegroundDir = Join-Path $Repo "Foreground Masking"
-$SEPSpikeOptimiser = Join-Path $ForegroundDir "optimise_sep_spike_gate_parameters.py"
 $SEPToyOptimiser = Join-Path $ForegroundDir "sep_toy_object_parameter_optimisation.py"
 $SEPBatch = Join-Path $ForegroundDir "batch_sep_all_galaxies.py"
 
 $Root = "D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects"
 $LogRoot = Join-Path $ForegroundDir "run_logs"
-$MasterLog = Join-Path $LogRoot ("aggressive_sep_optimisations_and_batches_{0}.log" -f (Get-Date -Format "yyyyMMdd_HHmmss"))
+$MasterLog = Join-Path $LogRoot ("continue_aggressive_sep_after_spike_{0}.log" -f (Get-Date -Format "yyyyMMdd_HHmmss"))
+$SpikeRun = "20260724_150938"
+$SpikeBest = Join-Path $Root "sep spike optimisation\$SpikeRun\sep_spike_optimisation_best.json"
 
 function Write-MasterLog {
     param([string]$Message)
@@ -66,25 +67,12 @@ function Latest-RunDir {
         Select-Object -First 1
 }
 
-Write-MasterLog "Aggressive SEP optimisation and batch run started."
-Write-MasterLog "Master log: $MasterLog"
+Write-MasterLog "Continuing aggressive SEP run after completed Spike Gate optimisation."
+Write-MasterLog "Using Spike Gate best JSON: $SpikeBest"
 
-$spikeLog = Join-Path $LogRoot ("aggressive_sep_spike_optimisation_{0}.txt" -f (Get-Date -Format "yyyyMMdd_HHmmss"))
-$spikeExit = Run-Step `
-    -Name "Aggressive SEP Spike Gate optimisation" `
-    -LogPath $spikeLog `
-    -Command @(
-        $Python,
-        $SEPSpikeOptimiser,
-        "--max-images", "20",
-        "--initial-points", "12",
-        "--max-iter", "48",
-        "--detect-on", "residual",
-        "--progress-galaxies"
-    )
-if ($spikeExit -ne 0) {
-    Write-MasterLog "Stopping because SEP Spike Gate optimisation failed."
-    exit $spikeExit
+if (-not (Test-Path $SpikeBest)) {
+    Write-MasterLog "Missing completed Spike Gate best JSON."
+    exit 1
 }
 
 $toyLog = Join-Path $LogRoot ("aggressive_sep_toy_optimisation_{0}.txt" -f (Get-Date -Format "yyyyMMdd_HHmmss"))
@@ -113,32 +101,33 @@ if ($DryRun) {
     exit 0
 }
 
-$spikeRun = Latest-RunDir -Parent (Join-Path $Root "sep spike optimisation") -BestName "sep_spike_optimisation_best.json"
 $toyRun = Latest-RunDir -Parent (Join-Path $Root "sep toy optimisation") -BestName "sep_toy_object_optimisation_best.json"
-if (-not $spikeRun -or -not $toyRun) {
-    Write-MasterLog "Could not find one or both new SEP best JSON files."
+if (-not $toyRun) {
+    Write-MasterLog "Could not find new SEP Toy Object best JSON."
     exit 1
 }
 
-$spikeBest = Join-Path $spikeRun.FullName "sep_spike_optimisation_best.json"
 $toyBest = Join-Path $toyRun.FullName "sep_toy_object_optimisation_best.json"
-$spikeOut = Join-Path $Root ("SEP all galaxy batch\sep_spike_gate_aggressive_{0}" -f $spikeRun.Name)
+$spikeOut = Join-Path $Root ("SEP all galaxy batch\sep_spike_gate_aggressive_$SpikeRun")
 $toyOut = Join-Path $Root ("SEP all galaxy batch\sep_toy_object_aggressive_{0}" -f $toyRun.Name)
 
-Run-Step `
+$spikeBatchExit = Run-Step `
     -Name "Aggressive SEP Spike Gate all-galaxy batch" `
     -LogPath (Join-Path $spikeOut "terminal_log.txt") `
     -Command @(
         $Python,
         $SEPBatch,
-        "--best-json", $spikeBest,
+        "--best-json", $SpikeBest,
         "--source", "spike-gate",
-        "--run-label", ("Aggressive SEP Spike Gate {0}" -f $spikeRun.Name),
+        "--run-label", "Aggressive SEP Spike Gate $SpikeRun",
         "--output-dir", $spikeOut,
         "--require-best-json"
     )
+if ($spikeBatchExit -ne 0) {
+    Write-MasterLog "Aggressive SEP Spike Gate batch failed; continuing to Toy Object batch."
+}
 
-Run-Step `
+$toyBatchExit = Run-Step `
     -Name "Aggressive SEP Toy Object all-galaxy batch" `
     -LogPath (Join-Path $toyOut "terminal_log.txt") `
     -Command @(
@@ -151,4 +140,9 @@ Run-Step `
         "--require-best-json"
     )
 
-Write-MasterLog "Aggressive SEP optimisation and batch run finished."
+if ($spikeBatchExit -ne 0 -or $toyBatchExit -ne 0) {
+    Write-MasterLog "Continuation finished with batch failure(s)."
+    exit 1
+}
+
+Write-MasterLog "Aggressive SEP continuation finished successfully."

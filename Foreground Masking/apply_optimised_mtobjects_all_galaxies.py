@@ -374,11 +374,19 @@ def draw_report(
     if len(source_label) > 58:
         source_label = source_label[:55] + "..."
     figure.suptitle(
-        f"{name} | {source_label} | detect_on={params['detect_on']} | segments={kept}/{len(products['rows'])}\n"
-        f"move_factor={float(params['move_factor']):.2f}, min_distance={float(params['min_distance']):.2f}, "
-        f"gaussian_fwhm={float(params['gaussian_fwhm']):.2f}, minarea={int(params['minarea'])}, "
-        f"dilation_radius={int(params['dilation_radius'])}, max_area={int(params['max_area'])}, "
-        f"max_elongation={float(params['max_elongation']):.2f}",
+        "\n".join(
+            [
+                f"{name} | {source_label}",
+                f"detect_on={params['detect_on']} | segments={kept}/{len(products['rows'])}",
+                (
+                    f"move_factor={float(params['move_factor']):.2f}, "
+                    f"min_distance={float(params['min_distance']):.2f}, "
+                    f"gaussian_fwhm={float(params['gaussian_fwhm']):.2f}, "
+                    f"minarea={int(params['minarea'])}, dilation_radius={int(params['dilation_radius'])}, "
+                    f"max_area={int(params['max_area'])}, max_elongation={float(params['max_elongation']):.2f}"
+                ),
+            ]
+        ),
         fontsize=9.5,
         fontweight="bold",
         y=0.985,
@@ -496,7 +504,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--names", nargs="*", help="Optional explicit galaxy names. Defaults to all usable galaxies.")
     parser.add_argument("--max-images", type=int, help="Optional limit for smoke tests.")
     parser.add_argument("--dpi", type=int, default=DEFAULT_DPI)
-    parser.add_argument("--save-cleaned-fits", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument(
+        "--save-cleaned-fits",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Optionally write cleaned FITS products and masks. Default is reports/summary only.",
+    )
     return parser.parse_args()
 
 

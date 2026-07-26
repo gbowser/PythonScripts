@@ -151,9 +151,10 @@ def detect_plot_box(image: Image.Image) -> tuple[int, int, int, int] | None:
 
 
 def normalise_x_axis(crop: Image.Image) -> Image.Image:
+    contained_size = (PANEL_W - 28, PANEL_H - TITLE_H - 22)
     plot_box = detect_plot_box(crop)
     if plot_box is None:
-        return ImageOps.contain(crop, (PANEL_W - 28, PANEL_H - TITLE_H - 22), method=Image.Resampling.LANCZOS)
+        return ImageOps.contain(crop, contained_size, method=Image.Resampling.LANCZOS)
 
     left, _top, right, _bottom = plot_box
     plot_width = max(1.0, float(right - left))
@@ -162,9 +163,13 @@ def normalise_x_axis(crop: Image.Image) -> Image.Image:
     source_delta = max(1.0, source_x0 - source_xminus40)
     target_delta = TARGET_X0 - TARGET_X_MINUS40
     scale = target_delta / source_delta
+    resized_width = max(1, int(round(crop.width * scale)))
+    resized_height = max(1, int(round(crop.height * scale)))
+    if scale <= 0 or scale > 4.0 or resized_width * resized_height > 12_000_000:
+        return ImageOps.contain(crop, contained_size, method=Image.Resampling.LANCZOS)
 
     resized = crop.resize(
-        (max(1, int(round(crop.width * scale))), max(1, int(round(crop.height * scale)))),
+        (resized_width, resized_height),
         Image.Resampling.LANCZOS,
     )
     paste_x = int(round(TARGET_X0 - source_x0 * scale))

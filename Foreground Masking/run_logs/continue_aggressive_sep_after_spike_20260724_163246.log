@@ -1,0 +1,6 @@
+[2026-07-24 16:32:46] Continuing aggressive SEP run after completed Spike Gate optimisation.
+[2026-07-24 16:32:46] Using Spike Gate best JSON: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\sep spike optimisation\20260724_150938\sep_spike_optimisation_best.json
+[2026-07-24 16:32:46] START Aggressive SEP Toy Object optimisation
+[2026-07-24 16:32:46] COMMAND C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\sep_toy_object_parameter_optimisation.py --max-images 20 --toys-per-image 6 --initial-points 8 --max-iter 32 --detect-on residual --max-masked-fraction 0.15 --data-loss-penalty 0.35 --false-positive-penalty 0.05
+[2026-07-24 16:32:46] DRY RUN Aggressive SEP Toy Object optimisation
+[2026-07-24 16:32:46] Dry run complete.

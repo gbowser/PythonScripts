@@ -210,6 +210,8 @@ def draw_profile(
 
     ax.semilogy(radii, displayed_intensity, color="#1f77b4", linewidth=1.4)
     if bridged_intensity is not None:
+        for start, stop in sep_gui.contiguous_true_runs(bridged_samples):
+            ax.axvspan(radii[start], radii[stop], color="#f4a6b8", alpha=0.28, linewidth=0)
         bridge_label = "log-linear interpolation"
         for start, stop in sep_gui.contiguous_true_runs(bridged_samples):
             plot_start = max(0, start - 1)
@@ -264,9 +266,9 @@ def draw_products(name: str, original: np.ndarray, products: dict, params: dict,
     bar_sma = display.bar_sma_deprojected_arcsec(geometry)
     central_exclusion_arcsec = float(params["exclude_center_pixels"]) * geometry["pixel_scale"]
 
-    figure = Figure(figsize=(12.0, 15.6), dpi=100, constrained_layout=True)
+    figure = Figure(figsize=(12.0, 15.8), dpi=100, constrained_layout=True)
     FigureCanvasAgg(figure)
-    grid = figure.add_gridspec(5, 2, height_ratios=[0.26, 1.0, 1.0, 1.0, 0.72])
+    grid = figure.add_gridspec(5, 2, height_ratios=[0.38, 1.0, 1.0, 1.0, 0.72])
     ax_parameters = figure.add_subplot(grid[0, :])
     ax_original = figure.add_subplot(grid[1, 0])
     ax_cleaned = figure.add_subplot(grid[1, 1])
@@ -281,20 +283,29 @@ def draw_products(name: str, original: np.ndarray, products: dict, params: dict,
     raw = len(products["rows"])
     masked_fraction = np.count_nonzero(mask) / mask.size
     ax_parameters.set_axis_off()
+    parameter_text = "\n".join(
+        [
+            f"SEP foreground detection | units=Pixels | detect_on={params['detect_on']}",
+            (
+                f"thresh={float(params['detect_thresh']):.1f} | minarea={int(params['minarea'])} | "
+                f"deblend={int(params['deblend_nthresh'])}/{float(params['deblend_cont']):.4f} | "
+                f"dilation={int(params['dilation_radius'])}"
+            ),
+            (
+                f"bkg={float(products['background_level']):.4g} | rms={float(products['background_rms']):.4g} | "
+                f"segments={kept}/{raw} | masked={masked_fraction:.2%}"
+            ),
+        ]
+    )
     ax_parameters.text(
         0.5,
         0.5,
-        "SEP foreground detection   "
-        f"units=Pixels   detect_on={params['detect_on']}   "
-        f"thresh={float(params['detect_thresh']):.1f}   minarea={int(params['minarea'])}   "
-        f"deblend={int(params['deblend_nthresh'])}/{float(params['deblend_cont']):.4f}   "
-        f"dilation={int(params['dilation_radius'])}   "
-        f"bkg={float(products['background_level']):.4g}, rms={float(products['background_rms']):.4g}   |   "
-        f"segments={kept}/{raw}   masked={masked_fraction:.2%}",
+        parameter_text,
         transform=ax_parameters.transAxes,
         ha="center",
         va="center",
-        fontsize=9.3,
+        fontsize=9.0,
+        linespacing=1.28,
         color="0.12",
         bbox={"boxstyle": "round,pad=0.45", "facecolor": "#F4F6F9", "edgecolor": "#6B7280", "linewidth": 0.8},
     )
@@ -518,7 +529,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--limit", type=int, default=None, help="Deprecated alias for --max-images.")
     parser.add_argument("--max-images", type=int, default=None)
     parser.add_argument("--dpi", type=int, default=DEFAULT_DPI)
-    parser.add_argument("--save-cleaned-fits", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument(
+        "--save-cleaned-fits",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Optionally write cleaned FITS products and masks. Default is reports/summary only.",
+    )
     parser.add_argument("--detect-on", choices=["residual", "original"], default="residual")
     parser.add_argument("--detect-thresh", type=float, default=sep_gui.DEFAULT_DETECT_THRESH)
     parser.add_argument("--minarea", type=int, default=sep_gui.DEFAULT_MINAREA)
@@ -530,6 +546,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-area", type=int, default=sep_gui.DEFAULT_MAX_AREA)
     parser.add_argument("--max-elongation", type=float, default=sep_gui.DEFAULT_MAX_ELONGATION)
     parser.add_argument("--exclude-center-pixels", type=float, default=sep_gui.DEFAULT_EXCLUDE_CENTER_PIXELS)
+    parser.add_argument(
+        "--replace-summary",
+        action="store_true",
+        help="Replace the summary CSV files in the output folder before writing this run.",
+    )
     return parser.parse_args()
 
 
@@ -572,6 +593,11 @@ def main() -> None:
         raise RuntimeError("No matching galaxies with available FITS images were found.")
 
     summary_path = output_dir / "sep_optimised_apply_summary.csv"
+    legacy_summary_path = output_dir / "sep_batch_summary.csv"
+    if args.replace_summary:
+        for path in (summary_path, legacy_summary_path):
+            if path.exists():
+                path.unlink()
     completed_names = completed_names_from_summary(summary_path) if args.resume_output_dir is not None else set()
     if completed_names:
         rows = [row for row in rows if row["name"] not in completed_names]
@@ -644,7 +670,6 @@ def main() -> None:
             )
 
     finished = datetime.now()
-    legacy_summary_path = output_dir / "sep_batch_summary.csv"
     if not legacy_summary_path.exists() and summary_path.exists():
         with summary_path.open(newline="", encoding="utf-8") as src, legacy_summary_path.open(
             "w", newline="", encoding="utf-8"

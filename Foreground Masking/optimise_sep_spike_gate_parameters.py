@@ -41,6 +41,9 @@ DEFAULT_INITIAL_POINTS = 16
 DEFAULT_MAX_ITER = 64
 DEFAULT_RANDOM_SEED = 20260719
 DEFAULT_STUDY_NAME = "sep-spike-gate-optimisation"
+DEFAULT_MAX_MASKED_FRACTION = 0.15
+DEFAULT_DATA_LOSS_PENALTY = 4.0
+DEFAULT_PROFILE_LOSS_PENALTY = 2.0
 OPTIMISED_PARAMETER_NAMES = [
     "detect_thresh",
     "minarea",
@@ -253,28 +256,45 @@ def score_case(
     }
 
 
-def aggregate_score(case_rows: list[dict[str, float | int | str]]) -> dict[str, float]:
+def aggregate_score(
+    case_rows: list[dict[str, float | int | str]],
+    *,
+    max_masked_fraction: float,
+    data_loss_penalty: float,
+    profile_loss_penalty: float,
+) -> dict[str, float]:
     spike_rows = [row for row in case_rows if int(row["spike_samples"]) > 0]
     rows_for_coverage = spike_rows if spike_rows else case_rows
     mean_spike_coverage = float(np.mean([float(row["spike_coverage"]) for row in rows_for_coverage]))
     min_spike_coverage = float(np.min([float(row["spike_coverage"]) for row in rows_for_coverage]))
     mean_masked_fraction = float(np.mean([float(row["masked_fraction"]) for row in case_rows]))
+    max_masked_fraction_seen = float(np.max([float(row["masked_fraction"]) for row in case_rows]))
     mean_profile_affected = float(np.mean([float(row["profile_affected_fraction"]) for row in case_rows]))
     mean_non_spike_profile = float(np.mean([float(row["non_spike_profile_fraction"]) for row in case_rows]))
     mean_profile_change = float(np.mean([float(row["profile_change"]) for row in case_rows]))
-    objective = (
+
+    base_objective = (
         24.0 * (1.0 - mean_spike_coverage)
         + 12.0 * (1.0 - min_spike_coverage)
-        + 1.5 * mean_non_spike_profile
-        + 0.6 * mean_masked_fraction
-        + 0.6 * mean_profile_affected
+        + profile_loss_penalty * mean_non_spike_profile
+        + data_loss_penalty * mean_masked_fraction
+        + profile_loss_penalty * mean_profile_affected
         + 0.5 * mean_profile_change
     )
+    cap_excess = max(0.0, max_masked_fraction_seen - max_masked_fraction)
+    if cap_excess > 0.0:
+        objective = 10.0 + 100.0 * cap_excess + base_objective
+    else:
+        objective = base_objective
     return {
         "objective": objective,
+        "base_objective": base_objective,
         "mean_spike_coverage": mean_spike_coverage,
         "min_spike_coverage": min_spike_coverage,
         "mean_masked_fraction": mean_masked_fraction,
+        "max_masked_fraction": max_masked_fraction_seen,
+        "max_masked_fraction_limit": max_masked_fraction,
+        "masked_fraction_cap_excess": cap_excess,
         "mean_profile_affected_fraction": mean_profile_affected,
         "mean_non_spike_profile_fraction": mean_non_spike_profile,
         "mean_profile_change": mean_profile_change,
@@ -326,7 +346,12 @@ class OptimisationRun:
                             f"masked={float(row['masked_fraction']):.3%}, "
                             f"segments={int(row['segments'])}, elapsed={format_duration(case_elapsed)}"
                         )
-            aggregate = aggregate_score(case_rows)
+            aggregate = aggregate_score(
+                case_rows,
+                max_masked_fraction=float(self.args.max_masked_fraction),
+                data_loss_penalty=float(self.args.data_loss_penalty),
+                profile_loss_penalty=float(self.args.profile_loss_penalty),
+            )
             objective = float(aggregate["objective"])
             status = "ok"
             error = ""
@@ -345,9 +370,13 @@ class OptimisationRun:
             "trial_number": "" if trial_number is None else trial_number,
             "status": status,
             "objective": objective,
+            "base_objective": aggregate.get("base_objective", math.nan),
             "mean_spike_coverage": aggregate.get("mean_spike_coverage", math.nan),
             "min_spike_coverage": aggregate.get("min_spike_coverage", math.nan),
             "mean_masked_fraction": aggregate.get("mean_masked_fraction", math.nan),
+            "max_masked_fraction": aggregate.get("max_masked_fraction", math.nan),
+            "max_masked_fraction_limit": aggregate.get("max_masked_fraction_limit", math.nan),
+            "masked_fraction_cap_excess": aggregate.get("masked_fraction_cap_excess", math.nan),
             "mean_profile_affected_fraction": aggregate.get("mean_profile_affected_fraction", math.nan),
             "mean_non_spike_profile_fraction": aggregate.get("mean_non_spike_profile_fraction", math.nan),
             "mean_profile_change": aggregate.get("mean_profile_change", math.nan),
@@ -363,9 +392,13 @@ class OptimisationRun:
                 "trial_number",
                 "status",
                 "objective",
+                "base_objective",
                 "mean_spike_coverage",
                 "min_spike_coverage",
                 "mean_masked_fraction",
+                "max_masked_fraction",
+                "max_masked_fraction_limit",
+                "masked_fraction_cap_excess",
                 "mean_profile_affected_fraction",
                 "mean_non_spike_profile_fraction",
                 "mean_profile_change",
@@ -415,6 +448,7 @@ class OptimisationRun:
             f"coverage={float(summary['mean_spike_coverage']):.3f} "
             f"min_coverage={float(summary['min_spike_coverage']):.3f} "
             f"masked={float(summary['mean_masked_fraction']):.3%} "
+            f"max_masked={float(summary['max_masked_fraction']):.3%} "
             f"status={status} elapsed={format_duration(elapsed)}{remaining_text}"
         )
         return objective
@@ -472,6 +506,24 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-iter", type=int, default=DEFAULT_MAX_ITER)
     parser.add_argument("--seed", type=int, default=DEFAULT_RANDOM_SEED)
     parser.add_argument("--study-name", default=DEFAULT_STUDY_NAME)
+    parser.add_argument(
+        "--max-masked-fraction",
+        type=float,
+        default=DEFAULT_MAX_MASKED_FRACTION,
+        help="Hard worst-galaxy masked-fraction ceiling for a trial.",
+    )
+    parser.add_argument(
+        "--data-loss-penalty",
+        type=float,
+        default=DEFAULT_DATA_LOSS_PENALTY,
+        help="Penalty weight applied to mean image masked fraction.",
+    )
+    parser.add_argument(
+        "--profile-loss-penalty",
+        type=float,
+        default=DEFAULT_PROFILE_LOSS_PENALTY,
+        help="Penalty weight applied to non-spike/profile masking.",
+    )
     parser.add_argument(
         "--results-workbook",
         type=Path,
