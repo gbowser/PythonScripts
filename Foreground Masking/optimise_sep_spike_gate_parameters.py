@@ -51,6 +51,12 @@ DEFAULT_MAX_NON_SPIKE_PROFILE_FRACTION = 1.0
 DEFAULT_MAX_BRIDGE_SPAN_ARCSEC = 1.0e6
 DEFAULT_BRIDGE_SPAN_PENALTY = 0.0
 DEFAULT_MAX_AREA_SEARCH = 8000
+DEFAULT_DETECT_THRESH_MIN = 0.2
+DEFAULT_DETECT_THRESH_MAX = 5.0
+DEFAULT_MINAREA_MIN = 1
+DEFAULT_MINAREA_MAX = 50
+DEFAULT_DILATION_RADIUS_MIN = 0
+DEFAULT_DILATION_RADIUS_MAX = 4
 OPTIMISED_PARAMETER_NAMES = [
     "detect_thresh",
     "minarea",
@@ -122,13 +128,21 @@ def default_params(detect_on: str) -> dict[str, float | int | str]:
 def optuna_trial_to_params(trial: optuna.Trial, args: argparse.Namespace) -> dict[str, float | int | str]:
     detect_on = str(args.detect_on)
     params = default_params(detect_on)
-    params["detect_thresh"] = trial.suggest_float("detect_thresh", 0.2, 5.0)
-    params["minarea"] = trial.suggest_int("minarea", 1, 50)
+    params["detect_thresh"] = trial.suggest_float(
+        "detect_thresh",
+        float(args.detect_thresh_min),
+        float(args.detect_thresh_max),
+    )
+    params["minarea"] = trial.suggest_int("minarea", int(args.minarea_min), int(args.minarea_max))
     params["deblend_nthresh"] = trial.suggest_int("deblend_nthresh", 8, 64)
     params["deblend_cont"] = trial.suggest_float("deblend_cont", 0.00001, 0.1, log=True)
     params["back_size"] = trial.suggest_categorical("back_size", [16, 24, 32, 48, 64, 96, 128, 192, 256])
     params["filter_size"] = trial.suggest_categorical("filter_size", [1, 3, 5, 7, 9])
-    params["dilation_radius"] = trial.suggest_int("dilation_radius", 0, 4)
+    params["dilation_radius"] = trial.suggest_int(
+        "dilation_radius",
+        int(args.dilation_radius_min),
+        int(args.dilation_radius_max),
+    )
     params["max_area"] = trial.suggest_int("max_area", 20, int(args.max_area_search))
     params["max_elongation"] = trial.suggest_float("max_elongation", 1.5, 30.0)
     return params
@@ -634,6 +648,42 @@ def parse_args() -> argparse.Namespace:
         help="Upper bound for the Optuna max_area search range.",
     )
     parser.add_argument(
+        "--detect-thresh-min",
+        type=float,
+        default=DEFAULT_DETECT_THRESH_MIN,
+        help="Lower bound for the Optuna detect_thresh search range.",
+    )
+    parser.add_argument(
+        "--detect-thresh-max",
+        type=float,
+        default=DEFAULT_DETECT_THRESH_MAX,
+        help="Upper bound for the Optuna detect_thresh search range.",
+    )
+    parser.add_argument(
+        "--minarea-min",
+        type=int,
+        default=DEFAULT_MINAREA_MIN,
+        help="Lower bound for the Optuna minarea search range.",
+    )
+    parser.add_argument(
+        "--minarea-max",
+        type=int,
+        default=DEFAULT_MINAREA_MAX,
+        help="Upper bound for the Optuna minarea search range.",
+    )
+    parser.add_argument(
+        "--dilation-radius-min",
+        type=int,
+        default=DEFAULT_DILATION_RADIUS_MIN,
+        help="Lower bound for the Optuna dilation_radius search range.",
+    )
+    parser.add_argument(
+        "--dilation-radius-max",
+        type=int,
+        default=DEFAULT_DILATION_RADIUS_MAX,
+        help="Upper bound for the Optuna dilation_radius search range.",
+    )
+    parser.add_argument(
         "--results-workbook",
         type=Path,
         default=None,
@@ -641,7 +691,18 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--progress-galaxies", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--prepare-only", action="store_true", help="Build cases and write config, but do not optimise.")
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.detect_thresh_min > args.detect_thresh_max:
+        parser.error("--detect-thresh-min must be <= --detect-thresh-max")
+    if args.minarea_min > args.minarea_max:
+        parser.error("--minarea-min must be <= --minarea-max")
+    if args.dilation_radius_min > args.dilation_radius_max:
+        parser.error("--dilation-radius-min must be <= --dilation-radius-max")
+    if args.minarea_min < 1:
+        parser.error("--minarea-min must be >= 1")
+    if args.dilation_radius_min < 0:
+        parser.error("--dilation-radius-min must be >= 0")
+    return args
 
 
 def prepare_output_dir(args: argparse.Namespace) -> None:
