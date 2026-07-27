@@ -73,7 +73,7 @@ def load_json_params(path: Path | None) -> dict:
 
 def sep_params(best_json: Path | None) -> dict[str, float | int | str]:
     params = {
-        "detect_on": "residual",
+        "detect_on": "original",
         "detect_thresh": sep_tool.DEFAULT_DETECT_THRESH,
         "minarea": sep_tool.DEFAULT_MINAREA,
         "deblend_nthresh": sep_tool.DEFAULT_DEBLEND_NTHRESH,
