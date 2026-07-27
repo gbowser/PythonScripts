@@ -13,6 +13,7 @@ import argparse
 import contextlib
 import ctypes
 from datetime import datetime
+import json
 import math
 import os
 from pathlib import Path
@@ -717,11 +718,12 @@ def filter_segmentation(segmentation: np.ndarray, rows: list[dict[str, float | i
 
 
 class MTObjectsTester(tk.Tk):
-    def __init__(self, manifest: Path, pc_name: str, mtobjects_root: Path | None):
+    def __init__(self, manifest: Path, pc_name: str, mtobjects_root: Path | None, best_json: Path | None = None):
         super().__init__()
         self.title("MTObjects Spike Gate Interactive Tester")
         self._configure_window_size()
         self.manifest = manifest
+        self.best_json = best_json
         self.mtobjects_root = find_mtobjects_root(mtobjects_root)
         self.all_rows = display.read_manifest(manifest)
         self.pc_var = tk.StringVar(value=pc_name)
@@ -739,6 +741,8 @@ class MTObjectsTester(tk.Tk):
         self._build_controls()
         self._build_figure()
         self.refresh_pc_paths(initial=True)
+        if self.best_json is not None:
+            self.load_parameters_from_json(self.best_json)
 
     def _configure_window_size(self) -> None:
         screen_width = max(900, self.winfo_screenwidth())
@@ -1218,6 +1222,33 @@ class MTObjectsTester(tk.Tk):
         self.spike_gate_detect_on_var.set("residual")
         self.mark_needs_calculation()
 
+    def load_parameters_from_json(self, path: Path) -> None:
+        with path.open("r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+        params = payload.get("params", payload)
+        if not isinstance(params, dict):
+            raise ValueError(f"Best-parameter JSON does not contain a parameter object: {path}")
+
+        for key, value in params.items():
+            if key == "detect_on":
+                if str(value) in {"original", "residual"}:
+                    self.detect_on_var.set(str(value))
+                continue
+            if key == "spike_gate_detect_on":
+                if str(value) in {"original", "residual"}:
+                    self.spike_gate_detect_on_var.set(str(value))
+                continue
+            if key not in self.vars:
+                continue
+            try:
+                numeric_value = float(value)
+            except (TypeError, ValueError):
+                continue
+            self.vars[key].set(self.convert_from_pixels(key, numeric_value))
+            self.parameter_changed(key, mark=False)
+            self.format_spinbox_value(key)
+        self.mark_needs_calculation()
+
     def refresh_pc_paths(self, initial: bool = False) -> None:
         pc_name = self.pc_var.get()
         self.output_dir = remove_foreground_folder(pc_name) / "interactive_mtobjects_spike_gate_parameter_tester"
@@ -1641,12 +1672,18 @@ def parse_args() -> argparse.Namespace:
         default=Path(DEFAULT_MTOBJECTS_ROOT) if DEFAULT_MTOBJECTS_ROOT else None,
         help="Path to a compiled CarolineHaigh/mtobjects checkout. Can also be set with MTOBJECTS_ROOT.",
     )
+    parser.add_argument(
+        "--best-json",
+        type=Path,
+        default=None,
+        help="Load MTObjects/Spike Gate parameters from an optimiser best JSON.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    app = MTObjectsTester(args.manifest, args.pc, args.mtobjects_root)
+    app = MTObjectsTester(args.manifest, args.pc, args.mtobjects_root, args.best_json)
     app.mainloop()
 
 
