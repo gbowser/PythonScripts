@@ -37,7 +37,7 @@ def add_metadata(doc: Document) -> None:
         ["Field", "Value"],
         [
             ["Script", SCRIPT_NAME],
-            ["Location", str(SCRIPT_DIR / SCRIPT_NAME)],
+            ["Location", str(SCRIPT_DIR / "PhotUtils" / SCRIPT_NAME)],
             ["Document date", date.today().isoformat()],
             [
                 "Documentation scope",
@@ -268,11 +268,11 @@ def add_cli_examples(doc: Document) -> None:
         [
             [
                 "Run one S4G image",
-                'python "Foreground Masking/foreground_mask_photutils.py" "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Erwin\\s4g_images_36um\\NGC1097.phot.1.fits" --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\foreground_mask_examples"',
+                'python "Foreground Masking/PhotUtils/foreground_mask_photutils.py" "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Erwin\\s4g_images_36um\\NGC1097.phot.1.fits" --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\foreground_mask_examples"',
             ],
             [
                 "Run five NGC examples from a folder",
-                'python "Foreground Masking/foreground_mask_photutils.py" "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Erwin\\s4g_images_36um" --glob "NGC*.fits" --limit 5 --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\foreground_mask_examples"',
+                'python "Foreground Masking/PhotUtils/foreground_mask_photutils.py" "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Erwin\\s4g_images_36um" --glob "NGC*.fits" --limit 5 --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\foreground_mask_examples"',
             ],
             [
                 "Make an optional cleaned preview",

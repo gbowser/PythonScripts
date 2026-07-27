@@ -93,11 +93,11 @@ def add_run_section(doc: Document) -> None:
         [
             [
                 "Laptop",
-                'python "Foreground Masking/interactive_photutils_parameter_tester.py" --pc Laptop',
+                'python "Foreground Masking/PhotUtils/interactive_photutils_parameter_tester.py" --pc Laptop',
             ],
             [
                 "Desktop",
-                'python "Foreground Masking/interactive_photutils_parameter_tester.py" --pc Desktop',
+                'python "Foreground Masking/PhotUtils/interactive_photutils_parameter_tester.py" --pc Desktop',
             ],
         ],
         [1800, 7560],

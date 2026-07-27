@@ -303,9 +303,9 @@ def build_spike_program_doc() -> Path:
         "SEP + Spike Gate Interactive Program Documentation",
         "Program documentation for interactive_sep_spike_gate_parameter_tester.py",
     )
-    add_callout(doc, "Program: Foreground Masking/interactive_sep_spike_gate_parameter_tester.py")
+    add_callout(doc, "Program: Foreground Masking/Interactive tools/interactive_sep_spike_gate_parameter_tester.py")
     doc.add_heading("How to Run", level=1)
-    add_code(doc, 'python "Foreground Masking/interactive_sep_spike_gate_parameter_tester.py"')
+    add_code(doc, 'python "Foreground Masking/Interactive tools/interactive_sep_spike_gate_parameter_tester.py"')
     add_bullets(doc, ["--manifest PATH overrides the default manifest.", "--pc Desktop or --pc Laptop selects configured machine-specific image and output paths."])
     doc.add_heading("Inputs", level=1)
     add_table(

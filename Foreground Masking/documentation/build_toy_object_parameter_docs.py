@@ -158,7 +158,7 @@ def add_cover(doc: Document) -> None:
 
     meta = doc.add_paragraph()
     meta.add_run("Source: ").bold = True
-    meta.add_run("Foreground Masking/interactive object recovery.py")
+    meta.add_run("Foreground Masking/Interactive tools/interactive object recovery.py")
     meta.paragraph_format.space_after = Pt(14)
 
     add_note(

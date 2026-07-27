@@ -52,7 +52,7 @@ def add_metadata(doc: Document) -> None:
         ["Field", "Value"],
         [
             ["Script", SCRIPT_NAME],
-            ["Location", str(SCRIPT_DIR / SCRIPT_NAME)],
+            ["Location", str(SCRIPT_DIR / "PhotUtils" / SCRIPT_NAME)],
             ["Document date", date.today().isoformat()],
             [
                 "Default output directory",
@@ -406,19 +406,19 @@ def add_cli_examples(doc: Document) -> None:
         [
             [
                 "Run the current calibration set",
-                'python "Foreground Masking/bar_spike_gated_foreground_report.py" --names ESO120-012 ESO357-012 ESO358-020 ESO359-031 ESO440-044 NGC1187 NGC1640 NGC3726 ESO420-009 --auto-tune',
+                'python "Foreground Masking/PhotUtils/bar_spike_gated_foreground_report.py" --names ESO120-012 ESO357-012 ESO358-020 ESO359-031 ESO440-044 NGC1187 NGC1640 NGC3726 ESO420-009 --auto-tune',
             ],
             [
                 "Run one galaxy",
-                'python "Foreground Masking/bar_spike_gated_foreground_report.py" --names ESO120-012 --auto-tune',
+                'python "Foreground Masking/PhotUtils/bar_spike_gated_foreground_report.py" --names ESO120-012 --auto-tune',
             ],
             [
                 "Run every manifest galaxy",
-                'python "Foreground Masking/bar_spike_gated_foreground_report.py" --all --detection-nsigma 3.5 --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\spike_gated_3p5_sigma"',
+                'python "Foreground Masking/PhotUtils/bar_spike_gated_foreground_report.py" --all --detection-nsigma 3.5 --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\spike_gated_3p5_sigma"',
             ],
             [
                 "Run global Photutils at 3.5 sigma",
-                'python "Foreground Masking/bar_spike_gated_foreground_report.py" --all --masking-mode global --detection-nsigma 3.5 --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\global_photutils_3p5_sigma"',
+                'python "Foreground Masking/PhotUtils/bar_spike_gated_foreground_report.py" --all --masking-mode global --detection-nsigma 3.5 --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\global_photutils_3p5_sigma"',
             ],
             [
                 "Override output directory",

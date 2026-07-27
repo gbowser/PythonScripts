@@ -15,7 +15,7 @@ from docx.shared import Inches, Pt, RGBColor
 
 OUT_DIR = Path(__file__).resolve().parent
 LAUNCHER_PATH = OUT_DIR.parent / "interactive_mtobjects_spike_gate_parameter_tester.py"
-CORE_PATH = OUT_DIR.parent / "mtobjects_spike_gate_processing.py"
+CORE_PATH = OUT_DIR.parent / "Shared" / "mtobjects_spike_gate_processing.py"
 ALGORITHM_DOC = OUT_DIR / "MTObjects_Spike_Gate_Interactive_Methodology_and_Parameters.docx"
 FLOW_DOC = OUT_DIR / "MTObjects_Spike_Gate_Interactive_Program_Documentation.docx"
 

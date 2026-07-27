@@ -304,23 +304,23 @@ def add_cli_examples(doc: Document) -> None:
         [
             [
                 "Run all galaxies with per-galaxy global auto-tune",
-                'python "Foreground Masking/bar_spike_gated_foreground_report.py" --all --masking-mode global --auto-tune --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\global_photutils_auto_tuned"',
+                'python "Foreground Masking/PhotUtils/bar_spike_gated_foreground_report.py" --all --masking-mode global --auto-tune --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\global_photutils_auto_tuned"',
             ],
             [
                 "Run one galaxy in global mode",
-                'python "Foreground Masking/bar_spike_gated_foreground_report.py" --names NGC7418 --masking-mode global --auto-tune --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\global_photutils_auto_tuned"',
+                'python "Foreground Masking/PhotUtils/bar_spike_gated_foreground_report.py" --names NGC7418 --masking-mode global --auto-tune --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\global_photutils_auto_tuned"',
             ],
             [
                 "Run fixed-threshold global mode",
-                'python "Foreground Masking/bar_spike_gated_foreground_report.py" --all --masking-mode global --detection-nsigma 3.5 --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\global_photutils_3p5_sigma"',
+                'python "Foreground Masking/PhotUtils/bar_spike_gated_foreground_report.py" --all --masking-mode global --detection-nsigma 3.5 --output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\global_photutils_3p5_sigma"',
             ],
             [
                 "Run the bar-spike calibration experiment",
-                'python "Foreground Masking/photutils_global_from_bar_spike_calibration.py"',
+                'python "Foreground Masking/PhotUtils/photutils_global_from_bar_spike_calibration.py"',
             ],
             [
                 "Run a small optimisation grid",
-                'python "Foreground Masking/optimise_photutils_global_parameters.py" --nsigmas 5.0 4.5 4.0 3.5 --dilations 1 2 3 --max-areas 150 300 500 --max-elongations 3 4 6',
+                'python "Foreground Masking/PhotUtils/optimise_photutils_global_parameters.py" --nsigmas 5.0 4.5 4.0 3.5 --dilations 1 2 3 --max-areas 150 300 500 --max-elongations 3 4 6',
             ],
         ],
         [2300, 7060],

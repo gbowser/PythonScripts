@@ -232,8 +232,8 @@ def build_doc() -> None:
         doc,
         ["Item", "Path or role"],
         [
-            ["Optimiser script", "Foreground Masking/optimise_sep_spike_gate_parameters.py"],
-            ["SEP implementation", "Foreground Masking/interactive_sep_spike_gate_parameter_tester.py provides SEP masks and Spike Gate helpers."],
+            ["Optimiser script", "Foreground Masking/optimise_spike_gate_SEP.py"],
+            ["SEP implementation", "Foreground Masking/Interactive tools/interactive_sep_spike_gate_parameter_tester.py provides SEP masks and Spike Gate helpers."],
             ["Default output folder", "Remove foreground objects/sep spike optimisation/<timestamp>"],
             ["Best parameter file", "sep_spike_optimisation_best.json"],
             ["Study database", "sep_spike_optimisation_study.sqlite3, reused by --resume-output-dir"],
@@ -322,12 +322,12 @@ def build_doc() -> None:
     doc.add_heading("Initial 20-Galaxy Run", level=2)
     add_code_block(
         doc,
-        'python "Foreground Masking\\optimise_sep_spike_gate_parameters.py" --max-images 20 --initial-points 16 --max-iter 64',
+        'python "Foreground Masking\\optimise_spike_gate_SEP.py" --max-images 20 --initial-points 16 --max-iter 64',
     )
     doc.add_heading("Resume an Interrupted Run", level=2)
     add_code_block(
         doc,
-        'python "Foreground Masking\\optimise_sep_spike_gate_parameters.py" --resume-output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\sep spike optimisation\\YYYYMMDD_HHMMSS" --max-images 20 --initial-points 16 --max-iter 64',
+        'python "Foreground Masking\\optimise_spike_gate_SEP.py" --resume-output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\sep spike optimisation\\YYYYMMDD_HHMMSS" --max-images 20 --initial-points 16 --max-iter 64',
     )
     add_bullets(
         doc,
