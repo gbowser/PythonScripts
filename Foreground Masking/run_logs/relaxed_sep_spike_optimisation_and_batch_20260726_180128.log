@@ -1,0 +1,11 @@
+[2026-07-26 18:01:28] Relaxed SEP Spike Gate optimisation and full-galaxy batch started.
+[2026-07-26 18:01:28] Recipe: global SEP parameters, max_masked=8%, profile caps, lower worst-galaxy coverage pressure.
+[2026-07-26 18:01:28] START Relaxed SEP Spike Gate optimisation
+[2026-07-26 18:01:28] COMMAND C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\optimise_sep_spike_gate_parameters.py --max-images 20 --initial-points 12 --max-iter 48 --detect-on residual --max-masked-fraction 0.08 --data-loss-penalty 8.0 --profile-loss-penalty 18.0 --mean-spike-coverage-weight 22.0 --min-spike-coverage-weight 3.0 --max-profile-affected-fraction 0.20 --max-non-spike-profile-fraction 0.12 --progress-galaxies
+[2026-07-26 18:12:53] DONE Relaxed SEP Spike Gate optimisation
+[2026-07-26 18:12:53] Using relaxed SEP Spike Gate best JSON: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\sep spike optimisation\20260726_180130\sep_spike_optimisation_best.json
+[2026-07-26 18:12:53] Batch output: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy batch\sep_spike_gate_relaxed_20260726_180130
+[2026-07-26 18:12:53] START Relaxed SEP Spike Gate all-galaxy batch
+[2026-07-26 18:12:53] COMMAND C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\batch_sep_all_galaxies.py --best-json D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\sep spike optimisation\20260726_180130\sep_spike_optimisation_best.json --source spike-gate --run-label Relaxed SEP Spike Gate 20260726_180130 --output-dir D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy batch\sep_spike_gate_relaxed_20260726_180130 --require-best-json --replace-summary
+[2026-07-26 18:19:43] DONE Relaxed SEP Spike Gate all-galaxy batch
+[2026-07-26 18:19:43] Relaxed SEP Spike Gate optimisation and batch finished successfully.

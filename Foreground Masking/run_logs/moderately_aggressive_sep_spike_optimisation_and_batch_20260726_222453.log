@@ -1,0 +1,11 @@
+[2026-07-26 22:24:53] Moderately aggressive SEP Spike Gate optimisation and full-galaxy batch started.
+[2026-07-26 22:24:53] Recipe: global SEP parameters, stronger spike coverage pressure, bridge-span control retained.
+[2026-07-26 22:24:53] START Moderately aggressive SEP Spike Gate optimisation
+[2026-07-26 22:24:53] COMMAND C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\optimise_sep_spike_gate_parameters.py --max-images 20 --initial-points 12 --max-iter 48 --detect-on residual --max-masked-fraction 0.10 --data-loss-penalty 4.5 --profile-loss-penalty 12.0 --mean-spike-coverage-weight 58.0 --min-spike-coverage-weight 18.0 --max-profile-affected-fraction 0.28 --max-non-spike-profile-fraction 0.16 --max-bridge-span-arcsec 18.0 --bridge-span-penalty 0.035 --max-area-search 700 --progress-galaxies
+[2026-07-26 22:36:06] DONE Moderately aggressive SEP Spike Gate optimisation
+[2026-07-26 22:36:06] Using moderately aggressive SEP Spike Gate best JSON: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\sep spike optimisation\20260726_222455\sep_spike_optimisation_best.json
+[2026-07-26 22:36:06] Batch output: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy batch\sep_spike_gate_moderately_aggressive_20260726_222455
+[2026-07-26 22:36:06] START Moderately aggressive SEP Spike Gate all-galaxy batch
+[2026-07-26 22:36:06] COMMAND C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\batch_sep_all_galaxies.py --best-json D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\sep spike optimisation\20260726_222455\sep_spike_optimisation_best.json --source spike-gate --run-label Moderately aggressive SEP Spike Gate 20260726_222455 --output-dir D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy batch\sep_spike_gate_moderately_aggressive_20260726_222455 --require-best-json --replace-summary
+[2026-07-26 22:43:14] DONE Moderately aggressive SEP Spike Gate all-galaxy batch
+[2026-07-26 22:43:14] Moderately aggressive SEP Spike Gate optimisation and batch finished successfully.

@@ -1,0 +1,6 @@
+[2026-07-26 18:01:18] Relaxed SEP Spike Gate optimisation and full-galaxy batch started.
+[2026-07-26 18:01:18] Recipe: global SEP parameters, max_masked=8%, profile caps, lower worst-galaxy coverage pressure.
+[2026-07-26 18:01:18] START Relaxed SEP Spike Gate optimisation
+[2026-07-26 18:01:18] COMMAND C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\optimise_sep_spike_gate_parameters.py --max-images 20 --initial-points 12 --max-iter 48 --detect-on residual --max-masked-fraction 0.08 --data-loss-penalty 8.0 --profile-loss-penalty 18.0 --mean-spike-coverage-weight 22.0 --min-spike-coverage-weight 3.0 --max-profile-affected-fraction 0.20 --max-non-spike-profile-fraction 0.12 --progress-galaxies
+[2026-07-26 18:01:18] DRY RUN Relaxed SEP Spike Gate optimisation
+[2026-07-26 18:01:18] Dry run complete.

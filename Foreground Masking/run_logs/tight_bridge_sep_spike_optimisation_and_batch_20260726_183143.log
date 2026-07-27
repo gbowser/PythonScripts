@@ -1,0 +1,11 @@
+[2026-07-26 18:31:43] Tight-bridge SEP Spike Gate optimisation and full-galaxy batch started.
+[2026-07-26 18:31:43] Recipe: global SEP parameters, bridge-span cap, lower max-area search, no cleaned FITS.
+[2026-07-26 18:31:43] START Tight-bridge SEP Spike Gate optimisation
+[2026-07-26 18:31:43] COMMAND C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\optimise_sep_spike_gate_parameters.py --max-images 20 --initial-points 12 --max-iter 48 --detect-on residual --max-masked-fraction 0.08 --data-loss-penalty 8.0 --profile-loss-penalty 22.0 --mean-spike-coverage-weight 22.0 --min-spike-coverage-weight 2.0 --max-profile-affected-fraction 0.16 --max-non-spike-profile-fraction 0.08 --max-bridge-span-arcsec 13.0 --bridge-span-penalty 0.08 --max-area-search 250 --progress-galaxies
+[2026-07-26 18:43:25] DONE Tight-bridge SEP Spike Gate optimisation
+[2026-07-26 18:43:25] Using tight-bridge SEP Spike Gate best JSON: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\sep spike optimisation\20260726_183145\sep_spike_optimisation_best.json
+[2026-07-26 18:43:25] Batch output: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy batch\sep_spike_gate_tight_bridge_20260726_183145
+[2026-07-26 18:43:25] START Tight-bridge SEP Spike Gate all-galaxy batch
+[2026-07-26 18:43:25] COMMAND C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\batch_sep_all_galaxies.py --best-json D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\sep spike optimisation\20260726_183145\sep_spike_optimisation_best.json --source spike-gate --run-label Tight-bridge SEP Spike Gate 20260726_183145 --output-dir D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy batch\sep_spike_gate_tight_bridge_20260726_183145 --require-best-json --replace-summary
+[2026-07-26 18:50:34] DONE Tight-bridge SEP Spike Gate all-galaxy batch
+[2026-07-26 18:50:34] Tight-bridge SEP Spike Gate optimisation and batch finished successfully.

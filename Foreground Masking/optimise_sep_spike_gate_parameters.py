@@ -44,6 +44,13 @@ DEFAULT_STUDY_NAME = "sep-spike-gate-optimisation"
 DEFAULT_MAX_MASKED_FRACTION = 0.15
 DEFAULT_DATA_LOSS_PENALTY = 4.0
 DEFAULT_PROFILE_LOSS_PENALTY = 2.0
+DEFAULT_MEAN_SPIKE_COVERAGE_WEIGHT = 24.0
+DEFAULT_MIN_SPIKE_COVERAGE_WEIGHT = 12.0
+DEFAULT_MAX_PROFILE_AFFECTED_FRACTION = 1.0
+DEFAULT_MAX_NON_SPIKE_PROFILE_FRACTION = 1.0
+DEFAULT_MAX_BRIDGE_SPAN_ARCSEC = 1.0e6
+DEFAULT_BRIDGE_SPAN_PENALTY = 0.0
+DEFAULT_MAX_AREA_SEARCH = 8000
 OPTIMISED_PARAMETER_NAMES = [
     "detect_thresh",
     "minarea",
@@ -112,7 +119,8 @@ def default_params(detect_on: str) -> dict[str, float | int | str]:
     }
 
 
-def optuna_trial_to_params(trial: optuna.Trial, detect_on: str) -> dict[str, float | int | str]:
+def optuna_trial_to_params(trial: optuna.Trial, args: argparse.Namespace) -> dict[str, float | int | str]:
+    detect_on = str(args.detect_on)
     params = default_params(detect_on)
     params["detect_thresh"] = trial.suggest_float("detect_thresh", 0.2, 5.0)
     params["minarea"] = trial.suggest_int("minarea", 1, 50)
@@ -120,8 +128,8 @@ def optuna_trial_to_params(trial: optuna.Trial, detect_on: str) -> dict[str, flo
     params["deblend_cont"] = trial.suggest_float("deblend_cont", 0.00001, 0.1, log=True)
     params["back_size"] = trial.suggest_categorical("back_size", [16, 24, 32, 48, 64, 96, 128, 192, 256])
     params["filter_size"] = trial.suggest_categorical("filter_size", [1, 3, 5, 7, 9])
-    params["dilation_radius"] = trial.suggest_int("dilation_radius", 1, 6)
-    params["max_area"] = trial.suggest_int("max_area", 20, 8000)
+    params["dilation_radius"] = trial.suggest_int("dilation_radius", 0, 4)
+    params["max_area"] = trial.suggest_int("max_area", 20, int(args.max_area_search))
     params["max_elongation"] = trial.suggest_float("max_elongation", 1.5, 30.0)
     return params
 
@@ -241,6 +249,14 @@ def score_case(
     profile_change = 0.0
     if np.count_nonzero(finite) >= 5:
         profile_change = float(np.nanmedian(np.abs(np.log10(bridged_profile[finite]) - np.log10(case.original_profile[finite]))))
+    longest_bridge_span_arcsec = 0.0
+    longest_bridge_run_samples = 0
+    for start, stop in sep_tool.contiguous_true_runs(replaced):
+        longest_bridge_run_samples = max(longest_bridge_run_samples, int(stop - start + 1))
+        if 0 <= start < case.radii.size and 0 <= stop < case.radii.size:
+            span = abs(float(case.radii[stop]) - float(case.radii[start]))
+            if math.isfinite(span):
+                longest_bridge_span_arcsec = max(longest_bridge_span_arcsec, span)
     return {
         "image": case.name,
         "spike_samples": spike_count,
@@ -252,6 +268,8 @@ def score_case(
         "non_spike_profile_fraction": non_spike_profile_fraction,
         "profile_change": profile_change,
         "bridged_profile_samples": int(np.count_nonzero(replaced)),
+        "longest_bridge_run_samples": longest_bridge_run_samples,
+        "longest_bridge_span_arcsec": longest_bridge_span_arcsec,
         "segments": len(products["rows"]),
     }
 
@@ -262,6 +280,12 @@ def aggregate_score(
     max_masked_fraction: float,
     data_loss_penalty: float,
     profile_loss_penalty: float,
+    mean_spike_coverage_weight: float,
+    min_spike_coverage_weight: float,
+    max_profile_affected_fraction: float,
+    max_non_spike_profile_fraction: float,
+    max_bridge_span_arcsec: float,
+    bridge_span_penalty: float,
 ) -> dict[str, float]:
     spike_rows = [row for row in case_rows if int(row["spike_samples"]) > 0]
     rows_for_coverage = spike_rows if spike_rows else case_rows
@@ -272,20 +296,29 @@ def aggregate_score(
     mean_profile_affected = float(np.mean([float(row["profile_affected_fraction"]) for row in case_rows]))
     mean_non_spike_profile = float(np.mean([float(row["non_spike_profile_fraction"]) for row in case_rows]))
     mean_profile_change = float(np.mean([float(row["profile_change"]) for row in case_rows]))
+    mean_longest_bridge_span = float(np.mean([float(row["longest_bridge_span_arcsec"]) for row in case_rows]))
+    max_longest_bridge_span = float(np.max([float(row["longest_bridge_span_arcsec"]) for row in case_rows]))
 
     base_objective = (
-        24.0 * (1.0 - mean_spike_coverage)
-        + 12.0 * (1.0 - min_spike_coverage)
+        mean_spike_coverage_weight * (1.0 - mean_spike_coverage)
+        + min_spike_coverage_weight * (1.0 - min_spike_coverage)
         + profile_loss_penalty * mean_non_spike_profile
         + data_loss_penalty * mean_masked_fraction
         + profile_loss_penalty * mean_profile_affected
+        + bridge_span_penalty * mean_longest_bridge_span
         + 0.5 * mean_profile_change
     )
     cap_excess = max(0.0, max_masked_fraction_seen - max_masked_fraction)
-    if cap_excess > 0.0:
-        objective = 10.0 + 100.0 * cap_excess + base_objective
-    else:
-        objective = base_objective
+    profile_cap_excess = max(0.0, mean_profile_affected - max_profile_affected_fraction)
+    non_spike_cap_excess = max(0.0, mean_non_spike_profile - max_non_spike_profile_fraction)
+    bridge_span_cap_excess = max(0.0, max_longest_bridge_span - max_bridge_span_arcsec)
+    cap_penalty = (
+        100.0 * cap_excess
+        + 80.0 * profile_cap_excess
+        + 80.0 * non_spike_cap_excess
+        + 4.0 * bridge_span_cap_excess
+    )
+    objective = base_objective + (10.0 + cap_penalty if cap_penalty > 0.0 else 0.0)
     return {
         "objective": objective,
         "base_objective": base_objective,
@@ -295,6 +328,14 @@ def aggregate_score(
         "max_masked_fraction": max_masked_fraction_seen,
         "max_masked_fraction_limit": max_masked_fraction,
         "masked_fraction_cap_excess": cap_excess,
+        "max_profile_affected_fraction_limit": max_profile_affected_fraction,
+        "profile_affected_cap_excess": profile_cap_excess,
+        "max_non_spike_profile_fraction_limit": max_non_spike_profile_fraction,
+        "non_spike_profile_cap_excess": non_spike_cap_excess,
+        "mean_longest_bridge_span_arcsec": mean_longest_bridge_span,
+        "max_longest_bridge_span_arcsec": max_longest_bridge_span,
+        "max_bridge_span_arcsec_limit": max_bridge_span_arcsec,
+        "bridge_span_cap_excess": bridge_span_cap_excess,
         "mean_profile_affected_fraction": mean_profile_affected,
         "mean_non_spike_profile_fraction": mean_non_spike_profile,
         "mean_profile_change": mean_profile_change,
@@ -351,6 +392,12 @@ class OptimisationRun:
                 max_masked_fraction=float(self.args.max_masked_fraction),
                 data_loss_penalty=float(self.args.data_loss_penalty),
                 profile_loss_penalty=float(self.args.profile_loss_penalty),
+                mean_spike_coverage_weight=float(self.args.mean_spike_coverage_weight),
+                min_spike_coverage_weight=float(self.args.min_spike_coverage_weight),
+                max_profile_affected_fraction=float(self.args.max_profile_affected_fraction),
+                max_non_spike_profile_fraction=float(self.args.max_non_spike_profile_fraction),
+                max_bridge_span_arcsec=float(self.args.max_bridge_span_arcsec),
+                bridge_span_penalty=float(self.args.bridge_span_penalty),
             )
             objective = float(aggregate["objective"])
             status = "ok"
@@ -377,6 +424,14 @@ class OptimisationRun:
             "max_masked_fraction": aggregate.get("max_masked_fraction", math.nan),
             "max_masked_fraction_limit": aggregate.get("max_masked_fraction_limit", math.nan),
             "masked_fraction_cap_excess": aggregate.get("masked_fraction_cap_excess", math.nan),
+            "max_profile_affected_fraction_limit": aggregate.get("max_profile_affected_fraction_limit", math.nan),
+            "profile_affected_cap_excess": aggregate.get("profile_affected_cap_excess", math.nan),
+            "max_non_spike_profile_fraction_limit": aggregate.get("max_non_spike_profile_fraction_limit", math.nan),
+            "non_spike_profile_cap_excess": aggregate.get("non_spike_profile_cap_excess", math.nan),
+            "mean_longest_bridge_span_arcsec": aggregate.get("mean_longest_bridge_span_arcsec", math.nan),
+            "max_longest_bridge_span_arcsec": aggregate.get("max_longest_bridge_span_arcsec", math.nan),
+            "max_bridge_span_arcsec_limit": aggregate.get("max_bridge_span_arcsec_limit", math.nan),
+            "bridge_span_cap_excess": aggregate.get("bridge_span_cap_excess", math.nan),
             "mean_profile_affected_fraction": aggregate.get("mean_profile_affected_fraction", math.nan),
             "mean_non_spike_profile_fraction": aggregate.get("mean_non_spike_profile_fraction", math.nan),
             "mean_profile_change": aggregate.get("mean_profile_change", math.nan),
@@ -399,6 +454,14 @@ class OptimisationRun:
                 "max_masked_fraction",
                 "max_masked_fraction_limit",
                 "masked_fraction_cap_excess",
+                "max_profile_affected_fraction_limit",
+                "profile_affected_cap_excess",
+                "max_non_spike_profile_fraction_limit",
+                "non_spike_profile_cap_excess",
+                "mean_longest_bridge_span_arcsec",
+                "max_longest_bridge_span_arcsec",
+                "max_bridge_span_arcsec_limit",
+                "bridge_span_cap_excess",
                 "mean_profile_affected_fraction",
                 "mean_non_spike_profile_fraction",
                 "mean_profile_change",
@@ -423,6 +486,8 @@ class OptimisationRun:
                     "non_spike_profile_fraction",
                     "profile_change",
                     "bridged_profile_samples",
+                    "longest_bridge_run_samples",
+                    "longest_bridge_span_arcsec",
                     "segments",
                 ],
             )
@@ -449,12 +514,14 @@ class OptimisationRun:
             f"min_coverage={float(summary['min_spike_coverage']):.3f} "
             f"masked={float(summary['mean_masked_fraction']):.3%} "
             f"max_masked={float(summary['max_masked_fraction']):.3%} "
+            f"profile_affected={float(summary['mean_profile_affected_fraction']):.3%} "
+            f"max_bridge={float(summary['max_longest_bridge_span_arcsec']):.2f}arcsec "
             f"status={status} elapsed={format_duration(elapsed)}{remaining_text}"
         )
         return objective
 
     def evaluate_trial(self, trial: optuna.Trial) -> float:
-        params = optuna_trial_to_params(trial, self.args.detect_on)
+        params = optuna_trial_to_params(trial, self.args)
         objective = self.evaluate_params(params, trial.number)
         trial.set_user_attr("best_json", str(self.best_path))
         return objective
@@ -523,6 +590,48 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=DEFAULT_PROFILE_LOSS_PENALTY,
         help="Penalty weight applied to non-spike/profile masking.",
+    )
+    parser.add_argument(
+        "--mean-spike-coverage-weight",
+        type=float,
+        default=DEFAULT_MEAN_SPIKE_COVERAGE_WEIGHT,
+        help="Objective weight for average Spike Gate sample coverage.",
+    )
+    parser.add_argument(
+        "--min-spike-coverage-weight",
+        type=float,
+        default=DEFAULT_MIN_SPIKE_COVERAGE_WEIGHT,
+        help="Objective weight for worst-galaxy Spike Gate sample coverage.",
+    )
+    parser.add_argument(
+        "--max-profile-affected-fraction",
+        type=float,
+        default=DEFAULT_MAX_PROFILE_AFFECTED_FRACTION,
+        help="Soft hard cap for mean bar-profile samples affected by the mask.",
+    )
+    parser.add_argument(
+        "--max-non-spike-profile-fraction",
+        type=float,
+        default=DEFAULT_MAX_NON_SPIKE_PROFILE_FRACTION,
+        help="Soft hard cap for non-spike bar-profile samples affected by the mask.",
+    )
+    parser.add_argument(
+        "--max-bridge-span-arcsec",
+        type=float,
+        default=DEFAULT_MAX_BRIDGE_SPAN_ARCSEC,
+        help="Soft hard cap for the longest single log-linear bridge span in any optimisation galaxy.",
+    )
+    parser.add_argument(
+        "--bridge-span-penalty",
+        type=float,
+        default=DEFAULT_BRIDGE_SPAN_PENALTY,
+        help="Penalty weight applied to mean longest bridge span in arcsec.",
+    )
+    parser.add_argument(
+        "--max-area-search",
+        type=int,
+        default=DEFAULT_MAX_AREA_SEARCH,
+        help="Upper bound for the Optuna max_area search range.",
     )
     parser.add_argument(
         "--results-workbook",

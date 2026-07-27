@@ -1,0 +1,11 @@
+[2026-07-26 19:56:07] Balanced-bridge SEP Spike Gate optimisation and full-galaxy batch started.
+[2026-07-26 19:56:07] Recipe: global SEP parameters, restored spike coverage pressure, moderate bridge-span control.
+[2026-07-26 19:56:07] START Balanced-bridge SEP Spike Gate optimisation
+[2026-07-26 19:56:07] COMMAND C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\optimise_sep_spike_gate_parameters.py --max-images 20 --initial-points 12 --max-iter 48 --detect-on residual --max-masked-fraction 0.08 --data-loss-penalty 7.0 --profile-loss-penalty 16.0 --mean-spike-coverage-weight 38.0 --min-spike-coverage-weight 6.0 --max-profile-affected-fraction 0.22 --max-non-spike-profile-fraction 0.12 --max-bridge-span-arcsec 18.0 --bridge-span-penalty 0.03 --max-area-search 600 --progress-galaxies
+[2026-07-26 20:06:47] DONE Balanced-bridge SEP Spike Gate optimisation
+[2026-07-26 20:06:47] Using balanced-bridge SEP Spike Gate best JSON: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\sep spike optimisation\20260726_195609\sep_spike_optimisation_best.json
+[2026-07-26 20:06:47] Batch output: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy batch\sep_spike_gate_balanced_bridge_20260726_195609
+[2026-07-26 20:06:47] START Balanced-bridge SEP Spike Gate all-galaxy batch
+[2026-07-26 20:06:47] COMMAND C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\batch_sep_all_galaxies.py --best-json D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\sep spike optimisation\20260726_195609\sep_spike_optimisation_best.json --source spike-gate --run-label Balanced-bridge SEP Spike Gate 20260726_195609 --output-dir D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy batch\sep_spike_gate_balanced_bridge_20260726_195609 --require-best-json --replace-summary
+[2026-07-26 20:14:06] DONE Balanced-bridge SEP Spike Gate all-galaxy batch
+[2026-07-26 20:14:06] Balanced-bridge SEP Spike Gate optimisation and batch finished successfully.

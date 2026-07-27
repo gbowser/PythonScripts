@@ -1,0 +1,6 @@
+[2026-07-26 22:21:45] Moderately aggressive SEP Spike Gate optimisation and full-galaxy batch started.
+[2026-07-26 22:21:45] Recipe: global SEP parameters, stronger spike coverage pressure, bridge-span control retained.
+[2026-07-26 22:21:45] START Moderately aggressive SEP Spike Gate optimisation
+[2026-07-26 22:21:45] COMMAND C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\optimise_sep_spike_gate_parameters.py --max-images 20 --initial-points 12 --max-iter 48 --detect-on residual --max-masked-fraction 0.10 --data-loss-penalty 4.5 --profile-loss-penalty 12.0 --mean-spike-coverage-weight 58.0 --min-spike-coverage-weight 18.0 --max-profile-affected-fraction 0.28 --max-non-spike-profile-fraction 0.16 --max-bridge-span-arcsec 18.0 --bridge-span-penalty 0.035 --max-area-search 700 --progress-galaxies
+[2026-07-26 22:21:45] DRY RUN Moderately aggressive SEP Spike Gate optimisation
+[2026-07-26 22:21:45] Dry run complete.
