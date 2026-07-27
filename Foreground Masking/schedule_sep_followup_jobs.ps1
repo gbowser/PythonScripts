@@ -1,4 +1,9 @@
 param(
+    [ValidateSet("Desktop", "Laptop")]
+    [string]$PC = "Desktop"
+)
+
+param(
     [int]$WaitPid = 0,
     [switch]$DryRun
 )
@@ -11,7 +16,8 @@ $ForegroundDir = Join-Path $Repo "Foreground Masking"
 $WorkbookHelper = Join-Path $ForegroundDir "append_optimisation_run_to_workbook.py"
 $BatchScript = Join-Path $ForegroundDir "batch_sep_all_galaxies.py"
 
-$Root = "D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects"
+$ResearchRoot = if ($PC -eq "Laptop") { "C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research" } else { "D:\Dropbox\Public Documents\UCLAN\MSc Research" }
+$Root = Join-Path $ResearchRoot "Remove foreground objects"
 $Workbook = Join-Path $Root "documentation\Foreground Masking Optimisation Results.xlsx"
 
 $ToyRun = Join-Path $Root "sep toy optimisation\20260722_141659"
@@ -85,6 +91,7 @@ Invoke-LoggedCommand -LogPath $SchedulerLog -Command @(
 Invoke-LoggedCommand -LogPath $SpikeBatchLog -Command @(
     $Python,
     $BatchScript,
+        "--pc", $PC,
     "--best-json", $SpikeBest,
     "--source", "spike-gate",
     "--run-label", "SEP Spike Gate best 20260719_183144",
@@ -94,6 +101,7 @@ Invoke-LoggedCommand -LogPath $SpikeBatchLog -Command @(
 Invoke-LoggedCommand -LogPath $ToyBatchLog -Command @(
     $Python,
     $BatchScript,
+        "--pc", $PC,
     "--best-json", $ToyBest,
     "--source", "toy-object",
     "--run-label", "SEP Toy Object best 20260722_141659",

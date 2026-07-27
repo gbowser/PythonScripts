@@ -1,4 +1,9 @@
 param(
+    [ValidateSet("Desktop", "Laptop")]
+    [string]$PC = "Desktop"
+)
+
+param(
     [int]$WaitPid = 37036,
     [switch]$DryRun
 )
@@ -9,7 +14,8 @@ $Python = "C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe"
 $Repo = "C:\Users\gordo\Documents\Github\PythonScripts"
 $ForegroundDir = Join-Path $Repo "Foreground Masking"
 $Compositor = Join-Path $ForegroundDir "make_all_method_galaxy_comparison_pngs.py"
-$Root = "D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects"
+$ResearchRoot = if ($PC -eq "Laptop") { "C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research" } else { "D:\Dropbox\Public Documents\UCLAN\MSc Research" }
+$Root = Join-Path $ResearchRoot "Remove foreground objects"
 $OutputDir = Join-Path $Root "all method galaxy comparison panels\all_method_comparison_20260724"
 $MasterLog = Join-Path $ForegroundDir ("run_logs\all_method_comparison_after_mtobjects_toy_{0}.log" -f (Get-Date -Format "yyyyMMdd_HHmmss"))
 

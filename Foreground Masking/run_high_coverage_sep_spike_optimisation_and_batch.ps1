@@ -1,5 +1,7 @@
 param(
-    [switch]$DryRun
+    [switch]$DryRun,
+    [ValidateSet("Desktop", "Laptop")]
+    [string]$PC = "Desktop"
 )
 
 $ErrorActionPreference = "Continue"
@@ -10,7 +12,8 @@ $ForegroundDir = Join-Path $Repo "Foreground Masking"
 $Optimiser = Join-Path $ForegroundDir "optimise_sep_spike_gate_parameters.py"
 $Batch = Join-Path $ForegroundDir "batch_sep_all_galaxies.py"
 
-$Root = "D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects"
+$ResearchRoot = if ($PC -eq "Laptop") { "C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research" } else { "D:\Dropbox\Public Documents\UCLAN\MSc Research" }
+$Root = Join-Path $ResearchRoot "Remove foreground objects"
 $LogRoot = Join-Path $ForegroundDir "run_logs"
 $MasterLog = Join-Path $LogRoot ("high_coverage_sep_spike_optimisation_and_batch_{0}.log" -f (Get-Date -Format "yyyyMMdd_HHmmss"))
 
@@ -65,7 +68,7 @@ function Latest-RunDir {
 }
 
 Write-MasterLog "High-coverage SEP Spike Gate optimisation and full-galaxy batch started."
-Write-MasterLog "Recipe: smaller SEP detections, stronger missed-spike pressure, no dilation expansion."
+Write-MasterLog "Recipe: Spike Gate detects on residual; SEP detects on original; smaller detections, stronger missed-spike pressure, no dilation expansion."
 
 $optimiseLog = Join-Path $LogRoot ("high_coverage_sep_spike_optimisation_{0}.txt" -f (Get-Date -Format "yyyyMMdd_HHmmss"))
 $optimiseExit = Run-Step `
@@ -74,10 +77,12 @@ $optimiseExit = Run-Step `
     -Command @(
         $Python,
         $Optimiser,
+        "--pc", $PC,
         "--max-images", "20",
         "--initial-points", "16",
         "--max-iter", "64",
-        "--detect-on", "residual",
+        "--detect-on", "original",
+        "--spike-gate-detect-on", "residual",
         "--detect-thresh-min", "0.65",
         "--detect-thresh-max", "1.25",
         "--minarea-min", "1",
@@ -124,6 +129,7 @@ $batchExit = Run-Step `
     -Command @(
         $Python,
         $Batch,
+        "--pc", $PC,
         "--best-json", $bestJson,
         "--source", "spike-gate",
         "--run-label", ("High-coverage SEP Spike Gate {0}" -f $runDir.Name),

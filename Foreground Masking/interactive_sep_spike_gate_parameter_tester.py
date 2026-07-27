@@ -578,7 +578,7 @@ class SEPTester(tk.Tk):
         spike_gate_detect_frame = ttk.Frame(detect_row)
         spike_gate_detect_frame.grid(row=0, column=0, sticky=tk.EW, padx=(0, 4))
         ttk.Label(spike_gate_detect_frame, text="Spike Gate detects on").pack(anchor=tk.W)
-        self.spike_gate_detect_on_var = tk.StringVar(value="original")
+        self.spike_gate_detect_on_var = tk.StringVar(value="residual")
         spike_gate_detect_combo = ttk.Combobox(
             spike_gate_detect_frame,
             textvariable=self.spike_gate_detect_on_var,
@@ -591,7 +591,7 @@ class SEPTester(tk.Tk):
         sep_detect_frame = ttk.Frame(detect_row)
         sep_detect_frame.grid(row=0, column=1, sticky=tk.EW, padx=(4, 0))
         ttk.Label(sep_detect_frame, text="SEP detects on").pack(anchor=tk.W)
-        self.detect_on_var = tk.StringVar(value="residual")
+        self.detect_on_var = tk.StringVar(value="original")
         detect_combo = ttk.Combobox(sep_detect_frame, textvariable=self.detect_on_var, values=["original", "residual"], state="readonly")
         detect_combo.pack(fill=tk.X)
         detect_combo.bind("<<ComboboxSelected>>", lambda _event: self.mark_needs_calculation())
@@ -941,8 +941,8 @@ class SEPTester(tk.Tk):
             self.vars[key].set(self.convert_from_pixels(key, value))
             self.parameter_changed(key, mark=False)
             self.format_spinbox_value(key)
-        self.detect_on_var.set("residual")
-        self.spike_gate_detect_on_var.set("original")
+        self.detect_on_var.set("original")
+        self.spike_gate_detect_on_var.set("residual")
         self.mark_needs_calculation()
 
     def load_parameters_from_json(self, path: Path) -> None:

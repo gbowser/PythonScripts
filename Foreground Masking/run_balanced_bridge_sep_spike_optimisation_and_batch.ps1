@@ -1,5 +1,7 @@
 param(
-    [switch]$DryRun
+    [switch]$DryRun,
+    [ValidateSet("Desktop", "Laptop")]
+    [string]$PC = "Desktop"
 )
 
 $ErrorActionPreference = "Continue"
@@ -10,7 +12,8 @@ $ForegroundDir = Join-Path $Repo "Foreground Masking"
 $Optimiser = Join-Path $ForegroundDir "optimise_sep_spike_gate_parameters.py"
 $Batch = Join-Path $ForegroundDir "batch_sep_all_galaxies.py"
 
-$Root = "D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects"
+$ResearchRoot = if ($PC -eq "Laptop") { "C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research" } else { "D:\Dropbox\Public Documents\UCLAN\MSc Research" }
+$Root = Join-Path $ResearchRoot "Remove foreground objects"
 $LogRoot = Join-Path $ForegroundDir "run_logs"
 $MasterLog = Join-Path $LogRoot ("balanced_bridge_sep_spike_optimisation_and_batch_{0}.log" -f (Get-Date -Format "yyyyMMdd_HHmmss"))
 
@@ -74,6 +77,7 @@ $optimiseExit = Run-Step `
     -Command @(
         $Python,
         $Optimiser,
+        "--pc", $PC,
         "--max-images", "20",
         "--initial-points", "12",
         "--max-iter", "48",
@@ -118,6 +122,7 @@ $batchExit = Run-Step `
     -Command @(
         $Python,
         $Batch,
+        "--pc", $PC,
         "--best-json", $bestJson,
         "--source", "spike-gate",
         "--run-label", ("Balanced-bridge SEP Spike Gate {0}" -f $runDir.Name),

@@ -1,5 +1,7 @@
 param(
-    [switch]$DryRun
+    [switch]$DryRun,
+    [ValidateSet("Desktop", "Laptop")]
+    [string]$PC = "Desktop"
 )
 
 $ErrorActionPreference = "Continue"
@@ -9,7 +11,8 @@ $Repo = "C:\Users\gordo\Documents\Github\PythonScripts"
 $ForegroundDir = Join-Path $Repo "Foreground Masking"
 $BatchScript = Join-Path $ForegroundDir "apply_optimised_mtobjects_all_galaxies.py"
 
-$Root = "D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects"
+$ResearchRoot = if ($PC -eq "Laptop") { "C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research" } else { "D:\Dropbox\Public Documents\UCLAN\MSc Research" }
+$Root = Join-Path $ResearchRoot "Remove foreground objects"
 $RunName = "20260723_195742"
 $BestJson = Join-Path $Root "mtobjects toy optimisation\$RunName\mtobjects_parameter_optimisation_best.json"
 $BatchOut = Join-Path $Root "mtobjects all galaxy batch\mtobjects_toy_object_$RunName"

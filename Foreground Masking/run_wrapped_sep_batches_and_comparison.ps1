@@ -1,5 +1,7 @@
 param(
-    [switch]$DryRun
+    [switch]$DryRun,
+    [ValidateSet("Desktop", "Laptop")]
+    [string]$PC = "Desktop"
 )
 
 $ErrorActionPreference = "Continue"
@@ -10,7 +12,8 @@ $ForegroundDir = Join-Path $Repo "Foreground Masking"
 $SEPBatch = Join-Path $ForegroundDir "batch_sep_all_galaxies.py"
 $Compositor = Join-Path $ForegroundDir "make_all_method_galaxy_comparison_pngs.py"
 
-$Root = "D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects"
+$ResearchRoot = if ($PC -eq "Laptop") { "C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research" } else { "D:\Dropbox\Public Documents\UCLAN\MSc Research" }
+$Root = Join-Path $ResearchRoot "Remove foreground objects"
 $LogRoot = Join-Path $ForegroundDir "run_logs"
 $MasterLog = Join-Path $LogRoot ("wrapped_sep_batches_and_comparison_{0}.log" -f (Get-Date -Format "yyyyMMdd_HHmmss"))
 

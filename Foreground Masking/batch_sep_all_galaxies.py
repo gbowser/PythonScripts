@@ -86,7 +86,8 @@ def load_best_params(path: Path) -> dict[str, float | int | str]:
         raise ValueError(f"Best-parameter JSON does not contain a parameter dictionary: {path}")
 
     loaded = {
-        "detect_on": "residual",
+        "detect_on": "original",
+        "spike_gate_detect_on": "residual",
         "detect_thresh": sep_gui.DEFAULT_DETECT_THRESH,
         "minarea": sep_gui.DEFAULT_MINAREA,
         "deblend_nthresh": sep_gui.DEFAULT_DEBLEND_NTHRESH,
@@ -133,6 +134,7 @@ def params_from_args(args: argparse.Namespace) -> dict[str, float | int | str]:
 def default_params(args: argparse.Namespace) -> dict[str, float | int | str]:
     return {
         "detect_on": args.detect_on,
+        "spike_gate_detect_on": args.spike_gate_detect_on,
         "detect_thresh": args.detect_thresh,
         "minarea": args.minarea,
         "deblend_nthresh": args.deblend_nthresh,
@@ -285,7 +287,10 @@ def draw_products(name: str, original: np.ndarray, products: dict, params: dict,
     ax_parameters.set_axis_off()
     parameter_text = "\n".join(
         [
-            f"SEP foreground detection | units=Pixels | detect_on={params['detect_on']}",
+            (
+                f"SEP foreground detection | units=Pixels | detect_on={params['detect_on']} | "
+                f"spike_gate_detect_on={params.get('spike_gate_detect_on', 'residual')}"
+            ),
             (
                 f"thresh={float(params['detect_thresh']):.1f} | minarea={int(params['minarea'])} | "
                 f"deblend={int(params['deblend_nthresh'])}/{float(params['deblend_cont']):.4f} | "
@@ -535,7 +540,13 @@ def parse_args() -> argparse.Namespace:
         default=False,
         help="Optionally write cleaned FITS products and masks. Default is reports/summary only.",
     )
-    parser.add_argument("--detect-on", choices=["residual", "original"], default="residual")
+    parser.add_argument("--detect-on", choices=["residual", "original"], default="original")
+    parser.add_argument(
+        "--spike-gate-detect-on",
+        choices=["residual", "original"],
+        default="residual",
+        help="Provenance label for the Spike Gate source image used during optimisation.",
+    )
     parser.add_argument("--detect-thresh", type=float, default=sep_gui.DEFAULT_DETECT_THRESH)
     parser.add_argument("--minarea", type=int, default=sep_gui.DEFAULT_MINAREA)
     parser.add_argument("--deblend-nthresh", type=int, default=sep_gui.DEFAULT_DEBLEND_NTHRESH)

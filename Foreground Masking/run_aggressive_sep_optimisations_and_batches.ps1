@@ -1,5 +1,7 @@
 param(
-    [switch]$DryRun
+    [switch]$DryRun,
+    [ValidateSet("Desktop", "Laptop")]
+    [string]$PC = "Desktop"
 )
 
 $ErrorActionPreference = "Continue"
@@ -11,7 +13,8 @@ $SEPSpikeOptimiser = Join-Path $ForegroundDir "optimise_sep_spike_gate_parameter
 $SEPToyOptimiser = Join-Path $ForegroundDir "sep_toy_object_parameter_optimisation.py"
 $SEPBatch = Join-Path $ForegroundDir "batch_sep_all_galaxies.py"
 
-$Root = "D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects"
+$ResearchRoot = if ($PC -eq "Laptop") { "C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research" } else { "D:\Dropbox\Public Documents\UCLAN\MSc Research" }
+$Root = Join-Path $ResearchRoot "Remove foreground objects"
 $LogRoot = Join-Path $ForegroundDir "run_logs"
 $MasterLog = Join-Path $LogRoot ("aggressive_sep_optimisations_and_batches_{0}.log" -f (Get-Date -Format "yyyyMMdd_HHmmss"))
 

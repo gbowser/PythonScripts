@@ -128,6 +128,7 @@ def default_params(detect_on: str) -> dict[str, float | int | str]:
 def optuna_trial_to_params(trial: optuna.Trial, args: argparse.Namespace) -> dict[str, float | int | str]:
     detect_on = str(args.detect_on)
     params = default_params(detect_on)
+    params["spike_gate_detect_on"] = str(args.spike_gate_detect_on)
     params["detect_thresh"] = trial.suggest_float(
         "detect_thresh",
         float(args.detect_thresh_min),
@@ -188,9 +189,14 @@ def spike_profile_for_case(
     args: argparse.Namespace,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     radius_arcsec = sep_tool.display.profile_radius_pixels(data, geometry) * geometry["pixel_scale"]
-    original_view, x_axis, y_axis = sep_tool.display.deproject_bar_aligned_cutout(data, geometry, radius_arcsec)
+    detection, _residual, _nonfinite_mask = sep_tool.prepare_detection_image(data, str(args.spike_gate_detect_on))
+    profile_source_view, x_axis, y_axis = sep_tool.display.deproject_bar_aligned_cutout(
+        detection,
+        geometry,
+        radius_arcsec,
+    )
     half_width = 0.5 * int(args.profile_width_pixels) * geometry["pixel_scale"]
-    radii, intensity = sep_tool.display.bar_major_axis_profile(original_view, x_axis, y_axis, half_width)
+    radii, intensity = sep_tool.display.bar_major_axis_profile(profile_source_view, x_axis, y_axis, half_width)
     spikes = sep_tool.detect_profile_spikes(
         radii,
         intensity,
@@ -218,10 +224,10 @@ def build_cases(args: argparse.Namespace) -> list[GalaxyCase]:
         radii, profile, spikes = spike_profile_for_case(data, geometry, args)
         spike_count = int(np.count_nonzero(spikes))
         if spike_count == 0 and args.require_spikes:
-            log(f"Skipping {name}: Spike Gate found no spike samples.")
+            log(f"Skipping {name}: Spike Gate found no spike samples on {args.spike_gate_detect_on}.")
             continue
         cases.append(GalaxyCase(name, data, geometry, radii, profile, spikes))
-        log(f"Prepared {name}: {spike_count} Spike Gate samples.")
+        log(f"Prepared {name}: {spike_count} Spike Gate samples on {args.spike_gate_detect_on}.")
         if len(cases) >= int(args.max_images):
             break
     if not cases:
@@ -574,7 +580,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--names", nargs="*", help="Optional explicit galaxy names. Defaults to first usable manifest images.")
     parser.add_argument("--max-images", type=int, default=DEFAULT_MAX_IMAGES)
     parser.add_argument("--require-spikes", action=argparse.BooleanOptionalAction, default=True)
-    parser.add_argument("--detect-on", choices=["original", "residual"], default="residual")
+    parser.add_argument(
+        "--detect-on",
+        choices=["original", "residual"],
+        default="original",
+        help="Image used by SEP for the global segmentation being optimised.",
+    )
+    parser.add_argument(
+        "--spike-gate-detect-on",
+        choices=["original", "residual"],
+        default="residual",
+        help="Image used by Spike Gate to define target bar-profile spike samples.",
+    )
     parser.add_argument("--profile-width-pixels", type=int, default=sep_tool.DEFAULT_PROFILE_WIDTH_PIXELS)
     parser.add_argument("--spike-excess-fraction", type=float, default=sep_tool.DEFAULT_SPIKE_EXCESS_FRACTION)
     parser.add_argument("--spike-neighbour-inner-arcsec", type=float, default=sep_tool.DEFAULT_SPIKE_NEIGHBOUR_INNER_ARCSEC)

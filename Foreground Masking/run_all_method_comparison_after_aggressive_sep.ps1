@@ -1,4 +1,9 @@
 param(
+    [ValidateSet("Desktop", "Laptop")]
+    [string]$PC = "Desktop"
+)
+
+param(
     [int]$WaitPid = 29164,
     [switch]$DryRun
 )
@@ -10,7 +15,8 @@ $Repo = "C:\Users\gordo\Documents\Github\PythonScripts"
 $ForegroundDir = Join-Path $Repo "Foreground Masking"
 $Compositor = Join-Path $ForegroundDir "make_all_method_galaxy_comparison_pngs.py"
 
-$Root = "D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects"
+$ResearchRoot = if ($PC -eq "Laptop") { "C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research" } else { "D:\Dropbox\Public Documents\UCLAN\MSc Research" }
+$Root = Join-Path $ResearchRoot "Remove foreground objects"
 $MTObjectsSpikeSummary = Join-Path $Root "mtobjects all galaxy batch\mtobjects_spike_gate_20260722_103506\mtobjects_optimised_apply_summary.csv"
 $MTObjectsToySummary = Join-Path $Root "mtobjects all galaxy batch\mtobjects_toy_object_20260723_195742\mtobjects_optimised_apply_summary.csv"
 $SEPSpikeSummary = Join-Path $Root "SEP all galaxy batch\sep_spike_gate_aggressive_20260724_150938\sep_optimised_apply_summary.csv"

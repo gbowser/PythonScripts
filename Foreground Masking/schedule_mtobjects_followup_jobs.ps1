@@ -1,4 +1,9 @@
 param(
+    [ValidateSet("Desktop", "Laptop")]
+    [string]$PC = "Desktop"
+)
+
+param(
     [int]$WaitPid = 3760,
     [switch]$DryRun
 )
@@ -11,7 +16,8 @@ $ForegroundDir = Join-Path $Repo "Foreground Masking"
 $WorkbookHelper = Join-Path $ForegroundDir "append_optimisation_run_to_workbook.py"
 $ApplyScript = Join-Path $ForegroundDir "apply_optimised_mtobjects_all_galaxies.py"
 
-$Root = "D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects"
+$ResearchRoot = if ($PC -eq "Laptop") { "C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research" } else { "D:\Dropbox\Public Documents\UCLAN\MSc Research" }
+$Root = Join-Path $ResearchRoot "Remove foreground objects"
 $Workbook = Join-Path $Root "documentation\Foreground Masking Optimisation Results.xlsx"
 
 $ToyRun = Join-Path $Root "mtobjects toy optimisation\20260722_141659"

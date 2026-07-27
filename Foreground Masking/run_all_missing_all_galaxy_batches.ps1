@@ -1,5 +1,7 @@
 param(
-    [switch]$DryRun
+    [switch]$DryRun,
+    [ValidateSet("Desktop", "Laptop")]
+    [string]$PC = "Desktop"
 )
 
 $ErrorActionPreference = "Continue"
@@ -10,7 +12,8 @@ $ForegroundDir = Join-Path $Repo "Foreground Masking"
 $MTObjectsBatchScript = Join-Path $ForegroundDir "apply_optimised_mtobjects_all_galaxies.py"
 $SEPBatchScript = Join-Path $ForegroundDir "batch_sep_all_galaxies.py"
 
-$Root = "D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects"
+$ResearchRoot = if ($PC -eq "Laptop") { "C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research" } else { "D:\Dropbox\Public Documents\UCLAN\MSc Research" }
+$Root = Join-Path $ResearchRoot "Remove foreground objects"
 $BatchRoot = Join-Path $Root "all galaxy batch scheduled run logs"
 $MasterLog = Join-Path $BatchRoot ("run_all_missing_all_galaxy_batches_{0}.log" -f (Get-Date -Format "yyyyMMdd_HHmmss"))
 
