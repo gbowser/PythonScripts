@@ -16,12 +16,22 @@ PC_HOSTNAMES = {
 }
 
 
+def _path_is_within(path: Path, parent: Path) -> bool:
+    try:
+        path.relative_to(parent)
+    except ValueError:
+        return False
+    return True
+
+
 def detect_pc(reference_path: str | Path | None = None) -> str:
-    """Return the configured device whose drive contains the running code.
+    """Return the configured device for local research/output paths.
 
     ``FOREGROUND_MASKING_PC`` remains available as an explicit environment
-    override.  Matching the code/cwd drive makes detection deterministic when
-    both Dropbox trees are visible on the same machine.
+    override.  If the supplied path is already inside one of the configured
+    research folders that folder wins; otherwise the host name and visible
+    Dropbox roots are used.  Desktop is the tie-breaker because it is the main
+    working machine.
     """
     override = os.environ.get("FOREGROUND_MASKING_PC")
     if override:
@@ -40,12 +50,16 @@ def detect_pc(reference_path: str | Path | None = None) -> str:
 
     reference = Path(reference_path or Path.cwd()).resolve()
     for pc_name, root in PC_RESEARCH_FOLDERS.items():
-        if reference.drive.casefold() == root.drive.casefold():
+        if root.exists() and _path_is_within(reference, root.resolve()):
             return pc_name
 
     available = [name for name, root in PC_RESEARCH_FOLDERS.items() if root.exists()]
     if len(available) == 1:
         return available[0]
+    if "Desktop" in available:
+        return "Desktop"
+    if "Laptop" in available:
+        return "Laptop"
     raise RuntimeError(
         "Could not auto-detect this device; pass --pc or set FOREGROUND_MASKING_PC."
     )
