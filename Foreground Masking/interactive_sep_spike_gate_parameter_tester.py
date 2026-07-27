@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime
+import json
 import math
 from pathlib import Path
 import subprocess
@@ -503,11 +504,12 @@ def filter_segmentation(segmentation: np.ndarray, rows: list[dict[str, float | i
 
 
 class SEPTester(tk.Tk):
-    def __init__(self, manifest: Path, pc_name: str):
+    def __init__(self, manifest: Path, pc_name: str, best_json: Path | None = None):
         super().__init__()
         self.title("SEP + Spike Gate Parameter Tester")
         self._configure_window_size()
         self.manifest = manifest
+        self.best_json = best_json
         self.all_rows = display.read_manifest(manifest)
         self.pc_var = tk.StringVar(value=pc_name)
         self.unit_var = tk.StringVar(value="Pixels")
@@ -523,6 +525,8 @@ class SEPTester(tk.Tk):
         self._build_controls()
         self._build_figure()
         self.refresh_pc_paths(initial=True)
+        if self.best_json is not None:
+            self.load_parameters_from_json(self.best_json)
 
     def _configure_window_size(self) -> None:
         screen_width = max(900, self.winfo_screenwidth())
@@ -939,6 +943,33 @@ class SEPTester(tk.Tk):
             self.format_spinbox_value(key)
         self.detect_on_var.set("residual")
         self.spike_gate_detect_on_var.set("original")
+        self.mark_needs_calculation()
+
+    def load_parameters_from_json(self, path: Path) -> None:
+        with path.open("r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+        params = payload.get("params", payload)
+        if not isinstance(params, dict):
+            raise ValueError(f"Best-parameter JSON does not contain a parameter object: {path}")
+
+        for key, value in params.items():
+            if key == "detect_on":
+                if str(value) in {"original", "residual"}:
+                    self.detect_on_var.set(str(value))
+                continue
+            if key == "spike_gate_detect_on":
+                if str(value) in {"original", "residual"}:
+                    self.spike_gate_detect_on_var.set(str(value))
+                continue
+            if key not in self.vars:
+                continue
+            try:
+                numeric_value = float(value)
+            except (TypeError, ValueError):
+                continue
+            self.vars[key].set(self.convert_from_pixels(key, numeric_value))
+            self.parameter_changed(key, mark=False)
+            self.format_spinbox_value(key)
         self.mark_needs_calculation()
 
     def refresh_pc_paths(self, initial: bool = False) -> None:
@@ -1366,12 +1397,18 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=DEFAULT_PC)
+    parser.add_argument(
+        "--best-json",
+        type=Path,
+        default=None,
+        help="Load SEP/Spike Gate parameters from an optimiser best JSON.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    app = SEPTester(args.manifest, args.pc)
+    app = SEPTester(args.manifest, args.pc, args.best_json)
     app.mainloop()
 
 
