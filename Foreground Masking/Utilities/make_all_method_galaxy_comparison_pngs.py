@@ -32,7 +32,7 @@ for path in (PROJECT_ROOT, FOREGROUND_ROOT, SCRIPT_DIR, *SUPPORT_DIRS):
     if str(path) not in sys.path:
         sys.path.append(str(path))
 
-from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder
+from machine_paths import PC_RESEARCH_FOLDERS, detect_pc, remove_foreground_folder
 
 
 PANEL_W = 900
@@ -277,7 +277,7 @@ def compose_one(
 def parse_args() -> argparse.Namespace:
     defaults = default_paths("Desktop")
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default="Desktop")
+    parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=detect_pc(FOREGROUND_ROOT))
     parser.add_argument("--mtobjects-spike-summary", type=Path, default=defaults["mtobjects_spike"])
     parser.add_argument("--mtobjects-toy-summary", type=Path, default=defaults["mtobjects_toy"])
     parser.add_argument("--sep-spike-summary", type=Path, default=defaults["sep_spike"])

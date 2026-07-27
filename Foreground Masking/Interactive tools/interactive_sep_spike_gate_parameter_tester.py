@@ -39,11 +39,11 @@ for path in (PROJECT_ROOT, FOREGROUND_ROOT, SCRIPT_DIR, *SUPPORT_DIRS):
         sys.path.append(str(path))
 
 import foreground_display_helpers as display  # noqa: E402
-from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_folder  # noqa: E402
+from machine_paths import PC_RESEARCH_FOLDERS, detect_pc, erwin_folder, remove_foreground_folder  # noqa: E402
 
 
 DEFAULT_MANIFEST = display.DEFAULT_MANIFEST
-DEFAULT_PC = "Desktop"
+DEFAULT_PC = detect_pc(FOREGROUND_ROOT)
 DEFAULT_GALAXY = "ESO120-012"
 DEFAULT_DETECT_THRESH = 0.7319079268449962
 SPIKE_GATE_DETECT_THRESH = 0.5

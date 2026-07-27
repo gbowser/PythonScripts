@@ -23,7 +23,7 @@ for path in (PROJECT_ROOT, FOREGROUND_ROOT, SCRIPT_DIR, *SUPPORT_DIRS):
     if str(path) not in sys.path:
         sys.path.append(str(path))
 
-from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
+from machine_paths import PC_RESEARCH_FOLDERS, detect_pc, remove_foreground_folder  # noqa: E402
 
 
 WORKBOOK_NAME = "Foreground Masking Optimisation Results.xlsx"
@@ -331,7 +331,7 @@ class OptimisationLauncher(tk.Tk):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default="Desktop")
+    parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=detect_pc(FOREGROUND_ROOT))
     parser.add_argument("--workbook", type=Path, default=None)
     parser.add_argument("--manifest", type=Path, default=None)
     parser.add_argument("--mtobjects-root", type=Path, default=None)

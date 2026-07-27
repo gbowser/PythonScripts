@@ -1,0 +1,66 @@
+Prepared NGC2500: 6 injected toy objects.
+Prepared NGC4204: 6 injected toy objects.
+Prepared NGC4496A: 6 injected toy objects.
+Prepared UGC06840: 6 injected toy objects.
+Prepared NGC2681: 6 injected toy objects.
+Prepared ESO298-023: 6 injected toy objects.
+Prepared NGC4123: 6 injected toy objects.
+Prepared UGC09245: 6 injected toy objects.
+Prepared UGC05832: 6 injected toy objects.
+Prepared NGC4532: 6 injected toy objects.
+Prepared PGC002492: 6 injected toy objects.
+Prepared PGC011677: 6 injected toy objects.
+Prepared IC1014: 6 injected toy objects.
+Prepared NGC4293: 6 injected toy objects.
+Prepared UGC04988: 6 injected toy objects.
+Prepared NGC3850: 6 injected toy objects.
+Prepared NGC2903: 6 injected toy objects.
+Prepared NGC1341: 6 injected toy objects.
+Prepared NGC1800: 6 injected toy objects.
+Prepared UGC06682: 6 injected toy objects.
+Prepared 20 images and 120 toy objects.
+Output: C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\sep toy optimisation\20260727_194901
+Optuna study 'sep-toy-object-optimisation' using TPESampler: 0 existing trials, 40 new trials.
+[2026-07-27 19:50:51] eval 001: score=0.3734 status=ok mean_masked=3.469% max_masked=8.660% elapsed=15s remaining=39, rough_eta=9m 30s, expected_completion=2026-07-27 20:00:22
+[2026-07-27 19:51:03] eval 002: score=0.4073 status=ok mean_masked=1.157% max_masked=2.274% elapsed=12s remaining=38, rough_eta=8m 20s, expected_completion=2026-07-27 19:59:23
+[2026-07-27 19:51:15] eval 003: score=0.3399 status=ok mean_masked=0.152% max_masked=0.397% elapsed=11s remaining=37, rough_eta=7m 44s, expected_completion=2026-07-27 19:58:59
+[2026-07-27 19:51:47] eval 004: score=0.5995 status=ok mean_masked=11.866% max_masked=23.978% elapsed=32s remaining=36, rough_eta=10m 23s, expected_completion=2026-07-27 20:02:10
+[2026-07-27 19:51:58] eval 005: score=0.5442 status=ok mean_masked=2.340% max_masked=4.221% elapsed=11s remaining=35, rough_eta=9m 21s, expected_completion=2026-07-27 20:01:19
+[2026-07-27 19:52:16] eval 006: score=0.4235 status=ok mean_masked=2.081% max_masked=3.228% elapsed=18s remaining=34, rough_eta=9m 19s, expected_completion=2026-07-27 20:01:35
+[2026-07-27 19:52:27] eval 007: score=0.3056 status=ok mean_masked=0.272% max_masked=0.807% elapsed=11s remaining=33, rough_eta=8m 36s, expected_completion=2026-07-27 20:01:04
+[2026-07-27 19:52:38] eval 008: score=0.3619 status=ok mean_masked=0.412% max_masked=1.101% elapsed=10s remaining=32, rough_eta=7m 59s, expected_completion=2026-07-27 20:00:37
+[2026-07-27 19:52:49] eval 009: score=0.4169 status=ok mean_masked=0.733% max_masked=1.424% elapsed=11s remaining=31, rough_eta=7m 29s, expected_completion=2026-07-27 20:00:18
+[2026-07-27 19:53:03] eval 010: score=0.5177 status=ok mean_masked=4.315% max_masked=8.289% elapsed=14s remaining=30, rough_eta=7m 13s, expected_completion=2026-07-27 20:00:16
+[2026-07-27 19:53:15] eval 011: score=0.5035 status=ok mean_masked=2.638% max_masked=5.174% elapsed=12s remaining=29, rough_eta=6m 52s, expected_completion=2026-07-27 20:00:07
+[2026-07-27 19:53:29] eval 012: score=0.5065 status=ok mean_masked=4.131% max_masked=8.036% elapsed=14s remaining=28, rough_eta=6m 36s, expected_completion=2026-07-27 20:00:05
+[2026-07-27 19:55:01] eval 013: score=0.4692 status=ok mean_masked=30.362% max_masked=43.007% elapsed=1m 32s remaining=27, rough_eta=9m 04s, expected_completion=2026-07-27 20:04:05
+[2026-07-27 19:55:14] eval 014: score=0.3304 status=ok mean_masked=1.737% max_masked=3.977% elapsed=12s remaining=26, rough_eta=8m 30s, expected_completion=2026-07-27 20:03:43
+[2026-07-27 19:55:26] eval 015: score=0.3896 status=ok mean_masked=1.570% max_masked=3.438% elapsed=13s remaining=25, rough_eta=7m 58s, expected_completion=2026-07-27 20:03:25
+[2026-07-27 19:55:40] eval 016: score=0.5019 status=ok mean_masked=3.078% max_masked=6.160% elapsed=13s remaining=24, rough_eta=7m 30s, expected_completion=2026-07-27 20:03:10
+[2026-07-27 19:55:56] eval 017: score=0.5705 status=ok mean_masked=5.838% max_masked=10.022% elapsed=16s remaining=23, rough_eta=7m 08s, expected_completion=2026-07-27 20:03:04
+[2026-07-27 19:56:14] eval 018: score=0.5872 status=ok mean_masked=2.961% max_masked=4.239% elapsed=18s remaining=22, rough_eta=6m 48s, expected_completion=2026-07-27 20:03:02
+[2026-07-27 19:56:32] eval 019: score=0.5864 status=ok mean_masked=2.777% max_masked=4.007% elapsed=18s remaining=21, rough_eta=6m 29s, expected_completion=2026-07-27 20:03:00
+[2026-07-27 19:56:51] eval 020: score=0.5892 status=ok mean_masked=3.136% max_masked=4.442% elapsed=19s remaining=20, rough_eta=6m 10s, expected_completion=2026-07-27 20:03:01
+[2026-07-27 19:57:02] eval 021: score=0.4706 status=ok mean_masked=0.506% max_masked=0.938% elapsed=11s remaining=19, rough_eta=5m 45s, expected_completion=2026-07-27 20:02:46
+[2026-07-27 19:57:21] eval 022: score=0.5864 status=ok mean_masked=4.054% max_masked=5.540% elapsed=19s remaining=18, rough_eta=5m 28s, expected_completion=2026-07-27 20:02:49
+[2026-07-27 19:57:37] eval 023: score=0.5822 status=ok mean_masked=2.730% max_masked=3.938% elapsed=16s remaining=17, rough_eta=5m 08s, expected_completion=2026-07-27 20:02:45
+[2026-07-27 19:58:37] eval 024: score=0.5381 status=ok mean_masked=6.720% max_masked=9.108% elapsed=1m 00s remaining=16, rough_eta=5m 17s, expected_completion=2026-07-27 20:03:54
+[2026-07-27 19:58:54] eval 025: score=0.6314 status=ok mean_masked=2.316% max_masked=5.369% elapsed=17s remaining=15, rough_eta=4m 56s, expected_completion=2026-07-27 20:03:50
+[2026-07-27 19:59:07] eval 026: score=0.6484 status=ok mean_masked=2.404% max_masked=5.371% elapsed=12s remaining=14, rough_eta=4m 32s, expected_completion=2026-07-27 20:03:39
+[2026-07-27 19:59:18] eval 027: score=0.5933 status=ok mean_masked=1.689% max_masked=3.850% elapsed=11s remaining=13, rough_eta=4m 09s, expected_completion=2026-07-27 20:03:27
+[2026-07-27 19:59:31] eval 028: score=0.5762 status=ok mean_masked=2.117% max_masked=4.887% elapsed=12s remaining=12, rough_eta=3m 47s, expected_completion=2026-07-27 20:03:18
+[2026-07-27 19:59:43] eval 029: score=0.3824 status=ok mean_masked=1.364% max_masked=3.325% elapsed=12s remaining=11, rough_eta=3m 25s, expected_completion=2026-07-27 20:03:08
+[2026-07-27 19:59:55] eval 030: score=0.4869 status=ok mean_masked=1.920% max_masked=4.626% elapsed=12s remaining=10, rough_eta=3m 04s, expected_completion=2026-07-27 20:03:00
+[2026-07-27 20:00:08] eval 031: score=0.5824 status=ok mean_masked=1.624% max_masked=3.806% elapsed=13s remaining=9, rough_eta=2m 44s, expected_completion=2026-07-27 20:02:52
+[2026-07-27 20:00:22] eval 032: score=0.6182 status=ok mean_masked=1.664% max_masked=3.901% elapsed=14s remaining=8, rough_eta=2m 25s, expected_completion=2026-07-27 20:02:47
+[2026-07-27 20:00:36] eval 033: score=0.5459 status=ok mean_masked=0.442% max_masked=1.313% elapsed=13s remaining=7, rough_eta=2m 06s, expected_completion=2026-07-27 20:02:42
+[2026-07-27 20:00:47] eval 034: score=0.5214 status=ok mean_masked=0.651% max_masked=1.617% elapsed=11s remaining=6, rough_eta=1m 47s, expected_completion=2026-07-27 20:02:34
+[2026-07-27 20:01:02] eval 035: score=0.5589 status=ok mean_masked=0.594% max_masked=1.553% elapsed=15s remaining=5, rough_eta=1m 28s, expected_completion=2026-07-27 20:02:31
+[2026-07-27 20:01:16] eval 036: score=0.6375 status=ok mean_masked=2.908% max_masked=6.608% elapsed=13s remaining=4, rough_eta=1m 10s, expected_completion=2026-07-27 20:02:26
+[2026-07-27 20:01:38] eval 037: score=0.6348 status=ok mean_masked=4.030% max_masked=8.883% elapsed=22s remaining=3, rough_eta=53s, expected_completion=2026-07-27 20:02:31
+[2026-07-27 20:02:03] eval 038: score=0.5886 status=ok mean_masked=1.818% max_masked=4.020% elapsed=24s remaining=2, rough_eta=36s, expected_completion=2026-07-27 20:02:39
+[2026-07-27 20:02:17] eval 039: score=0.6236 status=ok mean_masked=6.874% max_masked=13.295% elapsed=14s remaining=1, rough_eta=18s, expected_completion=2026-07-27 20:02:35
+[2026-07-27 20:02:57] eval 040: score=0.5895 status=ok mean_masked=13.554% max_masked=20.481% elapsed=40s remaining=0, rough_eta=0s, expected_completion=2026-07-27 20:02:57
+Optuna best objective=-0.648374, params={'detect_thresh': 2.32732266463433, 'minarea': 8, 'deblend_nthresh': 15, 'deblend_cont': 1.6022316358644498e-05, 'back_size': 24, 'filter_size': 3, 'dilation_radius': 3, 'max_area': 6652, 'max_elongation': 13.433224838376848}
+Best result: C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\sep toy optimisation\20260727_194901\sep_toy_object_optimisation_best.json
+Results workbook: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\documentation\Foreground Masking Optimisation Results.xlsx

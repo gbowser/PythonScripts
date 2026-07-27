@@ -1,0 +1,65 @@
+[2026-07-27 19:49:01] Skipping NGC2500: Spike Gate found no spike samples.
+[2026-07-27 19:49:01] Prepared NGC4204: 10 Spike Gate samples.
+[2026-07-27 19:49:01] Prepared NGC4496A: 5 Spike Gate samples.
+[2026-07-27 19:49:01] Prepared UGC06840: 5 Spike Gate samples.
+[2026-07-27 19:49:01] Skipping NGC2681: Spike Gate found no spike samples.
+[2026-07-27 19:49:02] Prepared ESO298-023: 5 Spike Gate samples.
+[2026-07-27 19:49:02] Prepared NGC4123: 5 Spike Gate samples.
+[2026-07-27 19:49:02] Prepared UGC09245: 5 Spike Gate samples.
+[2026-07-27 19:49:02] Skipping UGC05832: Spike Gate found no spike samples.
+[2026-07-27 19:49:02] Skipping NGC4532: Spike Gate found no spike samples.
+[2026-07-27 19:49:02] Skipping PGC002492: Spike Gate found no spike samples.
+[2026-07-27 19:49:02] Skipping PGC011677: Spike Gate found no spike samples.
+[2026-07-27 19:49:02] Skipping IC1014: Spike Gate found no spike samples.
+[2026-07-27 19:49:02] Skipping NGC4293: Spike Gate found no spike samples.
+[2026-07-27 19:49:02] Skipping UGC04988: Spike Gate found no spike samples.
+[2026-07-27 19:49:02] Skipping NGC3850: Spike Gate found no spike samples.
+[2026-07-27 19:49:03] Prepared NGC2903: 5 Spike Gate samples.
+[2026-07-27 19:49:03] Skipping NGC1341: Spike Gate found no spike samples.
+[2026-07-27 19:49:03] Skipping NGC1800: Spike Gate found no spike samples.
+[2026-07-27 19:49:03] Prepared UGC06682: 15 Spike Gate samples.
+[2026-07-27 19:49:03] Skipping NGC5669: Spike Gate found no spike samples.
+[2026-07-27 19:49:03] Prepared IC3521: 5 Spike Gate samples.
+[2026-07-27 19:49:03] Skipping IC1954: Spike Gate found no spike samples.
+[2026-07-27 19:49:03] Skipping UGC06931: Spike Gate found no spike samples.
+[2026-07-27 19:49:03] Prepared NGC6237: 45 Spike Gate samples.
+[2026-07-27 19:49:03] Prepared NGC3185: 5 Spike Gate samples.
+[2026-07-27 19:49:04] Skipping NGC3992: Spike Gate found no spike samples.
+[2026-07-27 19:49:04] Prepared PGC051523: 10 Spike Gate samples.
+[2026-07-27 19:49:04] Prepared NGC3264: 15 Spike Gate samples.
+[2026-07-27 19:49:04] Skipping NGC3726: Spike Gate found no spike samples.
+[2026-07-27 19:49:04] Skipping NGC3344: Spike Gate found no spike samples.
+[2026-07-27 19:49:04] Prepared NGC1879: 10 Spike Gate samples.
+[2026-07-27 19:49:04] Prepared UGC09661: 5 Spike Gate samples.
+[2026-07-27 19:49:04] Prepared ESO443-085: 5 Spike Gate samples.
+[2026-07-27 19:49:04] Skipping NGC5068: Spike Gate found no spike samples.
+[2026-07-27 19:49:04] Skipping NGC4020: Spike Gate found no spike samples.
+[2026-07-27 19:49:04] Skipping NGC3930: Spike Gate found no spike samples.
+[2026-07-27 19:49:04] Skipping NGC0578: Spike Gate found no spike samples.
+[2026-07-27 19:49:05] Skipping NGC4424: Spike Gate found no spike samples.
+[2026-07-27 19:49:05] Skipping NGC3319: Spike Gate found no spike samples.
+[2026-07-27 19:49:05] Prepared NGC7418: 10 Spike Gate samples.
+[2026-07-27 19:49:05] Skipping NGC4559: Spike Gate found no spike samples.
+[2026-07-27 19:49:05] Skipping NGC4654: Spike Gate found no spike samples.
+[2026-07-27 19:49:05] Prepared UGC07911: 10 Spike Gate samples.
+[2026-07-27 19:49:05] Prepared UGC08851: 10 Spike Gate samples.
+[2026-07-27 19:49:05] Prepared NGC7424: 5 Spike Gate samples.
+[2026-07-27 19:49:05] Prepared 20 galaxies. Output: C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\mtobjects spike optimisation\20260727_194901
+[2026-07-27 19:49:07] Optuna study 'mtobjects-spike-gate-optimisation': 0 existing trials, 60 new trials.
+[2026-07-27 19:49:07] eval 001 trial 0 starting (1/60); params=move=0.719, min_distance=0.026, gaussian_fwhm=1.145, minarea=92, dilation=6, max_area=4681, max_elongation=11.152
+[2026-07-27 20:18:48] eval 001 galaxy 1/20 NGC4204: coverage=0.500, masked=42.733%, segments=159806, elapsed=29m 42s
+[2026-07-27 20:21:27] eval 001 galaxy 2/20 NGC4496A: coverage=0.000, masked=41.452%, segments=45309, elapsed=2m 39s
+[2026-07-27 20:25:33] eval 001 galaxy 3/20 UGC06840: coverage=0.000, masked=26.197%, segments=50143, elapsed=4m 05s
+[2026-07-27 20:26:56] eval 001 galaxy 4/20 ESO298-023: coverage=0.000, masked=52.897%, segments=43505, elapsed=1m 23s
+[2026-07-27 20:29:54] eval 001 galaxy 5/20 NGC4123: coverage=1.000, masked=31.533%, segments=46777, elapsed=2m 58s
+[2026-07-27 20:31:28] eval 001 galaxy 6/20 UGC09245: coverage=0.000, masked=50.350%, segments=45613, elapsed=1m 35s
+[2026-07-27 21:08:10] eval 001 galaxy 7/20 NGC2903: coverage=1.000, masked=48.756%, segments=197757, elapsed=36m 42s
+[2026-07-27 21:10:08] eval 001 galaxy 8/20 UGC06682: coverage=0.733, masked=41.804%, segments=43087, elapsed=1m 58s
+[2026-07-27 21:13:16] eval 001 galaxy 9/20 IC3521: coverage=0.000, masked=29.858%, segments=47106, elapsed=3m 08s
+[2026-07-27 21:15:27] eval 001 galaxy 10/20 NGC6237: coverage=0.578, masked=40.147%, segments=45010, elapsed=2m 10s
+[2026-07-27 21:19:07] eval 001 galaxy 11/20 NGC3185: coverage=0.000, masked=40.013%, segments=55832, elapsed=3m 40s
+[2026-07-27 21:21:52] eval 001 galaxy 12/20 PGC051523: coverage=0.500, masked=35.755%, segments=47012, elapsed=2m 45s
+[2026-07-27 21:25:24] eval 001 galaxy 13/20 NGC3264: coverage=0.400, masked=28.808%, segments=47316, elapsed=3m 32s
+[2026-07-27 21:26:33] eval 001 galaxy 14/20 NGC1879: coverage=0.200, masked=51.044%, segments=39802, elapsed=1m 10s
+[2026-07-27 21:27:41] eval 001 galaxy 15/20 UGC09661: coverage=0.000, masked=41.534%, segments=35744, elapsed=1m 07s
+[2026-07-27 21:28:38] eval 001 galaxy 16/20 ESO443-085: coverage=0.000, masked=39.367%, segments=31632, elapsed=57s

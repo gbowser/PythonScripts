@@ -34,10 +34,10 @@ for path in (PROJECT_ROOT, FOREGROUND_ROOT, SCRIPT_DIR, *SUPPORT_DIRS):
 import foreground_display_helpers as display  # noqa: E402
 import mtobjects_spike_gate_processing as mtobjects_tool  # noqa: E402
 import sep_processing as sep_tool  # noqa: E402
-from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
+from machine_paths import PC_RESEARCH_FOLDERS, detect_pc, remove_foreground_folder  # noqa: E402
 
 
-DEFAULT_PC = "Desktop"
+DEFAULT_PC = detect_pc(FOREGROUND_ROOT)
 DEFAULT_GALAXY = "ESO120-012"
 TOY_TYPES = {
     "Gaussian star": "star",
