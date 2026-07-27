@@ -22,6 +22,7 @@ dist/
 *.egg-info/
 
 # Generated analytical outputs
+mtobjects/
 Erwin_barprofiles_paper_GB_working_copy/plots/
 Erwin_barprofiles_paper_GB_working_copy/python_figure_output/
 Foreground Masking/startup_cache.sqlite3
