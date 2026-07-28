@@ -1,0 +1,11 @@
+[2026-07-28 07:17:59] Stopping optimisation queue controller PID 19300.
+[2026-07-28 07:17:59] MTObjects Spike Gate PID 15036: waiting for trial 10 to finish.
+[2026-07-28 07:17:59] MTObjects Toy Objects PID 6360: waiting for trial 12 to finish.
+[2026-07-28 07:24:39] MTObjects Toy Objects: trial 12 finished; stopping PID 6360 at the boundary.
+[2026-07-28 10:06:21] MTObjects Spike Gate: trial 10 finished; stopping PID 15036 at the boundary.
+[2026-07-28 10:06:21] Optimisation sequence stopped. Starting visible all-galaxy batches sequentially.
+[2026-07-28 10:06:21] Starting batch_spike_gate_SEP.py
+[2026-07-28 10:13:57] batch_spike_gate_SEP.py finished with exit code 0
+[2026-07-28 10:13:57] Starting batch_toy_objects_SEP.py
+[2026-07-28 10:20:05] batch_toy_objects_SEP.py finished with exit code 0
+[2026-07-28 10:20:05] Starting batch_spike_gate_MTObjects.py

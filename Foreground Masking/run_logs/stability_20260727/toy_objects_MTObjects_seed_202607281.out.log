@@ -1,0 +1,35 @@
+Prepared NGC2500: 6 injected toy objects.
+Prepared NGC4204: 6 injected toy objects.
+Prepared NGC4496A: 6 injected toy objects.
+Prepared UGC06840: 6 injected toy objects.
+Prepared NGC2681: 6 injected toy objects.
+Prepared ESO298-023: 6 injected toy objects.
+Prepared NGC4123: 6 injected toy objects.
+Prepared UGC09245: 6 injected toy objects.
+Prepared UGC05832: 6 injected toy objects.
+Prepared NGC4532: 6 injected toy objects.
+Prepared PGC002492: 6 injected toy objects.
+Prepared PGC011677: 6 injected toy objects.
+Prepared IC1014: 6 injected toy objects.
+Prepared NGC4293: 6 injected toy objects.
+Prepared UGC04988: 6 injected toy objects.
+Prepared NGC3850: 6 injected toy objects.
+Prepared NGC2903: 6 injected toy objects.
+Prepared NGC1341: 6 injected toy objects.
+Prepared NGC1800: 6 injected toy objects.
+Prepared UGC06682: 6 injected toy objects.
+Prepared 20 images and 120 toy objects.
+Output: C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\mtobjects toy optimisation\20260727_194901
+Optuna study 'mtobjects-toy-optimisation' using TPESampler: 0 existing trials, 40 new trials.
+[2026-07-27 22:14:51] eval 001: score=-0.1067 status=ok mean_masked=9.542% max_masked=14.543% elapsed=1h 42m 28s remaining=39, rough_eta=66h 36m 13s, expected_completion=2026-07-30 16:51:04
+[2026-07-27 23:34:48] eval 002: score=-0.2066 status=ok mean_masked=20.374% max_masked=29.831% elapsed=1h 19m 57s remaining=38, rough_eta=57h 45m 52s, expected_completion=2026-07-30 09:20:41
+[2026-07-27 23:58:10] eval 003: score=-0.1807 status=ok mean_masked=13.855% max_masked=20.623% elapsed=23m 22s remaining=37, rough_eta=42h 17m 58s, expected_completion=2026-07-29 18:16:08
+[2026-07-28 00:14:58] eval 004: score=-0.1959 status=ok mean_masked=18.384% max_masked=26.983% elapsed=16m 47s remaining=36, rough_eta=33h 23m 07s, expected_completion=2026-07-29 09:38:05
+[2026-07-28 00:40:45] eval 005: score=-0.1859 status=ok mean_masked=14.543% max_masked=21.779% elapsed=25m 48s remaining=35, rough_eta=28h 58m 32s, expected_completion=2026-07-29 05:39:17
+[2026-07-28 01:46:46] eval 006: score=-0.1937 status=ok mean_masked=18.715% max_masked=27.288% elapsed=1h 06m 01s remaining=34, rough_eta=29h 41m 26s, expected_completion=2026-07-29 07:28:12
+[2026-07-28 01:56:17] eval 007: score=0.0927 status=ok mean_masked=0.100% max_masked=0.195% elapsed=9m 31s remaining=33, rough_eta=25h 26m 52s, expected_completion=2026-07-29 03:23:09
+[2026-07-28 02:25:58] eval 008: score=0.1903 status=ok mean_masked=0.229% max_masked=0.317% elapsed=29m 41s remaining=32, rough_eta=23h 34m 14s, expected_completion=2026-07-29 02:00:12
+[2026-07-28 04:42:14] eval 009: score=0.1279 status=ok mean_masked=0.347% max_masked=0.709% elapsed=2h 16m 16s remaining=31, rough_eta=28h 07m 11s, expected_completion=2026-07-29 08:49:25
+[2026-07-28 04:51:15] eval 010: score=0.0348 status=ok mean_masked=4.883% max_masked=7.446% elapsed=9m 01s remaining=30, rough_eta=24h 56m 31s, expected_completion=2026-07-29 05:47:46
+[2026-07-28 05:06:41] eval 011: score=-0.0008 status=ok mean_masked=2.658% max_masked=3.449% elapsed=15m 26s remaining=29, rough_eta=22h 35m 49s, expected_completion=2026-07-29 03:42:31
+[2026-07-28 07:24:33] eval 012: score=0.1186 status=ok mean_masked=0.378% max_masked=0.695% elapsed=2h 17m 51s remaining=28, rough_eta=25h 21m 38s, expected_completion=2026-07-29 08:46:10

@@ -63,3 +63,207 @@
 [2026-07-27 21:26:33] eval 001 galaxy 14/20 NGC1879: coverage=0.200, masked=51.044%, segments=39802, elapsed=1m 10s
 [2026-07-27 21:27:41] eval 001 galaxy 15/20 UGC09661: coverage=0.000, masked=41.534%, segments=35744, elapsed=1m 07s
 [2026-07-27 21:28:38] eval 001 galaxy 16/20 ESO443-085: coverage=0.000, masked=39.367%, segments=31632, elapsed=57s
+[2026-07-27 21:54:03] eval 001 galaxy 17/20 NGC7418: coverage=0.500, masked=41.089%, segments=156704, elapsed=25m 26s
+[2026-07-27 21:55:08] eval 001 galaxy 18/20 UGC07911: coverage=0.400, masked=38.107%, segments=33616, elapsed=1m 05s
+[2026-07-27 21:56:57] eval 001 galaxy 19/20 UGC08851: coverage=0.000, masked=38.271%, segments=40346, elapsed=1m 49s
+[2026-07-27 22:09:46] eval 001 galaxy 20/20 NGC7424: coverage=1.000, masked=47.676%, segments=114629, elapsed=12m 49s
+[2026-07-27 22:09:46] eval 001: objective=10.769 coverage=0.341 masked=40.369% status=ok elapsed=2h 20m 40s remaining=59, rough_eta=138h 19m 08s, expected_completion=2026-08-02 16:28:55
+[2026-07-27 22:09:47] eval 002 trial 1 starting (2/60); params=move=0.147, min_distance=0.920, gaussian_fwhm=1.372, minarea=7, dilation=5, max_area=2111, max_elongation=3.318
+[2026-07-27 22:31:09] eval 002 galaxy 1/20 NGC4204: coverage=1.000, masked=49.714%, segments=128555, elapsed=21m 22s
+[2026-07-27 22:33:06] eval 002 galaxy 2/20 NGC4496A: coverage=1.000, masked=50.100%, segments=36834, elapsed=1m 57s
+[2026-07-27 22:36:11] eval 002 galaxy 3/20 UGC06840: coverage=1.000, masked=32.338%, segments=39734, elapsed=3m 04s
+[2026-07-27 22:37:16] eval 002 galaxy 4/20 ESO298-023: coverage=1.000, masked=63.071%, segments=34244, elapsed=1m 05s
+[2026-07-27 22:39:43] eval 002 galaxy 5/20 NGC4123: coverage=1.000, masked=36.452%, segments=36927, elapsed=2m 27s
+[2026-07-27 22:41:01] eval 002 galaxy 6/20 UGC09245: coverage=1.000, masked=57.325%, segments=35773, elapsed=1m 18s
+[2026-07-27 23:09:57] eval 002 galaxy 7/20 NGC2903: coverage=1.000, masked=58.107%, segments=154741, elapsed=28m 55s
+[2026-07-27 23:11:30] eval 002 galaxy 8/20 UGC06682: coverage=1.000, masked=48.678%, segments=33988, elapsed=1m 33s
+[2026-07-27 23:14:01] eval 002 galaxy 9/20 IC3521: coverage=1.000, masked=36.008%, segments=37269, elapsed=2m 31s
+[2026-07-27 23:15:40] eval 002 galaxy 10/20 NGC6237: coverage=1.000, masked=49.407%, segments=35255, elapsed=1m 40s
+[2026-07-27 23:18:26] eval 002 galaxy 11/20 NGC3185: coverage=1.000, masked=46.076%, segments=43780, elapsed=2m 45s
+[2026-07-27 23:20:30] eval 002 galaxy 12/20 PGC051523: coverage=1.000, masked=42.430%, segments=36975, elapsed=2m 05s
+[2026-07-27 23:23:11] eval 002 galaxy 13/20 NGC3264: coverage=0.667, masked=33.521%, segments=37247, elapsed=2m 40s
+[2026-07-27 23:24:05] eval 002 galaxy 14/20 NGC1879: coverage=1.000, masked=62.444%, segments=31230, elapsed=54s
+[2026-07-27 23:24:58] eval 002 galaxy 15/20 UGC09661: coverage=1.000, masked=50.740%, segments=28196, elapsed=54s
+[2026-07-27 23:25:45] eval 002 galaxy 16/20 ESO443-085: coverage=1.000, masked=47.742%, segments=24598, elapsed=47s
+[2026-07-27 23:46:00] eval 002 galaxy 17/20 NGC7418: coverage=1.000, masked=50.721%, segments=126076, elapsed=20m 15s
+[2026-07-27 23:46:51] eval 002 galaxy 18/20 UGC07911: coverage=1.000, masked=46.443%, segments=26385, elapsed=51s
+[2026-07-27 23:48:18] eval 002 galaxy 19/20 UGC08851: coverage=1.000, masked=45.549%, segments=31897, elapsed=1m 27s
+[2026-07-27 23:58:38] eval 002 galaxy 20/20 NGC7424: coverage=1.000, masked=56.563%, segments=92135, elapsed=10m 20s
+[2026-07-27 23:58:38] eval 002: objective=5.6037 coverage=0.983 masked=48.171% status=ok elapsed=1h 48m 51s remaining=58, rough_eta=120h 35m 59s, expected_completion=2026-08-02 00:34:37
+[2026-07-27 23:58:38] eval 003 trial 2 starting (3/60); params=move=0.217, min_distance=0.396, gaussian_fwhm=2.905, minarea=71, dilation=7, max_area=1620, max_elongation=7.121
+[2026-07-28 00:06:01] eval 003 galaxy 1/20 NGC4204: coverage=0.500, masked=46.318%, segments=43198, elapsed=7m 23s
+[2026-07-28 00:06:43] eval 003 galaxy 2/20 NGC4496A: coverage=0.000, masked=44.617%, segments=12627, elapsed=42s
+[2026-07-28 00:07:44] eval 003 galaxy 3/20 UGC06840: coverage=0.000, masked=29.999%, segments=12748, elapsed=1m 00s
+[2026-07-28 00:08:06] eval 003 galaxy 4/20 ESO298-023: coverage=0.000, masked=59.390%, segments=11088, elapsed=22s
+[2026-07-28 00:08:54] eval 003 galaxy 5/20 NGC4123: coverage=1.000, masked=33.740%, segments=11862, elapsed=48s
+[2026-07-28 00:09:20] eval 003 galaxy 6/20 UGC09245: coverage=0.000, masked=54.106%, segments=11528, elapsed=26s
+[2026-07-28 00:18:33] eval 003 galaxy 7/20 NGC2903: coverage=1.000, masked=52.556%, segments=48521, elapsed=9m 14s
+[2026-07-28 00:19:04] eval 003 galaxy 8/20 UGC06682: coverage=0.067, masked=44.796%, segments=11034, elapsed=30s
+[2026-07-28 00:19:53] eval 003 galaxy 9/20 IC3521: coverage=0.000, masked=33.447%, segments=11905, elapsed=49s
+[2026-07-28 00:20:25] eval 003 galaxy 10/20 NGC6237: coverage=0.778, masked=43.110%, segments=11368, elapsed=32s
+[2026-07-28 00:21:18] eval 003 galaxy 11/20 NGC3185: coverage=0.000, masked=41.601%, segments=13998, elapsed=53s
+[2026-07-28 00:21:57] eval 003 galaxy 12/20 PGC051523: coverage=0.500, masked=39.156%, segments=11694, elapsed=39s
+[2026-07-28 00:22:48] eval 003 galaxy 13/20 NGC3264: coverage=0.600, masked=31.493%, segments=12019, elapsed=52s
+[2026-07-28 00:23:05] eval 003 galaxy 14/20 NGC1879: coverage=1.000, masked=56.959%, segments=9893, elapsed=17s
+[2026-07-28 00:23:22] eval 003 galaxy 15/20 UGC09661: coverage=0.000, masked=46.023%, segments=8869, elapsed=17s
+[2026-07-28 00:23:37] eval 003 galaxy 16/20 ESO443-085: coverage=1.000, masked=42.191%, segments=7760, elapsed=15s
+[2026-07-28 00:30:22] eval 003 galaxy 17/20 NGC7418: coverage=1.000, masked=46.322%, segments=42468, elapsed=6m 45s
+[2026-07-28 00:30:38] eval 003 galaxy 18/20 UGC07911: coverage=1.000, masked=42.387%, segments=8185, elapsed=16s
+[2026-07-28 00:31:06] eval 003 galaxy 19/20 UGC08851: coverage=0.600, masked=41.858%, segments=10300, elapsed=28s
+[2026-07-28 00:34:31] eval 003 galaxy 20/20 NGC7424: coverage=1.000, masked=52.432%, segments=30731, elapsed=3m 25s
+[2026-07-28 00:34:31] eval 003: objective=9.0893 coverage=0.502 masked=44.125% status=ok elapsed=35m 53s remaining=57, rough_eta=90h 22m 41s, expected_completion=2026-07-31 18:57:12
+[2026-07-28 00:34:31] eval 004 trial 3 starting (4/60); params=move=0.892, min_distance=0.471, gaussian_fwhm=3.493, minarea=10, dilation=6, max_area=1175, max_elongation=15.541
+[2026-07-28 00:39:37] eval 004 galaxy 1/20 NGC4204: coverage=1.000, masked=49.060%, segments=31369, elapsed=5m 06s
+[2026-07-28 00:40:06] eval 004 galaxy 2/20 NGC4496A: coverage=1.000, masked=49.458%, segments=9145, elapsed=29s
+[2026-07-28 00:40:48] eval 004 galaxy 3/20 UGC06840: coverage=0.000, masked=31.955%, segments=9244, elapsed=42s
+[2026-07-28 00:41:03] eval 004 galaxy 4/20 ESO298-023: coverage=1.000, masked=62.622%, segments=8118, elapsed=15s
+[2026-07-28 00:41:38] eval 004 galaxy 5/20 NGC4123: coverage=1.000, masked=36.002%, segments=8643, elapsed=34s
+[2026-07-28 00:41:56] eval 004 galaxy 6/20 UGC09245: coverage=1.000, masked=56.982%, segments=8404, elapsed=18s
+[2026-07-28 00:48:30] eval 004 galaxy 7/20 NGC2903: coverage=1.000, masked=57.197%, segments=35156, elapsed=6m 33s
+[2026-07-28 00:48:51] eval 004 galaxy 8/20 UGC06682: coverage=0.667, masked=48.248%, segments=7951, elapsed=21s
+[2026-07-28 00:49:25] eval 004 galaxy 9/20 IC3521: coverage=1.000, masked=35.752%, segments=8555, elapsed=34s
+[2026-07-28 00:49:48] eval 004 galaxy 10/20 NGC6237: coverage=1.000, masked=48.771%, segments=8252, elapsed=23s
+[2026-07-28 00:50:26] eval 004 galaxy 11/20 NGC3185: coverage=1.000, masked=45.660%, segments=10053, elapsed=38s
+[2026-07-28 00:50:55] eval 004 galaxy 12/20 PGC051523: coverage=1.000, masked=41.949%, segments=8481, elapsed=29s
+[2026-07-28 00:51:33] eval 004 galaxy 13/20 NGC3264: coverage=0.867, masked=33.303%, segments=8824, elapsed=38s
+[2026-07-28 00:51:46] eval 004 galaxy 14/20 NGC1879: coverage=1.000, masked=61.921%, segments=7160, elapsed=13s
+[2026-07-28 00:51:58] eval 004 galaxy 15/20 UGC09661: coverage=1.000, masked=50.207%, segments=6443, elapsed=12s
+[2026-07-28 00:52:09] eval 004 galaxy 16/20 ESO443-085: coverage=1.000, masked=47.282%, segments=5568, elapsed=11s
+[2026-07-28 00:57:02] eval 004 galaxy 17/20 NGC7418: coverage=1.000, masked=50.047%, segments=30591, elapsed=4m 53s
+[2026-07-28 00:57:14] eval 004 galaxy 18/20 UGC07911: coverage=1.000, masked=46.033%, segments=6025, elapsed=12s
+[2026-07-28 00:57:33] eval 004 galaxy 19/20 UGC08851: coverage=0.500, masked=44.985%, segments=7426, elapsed=20s
+[2026-07-28 01:00:03] eval 004 galaxy 20/20 NGC7424: coverage=1.000, masked=55.633%, segments=22403, elapsed=2m 30s
+[2026-07-28 01:00:03] eval 004: objective=5.9485 coverage=0.902 masked=47.653% status=ok elapsed=25m 32s remaining=56, rough_eta=72h 33m 03s, expected_completion=2026-07-31 01:33:06
+[2026-07-28 01:00:03] eval 005 trial 4 starting (5/60); params=move=0.241, min_distance=0.687, gaussian_fwhm=2.716, minarea=65, dilation=7, max_area=2307, max_elongation=17.162
+[2026-07-28 01:07:58] eval 005 galaxy 1/20 NGC4204: coverage=0.500, masked=46.865%, segments=48394, elapsed=7m 55s
+[2026-07-28 01:08:42] eval 005 galaxy 2/20 NGC4496A: coverage=0.000, masked=45.185%, segments=14166, elapsed=44s
+[2026-07-28 01:09:46] eval 005 galaxy 3/20 UGC06840: coverage=0.000, masked=30.460%, segments=14241, elapsed=1m 04s
+[2026-07-28 01:10:09] eval 005 galaxy 4/20 ESO298-023: coverage=1.000, masked=60.094%, segments=12438, elapsed=23s
+[2026-07-28 01:11:00] eval 005 galaxy 5/20 NGC4123: coverage=1.000, masked=34.187%, segments=13211, elapsed=51s
+[2026-07-28 01:11:27] eval 005 galaxy 6/20 UGC09245: coverage=0.000, masked=54.527%, segments=12902, elapsed=28s
+[2026-07-28 01:21:26] eval 005 galaxy 7/20 NGC2903: coverage=1.000, masked=53.687%, segments=54379, elapsed=9m 58s
+[2026-07-28 01:21:59] eval 005 galaxy 8/20 UGC06682: coverage=0.067, masked=45.527%, segments=12442, elapsed=33s
+[2026-07-28 01:22:53] eval 005 galaxy 9/20 IC3521: coverage=0.000, masked=33.733%, segments=13436, elapsed=54s
+[2026-07-28 01:23:29] eval 005 galaxy 10/20 NGC6237: coverage=0.889, masked=45.713%, segments=12697, elapsed=36s
+[2026-07-28 01:24:28] eval 005 galaxy 11/20 NGC3185: coverage=0.000, masked=42.783%, segments=15706, elapsed=59s
+[2026-07-28 01:25:12] eval 005 galaxy 12/20 PGC051523: coverage=0.500, masked=39.700%, segments=13081, elapsed=44s
+[2026-07-28 01:26:10] eval 005 galaxy 13/20 NGC3264: coverage=0.533, masked=31.755%, segments=13481, elapsed=58s
+[2026-07-28 01:26:29] eval 005 galaxy 14/20 NGC1879: coverage=1.000, masked=57.769%, segments=11030, elapsed=19s
+[2026-07-28 01:26:47] eval 005 galaxy 15/20 UGC09661: coverage=0.000, masked=47.395%, segments=9942, elapsed=19s
+[2026-07-28 01:27:04] eval 005 galaxy 16/20 ESO443-085: coverage=1.000, masked=43.400%, segments=8663, elapsed=16s
+[2026-07-28 01:34:38] eval 005 galaxy 17/20 NGC7418: coverage=1.000, masked=47.166%, segments=47624, elapsed=7m 35s
+[2026-07-28 01:34:56] eval 005 galaxy 18/20 UGC07911: coverage=1.000, masked=43.837%, segments=9251, elapsed=17s
+[2026-07-28 01:35:27] eval 005 galaxy 19/20 UGC08851: coverage=0.200, masked=42.666%, segments=11510, elapsed=31s
+[2026-07-28 01:39:12] eval 005 galaxy 20/20 NGC7424: coverage=1.000, masked=53.129%, segments=34318, elapsed=3m 46s
+[2026-07-28 01:39:12] eval 005: objective=8.791 coverage=0.534 masked=44.979% status=ok elapsed=39m 09s remaining=55, rough_eta=64h 10m 57s, expected_completion=2026-07-30 17:50:10
+[2026-07-28 01:39:13] eval 006 trial 5 starting (6/60); params=move=0.472, min_distance=0.205, gaussian_fwhm=1.523, minarea=18, dilation=6, max_area=1893, max_elongation=21.496
+[2026-07-28 01:57:12] eval 006 galaxy 1/20 NGC4204: coverage=1.000, masked=49.152%, segments=111978, elapsed=18m 00s
+[2026-07-28 01:58:50] eval 006 galaxy 2/20 NGC4496A: coverage=1.000, masked=49.161%, segments=32459, elapsed=1m 38s
+[2026-07-28 02:01:22] eval 006 galaxy 3/20 UGC06840: coverage=1.000, masked=32.183%, segments=34298, elapsed=2m 31s
+[2026-07-28 02:02:15] eval 006 galaxy 4/20 ESO298-023: coverage=1.000, masked=62.532%, segments=29458, elapsed=53s
+[2026-07-28 02:04:15] eval 006 galaxy 5/20 NGC4123: coverage=1.000, masked=35.815%, segments=31818, elapsed=2m 00s
+[2026-07-28 02:05:18] eval 006 galaxy 6/20 UGC09245: coverage=1.000, masked=56.816%, segments=30693, elapsed=1m 04s
+[2026-07-28 02:29:27] eval 006 galaxy 7/20 NGC2903: coverage=1.000, masked=57.054%, segments=132422, elapsed=24m 08s
+[2026-07-28 02:30:42] eval 006 galaxy 8/20 UGC06682: coverage=1.000, masked=48.040%, segments=29272, elapsed=1m 15s
+[2026-07-28 02:32:47] eval 006 galaxy 9/20 IC3521: coverage=1.000, masked=35.514%, segments=32078, elapsed=2m 05s
+[2026-07-28 02:34:09] eval 006 galaxy 10/20 NGC6237: coverage=1.000, masked=48.717%, segments=30338, elapsed=1m 22s
+[2026-07-28 02:36:25] eval 006 galaxy 11/20 NGC3185: coverage=1.000, masked=45.563%, segments=37607, elapsed=2m 16s
+[2026-07-28 02:38:08] eval 006 galaxy 12/20 PGC051523: coverage=1.000, masked=41.775%, segments=31781, elapsed=1m 43s
+[2026-07-28 02:40:20] eval 006 galaxy 13/20 NGC3264: coverage=0.733, masked=33.165%, segments=31959, elapsed=2m 12s
+[2026-07-28 02:41:04] eval 006 galaxy 14/20 NGC1879: coverage=1.000, masked=61.796%, segments=26793, elapsed=44s
+[2026-07-28 02:41:47] eval 006 galaxy 15/20 UGC09661: coverage=1.000, masked=50.068%, segments=24089, elapsed=44s
+[2026-07-28 02:42:25] eval 006 galaxy 16/20 ESO443-085: coverage=1.000, masked=46.957%, segments=21065, elapsed=38s
+[2026-07-28 02:59:44] eval 006 galaxy 17/20 NGC7418: coverage=1.000, masked=49.946%, segments=109915, elapsed=17m 19s
+[2026-07-28 03:00:25] eval 006 galaxy 18/20 UGC07911: coverage=1.000, masked=45.817%, segments=22505, elapsed=41s
+[2026-07-28 03:01:34] eval 006 galaxy 19/20 UGC08851: coverage=0.500, masked=44.886%, segments=27360, elapsed=1m 09s
+[2026-07-28 03:10:18] eval 006 galaxy 20/20 NGC7424: coverage=1.000, masked=55.748%, segments=80125, elapsed=8m 44s
+[2026-07-28 03:10:18] eval 006: objective=5.1972 coverage=0.962 masked=47.535% status=ok elapsed=1h 31m 05s remaining=54, rough_eta=66h 10m 35s, expected_completion=2026-07-30 21:20:53
+[2026-07-28 03:10:18] eval 007 trial 6 starting (7/60); params=move=0.618, min_distance=0.092, gaussian_fwhm=4.575, minarea=97, dilation=0, max_area=305, max_elongation=12.980
+[2026-07-28 03:13:25] eval 007 galaxy 1/20 NGC4204: coverage=0.500, masked=7.612%, segments=18995, elapsed=3m 07s
+[2026-07-28 03:13:42] eval 007 galaxy 2/20 NGC4496A: coverage=0.000, masked=7.982%, segments=5520, elapsed=18s
+[2026-07-28 03:14:08] eval 007 galaxy 3/20 UGC06840: coverage=0.000, masked=4.785%, segments=5631, elapsed=26s
+[2026-07-28 03:14:18] eval 007 galaxy 4/20 ESO298-023: coverage=1.000, masked=9.335%, segments=4946, elapsed=10s
+[2026-07-28 03:14:40] eval 007 galaxy 5/20 NGC4123: coverage=1.000, masked=5.770%, segments=5343, elapsed=21s
+[2026-07-28 03:14:51] eval 007 galaxy 6/20 UGC09245: coverage=0.000, masked=9.184%, segments=5191, elapsed=12s
+[2026-07-28 03:18:51] eval 007 galaxy 7/20 NGC2903: coverage=1.000, masked=9.185%, segments=21414, elapsed=4m 00s
+[2026-07-28 03:19:05] eval 007 galaxy 8/20 UGC06682: coverage=0.000, masked=7.153%, segments=4903, elapsed=14s
+[2026-07-28 03:19:26] eval 007 galaxy 9/20 IC3521: coverage=0.000, masked=5.744%, segments=5210, elapsed=21s
+[2026-07-28 03:19:41] eval 007 galaxy 10/20 NGC6237: coverage=0.111, masked=7.347%, segments=5127, elapsed=15s
+[2026-07-28 03:20:05] eval 007 galaxy 11/20 NGC3185: coverage=1.000, masked=7.051%, segments=6059, elapsed=24s
+[2026-07-28 03:20:23] eval 007 galaxy 12/20 PGC051523: coverage=0.500, masked=6.796%, segments=5169, elapsed=18s
+[2026-07-28 03:20:46] eval 007 galaxy 13/20 NGC3264: coverage=0.333, masked=5.278%, segments=5406, elapsed=24s
+[2026-07-28 03:20:54] eval 007 galaxy 14/20 NGC1879: coverage=0.500, masked=9.795%, segments=4340, elapsed=8s
+[2026-07-28 03:21:02] eval 007 galaxy 15/20 UGC09661: coverage=0.000, masked=8.262%, segments=3861, elapsed=8s
+[2026-07-28 03:21:08] eval 007 galaxy 16/20 ESO443-085: coverage=0.000, masked=6.997%, segments=3369, elapsed=7s
+[2026-07-28 03:24:05] eval 007 galaxy 17/20 NGC7418: coverage=0.500, masked=7.947%, segments=18479, elapsed=2m 57s
+[2026-07-28 03:24:12] eval 007 galaxy 18/20 UGC07911: coverage=0.500, masked=7.643%, segments=3613, elapsed=7s
+[2026-07-28 03:24:25] eval 007 galaxy 19/20 UGC08851: coverage=0.000, masked=6.763%, segments=4555, elapsed=13s
+[2026-07-28 03:25:57] eval 007 galaxy 20/20 NGC7424: coverage=1.000, masked=8.617%, segments=13540, elapsed=1m 32s
+[2026-07-28 03:25:57] eval 007: objective=7.7491 coverage=0.397 masked=7.462% status=ok elapsed=15m 39s remaining=53, rough_eta=57h 38m 46s, expected_completion=2026-07-30 13:04:43
+[2026-07-28 03:25:57] eval 008 trial 7 starting (8/60); params=move=0.308, min_distance=0.262, gaussian_fwhm=2.502, minarea=56, dilation=1, max_area=879, max_elongation=6.860
+[2026-07-28 03:34:59] eval 008 galaxy 1/20 NGC4204: coverage=1.000, masked=22.087%, segments=55317, elapsed=9m 02s
+[2026-07-28 03:35:49] eval 008 galaxy 2/20 NGC4496A: coverage=0.000, masked=20.503%, segments=16170, elapsed=50s
+[2026-07-28 03:37:03] eval 008 galaxy 3/20 UGC06840: coverage=0.000, masked=14.095%, segments=16414, elapsed=1m 14s
+[2026-07-28 03:37:30] eval 008 galaxy 4/20 ESO298-023: coverage=1.000, masked=28.128%, segments=14156, elapsed=26s
+[2026-07-28 03:38:28] eval 008 galaxy 5/20 NGC4123: coverage=1.000, masked=15.629%, segments=15147, elapsed=59s
+[2026-07-28 03:38:59] eval 008 galaxy 6/20 UGC09245: coverage=0.000, masked=25.573%, segments=14666, elapsed=31s
+[2026-07-28 03:50:31] eval 008 galaxy 7/20 NGC2903: coverage=1.000, masked=24.201%, segments=62460, elapsed=11m 31s
+[2026-07-28 03:51:08] eval 008 galaxy 8/20 UGC06682: coverage=0.000, masked=20.813%, segments=14238, elapsed=37s
+[2026-07-28 03:52:08] eval 008 galaxy 9/20 IC3521: coverage=1.000, masked=16.110%, segments=15383, elapsed=1m 00s
+[2026-07-28 03:52:47] eval 008 galaxy 10/20 NGC6237: coverage=0.556, masked=20.035%, segments=14539, elapsed=39s
+[2026-07-28 03:53:53] eval 008 galaxy 11/20 NGC3185: coverage=0.000, masked=19.328%, segments=17910, elapsed=1m 06s
+[2026-07-28 03:54:42] eval 008 galaxy 12/20 PGC051523: coverage=0.500, masked=18.355%, segments=15037, elapsed=50s
+[2026-07-28 03:55:50] eval 008 galaxy 13/20 NGC3264: coverage=0.333, masked=14.938%, segments=15404, elapsed=1m 07s
+[2026-07-28 03:56:11] eval 008 galaxy 14/20 NGC1879: coverage=1.000, masked=26.062%, segments=12678, elapsed=21s
+[2026-07-28 03:56:32] eval 008 galaxy 15/20 UGC09661: coverage=0.000, masked=21.931%, segments=11299, elapsed=21s
+[2026-07-28 03:56:51] eval 008 galaxy 16/20 ESO443-085: coverage=0.000, masked=19.293%, segments=9952, elapsed=19s
+[2026-07-28 04:05:28] eval 008 galaxy 17/20 NGC7418: coverage=1.000, masked=21.995%, segments=54486, elapsed=8m 37s
+[2026-07-28 04:05:48] eval 008 galaxy 18/20 UGC07911: coverage=0.500, masked=19.552%, segments=10576, elapsed=20s
+[2026-07-28 04:06:22] eval 008 galaxy 19/20 UGC08851: coverage=0.000, masked=19.967%, segments=13163, elapsed=34s
+[2026-07-28 04:10:40] eval 008 galaxy 20/20 NGC7424: coverage=1.000, masked=24.678%, segments=39270, elapsed=4m 18s
+[2026-07-28 04:10:40] eval 008: objective=7.5177 coverage=0.494 masked=20.664% status=ok elapsed=44m 43s remaining=52, rough_eta=54h 19m 59s, expected_completion=2026-07-30 10:30:38
+[2026-07-28 04:10:40] eval 009 trial 8 starting (9/60); params=move=0.521, min_distance=0.817, gaussian_fwhm=0.188, minarea=64, dilation=0, max_area=2462, max_elongation=3.543
+[2026-07-28 04:44:16] eval 009 galaxy 1/20 NGC4204: coverage=0.500, masked=5.817%, segments=210069, elapsed=33m 36s
+[2026-07-28 04:47:19] eval 009 galaxy 2/20 NGC4496A: coverage=0.000, masked=6.786%, segments=59869, elapsed=3m 03s
+[2026-07-28 04:52:05] eval 009 galaxy 3/20 UGC06840: coverage=0.000, masked=2.852%, segments=65622, elapsed=4m 47s
+[2026-07-28 04:53:49] eval 009 galaxy 4/20 ESO298-023: coverage=0.000, masked=6.897%, segments=58198, elapsed=1m 44s
+[2026-07-28 04:57:42] eval 009 galaxy 5/20 NGC4123: coverage=0.000, masked=4.589%, segments=62097, elapsed=3m 53s
+[2026-07-28 04:59:48] eval 009 galaxy 6/20 UGC09245: coverage=0.000, masked=7.165%, segments=60912, elapsed=2m 06s
+[2026-07-28 05:48:22] eval 009 galaxy 7/20 NGC2903: coverage=1.000, masked=8.678%, segments=266647, elapsed=48m 34s
+[2026-07-28 05:50:51] eval 009 galaxy 8/20 UGC06682: coverage=0.067, masked=5.880%, segments=56823, elapsed=2m 28s
+[2026-07-28 05:54:54] eval 009 galaxy 9/20 IC3521: coverage=0.000, masked=4.230%, segments=62336, elapsed=4m 03s
+[2026-07-28 05:57:41] eval 009 galaxy 10/20 NGC6237: coverage=0.267, masked=5.290%, segments=59858, elapsed=2m 47s
+[2026-07-28 06:02:14] eval 009 galaxy 11/20 NGC3185: coverage=0.000, masked=5.676%, segments=74394, elapsed=4m 34s
+[2026-07-28 06:05:40] eval 009 galaxy 12/20 PGC051523: coverage=0.100, masked=5.159%, segments=62604, elapsed=3m 26s
+[2026-07-28 06:10:02] eval 009 galaxy 13/20 NGC3264: coverage=0.333, masked=4.024%, segments=62646, elapsed=4m 22s
+[2026-07-28 06:11:29] eval 009 galaxy 14/20 NGC1879: coverage=0.500, masked=7.609%, segments=53109, elapsed=1m 27s
+[2026-07-28 06:12:54] eval 009 galaxy 15/20 UGC09661: coverage=0.000, masked=6.273%, segments=47404, elapsed=1m 25s
+[2026-07-28 06:14:10] eval 009 galaxy 16/20 ESO443-085: coverage=0.000, masked=6.609%, segments=42363, elapsed=1m 16s
+[2026-07-28 06:46:54] eval 009 galaxy 17/20 NGC7418: coverage=1.000, masked=5.613%, segments=205382, elapsed=32m 44s
+[2026-07-28 06:48:17] eval 009 galaxy 18/20 UGC07911: coverage=0.000, masked=4.924%, segments=44746, elapsed=1m 22s
+[2026-07-28 06:50:38] eval 009 galaxy 19/20 UGC08851: coverage=0.000, masked=5.368%, segments=53579, elapsed=2m 22s
+[2026-07-28 07:07:17] eval 009 galaxy 20/20 NGC7424: coverage=0.800, masked=7.345%, segments=151666, elapsed=16m 39s
+[2026-07-28 07:07:17] eval 009: objective=10.045 coverage=0.228 masked=5.839% status=ok elapsed=2h 56m 37s remaining=51, rough_eta=64h 02m 50s, expected_completion=2026-07-30 23:10:07
+[2026-07-28 07:07:17] eval 010 trial 9 starting (10/60); params=move=0.136, min_distance=0.571, gaussian_fwhm=0.367, minarea=51, dilation=8, max_area=2069, max_elongation=5.837
+[2026-07-28 07:41:59] eval 010 galaxy 1/20 NGC4204: coverage=1.000, masked=47.218%, segments=210069, elapsed=34m 42s
+[2026-07-28 07:45:10] eval 010 galaxy 2/20 NGC4496A: coverage=0.000, masked=45.730%, segments=59869, elapsed=3m 11s
+[2026-07-28 07:50:12] eval 010 galaxy 3/20 UGC06840: coverage=0.000, masked=29.264%, segments=65622, elapsed=5m 03s
+[2026-07-28 07:52:22] eval 010 galaxy 4/20 ESO298-023: coverage=1.000, masked=58.672%, segments=58198, elapsed=2m 09s
+[2026-07-28 07:56:45] eval 010 galaxy 5/20 NGC4123: coverage=1.000, masked=34.518%, segments=62097, elapsed=4m 23s
+[2026-07-28 07:59:03] eval 010 galaxy 6/20 UGC09245: coverage=0.000, masked=54.400%, segments=60912, elapsed=2m 18s
+[2026-07-28 08:47:56] eval 010 galaxy 7/20 NGC2903: coverage=1.000, masked=54.613%, segments=266647, elapsed=48m 53s
+[2026-07-28 08:50:29] eval 010 galaxy 8/20 UGC06682: coverage=0.600, masked=45.184%, segments=56823, elapsed=2m 33s
+[2026-07-28 08:54:34] eval 010 galaxy 9/20 IC3521: coverage=1.000, masked=33.537%, segments=62336, elapsed=4m 05s
+[2026-07-28 08:57:21] eval 010 galaxy 10/20 NGC6237: coverage=0.867, masked=45.074%, segments=59858, elapsed=2m 47s
+[2026-07-28 09:01:57] eval 010 galaxy 11/20 NGC3185: coverage=0.000, masked=42.607%, segments=74394, elapsed=4m 36s
+[2026-07-28 09:05:24] eval 010 galaxy 12/20 PGC051523: coverage=0.500, masked=39.706%, segments=62604, elapsed=3m 27s
+[2026-07-28 09:09:53] eval 010 galaxy 13/20 NGC3264: coverage=0.867, masked=31.755%, segments=62646, elapsed=4m 29s
+[2026-07-28 09:11:26] eval 010 galaxy 14/20 NGC1879: coverage=1.000, masked=57.577%, segments=53109, elapsed=1m 32s
+[2026-07-28 09:12:56] eval 010 galaxy 15/20 UGC09661: coverage=0.000, masked=47.364%, segments=47404, elapsed=1m 30s
+[2026-07-28 09:14:14] eval 010 galaxy 16/20 ESO443-085: coverage=1.000, masked=44.656%, segments=42363, elapsed=1m 18s
+[2026-07-28 09:46:27] eval 010 galaxy 17/20 NGC7418: coverage=1.000, masked=46.827%, segments=205382, elapsed=32m 13s
+[2026-07-28 09:47:48] eval 010 galaxy 18/20 UGC07911: coverage=1.000, masked=42.788%, segments=44746, elapsed=1m 21s
+[2026-07-28 09:50:06] eval 010 galaxy 19/20 UGC08851: coverage=0.000, masked=42.458%, segments=53579, elapsed=2m 18s
+[2026-07-28 10:06:15] eval 010 galaxy 20/20 NGC7424: coverage=1.000, masked=53.200%, segments=151666, elapsed=16m 09s
+[2026-07-28 10:06:15] eval 010: objective=7.9503 coverage=0.642 masked=44.857% status=ok elapsed=2h 58m 58s remaining=50, rough_eta=71h 25m 35s, expected_completion=2026-07-31 09:31:49
+[2026-07-28 10:06:16] eval 011 trial 10 starting (11/60); params=move=0.239, min_distance=0.140, gaussian_fwhm=4.327, minarea=89, dilation=6, max_area=3540, max_elongation=23.519
