@@ -49,7 +49,12 @@ PLACEHOLDER_COLOR = (245, 247, 250)
 
 
 def newest_summary(root: Path, patterns: tuple[str, ...]) -> Path:
-    """Return the most recently updated batch summary matching any pattern."""
+    """Return the newest full-sized batch summary matching any pattern.
+
+    Batch summaries are written incrementally, so modification time alone can
+    select an interrupted partial run.  Prefer summaries with the largest row
+    count, then use modification time to select the newest completed run.
+    """
     candidates = {
         path.resolve()
         for pattern in patterns
@@ -58,7 +63,16 @@ def newest_summary(root: Path, patterns: tuple[str, ...]) -> Path:
     }
     if not candidates:
         return root / "missing_batch_summary.csv"
-    return max(candidates, key=lambda path: path.stat().st_mtime)
+    row_counts: dict[Path, int] = {}
+    for path in candidates:
+        try:
+            with path.open(newline="", encoding="utf-8-sig") as handle:
+                row_counts[path] = sum(1 for _ in csv.DictReader(handle))
+        except (OSError, csv.Error):
+            row_counts[path] = 0
+    largest = max(row_counts.values())
+    full_summaries = [path for path, count in row_counts.items() if count == largest]
+    return max(full_summaries, key=lambda path: path.stat().st_mtime)
 
 
 def default_paths(pc_name: str) -> dict[str, Path]:

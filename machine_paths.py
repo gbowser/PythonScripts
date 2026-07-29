@@ -12,7 +12,7 @@ PC_RESEARCH_FOLDERS = {
 }
 
 PC_HOSTNAMES = {
-    "gb-study": "Laptop",
+    "gb-study": "Desktop",
 }
 
 

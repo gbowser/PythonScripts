@@ -1,0 +1,16 @@
+Input mtobjects_spike: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\mtobjects all galaxy batch\mtobjects_spike_gate_20260722_103506\mtobjects_optimised_apply_summary.csv
+Input mtobjects_toy: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\mtobjects all galaxy batch\mtobjects_toy_object_20260723_195742\mtobjects_optimised_apply_summary.csv
+Input sep_spike: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy batch\sep_spike_gate_20260727_172404\sep_optimised_apply_summary.csv
+Input sep_toy: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy batch\sep_toy_object_capped_wrapped_nofits_20260724_163302\sep_optimised_apply_summary.csv
+Rendering 182 galaxy comparison PNGs to D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\all method galaxy comparison panels\20260729_151014
+1/182 ESO013-016: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\all method galaxy comparison panels\20260729_151014\ESO013-016_all_method_comparison.png
+2/182 ESO026-001: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\all method galaxy comparison panels\20260729_151014\ESO026-001_all_method_comparison.png
+3/182 ESO054-021: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\all method galaxy comparison panels\20260729_151014\ESO054-021_all_method_comparison.png
+4/182 ESO079-005: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\all method galaxy comparison panels\20260729_151014\ESO079-005_all_method_comparison.png
+5/182 ESO085-047: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\all method galaxy comparison panels\20260729_151014\ESO085-047_all_method_comparison.png
+6/182 ESO120-012: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\all method galaxy comparison panels\20260729_151014\ESO120-012_all_method_comparison.png
+7/182 ESO202-041: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\all method galaxy comparison panels\20260729_151014\ESO202-041_all_method_comparison.png
+8/182 ESO236-039: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\all method galaxy comparison panels\20260729_151014\ESO236-039_all_method_comparison.png
+9/182 ESO298-023: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\all method galaxy comparison panels\20260729_151014\ESO298-023_all_method_comparison.png
+10/182 ESO357-012: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\all method galaxy comparison panels\20260729_151014\ESO357-012_all_method_comparison.png
+11/182 ESO358-020: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\all method galaxy comparison panels\20260729_151014\ESO358-020_all_method_comparison.png
