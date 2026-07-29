@@ -48,25 +48,44 @@ TITLE_COLOR = (20, 28, 38)
 PLACEHOLDER_COLOR = (245, 247, 250)
 
 
+def newest_summary(root: Path, patterns: tuple[str, ...]) -> Path:
+    """Return the most recently updated batch summary matching any pattern."""
+    candidates = {
+        path.resolve()
+        for pattern in patterns
+        for path in root.glob(pattern)
+        if path.is_file()
+    }
+    if not candidates:
+        return root / "missing_batch_summary.csv"
+    return max(candidates, key=lambda path: path.stat().st_mtime)
+
+
 def default_paths(pc_name: str) -> dict[str, Path]:
     root = remove_foreground_folder(pc_name)
     return {
-        "mtobjects_spike": root
-        / "mtobjects all galaxy batch"
-        / "mtobjects_spike_gate_20260722_103506"
-        / "mtobjects_optimised_apply_summary.csv",
-        "mtobjects_toy": root
-        / "mtobjects all galaxy batch"
-        / "mtobjects_toy_object_20260723_195742"
-        / "mtobjects_optimised_apply_summary.csv",
-        "sep_spike": root
-        / "SEP all galaxy batch"
-        / "sep_spike_gate_20260719_183144"
-        / "sep_optimised_apply_summary.csv",
-        "sep_toy": root
-        / "SEP all galaxy batch"
-        / "sep_toy_object_20260722_141659"
-        / "sep_optimised_apply_summary.csv",
+        "mtobjects_spike": newest_summary(
+            root,
+            (
+                "mtobjects optimised foreground removal/spike-gate/*/mtobjects_optimised_apply_summary.csv",
+                "mtobjects all galaxy batch/mtobjects_spike_gate_*/mtobjects_optimised_apply_summary.csv",
+            ),
+        ),
+        "mtobjects_toy": newest_summary(
+            root,
+            (
+                "mtobjects optimised foreground removal/toy-object/*/mtobjects_optimised_apply_summary.csv",
+                "mtobjects all galaxy batch/mtobjects_toy_object_*/mtobjects_optimised_apply_summary.csv",
+            ),
+        ),
+        "sep_spike": newest_summary(
+            root,
+            ("SEP all galaxy batch/sep_spike_gate_*/sep_optimised_apply_summary.csv",),
+        ),
+        "sep_toy": newest_summary(
+            root,
+            ("SEP all galaxy batch/sep_toy_object_*/sep_optimised_apply_summary.csv",),
+        ),
         "output": root / "all method galaxy comparison panels",
     }
 
@@ -275,13 +294,12 @@ def compose_one(
 
 
 def parse_args() -> argparse.Namespace:
-    defaults = default_paths("Desktop")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=detect_pc(FOREGROUND_ROOT))
-    parser.add_argument("--mtobjects-spike-summary", type=Path, default=defaults["mtobjects_spike"])
-    parser.add_argument("--mtobjects-toy-summary", type=Path, default=defaults["mtobjects_toy"])
-    parser.add_argument("--sep-spike-summary", type=Path, default=defaults["sep_spike"])
-    parser.add_argument("--sep-toy-summary", type=Path, default=defaults["sep_toy"])
+    parser.add_argument("--mtobjects-spike-summary", type=Path, default=None)
+    parser.add_argument("--mtobjects-toy-summary", type=Path, default=None)
+    parser.add_argument("--sep-spike-summary", type=Path, default=None)
+    parser.add_argument("--sep-toy-summary", type=Path, default=None)
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--names", nargs="*", help="Optional galaxy names to render.")
     parser.add_argument("--max-galaxies", type=int, default=None)
@@ -293,11 +311,16 @@ def main() -> int:
     args = parse_args()
     paths = default_paths(args.pc)
     output_dir = args.output_dir or (paths["output"] / datetime.now().strftime("%Y%m%d_%H%M%S"))
+    summaries = {
+        "mtobjects_spike": args.mtobjects_spike_summary or paths["mtobjects_spike"],
+        "mtobjects_toy": args.mtobjects_toy_summary or paths["mtobjects_toy"],
+        "sep_spike": args.sep_spike_summary or paths["sep_spike"],
+        "sep_toy": args.sep_toy_summary or paths["sep_toy"],
+    }
+    for method, summary in summaries.items():
+        print(f"Input {method}: {summary}", flush=True)
     reports = {
-        "mtobjects_spike": load_summary(args.mtobjects_spike_summary),
-        "mtobjects_toy": load_summary(args.mtobjects_toy_summary),
-        "sep_spike": load_summary(args.sep_spike_summary),
-        "sep_toy": load_summary(args.sep_toy_summary),
+        method: load_summary(summary) for method, summary in summaries.items()
     }
     if args.names:
         names = list(args.names)

@@ -1,0 +1,5 @@
+Input mtobjects_spike: C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\mtobjects optimised foreground removal\spike-gate\20260728_102007\mtobjects_optimised_apply_summary.csv
+Input mtobjects_toy: C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\mtobjects optimised foreground removal\toy-object\20260728_224057\mtobjects_optimised_apply_summary.csv
+Input sep_spike: C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy batch\sep_spike_gate_20260728_100623\sep_optimised_apply_summary.csv
+Input sep_toy: C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy batch\sep_toy_object_20260728_101358\sep_optimised_apply_summary.csv
+Rendering 182 galaxy comparison PNGs to C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\all method galaxy comparison panels\20260729_150323
