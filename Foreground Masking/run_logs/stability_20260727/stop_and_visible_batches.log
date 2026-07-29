@@ -9,3 +9,7 @@
 [2026-07-28 10:13:57] Starting batch_toy_objects_SEP.py
 [2026-07-28 10:20:05] batch_toy_objects_SEP.py finished with exit code 0
 [2026-07-28 10:20:05] Starting batch_spike_gate_MTObjects.py
+[2026-07-28 22:40:55] batch_spike_gate_MTObjects.py finished with exit code 0
+[2026-07-28 22:40:55] Starting batch_toy_objects_MTObjects.py
+[2026-07-29 03:51:27] batch_toy_objects_MTObjects.py finished with exit code 0
+[2026-07-29 03:51:27] All visible batch jobs finished.

@@ -25,6 +25,14 @@ COMBINATIONS = [
 ]
 
 
+OPTIMISATION_TRIALS = [
+    ("SEP", "Spike Gate", "optimise_spike_gate_SEP.py", 16, 64),
+    ("MTObjects", "Spike Gate", "optimise_spike_gate_MTObjects.py", 12, 48),
+    ("SEP", "Toy Objects", "optimise_toy_objects_SEP.py", 8, 32),
+    ("MTObjects", "Toy Objects", "optimise_toy_objects_MTObjects.py", 8, 32),
+]
+
+
 def style_document(doc: Document) -> None:
     section = doc.sections[0]
     section.top_margin = Inches(0.75)
@@ -91,6 +99,44 @@ def main() -> None:
         "Every optimiser writes its best parameter dictionary to a method-specific JSON file in its timestamped "
         "output directory. The matching canonical interactive and batch launchers automatically locate and load the "
         "newest JSON for the detected device. Pass --best-json (or --params-json where supported) to override it."
+    )
+
+    doc.add_heading("Parameter optimisation process", level=1)
+    doc.add_paragraph(
+        "A trial is one candidate parameter combination evaluated by Optuna; it is not one galaxy. By default, "
+        "each optimiser run reproducibly selects 20 galaxies from the usable manifest rows using its --seed value. "
+        "Every trial in that run is evaluated against the same selected set of 20 galaxies. This allows candidate "
+        "parameter sets to be compared on identical data within a run."
+    )
+
+    trial_table = doc.add_table(rows=1, cols=6)
+    trial_table.style = "Table Grid"
+    trial_headers = ["Engine", "Mask method", "Optimiser", "Initial trials", "Further trials", "Total trials"]
+    for cell, header in zip(trial_table.rows[0].cells, trial_headers):
+        cell.text = header
+        for paragraph in cell.paragraphs:
+            for run in paragraph.runs:
+                run.bold = True
+    for engine, method, filename, initial, further in OPTIMISATION_TRIALS:
+        cells = trial_table.add_row().cells
+        values = [engine, method, filename, str(initial), str(further), str(initial + further)]
+        for cell, value in zip(cells, values):
+            cell.text = value
+
+    doc.add_paragraph(
+        "The stability study repeats all four optimiser runs three times with three different reproducible seeds. "
+        "Consequently, each optimiser is tested on three differently selected 20-galaxy samples. The three runs "
+        "are compared to determine whether the selected best parameters and objective scores are stable across "
+        "different galaxy samples. Changing the seed changes the selected sample; it does not change the number "
+        "of Optuna trials."
+    )
+    doc.add_paragraph(
+        "Per run, the SEP Spike Gate optimiser performs 80 trials (16 initial plus 64 further), the MTObjects "
+        "Spike Gate optimiser performs 60 trials (12 plus 48), and each Toy Objects optimiser performs 40 trials "
+        "(8 plus 32). With 20 galaxies, these correspond to 1,600, 1,200, 800, and 800 per-galaxy trial "
+        "evaluations respectively, subject to any failed or skipped galaxy evaluations. Command-line overrides "
+        "for --initial-points, --max-iter, --max-images, or --names alter these defaults and should be recorded "
+        "with the run results."
     )
 
     doc.add_heading("Device detection", level=1)

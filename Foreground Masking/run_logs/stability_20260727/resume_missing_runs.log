@@ -1,1 +1,9 @@
 [2026-07-28 16:19:24] Waiting for the current visible all-galaxy batch sequence to finish.
+[2026-07-29 03:51:37] Current all-galaxy batches are complete.
+[2026-07-29 03:51:37] Starting missing optimisation wave seed=202607282.
+[2026-07-29 03:51:37] Started SEP Spike Gate seed=202607282 in visible PowerShell PID 40720.
+[2026-07-29 03:51:37] Started SEP Toy Objects seed=202607282 in visible PowerShell PID 40160.
+[2026-07-29 03:51:37] Started MTObjects Spike Gate seed=202607282 in visible PowerShell PID 37748.
+[2026-07-29 03:51:37] Started MTObjects Toy Objects seed=202607282 in visible PowerShell PID 31116.
+[2026-07-29 04:24:02] SEP Spike Gate seed=202607282 finished with exit code 0.
+[2026-07-29 04:24:02] SEP Toy Objects seed=202607282 finished with exit code 0.
