@@ -16,6 +16,8 @@ from dataclasses import dataclass
 from datetime import datetime
 import json
 import math
+import multiprocessing as mp
+import os
 from pathlib import Path
 import sys
 import time
@@ -82,6 +84,27 @@ PARAMETER_BOUNDS = {
     "max_area": (20, 3000),
     "max_elongation": (1.5, 20.0),
 }
+
+
+# Process workers keep their own MTObjects state and working directory.  This is
+# deliberately process-based: MTObjects changes cwd while loading its C
+# libraries, so threads would race with one another.  On Linux, ``fork`` also
+# lets the workers share the prepared image arrays copy-on-write.
+_WORKER_CASES: list[ImageCase] | None = None
+_WORKER_MTOBJECTS_ROOT: Path | None = None
+
+
+def initialise_score_worker(cases: list[ImageCase], mtobjects_root: Path | None) -> None:
+    global _WORKER_CASES, _WORKER_MTOBJECTS_ROOT
+    _WORKER_CASES = cases
+    _WORKER_MTOBJECTS_ROOT = mtobjects_root
+
+
+def score_case_worker(task: tuple[int, dict[str, float | int | str]]) -> dict[str, object]:
+    case_index, params = task
+    if _WORKER_CASES is None:
+        raise RuntimeError("MTObjects scoring worker was not initialised.")
+    return score_case(_WORKER_CASES[case_index], params, _WORKER_MTOBJECTS_ROOT)
 
 
 @dataclass
@@ -506,6 +529,23 @@ class OptimisationRun:
         self.total_trials = 0
         self.completed_before_run = 0
         self.trial_durations: list[float] = []
+        self.worker_pool: mp.pool.Pool | None = None
+        worker_count = min(max(1, int(args.workers)), len(cases))
+        if worker_count > 1:
+            start_method = "fork" if os.name == "posix" else "spawn"
+            context = mp.get_context(start_method)
+            self.worker_pool = context.Pool(
+                processes=worker_count,
+                initializer=initialise_score_worker,
+                initargs=(cases, self.mtobjects_root),
+            )
+            print(f"Using {worker_count} MTObjects image workers ({start_method}).", flush=True)
+
+    def close(self) -> None:
+        if self.worker_pool is not None:
+            self.worker_pool.close()
+            self.worker_pool.join()
+            self.worker_pool = None
 
     def evaluate_params(
         self,
@@ -520,7 +560,11 @@ class OptimisationRun:
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
-                case_rows = [score_case(case, params, self.mtobjects_root) for case in self.cases]
+                if self.worker_pool is None:
+                    case_rows = [score_case(case, params, self.mtobjects_root) for case in self.cases]
+                else:
+                    tasks = [(index, params) for index in range(len(self.cases))]
+                    case_rows = self.worker_pool.map(score_case_worker, tasks)
             aggregate = aggregate_score(
                 case_rows,
                 max_masked_fraction=float(self.args.max_masked_fraction),
@@ -684,8 +728,15 @@ def run_optuna(run: OptimisationRun) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
+    try:
+        default_pc = detect_pc(SCRIPT_DIR)
+    except RuntimeError:
+        # Cloud/Linux hosts do not have either configured Windows research
+        # folder.  The manifest's image_path column remains authoritative when
+        # the machine-specific fallback path does not exist.
+        default_pc = "Desktop"
     parser.add_argument("--manifest", type=Path, default=mto.DEFAULT_MANIFEST)
-    parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=detect_pc(SCRIPT_DIR))
+    parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=default_pc)
     parser.add_argument("--mtobjects-root", type=Path, default=Path(mto.DEFAULT_MTOBJECTS_ROOT) if mto.DEFAULT_MTOBJECTS_ROOT else None)
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--names", nargs="*", help="Optional explicit galaxy names. Defaults to the first usable images.")
@@ -706,6 +757,15 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--initial-points", type=int, default=DEFAULT_INITIAL_POINTS)
     parser.add_argument("--max-iter", type=int, default=DEFAULT_MAX_ITER)
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help=(
+            "Number of process workers used to score images within each Optuna trial. "
+            "Use 1 for the original serial behaviour; 4-8 is suitable for an Azure F-series Linux VM."
+        ),
+    )
     parser.add_argument("--seed", type=int, default=DEFAULT_RANDOM_SEED)
     parser.add_argument("--study-name", default="mtobjects-toy-optimisation")
     parser.add_argument(
@@ -756,8 +816,14 @@ def main() -> None:
         return
 
     run = OptimisationRun(args, cases)
-    run_optuna(run)
+    try:
+        run_optuna(run)
+    finally:
+        run.close()
     print(f"Best result: {run.best_path}")
+    if os.name != "nt" and args.results_workbook is None:
+        print("Results workbook: skipped on non-Windows host (pass --results-workbook to enable).")
+        return
     try:
         workbook_path = append_run_to_workbook(
             algorithm="MTObjects",

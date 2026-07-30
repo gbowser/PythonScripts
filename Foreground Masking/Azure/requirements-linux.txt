@@ -1,0 +1,11 @@
+# Headless Linux dependencies for the MTObjects toy-object optimiser.
+# Ubuntu's supported Python 3 is used for the initial Azure deployment.
+astropy>=7.2,<8
+matplotlib>=3.10,<4
+numpy>=2.3,<3
+openpyxl>=3.1,<4
+optuna>=4.5,<5
+pandas>=3.0,<4
+scikit-image>=0.26,<1
+scipy>=1.17,<2
+sep>=1.4,<2
