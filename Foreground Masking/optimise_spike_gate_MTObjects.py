@@ -15,6 +15,8 @@ from dataclasses import dataclass
 from datetime import datetime
 import json
 import math
+import multiprocessing as mp
+import os
 from pathlib import Path
 import sys
 import time
@@ -85,6 +87,36 @@ class GalaxyCase:
     original_profile: np.ndarray
     spike_samples: np.ndarray
     spike_gate_detect_on: str
+
+
+_WORKER_CASES: list[GalaxyCase] | None = None
+_WORKER_MTOBJECTS_ROOT: Path | None = None
+_WORKER_PROFILE_WIDTH_PIXELS = 0
+
+
+def initialise_score_worker(
+    cases: list[GalaxyCase], mtobjects_root: Path | None, profile_width_pixels: int
+) -> None:
+    global _WORKER_CASES, _WORKER_MTOBJECTS_ROOT, _WORKER_PROFILE_WIDTH_PIXELS
+    _WORKER_CASES = cases
+    _WORKER_MTOBJECTS_ROOT = mtobjects_root
+    _WORKER_PROFILE_WIDTH_PIXELS = int(profile_width_pixels)
+
+
+def score_case_worker(
+    task: tuple[int, dict[str, float | int | str]],
+) -> tuple[dict[str, float | int | str], float]:
+    case_index, params = task
+    if _WORKER_CASES is None:
+        raise RuntimeError("MTObjects Spike Gate scoring worker was not initialised.")
+    started = time.perf_counter()
+    row = score_case(
+        _WORKER_CASES[case_index],
+        params,
+        _WORKER_MTOBJECTS_ROOT,
+        _WORKER_PROFILE_WIDTH_PIXELS,
+    )
+    return row, time.perf_counter() - started
 
 
 def default_params(detect_on: str, spike_gate_detect_on: str) -> dict[str, float | int | str]:
@@ -309,6 +341,23 @@ class OptimisationRun:
         self.completed_before_run = 0
         self.run_started = time.perf_counter()
         self.trial_durations: list[float] = []
+        self.worker_pool: mp.pool.Pool | None = None
+        worker_count = min(max(1, int(args.workers)), len(cases))
+        if worker_count > 1:
+            start_method = "fork" if os.name == "posix" else "spawn"
+            context = mp.get_context(start_method)
+            self.worker_pool = context.Pool(
+                processes=worker_count,
+                initializer=initialise_score_worker,
+                initargs=(cases, self.mtobjects_root, int(args.profile_width_pixels)),
+            )
+            log(f"Using {worker_count} MTObjects image workers ({start_method}).")
+
+    def close(self) -> None:
+        if self.worker_pool is not None:
+            self.worker_pool.close()
+            self.worker_pool.join()
+            self.worker_pool = None
 
     def evaluate_params(self, params: dict[str, float | int | str], trial_number: int | None) -> float:
         self.evaluation_index += 1
@@ -331,13 +380,19 @@ class OptimisationRun:
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
-                case_rows = []
-                for case_index, case in enumerate(self.cases, start=1):
-                    case_started = time.perf_counter()
-                    row = score_case(case, params, self.mtobjects_root, int(self.args.profile_width_pixels))
-                    case_rows.append(row)
+                if self.worker_pool is None:
+                    case_results = []
+                    for case in self.cases:
+                        case_started = time.perf_counter()
+                        row = score_case(case, params, self.mtobjects_root, int(self.args.profile_width_pixels))
+                        case_results.append((row, time.perf_counter() - case_started))
+                else:
+                    tasks = [(index, params) for index in range(len(self.cases))]
+                    case_results = self.worker_pool.map(score_case_worker, tasks)
+                case_rows = [row for row, _case_elapsed in case_results]
+                for case_index, (row, case_elapsed) in enumerate(case_results, start=1):
+                    case = self.cases[case_index - 1]
                     if self.args.progress_galaxies:
-                        case_elapsed = time.perf_counter() - case_started
                         log(
                             f"eval {self.evaluation_index:03d} galaxy {case_index}/{len(self.cases)} "
                             f"{case.name}: coverage={float(row['spike_coverage']):.3f}, "
@@ -471,8 +526,12 @@ def run_optuna(run: OptimisationRun) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
+    try:
+        default_pc = detect_pc(SCRIPT_DIR)
+    except RuntimeError:
+        default_pc = "Desktop"
     parser.add_argument("--manifest", type=Path, default=mto.DEFAULT_MANIFEST)
-    parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=detect_pc(SCRIPT_DIR))
+    parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=default_pc)
     parser.add_argument("--mtobjects-root", type=Path, default=Path(mto.DEFAULT_MTOBJECTS_ROOT) if mto.DEFAULT_MTOBJECTS_ROOT else None)
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument(
@@ -513,6 +572,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--spike-window-samples", type=int, default=mto.DEFAULT_SPIKE_WINDOW_SAMPLES)
     parser.add_argument("--initial-points", type=int, default=DEFAULT_INITIAL_POINTS)
     parser.add_argument("--max-iter", type=int, default=DEFAULT_MAX_ITER)
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="Number of process workers used to score galaxies within each Optuna trial.",
+    )
     parser.add_argument("--seed", type=int, default=DEFAULT_RANDOM_SEED)
     parser.add_argument("--study-name", default=DEFAULT_STUDY_NAME)
     parser.add_argument(
@@ -588,8 +653,14 @@ def main() -> None:
         return
 
     run = OptimisationRun(args, cases)
-    run_optuna(run)
+    try:
+        run_optuna(run)
+    finally:
+        run.close()
     log(f"Best result: {run.best_path}")
+    if os.name != "nt" and args.results_workbook is None:
+        log("Results workbook: skipped on non-Windows host (pass --results-workbook to enable).")
+        return
     try:
         workbook_path = append_run_to_workbook(
             algorithm="MTObjects",

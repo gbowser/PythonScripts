@@ -16,6 +16,8 @@ from dataclasses import dataclass
 from datetime import datetime
 import json
 import math
+import multiprocessing as mp
+import os
 from pathlib import Path
 import sys
 import time
@@ -31,6 +33,9 @@ SUPPORT_DIRS = tuple(SCRIPT_DIR / name for name in ("Batch tools", "PhotUtils", 
 for path in (SCRIPT_DIR, PROJECT_ROOT, *SUPPORT_DIRS):
     if str(path) not in sys.path:
         sys.path.append(str(path))
+
+if os.name != "nt":
+    os.environ.setdefault("FOREGROUND_MASKING_PC", "Desktop")
 
 import sep_processing as sep_tool  # noqa: E402
 from machine_paths import PC_RESEARCH_FOLDERS, detect_pc, remove_foreground_folder  # noqa: E402
@@ -112,6 +117,21 @@ class ImageCase:
     truth_labels: np.ndarray
     toys: list[ToyObject]
     baseline_mask: np.ndarray
+
+
+_WORKER_CASES: list[ImageCase] | None = None
+
+
+def initialise_score_worker(cases: list[ImageCase]) -> None:
+    global _WORKER_CASES
+    _WORKER_CASES = cases
+
+
+def score_case_worker(task: tuple[int, dict[str, float | int | str]]) -> dict[str, float | int | str]:
+    case_index, params = task
+    if _WORKER_CASES is None:
+        raise RuntimeError("SEP scoring worker was not initialised.")
+    return score_case(_WORKER_CASES[case_index], params)
 
 
 def robust_sigma(data: np.ndarray) -> float:
@@ -499,6 +519,23 @@ class OptimisationRun:
         self.total_trials = 0
         self.completed_before_run = 0
         self.trial_durations: list[float] = []
+        self.worker_pool: mp.pool.Pool | None = None
+        worker_count = min(max(1, int(args.workers)), len(cases))
+        if worker_count > 1:
+            start_method = "fork" if os.name == "posix" else "spawn"
+            context = mp.get_context(start_method)
+            self.worker_pool = context.Pool(
+                processes=worker_count,
+                initializer=initialise_score_worker,
+                initargs=(cases,),
+            )
+            print(f"Using {worker_count} SEP image workers ({start_method}).", flush=True)
+
+    def close(self) -> None:
+        if self.worker_pool is not None:
+            self.worker_pool.close()
+            self.worker_pool.join()
+            self.worker_pool = None
 
     def evaluate_params(
         self,
@@ -513,7 +550,11 @@ class OptimisationRun:
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
-                case_rows = [score_case(case, params) for case in self.cases]
+                if self.worker_pool is None:
+                    case_rows = [score_case(case, params) for case in self.cases]
+                else:
+                    tasks = [(index, params) for index in range(len(self.cases))]
+                    case_rows = self.worker_pool.map(score_case_worker, tasks)
             aggregate = aggregate_score(
                 case_rows,
                 max_masked_fraction=float(self.args.max_masked_fraction),
@@ -669,8 +710,12 @@ def run_optuna(run: OptimisationRun) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
+    try:
+        default_pc = detect_pc(SCRIPT_DIR)
+    except RuntimeError:
+        default_pc = "Desktop"
     parser.add_argument("--manifest", type=Path, default=sep_tool.DEFAULT_MANIFEST)
-    parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=detect_pc(SCRIPT_DIR))
+    parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=default_pc)
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--names", nargs="*", help="Optional explicit galaxy names. Defaults to the first usable images.")
     parser.add_argument("--max-images", type=int, default=DEFAULT_MAX_IMAGES)
@@ -688,6 +733,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--initial-points", type=int, default=DEFAULT_INITIAL_POINTS)
     parser.add_argument("--max-iter", type=int, default=DEFAULT_MAX_ITER)
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="Number of process workers used to score images within each Optuna trial.",
+    )
     parser.add_argument("--seed", type=int, default=DEFAULT_RANDOM_SEED)
     parser.add_argument("--study-name", default="sep-toy-object-optimisation")
     parser.add_argument(
@@ -735,8 +786,14 @@ def main() -> None:
         return
 
     run = OptimisationRun(args, cases)
-    run_optuna(run)
+    try:
+        run_optuna(run)
+    finally:
+        run.close()
     print(f"Best result: {run.best_path}")
+    if os.name != "nt" and args.results_workbook is None:
+        print("Results workbook: skipped on non-Windows host (pass --results-workbook to enable).")
+        return
     try:
         workbook_path = append_run_to_workbook(
             algorithm="SEP",

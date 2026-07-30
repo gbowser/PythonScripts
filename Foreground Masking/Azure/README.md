@@ -1,7 +1,7 @@
 # Azure Linux MTObjects optimisation
 
-This folder contains the headless Linux setup for the toy-object MTObjects
-optimiser. It targets an Ubuntu x86-64 Azure VM and does not require a GPU.
+This folder contains the headless Linux setup for all four foreground-mask
+optimisers. It targets an Ubuntu x86-64 Azure VM and does not require a GPU.
 
 ## Recommended first machine
 
@@ -47,3 +47,22 @@ python "Foreground Masking/optimise_toy_objects_MTObjects.py" \
 `--workers` parallelises images inside a trial. Optuna trials remain sequential,
 so TPE behaviour is stable and only the parent process writes result files.
 Use `--workers 1` to reproduce the original execution path.
+
+The other three optimisers use the same worker model:
+
+```bash
+python "Foreground Masking/optimise_toy_objects_SEP.py" \
+  --manifest /data/manifest.csv --output-dir /data/results/sep-toy --workers 8
+
+python "Foreground Masking/optimise_spike_gate_SEP.py" \
+  --manifest /data/manifest.csv --output-dir /data/results/sep-spike --workers 8
+
+python "Foreground Masking/optimise_spike_gate_MTObjects.py" \
+  --manifest /data/manifest.csv --output-dir /data/results/mtobjects-spike \
+  --mtobjects-root "$(dirname "$PWD")/mtobjects" --workers 8
+```
+
+Each optimiser keeps Optuna trials sequential and returns per-image results in
+manifest order, so a fixed seed produces the same score and parameter sequence
+with `--workers 1` and `--workers 8`. On Linux the pool uses `fork`, allowing
+prepared image arrays to be shared copy-on-write. On Windows it uses `spawn`.
