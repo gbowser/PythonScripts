@@ -47,7 +47,13 @@ from machine_paths import PC_RESEARCH_FOLDERS, detect_pc, erwin_folder, remove_f
 
 
 DEFAULT_MANIFEST = display.DEFAULT_MANIFEST
-DEFAULT_PC = detect_pc(FOREGROUND_ROOT)
+try:
+    DEFAULT_PC = detect_pc(FOREGROUND_ROOT)
+except RuntimeError:
+    # Headless Linux/cloud hosts do not have either configured Windows research
+    # folder.  Callers can still pass --pc, while manifest image_path values are
+    # used whenever the machine-specific fallback path does not exist.
+    DEFAULT_PC = "Desktop"
 DEFAULT_GALAXY = "ESO120-012"
 DEFAULT_MTOBJECTS_ROOT = os.environ.get("MTOBJECTS_ROOT")
 MTOBJECTS_ROOT_CANDIDATES = [
