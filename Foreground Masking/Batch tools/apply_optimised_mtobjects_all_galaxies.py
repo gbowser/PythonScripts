@@ -45,7 +45,9 @@ for path in (PROJECT_ROOT, FOREGROUND_ROOT, SCRIPT_DIR, *SUPPORT_DIRS):
         sys.path.append(str(path))
 
 import mtobjects_spike_gate_processing as mto  # noqa: E402
+from canonical_tool_helpers import latest_best_json as canonical_latest_best_json  # noqa: E402
 from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
+from standalone_profile_plot import save_profile_png  # noqa: E402
 
 
 DEFAULT_OUTPUT_SUBDIR = "mtobjects optimised foreground removal"
@@ -77,14 +79,16 @@ def log(message: str) -> None:
 
 
 def latest_best_json(pc_name: str, source: str) -> Path | None:
-    root = remove_foreground_folder(pc_name)
-    candidates = []
+    candidates: list[Path] = []
     if source in {"latest", "spike-gate"}:
-        candidates.extend((root / "mtobjects spike optimisation").glob("*/mtobjects_spike_optimisation_best.json"))
+        path = canonical_latest_best_json(pc_name, "spike_gate", "MTObjects")
+        if path is not None:
+            candidates.append(path)
     if source in {"latest", "toy-object"}:
-        candidates.extend((root / "mtobjects toy optimisation").glob("*/mtobjects_parameter_optimisation_best.json"))
-    candidates = sorted([path for path in candidates if path.is_file()], key=lambda path: path.stat().st_mtime)
-    return candidates[-1] if candidates else None
+        path = canonical_latest_best_json(pc_name, "toy_objects", "MTObjects")
+        if path is not None:
+            candidates.append(path)
+    return max(candidates, key=lambda path: path.stat().st_mtime) if candidates else None
 
 
 def load_best_params(path: Path) -> dict[str, float | int | str]:
@@ -436,6 +440,7 @@ def process_one(
     params: dict[str, float | int | str],
     mtobjects_root: Path | None,
     report_dir: Path,
+    profile_dir: Path,
     fits_dir: Path,
 ) -> dict[str, object]:
     name = row["name"]
@@ -448,6 +453,28 @@ def process_one(
     report_path = report_dir / f"{mto.display.safe_filename(name)}_mtobjects_optimised_report.png"
     figure = draw_report(name, data, products, params, geometry)
     figure.savefig(report_path, dpi=int(args.dpi))
+
+    radius_arcsec = mto.display.profile_radius_pixels(data, geometry) * geometry["pixel_scale"]
+    original_view, x_axis, y_axis = mto.display.deproject_bar_aligned_cutout(data, geometry, radius_arcsec)
+    mask_view, _, _ = mto.display.deproject_bar_aligned_cutout(
+        np.asarray(products["mask"], dtype=float), geometry, radius_arcsec, order=0
+    )
+    mask_view = np.isfinite(mask_view) & (mask_view > 0.5)
+    half_width = 0.5 * mto.DEFAULT_PROFILE_WIDTH_PIXELS * geometry["pixel_scale"]
+    mask_profile = mto.profile_mask_at_bar_major(mask_view, y_axis, half_width)
+    radii, original_profile = mto.display.bar_major_axis_profile(original_view, x_axis, y_axis, half_width)
+    processed_profile, replaced_samples = mto.fill_profile_with_log_linear_bridges(original_profile, mask_profile)
+    profile_path = profile_dir / f"{mto.display.safe_filename(name)}_bar_major_profile.png"
+    save_profile_png(
+        profile_path,
+        radii=radii,
+        original_profile=original_profile,
+        processed_profile=processed_profile,
+        replaced_samples=replaced_samples,
+        bar_sma=mto.display.bar_sma_deprojected_arcsec(geometry),
+        central_exclusion_arcsec=float(params["exclude_center_pixels"]) * geometry["pixel_scale"],
+        title="MTObjects processed bar-major profile",
+    )
 
     cleaned_fits_path = ""
     if args.save_cleaned_fits:
@@ -465,6 +492,7 @@ def process_one(
         "masked_pixels": int(np.count_nonzero(mask)),
         "masked_fraction": float(np.count_nonzero(mask) / mask.size),
         "report_png": str(report_path),
+        "profile_png": str(profile_path),
         "cleaned_fits": cleaned_fits_path,
         "error": "",
     }
@@ -537,8 +565,10 @@ def main() -> int:
         remove_foreground_folder(args.pc) / DEFAULT_OUTPUT_SUBDIR / label_slug / timestamp_dir
     )
     report_dir = output_dir
+    profile_dir = output_dir / "bar_major_profiles"
     fits_dir = output_dir / "cleaned_fits"
     report_dir.mkdir(parents=True, exist_ok=True)
+    profile_dir.mkdir(parents=True, exist_ok=True)
     if args.save_cleaned_fits:
         fits_dir.mkdir(parents=True, exist_ok=True)
 
@@ -566,6 +596,7 @@ def main() -> int:
         "masked_pixels",
         "masked_fraction",
         "report_png",
+        "profile_png",
         "cleaned_fits",
         "elapsed_seconds",
         "error",
@@ -579,7 +610,7 @@ def main() -> int:
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
-                summary = process_one(row, args, params, mtobjects_root, report_dir, fits_dir)
+                summary = process_one(row, args, params, mtobjects_root, report_dir, profile_dir, fits_dir)
             made += 1
         except Exception as exc:  # noqa: BLE001
             failed += 1
@@ -591,6 +622,7 @@ def main() -> int:
                 "masked_pixels": "",
                 "masked_fraction": "",
                 "report_png": "",
+                "profile_png": "",
                 "cleaned_fits": "",
                 "error": "".join(traceback.format_exception_only(type(exc), exc)).strip(),
             }

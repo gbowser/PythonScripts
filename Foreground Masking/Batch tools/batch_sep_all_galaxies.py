@@ -38,7 +38,9 @@ for path in (PROJECT_ROOT, FOREGROUND_ROOT, SCRIPT_DIR, *SUPPORT_DIRS):
 
 import foreground_display_helpers as display  # noqa: E402
 import sep_processing as sep_gui  # noqa: E402
+from canonical_tool_helpers import latest_best_json as canonical_latest_best_json  # noqa: E402
 from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
+from standalone_profile_plot import save_profile_png  # noqa: E402
 
 
 DEFAULT_OUTPUT_SUBDIR = "SEP all galaxy batch"
@@ -70,14 +72,16 @@ def log(message: str) -> None:
 
 
 def latest_best_json(pc_name: str, source: str) -> Path | None:
-    root = remove_foreground_folder(pc_name)
-    candidates = []
+    candidates: list[Path] = []
     if source in {"latest", "spike-gate"}:
-        candidates.extend((root / "sep spike optimisation").glob("*/sep_spike_optimisation_best.json"))
+        path = canonical_latest_best_json(pc_name, "spike_gate", "SEP")
+        if path is not None:
+            candidates.append(path)
     if source in {"latest", "toy-object"}:
-        candidates.extend((root / "sep toy optimisation").glob("*/sep_toy_object_optimisation_best.json"))
-    candidates = sorted([path for path in candidates if path.is_file()], key=lambda path: path.stat().st_mtime)
-    return candidates[-1] if candidates else None
+        path = canonical_latest_best_json(pc_name, "toy_objects", "SEP")
+        if path is not None:
+            candidates.append(path)
+    return max(candidates, key=lambda path: path.stat().st_mtime) if candidates else None
 
 
 def load_best_params(path: Path) -> dict[str, float | int | str]:
@@ -102,8 +106,7 @@ def load_best_params(path: Path) -> dict[str, float | int | str]:
         "exclude_center_pixels": sep_gui.DEFAULT_EXCLUDE_CENTER_PIXELS,
     }
     for key, value in params.items():
-        if key in loaded:
-            loaded[key] = math.nan if value == "NaN" else value
+        loaded[key] = math.nan if value == "NaN" else value
     return loaded
 
 
@@ -461,6 +464,7 @@ def run_one(
     args: argparse.Namespace,
     params: dict[str, float | int | str],
     report_dir: Path,
+    profile_dir: Path,
     fits_dir: Path,
 ) -> dict[str, str | int | float]:
     name = row["name"]
@@ -472,6 +476,28 @@ def run_one(
     figure = draw_products(name, data, products, params, geometry)
     png_path = output_png_path(report_dir, name, params)
     figure.savefig(png_path, dpi=args.dpi)
+
+    radius_arcsec = display.profile_radius_pixels(data, geometry) * geometry["pixel_scale"]
+    original_view, x_axis, y_axis = display.deproject_bar_aligned_cutout(data, geometry, radius_arcsec)
+    mask_view, _, _ = display.deproject_bar_aligned_cutout(
+        np.asarray(products["mask"], dtype=float), geometry, radius_arcsec, order=0
+    )
+    mask_view = np.isfinite(mask_view) & (mask_view > 0.5)
+    half_width = 0.5 * sep_gui.DEFAULT_PROFILE_WIDTH_PIXELS * geometry["pixel_scale"]
+    mask_profile = sep_gui.profile_mask_at_bar_major(mask_view, y_axis, half_width)
+    radii, original_profile = display.bar_major_axis_profile(original_view, x_axis, y_axis, half_width)
+    processed_profile, replaced_samples = sep_gui.fill_profile_with_log_linear_bridges(original_profile, mask_profile)
+    profile_path = profile_dir / f"{display.safe_filename(name)}_bar_major_profile.png"
+    save_profile_png(
+        profile_path,
+        radii=radii,
+        original_profile=original_profile,
+        processed_profile=processed_profile,
+        replaced_samples=replaced_samples,
+        bar_sma=display.bar_sma_deprojected_arcsec(geometry),
+        central_exclusion_arcsec=float(params["exclude_center_pixels"]) * geometry["pixel_scale"],
+        title="SEP processed bar-major profile",
+    )
 
     cleaned_fits_path = ""
     if args.save_cleaned_fits:
@@ -485,6 +511,7 @@ def run_one(
         "name": name,
         "status": "ok",
         "report_png": str(png_path),
+        "profile_png": str(profile_path),
         "cleaned_fits": cleaned_fits_path,
         "raw_segments": raw,
         "kept_segments": kept,
@@ -589,8 +616,10 @@ def main() -> None:
         remove_foreground_folder(args.pc) / DEFAULT_OUTPUT_SUBDIR / f"{label_slug}_{timestamp_dir}"
     )
     report_dir = output_dir
+    profile_dir = output_dir / "bar_major_profiles"
     fits_dir = output_dir / "cleaned_fits"
     report_dir.mkdir(parents=True, exist_ok=True)
+    profile_dir.mkdir(parents=True, exist_ok=True)
     if args.save_cleaned_fits:
         fits_dir.mkdir(parents=True, exist_ok=True)
 
@@ -625,6 +654,7 @@ def main() -> None:
         "name",
         "status",
         "report_png",
+        "profile_png",
         "cleaned_fits",
         "raw_segments",
         "kept_segments",
@@ -644,7 +674,7 @@ def main() -> None:
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
-                result = run_one(row, args, params, report_dir, fits_dir)
+                result = run_one(row, args, params, report_dir, profile_dir, fits_dir)
             ok_count += 1
         except Exception as exc:  # noqa: BLE001
             failed_count += 1
@@ -652,6 +682,7 @@ def main() -> None:
                 "name": name,
                 "status": "failed",
                 "report_png": "",
+                "profile_png": "",
                 "cleaned_fits": "",
                 "raw_segments": "",
                 "kept_segments": "",

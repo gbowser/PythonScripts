@@ -1,0 +1,65 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260730192147
+Username: GB-STUDY\gordo
+RunAs User: GB-STUDY\gordo
+Configuration Name: 
+Machine: GB-STUDY (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -EncodedCommand JgAgACcAQwA6AFwAVQBzAGUAcgBzAFwAZwBvAHIAZABvAFwARABvAGMAdQBtAGUAbgB0AHMAXABHAGkAdABoAHUAYgBcAFAAeQB0AGgAbwBuAFMAYwByAGkAcAB0AHMAXABGAG8AcgBlAGcAcgBvAHUAbgBkACAATQBhAHMAawBpAG4AZwBcAEEAdQB0AG8AbQBhAHQAaQBvAG4AXAByAHUAbgBfAGYAbwB1AHIAXwBiAGEAdABjAGgAZQBzAF8AdABoAGUAbgBfAGMAbwBtAHAAbwBzAGkAdABvAHIAXwB2AGkAcwBpAGIAbABlAC4AcABzADEAJwA=
+Process ID: 41300
+PSVersion: 5.1.26100.8972
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.8972
+BuildVersion: 10.0.26100.8972
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+[2026-07-30 19:21:47] Starting batch_spike_gate_SEP.py on Desktop.
+[2026-07-30 19:29:41] [175/182] UGC07911 ...
+[2026-07-30 19:29:44]   ok: kept 748/750 segments, masked 4.02% elapsed=3s remaining=7 rough_eta=19s expected_completion
+=2026-07-30 19:30:03
+[2026-07-30 19:29:44] [176/182] UGC08385 ...
+[2026-07-30 19:29:46]   ok: kept 912/915 segments, masked 2.48% elapsed=3s remaining=6 rough_eta=16s expected_completion
+=2026-07-30 19:30:03
+[2026-07-30 19:29:46] [177/182] UGC08489 ...
+[2026-07-30 19:29:49]   ok: kept 1078/1080 segments, masked 2.66% elapsed=3s remaining=5 rough_eta=14s expected_completi
+on=2026-07-30 19:30:03
+[2026-07-30 19:29:49] [178/182] UGC08507 ...
+[2026-07-30 19:29:51]   ok: kept 919/919 segments, masked 4.16% elapsed=2s remaining=4 rough_eta=11s expected_completion
+=2026-07-30 19:30:02
+[2026-07-30 19:29:51] [179/182] UGC08851 ...
+[2026-07-30 19:29:54]   ok: kept 796/799 segments, masked 3.37% elapsed=2s remaining=3 rough_eta=8s expected_completion=
+2026-07-30 19:30:02
+[2026-07-30 19:29:54] [180/182] UGC09245 ...
+[2026-07-30 19:29:55]   ok: kept 1211/1212 segments, masked 5.89% elapsed=2s remaining=2 rough_eta=5s expected_completio
+n=2026-07-30 19:30:01
+[2026-07-30 19:29:55] [181/182] UGC09661 ...
+[2026-07-30 19:29:57]   ok: kept 859/860 segments, masked 4.62% elapsed=2s remaining=1 rough_eta=3s expected_completion=
+2026-07-30 19:30:00
+[2026-07-30 19:29:57] [182/182] UGC12151 ...
+[2026-07-30 19:29:59]   ok: kept 1131/1133 segments, masked 3.50% elapsed=2s remaining=0 rough_eta=0s expected_completio
+n=2026-07-30 19:29:59
+[2026-07-30 19:29:59] Batch SEP run finished 2026-07-30 19:29:59
+[2026-07-30 19:29:59] Successful: 182; failed: 0
+[2026-07-30 19:29:59] Summary: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy b
+atch\sep_spike_gate_20260730_192149\sep_optimised_apply_summary.csv
+[2026-07-30 19:30:00] batch_spike_gate_SEP.py finished with exit code 0.
+[2026-07-30 19:30:00] Starting batch_toy_objects_SEP.py on Desktop.
+
+[2026-07-30 19:37:48] batch_toy_objects_SEP.py finished with exit code 0.
+[2026-07-30 19:37:48] Starting batch_spike_gate_MTObjects.py on Desktop.
+
+[2026-07-30 21:58:29] batch_spike_gate_MTObjects.py finished with exit code 0.
+[2026-07-30 21:58:29] Starting batch_toy_objects_MTObjects.py on Desktop.
+
+[2026-07-31 04:53:14] batch_toy_objects_MTObjects.py finished with exit code 0.
+[2026-07-31 04:53:14] Starting all-method PNG consolidation using the newest full batch summaries.
+
+[2026-07-31 04:55:45] PNG consolidation finished with exit code 0.
+[2026-07-31 04:55:45] Sequence complete. Log: C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\run_logs\four_batches_then_compositor_20260730_192147.log
+**********************
+Windows PowerShell transcript end
+End time: 20260731045545
+**********************

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Build one six-panel comparison PNG per galaxy from existing batch reports.
 
-The compositor crops the existing per-method report PNGs rather than
-recomputing masks. The output layout is:
+The compositor uses standalone per-method bar-major profile PNGs when they
+are recorded in the batch summaries.  Older batches remain supported by
+falling back to crops of their full report PNGs. The output layout is:
 
 1. galaxy-centred original image,
 2. original bar-major profile,
@@ -40,8 +41,9 @@ PANEL_H = 860
 TITLE_H = 56
 GAP = 34
 PAGE_MARGIN = 46
-TARGET_X_MINUS40 = 190
-TARGET_X0 = 452
+TARGET_PLOT_LEFT = 120
+TARGET_PLOT_RIGHT = PANEL_W - TARGET_PLOT_LEFT
+TARGET_X0 = PANEL_W // 2
 BACKGROUND = "white"
 PANEL_BORDER = (215, 220, 226)
 TITLE_COLOR = (20, 28, 38)
@@ -116,7 +118,7 @@ def load_font(size: int, bold: bool = False) -> ImageFont.ImageFont:
     return ImageFont.load_default()
 
 
-def load_summary(path: Path) -> dict[str, Path]:
+def load_summary(path: Path, image_field: str = "report_png") -> dict[str, Path]:
     if not path.is_file():
         return {}
     rows: dict[str, Path] = {}
@@ -125,7 +127,7 @@ def load_summary(path: Path) -> dict[str, Path]:
             if str(row.get("status", "")).lower() != "ok":
                 continue
             name = row.get("name") or row.get("image")
-            report = row.get("report_png")
+            report = row.get(image_field)
             if not name or not report:
                 continue
             report_path = Path(report)
@@ -144,7 +146,10 @@ def crop_box(image: Image.Image, layout: str, panel: str) -> tuple[int, int, int
         }
     elif layout == "sep":
         boxes = {
-            "processed_profile": (0.515, 0.835, 0.885, 1.000),
+            # The SEP report's processed profile occupies the full lower-right
+            # subplot.  The previous 0.885 right edge clipped its positive-x
+            # side before alignment, making x=0 appear far to the right.
+            "processed_profile": (0.515, 0.810, 0.990, 1.000),
         }
     else:
         raise ValueError(f"Unknown layout: {layout}")
@@ -158,6 +163,13 @@ def crop_report(path: Path | None, layout: str, panel: str) -> Image.Image | Non
     with Image.open(path) as image:
         rgb = image.convert("RGB")
         return rgb.crop(crop_box(rgb, layout, panel))
+
+
+def load_image(path: Path | None) -> Image.Image | None:
+    if path is None or not path.is_file():
+        return None
+    with Image.open(path) as image:
+        return image.convert("RGB")
 
 
 def longest_true_run(values: np.ndarray) -> int:
@@ -194,10 +206,8 @@ def normalise_x_axis(crop: Image.Image) -> Image.Image:
     left, _top, right, _bottom = plot_box
     plot_width = max(1.0, float(right - left))
     source_x0 = left + 0.5 * plot_width
-    source_xminus40 = left + 0.1 * plot_width
-    source_delta = max(1.0, source_x0 - source_xminus40)
-    target_delta = TARGET_X0 - TARGET_X_MINUS40
-    scale = target_delta / source_delta
+    target_plot_width = TARGET_PLOT_RIGHT - TARGET_PLOT_LEFT
+    scale = target_plot_width / plot_width
     resized_width = max(1, int(round(crop.width * scale)))
     resized_height = max(1, int(round(crop.height * scale)))
     if scale <= 0 or scale > 4.0 or resized_width * resized_height > 12_000_000:
@@ -207,6 +217,9 @@ def normalise_x_axis(crop: Image.Image) -> Image.Image:
         (resized_width, resized_height),
         Image.Resampling.LANCZOS,
     )
+    # All source profiles use symmetric limits around x=0.  Mapping the full
+    # detected axes rectangle onto one fixed target rectangle therefore puts
+    # x=0 at the panel centre and vertically aligns all three rows.
     paste_x = int(round(TARGET_X0 - source_x0 * scale))
     available_height = PANEL_H - TITLE_H - 18
     paste_y = TITLE_H + max(0, (available_height - resized.height) // 2)
@@ -231,7 +244,13 @@ def make_placeholder(title: str, detail: str) -> Image.Image:
     return image
 
 
-def fit_panel(crop: Image.Image | None, title: str, missing_detail: str) -> Image.Image:
+def fit_panel(
+    crop: Image.Image | None,
+    title: str,
+    missing_detail: str,
+    *,
+    normalise_axes: bool = True,
+) -> Image.Image:
     title_font = load_font(30, bold=True)
     canvas = Image.new("RGB", (PANEL_W, PANEL_H), BACKGROUND)
     draw = ImageDraw.Draw(canvas)
@@ -239,6 +258,12 @@ def fit_panel(crop: Image.Image | None, title: str, missing_detail: str) -> Imag
     draw.text(((PANEL_W - (title_box[2] - title_box[0])) // 2, 14), title, fill=TITLE_COLOR, font=title_font)
     if crop is None:
         content = make_placeholder(title, missing_detail).crop((0, TITLE_H, PANEL_W, PANEL_H))
+    elif not normalise_axes:
+        content = ImageOps.contain(
+            crop,
+            (PANEL_W - 28, PANEL_H - TITLE_H - 22),
+            method=Image.Resampling.LANCZOS,
+        )
     else:
         content = normalise_x_axis(crop)
     x = (PANEL_W - content.width) // 2
@@ -251,6 +276,7 @@ def fit_panel(crop: Image.Image | None, title: str, missing_detail: str) -> Imag
 def compose_one(
     name: str,
     reports: dict[str, dict[str, Path]],
+    profiles: dict[str, dict[str, Path]],
     output_dir: Path,
 ) -> Path:
     source_original = reports["mtobjects_spike"].get(name) or reports["sep_spike"].get(name)
@@ -266,24 +292,32 @@ def compose_one(
             "No source report was found for the original profile.",
         ),
         fit_panel(
-            crop_report(reports["sep_spike"].get(name), "sep", "processed_profile"),
+            load_image(profiles["sep_spike"].get(name))
+            or crop_report(reports["sep_spike"].get(name), "sep", "processed_profile"),
             "SEP: Spike Gate parameters",
             "SEP Spike Gate report is missing or not complete.",
+            normalise_axes=name not in profiles["sep_spike"],
         ),
         fit_panel(
-            crop_report(reports["sep_toy"].get(name), "sep", "processed_profile"),
+            load_image(profiles["sep_toy"].get(name))
+            or crop_report(reports["sep_toy"].get(name), "sep", "processed_profile"),
             "SEP: Toy Objects parameters",
             "SEP Toy Object report is missing or not complete.",
+            normalise_axes=name not in profiles["sep_toy"],
         ),
         fit_panel(
-            crop_report(reports["mtobjects_spike"].get(name), "mtobjects", "processed_profile"),
+            load_image(profiles["mtobjects_spike"].get(name))
+            or crop_report(reports["mtobjects_spike"].get(name), "mtobjects", "processed_profile"),
             "MTObjects: Spike Gate parameters",
             "MTObjects Spike Gate report is missing or not complete.",
+            normalise_axes=name not in profiles["mtobjects_spike"],
         ),
         fit_panel(
-            crop_report(reports["mtobjects_toy"].get(name), "mtobjects", "processed_profile"),
+            load_image(profiles["mtobjects_toy"].get(name))
+            or crop_report(reports["mtobjects_toy"].get(name), "mtobjects", "processed_profile"),
             "MTObjects: Toy Objects parameters",
             "MTObjects Toy Object report is missing or not complete.",
+            normalise_axes=name not in profiles["mtobjects_toy"],
         ),
     ]
 
@@ -336,6 +370,9 @@ def main() -> int:
     reports = {
         method: load_summary(summary) for method, summary in summaries.items()
     }
+    profiles = {
+        method: load_summary(summary, "profile_png") for method, summary in summaries.items()
+    }
     if args.names:
         names = list(args.names)
     else:
@@ -347,7 +384,7 @@ def main() -> int:
 
     print(f"Rendering {len(names)} galaxy comparison PNGs to {output_dir}", flush=True)
     for index, name in enumerate(names, start=1):
-        output_path = compose_one(name, reports, output_dir)
+        output_path = compose_one(name, reports, profiles, output_dir)
         print(f"{index}/{len(names)} {name}: {output_path}", flush=True)
     return 0
 
