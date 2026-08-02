@@ -63,10 +63,10 @@ function Populate-ResultsWorkbook {
 Wait-ForCurrentBatches
 
 $optimisers = @(
-    @{Name='SEP Spike Gate'; Script='optimise_spike_gate_SEP.py'},
-    @{Name='SEP Toy Objects'; Script='optimise_toy_objects_SEP.py'},
-    @{Name='MTObjects Spike Gate'; Script='optimise_spike_gate_MTObjects.py'},
-    @{Name='MTObjects Toy Objects'; Script='optimise_toy_objects_MTObjects.py'}
+    @{Name='SEP Spike Gate'; Script='Optimisation\optimise_spike_gate_SEP.py'},
+    @{Name='SEP Toy Objects'; Script='Optimisation\optimise_toy_objects_SEP.py'},
+    @{Name='MTObjects Spike Gate'; Script='Optimisation\optimise_spike_gate_MTObjects.py'},
+    @{Name='MTObjects Toy Objects'; Script='Optimisation\optimise_toy_objects_MTObjects.py'}
 )
 
 foreach ($seed in @(202607282, 202607283)) {

@@ -9,7 +9,7 @@ $ErrorActionPreference = "Continue"
 $Python = "C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe"
 $Repo = "C:\Users\gordo\Documents\Github\PythonScripts"
 $ForegroundDir = Join-Path $Repo "Foreground Masking"
-$Optimiser = Join-Path $ForegroundDir "optimise_spike_gate_SEP.py"
+$Optimiser = Join-Path $ForegroundDir "Optimisation\optimise_spike_gate_SEP.py"
 $Batch = Join-Path $ForegroundDir "Batch tools\batch_sep_all_galaxies.py"
 
 $ResearchRoot = if ($PC -eq "Laptop") { "C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research" } else { "D:\Dropbox\Public Documents\UCLAN\MSc Research" }

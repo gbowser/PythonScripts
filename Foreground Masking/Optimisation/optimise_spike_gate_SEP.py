@@ -28,9 +28,10 @@ import optuna
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_DIR.parent
-SUPPORT_DIRS = tuple(SCRIPT_DIR / name for name in ("Batch tools", "PhotUtils", "Interactive tools", "Shared", "Utilities"))
-for path in (SCRIPT_DIR, PROJECT_ROOT, *SUPPORT_DIRS):
+FOREGROUND_ROOT = SCRIPT_DIR.parent
+PROJECT_ROOT = FOREGROUND_ROOT.parent
+SUPPORT_DIRS = tuple(FOREGROUND_ROOT / name for name in ("Batch tools", "PhotUtils", "Interactive tools", "Shared", "Utilities"))
+for path in (PROJECT_ROOT, FOREGROUND_ROOT, SCRIPT_DIR, *SUPPORT_DIRS):
     if str(path) not in sys.path:
         sys.path.append(str(path))
 

@@ -37,14 +37,17 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.append(str(SCRIPT_DIR))
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.append(str(PROJECT_ROOT))
+for path in SUPPORT_DIRS:
+    if str(path) not in sys.path:
+        sys.path.append(str(path))
 
 import foreground_mask_photutils as fgmask  # noqa: E402
 import interactive_photutils_parameter_tester as baseline  # noqa: E402
-from machine_paths import PC_RESEARCH_FOLDERS, erwin_folder, remove_foreground_folder  # noqa: E402
+from machine_paths import PC_RESEARCH_FOLDERS, detect_pc, erwin_folder, remove_foreground_folder  # noqa: E402
 
 
 DEFAULT_MANIFEST = baseline.DEFAULT_MANIFEST
-DEFAULT_PC = "Laptop"
+DEFAULT_PC = detect_pc(FOREGROUND_ROOT)
 DEFAULT_GALAXY = "NGC0986"
 PNG_OUTPUT_DIR = remove_foreground_folder(DEFAULT_PC) / "interactive_object_recovery"
 STARTUP_CACHE_PATH = SCRIPT_DIR / "startup_cache.sqlite3"

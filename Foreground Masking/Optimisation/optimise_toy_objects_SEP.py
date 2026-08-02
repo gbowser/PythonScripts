@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Optimise MTObjects parameters using injected toy-object recovery.
+"""Optimise SEP parameters using injected toy-object recovery.
 
 This follows the same broad idea as Haigh et al. (2021): create data with a
 known truth, run a source-extraction tool, score the segmentation, and let a
@@ -28,13 +28,17 @@ import numpy as np
 import optuna
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_DIR.parent
-SUPPORT_DIRS = tuple(SCRIPT_DIR / name for name in ("Batch tools", "PhotUtils", "Interactive tools", "Shared", "Utilities"))
-for path in (SCRIPT_DIR, PROJECT_ROOT, *SUPPORT_DIRS):
+FOREGROUND_ROOT = SCRIPT_DIR.parent
+PROJECT_ROOT = FOREGROUND_ROOT.parent
+SUPPORT_DIRS = tuple(FOREGROUND_ROOT / name for name in ("Batch tools", "PhotUtils", "Interactive tools", "Shared", "Utilities"))
+for path in (PROJECT_ROOT, FOREGROUND_ROOT, SCRIPT_DIR, *SUPPORT_DIRS):
     if str(path) not in sys.path:
         sys.path.append(str(path))
 
-import mtobjects_spike_gate_processing as mto  # noqa: E402
+if os.name != "nt":
+    os.environ.setdefault("FOREGROUND_MASKING_PC", "Desktop")
+
+import sep_processing as sep_tool  # noqa: E402
 from machine_paths import PC_RESEARCH_FOLDERS, detect_pc, remove_foreground_folder  # noqa: E402
 from optimisation_results_workbook import append_run_to_workbook  # noqa: E402
 
@@ -64,47 +68,30 @@ DEFAULT_INITIAL_POINTS = 8
 DEFAULT_MAX_ITER = 32
 DEFAULT_RANDOM_SEED = 20260719
 DEFAULT_MAX_MASKED_FRACTION = 0.15
-DEFAULT_DATA_LOSS_PENALTY = 2.0
-DEFAULT_FALSE_POSITIVE_PENALTY = 0.5
+DEFAULT_DATA_LOSS_PENALTY = 0.35
+DEFAULT_FALSE_POSITIVE_PENALTY = 0.05
 OPTIMISED_PARAMETER_NAMES = [
-    "move_factor",
-    "min_distance",
-    "gaussian_fwhm",
+    "detect_thresh",
     "minarea",
+    "deblend_nthresh",
+    "deblend_cont",
+    "back_size",
+    "filter_size",
     "dilation_radius",
     "max_area",
     "max_elongation",
 ]
 PARAMETER_BOUNDS = {
-    "move_factor": (0.0, 1.0),
-    "min_distance": (0.0, 1.0),
-    "gaussian_fwhm": (0.0, 5.0),
-    "minarea": (1, 80),
-    "dilation_radius": (0, 8),
-    "max_area": (20, 3000),
-    "max_elongation": (1.5, 20.0),
+    "detect_thresh": (0.2, 5.0),
+    "minarea": (1, 50),
+    "deblend_nthresh": (8, 64),
+    "deblend_cont": (0.00001, 0.1),
+    "back_size": [16, 24, 32, 48, 64, 96, 128, 192, 256],
+    "filter_size": [1, 3, 5, 7, 9],
+    "dilation_radius": (1, 6),
+    "max_area": (20, 8000),
+    "max_elongation": (1.5, 30.0),
 }
-
-
-# Process workers keep their own MTObjects state and working directory.  This is
-# deliberately process-based: MTObjects changes cwd while loading its C
-# libraries, so threads would race with one another.  On Linux, ``fork`` also
-# lets the workers share the prepared image arrays copy-on-write.
-_WORKER_CASES: list[ImageCase] | None = None
-_WORKER_MTOBJECTS_ROOT: Path | None = None
-
-
-def initialise_score_worker(cases: list[ImageCase], mtobjects_root: Path | None) -> None:
-    global _WORKER_CASES, _WORKER_MTOBJECTS_ROOT
-    _WORKER_CASES = cases
-    _WORKER_MTOBJECTS_ROOT = mtobjects_root
-
-
-def score_case_worker(task: tuple[int, dict[str, float | int | str]]) -> dict[str, object]:
-    case_index, params = task
-    if _WORKER_CASES is None:
-        raise RuntimeError("MTObjects scoring worker was not initialised.")
-    return score_case(_WORKER_CASES[case_index], params, _WORKER_MTOBJECTS_ROOT)
 
 
 @dataclass
@@ -133,6 +120,21 @@ class ImageCase:
     baseline_mask: np.ndarray
 
 
+_WORKER_CASES: list[ImageCase] | None = None
+
+
+def initialise_score_worker(cases: list[ImageCase]) -> None:
+    global _WORKER_CASES
+    _WORKER_CASES = cases
+
+
+def score_case_worker(task: tuple[int, dict[str, float | int | str]]) -> dict[str, float | int | str]:
+    case_index, params = task
+    if _WORKER_CASES is None:
+        raise RuntimeError("SEP scoring worker was not initialised.")
+    return score_case(_WORKER_CASES[case_index], params)
+
+
 def robust_sigma(data: np.ndarray) -> float:
     values = np.asarray(data, dtype=float)
     finite = values[np.isfinite(values)]
@@ -147,7 +149,7 @@ def robust_sigma(data: np.ndarray) -> float:
 
 
 def circular_dilate(mask: np.ndarray, radius_pixels: int) -> np.ndarray:
-    return mto.dilate_mask(mask, int(max(0, radius_pixels)))
+    return sep_tool.dilate_mask(mask, int(max(0, radius_pixels)))
 
 
 def gaussian_model(
@@ -201,26 +203,16 @@ def truth_from_model(model: np.ndarray, truth_dilation: int) -> np.ndarray:
 def default_params(detect_on: str) -> dict[str, float | int | str]:
     return {
         "detect_on": detect_on,
-        "alpha": mto.DEFAULT_ALPHA,
-        "move_factor": mto.DEFAULT_MOVE_FACTOR,
-        "min_distance": mto.DEFAULT_MIN_DISTANCE,
-        "gaussian_fwhm": mto.DEFAULT_GAUSSIAN_FWHM,
-        "soft_bias": mto.DEFAULT_SOFT_BIAS,
-        "gain": mto.DEFAULT_GAIN,
-        "bg_mean": mto.DEFAULT_BG_MEAN,
-        "bg_variance": mto.DEFAULT_BG_VARIANCE,
-        "minarea": mto.DEFAULT_MINAREA,
-        "dilation_radius": mto.DEFAULT_DILATION_RADIUS,
-        "max_area": mto.DEFAULT_MAX_AREA,
-        "max_elongation": mto.DEFAULT_MAX_ELONGATION,
-        "exclude_center_pixels": mto.DEFAULT_EXCLUDE_CENTER_PIXELS,
-        "spike_gate_move_factor": mto.SPIKE_GATE_MOVE_FACTOR,
-        "spike_excess_fraction": mto.DEFAULT_SPIKE_EXCESS_FRACTION,
-        "spike_neighbour_inner_arcsec": mto.DEFAULT_SPIKE_NEIGHBOUR_INNER_ARCSEC,
-        "spike_neighbour_outer_arcsec": mto.DEFAULT_SPIKE_NEIGHBOUR_OUTER_ARCSEC,
-        "spike_side_offset_samples": mto.DEFAULT_SPIKE_SIDE_OFFSET_SAMPLES,
-        "spike_side_drop_fraction": mto.DEFAULT_SPIKE_SIDE_DROP_FRACTION,
-        "spike_window_samples": mto.DEFAULT_SPIKE_WINDOW_SAMPLES,
+        "detect_thresh": sep_tool.DEFAULT_DETECT_THRESH,
+        "minarea": sep_tool.DEFAULT_MINAREA,
+        "deblend_nthresh": sep_tool.DEFAULT_DEBLEND_NTHRESH,
+        "deblend_cont": sep_tool.DEFAULT_DEBLEND_CONT,
+        "back_size": sep_tool.DEFAULT_BACK_SIZE,
+        "filter_size": sep_tool.DEFAULT_FILTER_SIZE,
+        "dilation_radius": sep_tool.DEFAULT_DILATION_RADIUS,
+        "max_area": sep_tool.DEFAULT_MAX_AREA,
+        "max_elongation": sep_tool.DEFAULT_MAX_ELONGATION,
+        "exclude_center_pixels": sep_tool.DEFAULT_EXCLUDE_CENTER_PIXELS,
     }
 
 
@@ -228,11 +220,12 @@ def vector_to_params(values: np.ndarray, detect_on: str) -> dict[str, float | in
     params = default_params(detect_on)
     vector = np.asarray(values, dtype=float).ravel()
     settings = dict(zip(OPTIMISED_PARAMETER_NAMES, vector))
-    params["alpha"] = mto.DEFAULT_ALPHA
-    params["move_factor"] = float(settings["move_factor"])
-    params["min_distance"] = float(settings["min_distance"])
-    params["gaussian_fwhm"] = float(settings["gaussian_fwhm"])
+    params["detect_thresh"] = float(settings["detect_thresh"])
     params["minarea"] = max(1, int(round(float(settings["minarea"]))))
+    params["deblend_nthresh"] = max(1, int(round(float(settings["deblend_nthresh"]))))
+    params["deblend_cont"] = float(settings["deblend_cont"])
+    params["back_size"] = max(1, int(round(float(settings["back_size"]))))
+    params["filter_size"] = max(1, int(round(float(settings["filter_size"]))))
     params["dilation_radius"] = max(0, int(round(float(settings["dilation_radius"]))))
     params["max_area"] = max(1, int(round(float(settings["max_area"]))))
     params["max_elongation"] = float(settings["max_elongation"])
@@ -241,11 +234,12 @@ def vector_to_params(values: np.ndarray, detect_on: str) -> dict[str, float | in
 
 def optuna_trial_to_params(trial: optuna.Trial, detect_on: str) -> dict[str, float | int | str]:
     params = default_params(detect_on)
-    params["alpha"] = mto.DEFAULT_ALPHA
-    params["move_factor"] = trial.suggest_float("move_factor", *PARAMETER_BOUNDS["move_factor"])
-    params["min_distance"] = trial.suggest_float("min_distance", *PARAMETER_BOUNDS["min_distance"])
-    params["gaussian_fwhm"] = trial.suggest_float("gaussian_fwhm", *PARAMETER_BOUNDS["gaussian_fwhm"])
+    params["detect_thresh"] = trial.suggest_float("detect_thresh", *PARAMETER_BOUNDS["detect_thresh"])
     params["minarea"] = trial.suggest_int("minarea", *PARAMETER_BOUNDS["minarea"])
+    params["deblend_nthresh"] = trial.suggest_int("deblend_nthresh", *PARAMETER_BOUNDS["deblend_nthresh"])
+    params["deblend_cont"] = trial.suggest_float("deblend_cont", *PARAMETER_BOUNDS["deblend_cont"], log=True)
+    params["back_size"] = trial.suggest_categorical("back_size", PARAMETER_BOUNDS["back_size"])
+    params["filter_size"] = trial.suggest_categorical("filter_size", PARAMETER_BOUNDS["filter_size"])
     params["dilation_radius"] = trial.suggest_int("dilation_radius", *PARAMETER_BOUNDS["dilation_radius"])
     params["max_area"] = trial.suggest_int("max_area", *PARAMETER_BOUNDS["max_area"])
     params["max_elongation"] = trial.suggest_float("max_elongation", *PARAMETER_BOUNDS["max_elongation"])
@@ -262,13 +256,13 @@ def params_to_jsonable(params: dict[str, float | int | str]) -> dict[str, float 
 def select_rows(
     manifest: Path, pc_name: str, names: list[str] | None, max_images: int, seed: int
 ) -> list[dict[str, str]]:
-    rows = mto.display.rows_with_images_for_pc(mto.display.read_manifest(manifest), pc_name)
+    rows = sep_tool.display.rows_with_images_for_pc(sep_tool.display.read_manifest(manifest), pc_name)
     if names:
         wanted = {name.casefold() for name in names}
         rows = [row for row in rows if row["name"].casefold() in wanted]
     selected = []
     for row in rows:
-        if mto.display.required_geometry(row) is not None:
+        if sep_tool.display.required_geometry(row) is not None:
             selected.append(row)
     if not selected:
         raise ValueError("No usable science images found for the requested PC/name selection.")
@@ -278,10 +272,10 @@ def select_rows(
 
 
 def investigated_region_mask(data: np.ndarray, geometry: dict[str, float]) -> np.ndarray:
-    radius_pix = mto.display.profile_radius_pixels(data, geometry)
+    radius_pix = sep_tool.display.profile_radius_pixels(data, geometry)
     yy, xx = np.indices(data.shape, dtype=float)
     offsets = np.vstack([(xx - (geometry["xc"] - 1.0)).ravel(), (yy - (geometry["yc"] - 1.0)).ravel()])
-    transform_xy = mto.display.image_transform(geometry["disk_pa"], geometry["inclination"], geometry["bar_pa"])
+    transform_xy = sep_tool.display.image_transform(geometry["disk_pa"], geometry["inclination"], geometry["bar_pa"])
     aligned = transform_xy @ offsets
     aligned_x = aligned[0].reshape(data.shape)
     aligned_y = aligned[1].reshape(data.shape)
@@ -372,16 +366,15 @@ def build_cases(args: argparse.Namespace) -> list[ImageCase]:
     cases = []
     rows = select_rows(args.manifest, args.pc, args.names, int(args.max_images), int(args.seed))
     baseline_params = default_params(args.detect_on)
-    mtobjects_root = mto.find_mtobjects_root(args.mtobjects_root)
     for row in rows:
         name = row["name"]
-        geometry = mto.display.required_geometry(row)
+        geometry = sep_tool.display.required_geometry(row)
         if geometry is None:
             continue
-        data, _header = mto.load_fits(mto.display.image_path_for_pc(row, args.pc))
+        data, _header = sep_tool.load_fits(sep_tool.display.image_path_for_pc(row, args.pc))
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)
-            baseline_products = mto.mtobjects_products(data, baseline_params, geometry, mtobjects_root)
+            baseline_products = sep_tool.sep_products(data, baseline_params, geometry)
         injected, truth_mask, truth_labels, toys = inject_toys(
             name,
             data,
@@ -409,9 +402,8 @@ def build_cases(args: argparse.Namespace) -> list[ImageCase]:
 def score_case(
     case: ImageCase,
     params: dict[str, float | int | str],
-    mtobjects_root: Path | None,
 ) -> dict[str, float | int | str]:
-    products = mto.mtobjects_products(case.injected, params, case.geometry, mtobjects_root)
+    products = sep_tool.sep_products(case.injected, params, case.geometry)
     mask = np.asarray(products["mask"], dtype=bool)
     incremental = mask & ~case.baseline_mask
     truth = case.truth_mask
@@ -469,7 +461,7 @@ def aggregate_score(
     recovered = sum(int(row["recovered_toys"]) for row in case_rows)
     toy_count = sum(int(row["toy_count"]) for row in case_rows)
     toy_detection_rate = recovered / toy_count if toy_count else 0.0
-    recovery_score = 0.45 * mean_f + 0.35 * mean_toy_recall + 0.20 * toy_detection_rate
+    recovery_score = 0.45 * mean_recall + 0.20 * mean_f + 0.25 * mean_toy_recall + 0.20 * toy_detection_rate
     data_loss = data_loss_penalty * mean_masked + false_positive_penalty * min(false_positive, 1.0)
     score = recovery_score - data_loss
     cap_excess = max(0.0, max_masked - max_masked_fraction)
@@ -519,11 +511,10 @@ class OptimisationRun:
     def __init__(self, args: argparse.Namespace, cases: list[ImageCase]):
         self.args = args
         self.cases = cases
-        self.mtobjects_root = mto.find_mtobjects_root(args.mtobjects_root)
         self.output_dir = args.output_dir
-        self.summary_path = self.output_dir / "mtobjects_parameter_optimisation_summary.csv"
-        self.detail_path = self.output_dir / "mtobjects_parameter_optimisation_details.csv"
-        self.best_path = self.output_dir / "mtobjects_parameter_optimisation_best.json"
+        self.summary_path = self.output_dir / "sep_toy_object_optimisation_summary.csv"
+        self.detail_path = self.output_dir / "sep_toy_object_optimisation_details.csv"
+        self.best_path = self.output_dir / "sep_toy_object_optimisation_best.json"
         self.evaluation_index = 0
         self.best: dict[str, object] | None = None
         self.total_trials = 0
@@ -537,9 +528,9 @@ class OptimisationRun:
             self.worker_pool = context.Pool(
                 processes=worker_count,
                 initializer=initialise_score_worker,
-                initargs=(cases, self.mtobjects_root),
+                initargs=(cases,),
             )
-            print(f"Using {worker_count} MTObjects image workers ({start_method}).", flush=True)
+            print(f"Using {worker_count} SEP image workers ({start_method}).", flush=True)
 
     def close(self) -> None:
         if self.worker_pool is not None:
@@ -561,7 +552,7 @@ class OptimisationRun:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
                 if self.worker_pool is None:
-                    case_rows = [score_case(case, params, self.mtobjects_root) for case in self.cases]
+                    case_rows = [score_case(case, params) for case in self.cases]
                 else:
                     tasks = [(index, params) for index in range(len(self.cases))]
                     case_rows = self.worker_pool.map(score_case_worker, tasks)
@@ -627,14 +618,6 @@ class OptimisationRun:
                 "trial_number",
                 *OPTIMISED_PARAMETER_NAMES,
                 "detect_on",
-                "alpha",
-                "move_factor",
-                "min_distance",
-                "gaussian_fwhm",
-                "minarea",
-                "dilation_radius",
-                "max_area",
-                "max_elongation",
             ],
         )
         if detail_rows:
@@ -706,7 +689,7 @@ def run_optuna(run: OptimisationRun) -> None:
         seed=int(run.args.seed),
         n_startup_trials=int(run.args.initial_points),
     )
-    storage_url = f"sqlite:///{(run.output_dir / 'mtobjects_parameter_optimisation_study.sqlite3').as_posix()}"
+    storage_url = f"sqlite:///{(run.output_dir / 'sep_toy_object_optimisation_study.sqlite3').as_posix()}"
     study = optuna.create_study(
         study_name=run.args.study_name,
         direction="minimize",
@@ -731,28 +714,22 @@ def parse_args() -> argparse.Namespace:
     try:
         default_pc = detect_pc(SCRIPT_DIR)
     except RuntimeError:
-        # Cloud/Linux hosts do not have either configured Windows research
-        # folder.  The manifest's image_path column remains authoritative when
-        # the machine-specific fallback path does not exist.
         default_pc = "Desktop"
-    parser.add_argument("--manifest", type=Path, default=mto.DEFAULT_MANIFEST)
+    parser.add_argument("--manifest", type=Path, default=sep_tool.DEFAULT_MANIFEST)
     parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=default_pc)
-    parser.add_argument("--mtobjects-root", type=Path, default=Path(mto.DEFAULT_MTOBJECTS_ROOT) if mto.DEFAULT_MTOBJECTS_ROOT else None)
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--names", nargs="*", help="Optional explicit galaxy names. Defaults to the first usable images.")
     parser.add_argument("--max-images", type=int, default=DEFAULT_MAX_IMAGES)
     parser.add_argument("--toys-per-image", type=int, default=DEFAULT_TOYS_PER_IMAGE)
     parser.add_argument("--truth-dilation", type=int, default=1)
     parser.add_argument(
-        "--mtobjects-detect-on",
         "--detect-on",
         dest="detect_on",
         choices=["original", "residual"],
-        default="original",
+        default="residual",
         help=(
-            "Image MTObjects uses during toy-object optimisation. "
+            "Image SEP uses during toy-object optimisation. "
             "Use 'original' for the science image or 'residual' for the smooth-model residual. "
-            "The older --detect-on spelling is kept as an alias."
         ),
     )
     parser.add_argument("--initial-points", type=int, default=DEFAULT_INITIAL_POINTS)
@@ -761,27 +738,21 @@ def parse_args() -> argparse.Namespace:
         "--workers",
         type=int,
         default=1,
-        help=(
-            "Number of process workers used to score images within each Optuna trial. "
-            "Use 1 for the original serial behaviour; 4-8 is suitable for an Azure F-series Linux VM."
-        ),
+        help="Number of process workers used to score images within each Optuna trial.",
     )
     parser.add_argument("--seed", type=int, default=DEFAULT_RANDOM_SEED)
-    parser.add_argument("--study-name", default="mtobjects-toy-optimisation")
+    parser.add_argument("--study-name", default="sep-toy-object-optimisation")
     parser.add_argument(
         "--max-masked-fraction",
         type=float,
         default=DEFAULT_MAX_MASKED_FRACTION,
-        help=(
-            "Hard worst-image masked-fraction ceiling for a trial. "
-            "Trials exceeding this value receive a large objective penalty."
-        ),
+        help="Hard worst-image masked-fraction ceiling for a trial.",
     )
     parser.add_argument(
         "--data-loss-penalty",
         type=float,
         default=DEFAULT_DATA_LOSS_PENALTY,
-        help="Penalty weight applied to the mean masked fraction in the toy-object objective.",
+        help="Penalty weight applied to the mean masked fraction.",
     )
     parser.add_argument(
         "--false-positive-penalty",
@@ -801,15 +772,15 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    output_parent = args.output_dir or (remove_foreground_folder(args.pc) / "mtobjects toy optimisation")
+    output_parent = args.output_dir or (remove_foreground_folder(args.pc) / "sep toy optimisation")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     args.output_dir = output_parent / timestamp
     args.output_dir.mkdir(parents=True, exist_ok=True)
     config = {key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()}
-    (args.output_dir / "mtobjects_parameter_optimisation_config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
+    (args.output_dir / "sep_toy_object_optimisation_config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
 
     cases = build_cases(args)
-    write_toys(args.output_dir / "mtobjects_parameter_optimisation_toys.csv", cases)
+    write_toys(args.output_dir / "sep_toy_object_optimisation_toys.csv", cases)
     print(f"Prepared {len(cases)} images and {sum(len(case.toys) for case in cases)} toy objects.")
     print(f"Output: {args.output_dir}")
     if args.prepare_only:
@@ -826,10 +797,10 @@ def main() -> None:
         return
     try:
         workbook_path = append_run_to_workbook(
-            algorithm="MTObjects",
+            algorithm="SEP",
             method="Toy Object",
             run_dir=args.output_dir,
-            prefix="mtobjects_parameter_optimisation",
+            prefix="sep_toy_object_optimisation",
             workbook_path=args.results_workbook,
         )
         print(f"Results workbook: {workbook_path}")

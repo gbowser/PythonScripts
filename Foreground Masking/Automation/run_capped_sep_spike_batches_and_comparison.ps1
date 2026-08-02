@@ -9,7 +9,7 @@ $ErrorActionPreference = "Continue"
 $Python = "C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe"
 $Repo = "C:\Users\gordo\Documents\Github\PythonScripts"
 $ForegroundDir = Join-Path $Repo "Foreground Masking"
-$SEPSpikeOptimiser = Join-Path $ForegroundDir "optimise_spike_gate_SEP.py"
+$SEPSpikeOptimiser = Join-Path $ForegroundDir "Optimisation\optimise_spike_gate_SEP.py"
 $SEPBatch = Join-Path $ForegroundDir "Batch tools\batch_sep_all_galaxies.py"
 $Compositor = Join-Path $ForegroundDir "Utilities\make_all_method_galaxy_comparison_pngs.py"
 

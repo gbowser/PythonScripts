@@ -38,7 +38,7 @@ not the existing `C:\` or `D:\` paths. Then:
 ```bash
 source .venv-azure-mtobjects/bin/activate
 export MTOBJECTS_ROOT="$(dirname "$PWD")/mtobjects"
-python "Foreground Masking/optimise_toy_objects_MTObjects.py" \
+python "Foreground Masking/Optimisation/optimise_toy_objects_MTObjects.py" \
   --manifest /data/manifest.csv \
   --output-dir /data/results/mtobjects-toy \
   --workers 8
@@ -51,13 +51,13 @@ Use `--workers 1` to reproduce the original execution path.
 The other three optimisers use the same worker model:
 
 ```bash
-python "Foreground Masking/optimise_toy_objects_SEP.py" \
+python "Foreground Masking/Optimisation/optimise_toy_objects_SEP.py" \
   --manifest /data/manifest.csv --output-dir /data/results/sep-toy --workers 8
 
-python "Foreground Masking/optimise_spike_gate_SEP.py" \
+python "Foreground Masking/Optimisation/optimise_spike_gate_SEP.py" \
   --manifest /data/manifest.csv --output-dir /data/results/sep-spike --workers 8
 
-python "Foreground Masking/optimise_spike_gate_MTObjects.py" \
+python "Foreground Masking/Optimisation/optimise_spike_gate_MTObjects.py" \
   --manifest /data/manifest.csv --output-dir /data/results/mtobjects-spike \
   --mtobjects-root "$(dirname "$PWD")/mtobjects" --workers 8
 ```

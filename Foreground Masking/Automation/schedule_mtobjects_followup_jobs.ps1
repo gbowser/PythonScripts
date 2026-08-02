@@ -13,7 +13,7 @@ $ErrorActionPreference = "Stop"
 $Python = "C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe"
 $Repo = "C:\Users\gordo\Documents\Github\PythonScripts"
 $ForegroundDir = Join-Path $Repo "Foreground Masking"
-$WorkbookHelper = Join-Path $ForegroundDir "append_optimisation_run_to_workbook.py"
+$WorkbookHelper = Join-Path $ForegroundDir "Shared\append_optimisation_run_to_workbook.py"
 $ApplyScript = Join-Path $ForegroundDir "Batch tools\apply_optimised_mtobjects_all_galaxies.py"
 
 $ResearchRoot = if ($PC -eq "Laptop") { "C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research" } else { "D:\Dropbox\Public Documents\UCLAN\MSc Research" }

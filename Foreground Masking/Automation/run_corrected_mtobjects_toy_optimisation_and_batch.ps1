@@ -9,7 +9,7 @@ $ErrorActionPreference = "Continue"
 $Python = "C:\Users\gordo\AppData\Local\Programs\Python\Python313\python.exe"
 $Repo = "C:\Users\gordo\Documents\Github\PythonScripts"
 $ForegroundDir = Join-Path $Repo "Foreground Masking"
-$OptimiserScript = Join-Path $ForegroundDir "optimise_toy_objects_MTObjects.py"
+$OptimiserScript = Join-Path $ForegroundDir "Optimisation\optimise_toy_objects_MTObjects.py"
 $BatchScript = Join-Path $ForegroundDir "Batch tools\apply_optimised_mtobjects_all_galaxies.py"
 
 $ResearchRoot = if ($PC -eq "Laptop") { "C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research" } else { "D:\Dropbox\Public Documents\UCLAN\MSc Research" }

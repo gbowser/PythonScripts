@@ -25,11 +25,18 @@ COMBINATIONS = [
 ]
 
 
+ROLE_FOLDERS = {
+    "optimise": "Optimisation",
+    "interactive": "Interactive tools",
+    "batch": "Batch tools",
+}
+
+
 OPTIMISATION_TRIALS = [
-    ("SEP", "Spike Gate", "optimise_spike_gate_SEP.py", 16, 64),
-    ("MTObjects", "Spike Gate", "optimise_spike_gate_MTObjects.py", 12, 48),
-    ("SEP", "Toy Objects", "optimise_toy_objects_SEP.py", 8, 32),
-    ("MTObjects", "Toy Objects", "optimise_toy_objects_MTObjects.py", 8, 32),
+    ("SEP", "Spike Gate", "Optimisation\\optimise_spike_gate_SEP.py", 16, 64),
+    ("MTObjects", "Spike Gate", "Optimisation\\optimise_spike_gate_MTObjects.py", 12, 48),
+    ("SEP", "Toy Objects", "Optimisation\\optimise_toy_objects_SEP.py", 8, 32),
+    ("MTObjects", "Toy Objects", "Optimisation\\optimise_toy_objects_MTObjects.py", 8, 32),
 ]
 
 
@@ -85,14 +92,15 @@ def main() -> None:
     for engine, method in COMBINATIONS:
         for role in ("optimise", "interactive", "batch"):
             cells = table.add_row().cells
-            values = [engine, method.replace("_", " ").title(), role.title(), f"{role}_{method}_{engine}.py"]
+            filename = f"{ROLE_FOLDERS[role]}\\{role}_{method}_{engine}.py"
+            values = [engine, method.replace("_", " ").title(), role.title(), filename]
             for cell, value in zip(cells, values):
                 cell.text = value
 
     doc.add_heading("Launch Commands", level=1)
-    add_code(doc, 'python "Foreground Masking\\optimise_spike_gate_SEP.py"')
-    add_code(doc, 'python "Foreground Masking\\interactive_spike_gate_SEP.py"')
-    add_code(doc, 'python "Foreground Masking\\batch_spike_gate_SEP.py"')
+    add_code(doc, 'python "Foreground Masking\\Optimisation\\optimise_spike_gate_SEP.py"')
+    add_code(doc, 'python "Foreground Masking\\Interactive tools\\interactive_spike_gate_SEP.py"')
+    add_code(doc, 'python "Foreground Masking\\Batch tools\\batch_spike_gate_SEP.py"')
 
     doc.add_heading("Parameter hand-off", level=1)
     doc.add_paragraph(
@@ -147,9 +155,9 @@ def main() -> None:
 
     doc.add_heading("Support-code folders", level=1)
     doc.add_paragraph(
-        "Only the twelve canonical launchers are kept in the Foreground Masking root. Supporting programs are grouped "
-        "under Batch tools, PhotUtils, Interactive tools, Shared, Utilities, and Automation. The canonical launchers "
-        "add these folders to the Python search path automatically."
+        "Canonical launchers are grouped by purpose: Optimisation, Interactive tools, and Batch tools. Supporting "
+        "programs are grouped under PhotUtils, Shared, Utilities, and Automation. The canonical launchers add these "
+        "folders to the Python search path automatically."
     )
 
     doc.add_heading("Documentation Rule", level=1)

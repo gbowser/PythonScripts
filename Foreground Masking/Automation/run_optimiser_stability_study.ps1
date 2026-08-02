@@ -52,10 +52,10 @@ if ($AdoptProcessIds.Count -gt 0) {
 }
 
 $optimisers = @(
-    @{Name="spike_gate_SEP"; Script="optimise_spike_gate_SEP.py"},
-    @{Name="toy_objects_SEP"; Script="optimise_toy_objects_SEP.py"},
-    @{Name="spike_gate_MTObjects"; Script="optimise_spike_gate_MTObjects.py"},
-    @{Name="toy_objects_MTObjects"; Script="optimise_toy_objects_MTObjects.py"}
+    @{Name="spike_gate_SEP"; Script="Optimisation\optimise_spike_gate_SEP.py"},
+    @{Name="toy_objects_SEP"; Script="Optimisation\optimise_toy_objects_SEP.py"},
+    @{Name="spike_gate_MTObjects"; Script="Optimisation\optimise_spike_gate_MTObjects.py"},
+    @{Name="toy_objects_MTObjects"; Script="Optimisation\optimise_toy_objects_MTObjects.py"}
 )
 
 foreach ($seed in @(202607282, 202607283)) {
@@ -73,10 +73,10 @@ foreach ($seed in @(202607282, 202607283)) {
 
 Write-MasterLog "All optimiser waves finished; starting all-galaxy batches sequentially."
 $batches = @(
-    @{Name="spike_gate_SEP"; Script="batch_spike_gate_SEP.py"},
-    @{Name="toy_objects_SEP"; Script="batch_toy_objects_SEP.py"},
-    @{Name="spike_gate_MTObjects"; Script="batch_spike_gate_MTObjects.py"},
-    @{Name="toy_objects_MTObjects"; Script="batch_toy_objects_MTObjects.py"}
+    @{Name="spike_gate_SEP"; Script="Batch tools\batch_spike_gate_SEP.py"},
+    @{Name="toy_objects_SEP"; Script="Batch tools\batch_toy_objects_SEP.py"},
+    @{Name="spike_gate_MTObjects"; Script="Batch tools\batch_spike_gate_MTObjects.py"},
+    @{Name="toy_objects_MTObjects"; Script="Batch tools\batch_toy_objects_MTObjects.py"}
 )
 
 foreach ($spec in $batches) {

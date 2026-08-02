@@ -241,7 +241,7 @@ def build_doc() -> None:
     doc.add_heading("Where the Code Lives", level=1)
     doc.add_paragraph(
         "The batch optimiser is implemented in "
-        "Foreground Masking/optimise_spike_gate_MTObjects.py. It reuses the MTObjects "
+        "Foreground Masking/Optimisation/optimise_spike_gate_MTObjects.py. It reuses the MTObjects "
         "runner, Spike Gate detector, profile extraction, and mask-profile utilities exposed through "
         "Foreground Masking/Interactive tools/interactive_mtobjects_spike_gate_parameter_tester.py."
     )
@@ -426,7 +426,7 @@ def build_doc() -> None:
     doc.add_paragraph("Use this command to start a new timestamped optimisation run:")
     add_code_block(
         doc,
-        'python "Foreground Masking\\optimise_spike_gate_MTObjects.py" '
+        'python "Foreground Masking\\Optimisation\\optimise_spike_gate_MTObjects.py" '
         "--max-images 20 --initial-points 12 --max-iter 48",
     )
     doc.add_heading("Resume an Interrupted Run", level=2)
@@ -436,7 +436,7 @@ def build_doc() -> None:
     )
     add_code_block(
         doc,
-        'python "Foreground Masking\\optimise_spike_gate_MTObjects.py" '
+        'python "Foreground Masking\\Optimisation\\optimise_spike_gate_MTObjects.py" '
         '--resume-output-dir "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\'
         'mtobjects spike optimisation\\20260719_165906" --max-images 20 --initial-points 12 --max-iter 48',
     )

@@ -81,10 +81,10 @@ while (@($activeTargets | Where-Object { -not $_.Stopped }).Count -gt 0) {
 
 Write-ControlLog "Optimisation sequence stopped. Starting visible all-galaxy batches sequentially."
 $batches = @(
-    'batch_spike_gate_SEP.py',
-    'batch_toy_objects_SEP.py',
-    'batch_spike_gate_MTObjects.py',
-    'batch_toy_objects_MTObjects.py'
+    'Batch tools\batch_spike_gate_SEP.py',
+    'Batch tools\batch_toy_objects_SEP.py',
+    'Batch tools\batch_spike_gate_MTObjects.py',
+    'Batch tools\batch_toy_objects_MTObjects.py'
 )
 
 foreach ($batch in $batches) {
