@@ -71,15 +71,20 @@ OPTIMISED_PARAMETER_NAMES = [
     "move_factor",
     "min_distance",
     "gaussian_fwhm",
+    "bg_variance",
     "minarea",
     "dilation_radius",
     "max_area",
     "max_elongation",
 ]
+DEFAULT_BG_VARIANCE_MIN = 0.0001
+DEFAULT_BG_VARIANCE_MAX = 10000.0
+DEFAULT_BG_VARIANCE_STEP = 0.0001
 PARAMETER_BOUNDS = {
     "move_factor": (0.0, 1.0),
     "min_distance": (0.0, 1.0),
     "gaussian_fwhm": (0.0, 5.0),
+    "bg_variance": (DEFAULT_BG_VARIANCE_MIN, DEFAULT_BG_VARIANCE_MAX),
     "minarea": (1, 80),
     "dilation_radius": (0, 8),
     "max_area": (20, 3000),
@@ -233,6 +238,7 @@ def vector_to_params(values: np.ndarray, detect_on: str) -> dict[str, float | in
     params["move_factor"] = float(settings["move_factor"])
     params["min_distance"] = float(settings["min_distance"])
     params["gaussian_fwhm"] = float(settings["gaussian_fwhm"])
+    params["bg_variance"] = float(settings["bg_variance"])
     params["minarea"] = max(1, int(round(float(settings["minarea"]))))
     params["dilation_radius"] = max(0, int(round(float(settings["dilation_radius"]))))
     params["max_area"] = max(1, int(round(float(settings["max_area"]))))
@@ -240,12 +246,25 @@ def vector_to_params(values: np.ndarray, detect_on: str) -> dict[str, float | in
     return params
 
 
-def optuna_trial_to_params(trial: optuna.Trial, detect_on: str) -> dict[str, float | int | str]:
+def suggest_bg_variance(trial: optuna.Trial, args: argparse.Namespace) -> float:
+    minimum = float(args.bg_variance_min)
+    maximum = float(args.bg_variance_max)
+    step = float(args.bg_variance_step)
+    if minimum == maximum:
+        return minimum
+    if step <= 0:
+        return trial.suggest_float("bg_variance", minimum, maximum)
+    return trial.suggest_float("bg_variance", minimum, maximum, step=step)
+
+
+def optuna_trial_to_params(trial: optuna.Trial, args: argparse.Namespace) -> dict[str, float | int | str]:
+    detect_on = args.detect_on
     params = default_params(detect_on)
     params["alpha"] = mto.DEFAULT_ALPHA
     params["move_factor"] = trial.suggest_float("move_factor", *PARAMETER_BOUNDS["move_factor"])
     params["min_distance"] = trial.suggest_float("min_distance", *PARAMETER_BOUNDS["min_distance"])
     params["gaussian_fwhm"] = trial.suggest_float("gaussian_fwhm", *PARAMETER_BOUNDS["gaussian_fwhm"])
+    params["bg_variance"] = suggest_bg_variance(trial, args)
     params["minarea"] = trial.suggest_int("minarea", *PARAMETER_BOUNDS["minarea"])
     params["dilation_radius"] = trial.suggest_int("dilation_radius", *PARAMETER_BOUNDS["dilation_radius"])
     params["max_area"] = trial.suggest_int("max_area", *PARAMETER_BOUNDS["max_area"])
@@ -632,6 +651,7 @@ class OptimisationRun:
                 "move_factor",
                 "min_distance",
                 "gaussian_fwhm",
+                "bg_variance",
                 "minarea",
                 "dilation_radius",
                 "max_area",
@@ -685,7 +705,7 @@ class OptimisationRun:
         return objective
 
     def evaluate_trial(self, trial: optuna.Trial) -> float:
-        params = optuna_trial_to_params(trial, self.args.detect_on)
+        params = optuna_trial_to_params(trial, self.args)
         parameter_values = {name: params[name] for name in OPTIMISED_PARAMETER_NAMES}
         objective = self.evaluate_params(params, parameter_values, trial.number)
         score = -objective
@@ -758,6 +778,14 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--initial-points", type=int, default=DEFAULT_INITIAL_POINTS)
     parser.add_argument("--max-iter", type=int, default=DEFAULT_MAX_ITER)
+    parser.add_argument("--bg-variance-min", type=float, default=DEFAULT_BG_VARIANCE_MIN)
+    parser.add_argument("--bg-variance-max", type=float, default=DEFAULT_BG_VARIANCE_MAX)
+    parser.add_argument(
+        "--bg-variance-step",
+        type=float,
+        default=DEFAULT_BG_VARIANCE_STEP,
+        help="Optuna discretisation for bg_variance; use 0 for continuous float sampling.",
+    )
     parser.add_argument(
         "--workers",
         type=int,

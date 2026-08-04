@@ -7,7 +7,9 @@ optimisers. It targets an Ubuntu x86-64 Azure VM and does not require a GPU.
 
 For a compatibility test, use an available x86-64 Ubuntu 24.04 LTS VM with
 2 vCPUs and 8 GiB RAM; the initial verified deployment used `Standard_D2ns_v6`
-in UK South. Resize to 8 vCPUs for the full parallel benchmark. Start with
+in UK South. For the MTObjects reruns, prefer a compute-optimised Fsv2 VM:
+`Standard_F16s_v2` is a sensible faster baseline, while `Standard_F32s_v2`
+is the recommended high-capacity rerun size if quota is available. Start with
 pay-as-you-go while testing and move to Spot only after restart/resume has been
 verified.
 
@@ -41,7 +43,7 @@ export MTOBJECTS_ROOT="$(dirname "$PWD")/mtobjects"
 python "Foreground Masking/Optimisation/optimise_toy_objects_MTObjects.py" \
   --manifest /data/manifest.csv \
   --output-dir /data/results/mtobjects-toy \
-  --workers 8
+  --workers 32
 ```
 
 `--workers` parallelises images inside a trial. Optuna trials remain sequential,
@@ -52,14 +54,32 @@ The other three optimisers use the same worker model:
 
 ```bash
 python "Foreground Masking/Optimisation/optimise_toy_objects_SEP.py" \
-  --manifest /data/manifest.csv --output-dir /data/results/sep-toy --workers 8
+  --manifest /data/manifest.csv --output-dir /data/results/sep-toy --workers 32
 
 python "Foreground Masking/Optimisation/optimise_spike_gate_SEP.py" \
-  --manifest /data/manifest.csv --output-dir /data/results/sep-spike --workers 8
+  --manifest /data/manifest.csv --output-dir /data/results/sep-spike --workers 32
 
 python "Foreground Masking/Optimisation/optimise_spike_gate_MTObjects.py" \
   --manifest /data/manifest.csv --output-dir /data/results/mtobjects-spike \
-  --mtobjects-root "$(dirname "$PWD")/mtobjects" --workers 8
+  --mtobjects-root "$(dirname "$PWD")/mtobjects" --workers 32
+```
+
+To rerun the MTObjects toy-object and Spike Gate optimisations with
+`bg_variance` included in the Optuna search at the high-precision `0.0001`
+step, run:
+
+```bash
+bash "Foreground Masking/Azure/run_mtobjects_bg_variance_optimisations.sh" \
+  /data/manifest.csv /data/results
+```
+
+Optional environment overrides:
+
+```bash
+WORKERS=32 MAX_IMAGES=20 SEED=20260804 \
+BG_VARIANCE_MIN=0.0001 BG_VARIANCE_MAX=10000.0 BG_VARIANCE_STEP=0.0001 \
+bash "Foreground Masking/Azure/run_mtobjects_bg_variance_optimisations.sh" \
+  /data/manifest.csv /data/results
 ```
 
 Each optimiser keeps Optuna trials sequential and returns per-image results in

@@ -121,6 +121,10 @@ FLOAT_SPIN_PARAMS = {
     "bg_mean",
     "bg_variance",
 }
+HIGH_PRECISION_SPIN_PARAMS = {
+    "bg_mean",
+    "bg_variance",
+}
 INTEGER_SPIN_PARAMS = {
     "spike_side_offset_samples",
     "spike_window_samples",
@@ -879,8 +883,24 @@ class MTObjectsTester(tk.Tk):
         self._spin(mto_frame, "gaussian_fwhm", "gaussian_fwhm [px] (↑ = smoother/broader)", 0.0, 8.0, 0.25, DEFAULT_GAUSSIAN_FWHM)
         self._spin(mto_frame, "soft_bias", "Soft bias", -1000.0, 1000.0, 1.0, DEFAULT_SOFT_BIAS)
         self._spin(mto_frame, "gain", "Gain (-1=estimate)", -1.0, 50.0, 0.5, DEFAULT_GAIN)
-        self._spin(mto_frame, "bg_mean", "Background mean (NaN=estimate)", -1000.0, 1000.0, 1.0, DEFAULT_BG_MEAN)
-        self._spin(mto_frame, "bg_variance", "Background variance (-1=estimate)", -1.0, 10000.0, 10.0, DEFAULT_BG_VARIANCE)
+        self._spin(
+            mto_frame,
+            "bg_mean",
+            "Background mean (NaN=estimate)",
+            -1000.0,
+            1000.0,
+            0.001,
+            DEFAULT_BG_MEAN,
+        )
+        self._spin(
+            mto_frame,
+            "bg_variance",
+            "Background variance (-1=estimate)",
+            -1.0,
+            10000.0,
+            0.0001,
+            DEFAULT_BG_VARIANCE,
+        )
 
         filter_frame = ttk.LabelFrame(control, text="Post-filter", padding=6)
         filter_frame.pack(fill=tk.X, pady=(0, 6))
@@ -946,7 +966,7 @@ class MTObjectsTester(tk.Tk):
             from_=self.convert_from_pixels(key, minimum),
             to=self.convert_from_pixels(key, maximum),
             increment=self.convert_from_pixels(key, increment),
-            width=10,
+            width=15 if key in HIGH_PRECISION_SPIN_PARAMS else 10,
             **spin_options,
         )
         self.spinboxes[key] = spin
@@ -1087,6 +1107,8 @@ class MTObjectsTester(tk.Tk):
             return "NaN"
         if key == "alpha":
             return f"{value:.2e}"
+        if key in HIGH_PRECISION_SPIN_PARAMS:
+            return f"{value:.8f}"
         if self.parameter_uses_integer_display(key):
             return f"{int(round(value))}"
         return f"{value:.2f}"
@@ -1099,6 +1121,8 @@ class MTObjectsTester(tk.Tk):
     def spinbox_format_for_key(self, key: str) -> str:
         if key == "alpha":
             return "%.2e"
+        if key in HIGH_PRECISION_SPIN_PARAMS:
+            return "%.8f"
         if self.parameter_uses_integer_display(key):
             return "%.0f"
         return "%.2f"

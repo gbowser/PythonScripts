@@ -49,11 +49,15 @@ OPTIMISED_PARAMETER_NAMES = [
     "move_factor",
     "min_distance",
     "gaussian_fwhm",
+    "bg_variance",
     "minarea",
     "dilation_radius",
     "max_area",
     "max_elongation",
 ]
+DEFAULT_BG_VARIANCE_MIN = 0.0001
+DEFAULT_BG_VARIANCE_MAX = 10000.0
+DEFAULT_BG_VARIANCE_STEP = 0.0001
 
 
 def timestamp() -> str:
@@ -147,11 +151,23 @@ def default_params(detect_on: str, spike_gate_detect_on: str) -> dict[str, float
     }
 
 
-def optuna_trial_to_params(trial: optuna.Trial, detect_on: str, spike_gate_detect_on: str) -> dict[str, float | int | str]:
-    params = default_params(detect_on, spike_gate_detect_on)
+def suggest_bg_variance(trial: optuna.Trial, args: argparse.Namespace) -> float:
+    minimum = float(args.bg_variance_min)
+    maximum = float(args.bg_variance_max)
+    step = float(args.bg_variance_step)
+    if minimum == maximum:
+        return minimum
+    if step <= 0:
+        return trial.suggest_float("bg_variance", minimum, maximum)
+    return trial.suggest_float("bg_variance", minimum, maximum, step=step)
+
+
+def optuna_trial_to_params(trial: optuna.Trial, args: argparse.Namespace) -> dict[str, float | int | str]:
+    params = default_params(args.detect_on, args.spike_gate_detect_on)
     params["move_factor"] = trial.suggest_float("move_factor", 0.05, 0.95)
     params["min_distance"] = trial.suggest_float("min_distance", 0.0, 1.0)
     params["gaussian_fwhm"] = trial.suggest_float("gaussian_fwhm", 0.0, 5.0)
+    params["bg_variance"] = suggest_bg_variance(trial, args)
     params["minarea"] = trial.suggest_int("minarea", 1, 100)
     params["dilation_radius"] = trial.suggest_int("dilation_radius", 0, 8)
     params["max_area"] = trial.suggest_int("max_area", 20, 5000)
@@ -374,7 +390,8 @@ class OptimisationRun:
             f"eval {self.evaluation_index:03d} trial {trial_label} starting "
             f"({progress_text}); params="
             f"move={float(params['move_factor']):.3f}, min_distance={float(params['min_distance']):.3f}, "
-            f"gaussian_fwhm={float(params['gaussian_fwhm']):.3f}, minarea={int(params['minarea'])}, "
+            f"gaussian_fwhm={float(params['gaussian_fwhm']):.3f}, "
+            f"bg_variance={float(params['bg_variance']):.8f}, minarea={int(params['minarea'])}, "
             f"dilation={int(params['dilation_radius'])}, max_area={int(params['max_area'])}, "
             f"max_elongation={float(params['max_elongation']):.3f}"
         )
@@ -496,7 +513,7 @@ class OptimisationRun:
         return objective
 
     def evaluate_trial(self, trial: optuna.Trial) -> float:
-        params = optuna_trial_to_params(trial, self.args.detect_on, self.args.spike_gate_detect_on)
+        params = optuna_trial_to_params(trial, self.args)
         objective = self.evaluate_params(params, trial.number)
         trial.set_user_attr("best_json", str(self.best_path))
         return objective
@@ -573,6 +590,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--spike-window-samples", type=int, default=mto.DEFAULT_SPIKE_WINDOW_SAMPLES)
     parser.add_argument("--initial-points", type=int, default=DEFAULT_INITIAL_POINTS)
     parser.add_argument("--max-iter", type=int, default=DEFAULT_MAX_ITER)
+    parser.add_argument("--bg-variance-min", type=float, default=DEFAULT_BG_VARIANCE_MIN)
+    parser.add_argument("--bg-variance-max", type=float, default=DEFAULT_BG_VARIANCE_MAX)
+    parser.add_argument(
+        "--bg-variance-step",
+        type=float,
+        default=DEFAULT_BG_VARIANCE_STEP,
+        help="Optuna discretisation for bg_variance; use 0 for continuous float sampling.",
+    )
     parser.add_argument(
         "--workers",
         type=int,
