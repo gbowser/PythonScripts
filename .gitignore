@@ -21,12 +21,17 @@ virtualenv/
 build/
 dist/
 *.egg-info/
+tmp/
 
 # Generated analytical outputs
 mtobjects/
 Erwin_barprofiles_paper_GB_working_copy/plots/
 Erwin_barprofiles_paper_GB_working_copy/python_figure_output/
 Foreground Masking/startup_cache.sqlite3
+Foreground Masking/run_logs/
+optimiser-stability-*/
+mtobjects-bg-variance*/
+all-method-comparison-pngs/
 PSS/*.pdf
 PSS/*.png
 PSS/*.gif
@@ -35,6 +40,17 @@ PSS/*.avi
 PSS/*.mov
 Data Driven Astronomy/*.pdf
 Basic UCLan tasks/gaia-plot.pdf
+
+# Large local data / Azure transfer artefacts
+*.fits
+*.fit
+*.fts
+*.fits.gz
+*.tar
+*.tar.gz
+*.tgz
+azure_mtobjects_*/
+optimiser_parameter_stability_*.xlsx
 
 # Operating system files
 .DS_Store
