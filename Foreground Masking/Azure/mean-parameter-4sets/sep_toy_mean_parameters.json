@@ -1,0 +1,15 @@
+{
+  "source_workbook": "optimiser_parameter_stability_4sets.xlsx",
+  "aggregation": "arithmetic mean across seeds 202608041-202608044; integer-valued parameters rounded to nearest integer",
+  "params": {
+    "detect_thresh": 2.185542184039657,
+    "minarea": 15,
+    "deblend_nthresh": 23,
+    "deblend_cont": 0.0005499685701731268,
+    "back_size": 24,
+    "filter_size": 3,
+    "dilation_radius": 5,
+    "max_area": 4590,
+    "max_elongation": 9.731347513447435
+  }
+}

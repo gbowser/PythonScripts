@@ -1,0 +1,2 @@
+name,status,png,raw_segments,kept_segments,masked_fraction,background_level,background_rms,error
+ESO013-016,ok,Foreground Masking\Azure\mean-parameter-4sets\smoke\sep-spike\ESO013-016_sep_thr2.5_area15_deb0.0001_dil2.png,611,610,0.06864322191272051,0.006923772860318422,0.016568414866924286,

@@ -1,0 +1,2 @@
+name,status,segments_kept,segments_raw,masked_pixels,masked_fraction,report_png,cleaned_fits,elapsed_seconds,error
+ESO013-016,ok,0,0,0,0.0,Foreground Masking\Azure\mean-parameter-4sets\smoke\mtobjects-spike\ESO013-016_mtobjects_optimised_report.png,,1.5461934999984805,
