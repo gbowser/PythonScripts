@@ -1,7 +1,8 @@
 $ErrorActionPreference = "Stop"
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
-$batchRoot = Join-Path $PSScriptRoot "separate-low-foreground-toy-optimisations\full-batches"
+$dropboxOutputRoot = "D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\Azure Optimisation outputs"
+$batchRoot = Join-Path $dropboxOutputRoot "separate-low-foreground-toy-optimisations\full-batches"
 $targets = @(
     [pscustomobject]@{
         Label = "SEP Toy Objects"

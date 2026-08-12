@@ -6,10 +6,11 @@ $PSNativeCommandUseErrorActionPreference = $false
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $python = Join-Path $repoRoot ".venv\Scripts\python.exe"
-$manifest = Join-Path $PSScriptRoot "mean-parameter-4sets\local_mtobjects_182_manifest.csv"
+$dropboxOutputRoot = "D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\Azure Optimisation outputs"
+$manifest = Join-Path $dropboxOutputRoot "mean-parameter-4sets\local_mtobjects_182_manifest.csv"
 $mtobjectsRoot = Join-Path $repoRoot "mtobjects"
-$outputRoot = Join-Path $PSScriptRoot "separate-low-foreground-toy-optimisations\mtobjects-toy-visible"
-$logRoot = Join-Path $PSScriptRoot "separate-low-foreground-toy-optimisations\logs"
+$outputRoot = Join-Path $dropboxOutputRoot "separate-low-foreground-toy-optimisations\mtobjects-toy-visible"
+$logRoot = Join-Path $dropboxOutputRoot "separate-low-foreground-toy-optimisations\logs"
 $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $logPath = Join-Path $logRoot "mtobjects_toy_low_foreground_$stamp.log"
 $names = @("IC1954", "IC4901", "NGC0289", "NGC0578", "NGC0986", "NGC1097", "NGC3359", "NGC3992", "NGC4133")
