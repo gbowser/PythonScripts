@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "cwd": "${workspaceFolder}",
-            "python": "C:\\Users\\gordo\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+            "python": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
             "console": "integratedTerminal",
             "justMyCode": true
         },
@@ -20,7 +20,7 @@
             "request": "launch",
             "program": "${workspaceFolder}\\SRA\\Density Shoulder Quantification v1.1.py",
             "cwd": "${workspaceFolder}",
-            "python": "C:\\Users\\gordo\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+            "python": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
             "console": "internalConsole",
             "justMyCode": true
         }
