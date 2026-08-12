@@ -4,6 +4,9 @@
     "python.analysis.extraPaths": [
         "C:\\Users\\gordo\\Documents\\Github\\mtobjects"
     ],
+    "git.ignoredRepositories": [
+        "${workspaceFolder}\\mtobjects"
+    ],
     "workbench.colorTheme": "Light+",
     "[python]": {
         "editor.formatOnSave": true,
