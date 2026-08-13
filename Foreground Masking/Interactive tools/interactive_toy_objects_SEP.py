@@ -12,12 +12,11 @@ sys.path.insert(0, str(FOREGROUND_ROOT.parent))
 for folder in ("Batch tools", "PhotUtils", "Interactive tools", "Shared", "Utilities"):
     sys.path.insert(0, str(FOREGROUND_ROOT / folder))
 
-from canonical_tool_helpers import insert_best_json_arg, insert_detected_pc_arg, latest_best_json
+from canonical_tool_helpers import insert_detected_pc_arg
 import toy_object_interactive_core as tool
 
 
 if __name__ == "__main__":
-    pc_name = insert_detected_pc_arg(sys.argv)
-    insert_best_json_arg(sys.argv, latest_best_json(pc_name, "toy_objects", "SEP"))
+    insert_detected_pc_arg(sys.argv)
     sys.argv[1:1] = ["--algorithm", "SEP"]
     tool.main()
