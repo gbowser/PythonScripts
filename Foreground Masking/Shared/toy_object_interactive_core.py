@@ -244,7 +244,11 @@ class ToyObjectTester(tk.Tk):
         self.toy_type_var = tk.StringVar(value="Gaussian star")
         self.x_var = tk.DoubleVar(value=45.0)
         self.y_var = tk.DoubleVar(value=0.0)
-        self.peak_var = tk.DoubleVar(value=30.0)
+        # SEP's background estimation and convolution make a 30-sigma toy
+        # visually subtle in brighter galaxies.  Start SEP higher so the
+        # injected morphology is immediately recognisable; retain the proven
+        # MTObjects starting value.
+        self.peak_var = tk.DoubleVar(value=100.0 if self.algorithm == "SEP" else 30.0)
         self.fwhm_var = tk.DoubleVar(value=5.0)
         self.axis_ratio_var = tk.DoubleVar(value=0.65)
         self.pa_var = tk.DoubleVar(value=30.0)
@@ -556,6 +560,16 @@ class ToyObjectTester(tk.Tk):
 
     def _build_figure(self) -> None:
         self.figure = Figure(figsize=(14.5, 8.6), dpi=100, constrained_layout=True)
+        # Keep a small inset around the complete grid.  Without the explicit
+        # right margin Tk can clip the third column's final spine/tick labels,
+        # making otherwise equal-width axes look horizontally compressed.
+        self.figure.get_layout_engine().set(
+            w_pad=0.06,
+            h_pad=0.06,
+            wspace=0.04,
+            hspace=0.04,
+            rect=(0.0, 0.0, 0.985, 1.0),
+        )
         grid = self.figure.add_gridspec(2, 3, width_ratios=(1.0, 1.0, 1.0))
         self.axes = np.array(
             [
@@ -618,7 +632,10 @@ class ToyObjectTester(tk.Tk):
             residual = self.data - mtobjects_tool.smooth_model(self.data, sigma_pixels=15.0)
             residual_sigma = robust_sigma(residual)
             self.mtobjects_vars["bg_variance"].set(f"{residual_sigma * residual_sigma:.4g}")
-        self.draw_preview()
+        # Populate every diagnostic panel immediately.  With no toy placed,
+        # this is the unaltered-galaxy baseline; the same calculation is run
+        # whenever the selected galaxy changes.
+        self.calculate()
 
     def draw_preview(self) -> None:
         if self.data is None or self.geometry_data is None:
@@ -629,6 +646,14 @@ class ToyObjectTester(tk.Tk):
         for item in (*self.axes.ravel(), *self.profile_axes):
             item.clear()
             item.set_box_aspect(1)
+        preview_titles = (
+            "Toy position (click to move)",
+            "Injected toy",
+            f"{self.algorithm} mask",
+            "Recovered image (green=correct, red=incorrect)",
+        )
+        for panel_ax, title in zip(self.axes.ravel(), preview_titles):
+            panel_ax.set_title(title)
         vmin, vmax = display.robust_limits(view)
         ax.imshow(view, origin="lower", extent=[x_axis[0], x_axis[-1], y_axis[0], y_axis[-1]], cmap="gist_gray_r", vmin=vmin, vmax=vmax)
         for index, toy in enumerate(self.toys, start=1):
@@ -638,7 +663,6 @@ class ToyObjectTester(tk.Tk):
             ax.text(x_value, y_value, str(index), color="blue", fontsize=8, ha="left", va="bottom")
         if self.toy_position_active:
             ax.plot(float(self.x_var.get()), float(self.y_var.get()), "rx", ms=9, mew=2)
-        ax.set_title("Toy position (click to move)")
         self._draw_major_axis_profiles(view, x_axis, y_axis)
         self.canvas.draw_idle()
 
@@ -681,21 +705,34 @@ class ToyObjectTester(tk.Tk):
 
     def _draw_major_axis_profiles(
         self,
-        before_view: np.ndarray,
+        original_view: np.ndarray,
         x_axis: np.ndarray,
         y_axis: np.ndarray,
         mask_view: np.ndarray | None = None,
+        injected_view: np.ndarray | None = None,
     ) -> None:
         half_width = 0.5 * sep_tool.DEFAULT_PROFILE_WIDTH_PIXELS * self.geometry_data["pixel_scale"]
-        radii, intensity = display.bar_major_axis_profile(before_view, x_axis, y_axis, half_width)
+        radii, original_intensity = display.bar_major_axis_profile(original_view, x_axis, y_axis, half_width)
+        if injected_view is None:
+            injected_intensity = np.array(original_intensity, copy=True)
+        else:
+            _injected_radii, injected_intensity = display.bar_major_axis_profile(
+                injected_view,
+                x_axis,
+                y_axis,
+                half_width,
+            )
         masked_samples = None
         bridged = None
         if mask_view is not None:
             _mask_radii, mask_fraction = display.bar_major_axis_profile(mask_view, x_axis, y_axis, half_width)
             masked_samples = np.isfinite(mask_fraction) & (mask_fraction > 0)
-            bridged, _replaced = sep_tool.fill_profile_with_log_linear_bridges(intensity, masked_samples)
+            bridged, _replaced = sep_tool.fill_profile_with_log_linear_bridges(injected_intensity, masked_samples)
 
-        positive_parts = [intensity[np.isfinite(intensity) & (intensity > 0)]]
+        positive_parts = [
+            original_intensity[np.isfinite(original_intensity) & (original_intensity > 0)],
+            injected_intensity[np.isfinite(injected_intensity) & (injected_intensity > 0)],
+        ]
         if bridged is not None:
             positive_parts.append(bridged[np.isfinite(bridged) & (bridged > 0)])
         positive = np.concatenate([part for part in positive_parts if part.size]) if any(part.size for part in positive_parts) else np.array([])
@@ -708,7 +745,31 @@ class ToyObjectTester(tk.Tk):
 
         for profile_ax in self.profile_axes:
             profile_ax.clear()
-        self._draw_profile_curve(self.profile_axes[0], radii, intensity, title="Before", y_limits=y_limits)
+        self._draw_profile_curve(self.profile_axes[0], radii, original_intensity, title="Before", y_limits=y_limits)
+        if self.profile_axes[0].lines:
+            self.profile_axes[0].lines[0].set_label("original")
+        toy_delta = injected_intensity - original_intensity
+        finite_delta = toy_delta[np.isfinite(toy_delta) & (toy_delta > 0)]
+        if finite_delta.size:
+            affected = np.isfinite(toy_delta) & (toy_delta >= 0.01 * float(np.nanmax(finite_delta)))
+            toy_label = "toy impact"
+            for start, stop in sep_tool.contiguous_true_runs(affected):
+                plot_slice = slice(max(0, start - 1), min(injected_intensity.size, stop + 2))
+                good = (
+                    np.isfinite(radii[plot_slice])
+                    & np.isfinite(injected_intensity[plot_slice])
+                    & (injected_intensity[plot_slice] > 0)
+                )
+                if np.count_nonzero(good) >= 2:
+                    self.profile_axes[0].semilogy(
+                        radii[plot_slice][good],
+                        injected_intensity[plot_slice][good],
+                        color="red",
+                        linewidth=1.5,
+                        label=toy_label,
+                    )
+                    toy_label = "_nolegend_"
+            self.profile_axes[0].legend(loc="best", fontsize=8)
         if masked_samples is None:
             self.profile_axes[1].set_title("Post masking")
             self.profile_axes[1].set_xlabel("bar major axis [arcsec]")
@@ -719,7 +780,7 @@ class ToyObjectTester(tk.Tk):
             self._draw_profile_curve(
                 self.profile_axes[1],
                 radii,
-                intensity,
+                injected_intensity,
                 title="Post masking",
                 masked_samples=masked_samples,
                 y_limits=y_limits,
@@ -928,7 +989,13 @@ class ToyObjectTester(tk.Tk):
                     linewidths=1.2,
                 )
         recovered_ax.set_title("Recovered image (green=correct, red=incorrect)")
-        self._draw_major_axis_profiles(panel_views[1][0], panel_views[1][1], panel_views[1][2], panel_views[2][0])
+        self._draw_major_axis_profiles(
+            panel_views[0][0],
+            panel_views[0][1],
+            panel_views[0][2],
+            panel_views[2][0],
+            panel_views[1][0],
+        )
         self.canvas.draw_idle()
 
     def on_click(self, event) -> None:
