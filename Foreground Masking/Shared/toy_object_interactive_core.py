@@ -45,6 +45,40 @@ TOY_TYPES = {
     "Compact galaxy": "galaxy",
 }
 
+# Arithmetic means from the four Azure stability runs (seeds
+# 202608041--202608044); integer-valued parameters were rounded to integers.
+AZURE_MEAN_PARAMS = {
+    "SEP": {
+        "detect_on": "original",
+        "detect_thresh": 2.185542184039657,
+        "minarea": 15,
+        "deblend_nthresh": 23,
+        "deblend_cont": 0.0005499685701731268,
+        "back_size": 24,
+        "filter_size": 3,
+        "dilation_radius": 5,
+        "max_area": 4590,
+        "max_elongation": 9.731347513447435,
+        "exclude_center_pixels": 8.0,
+    },
+    "MTObjects": {
+        "detect_on": "original",
+        "alpha": 1.0e-6,
+        "move_factor": 0.7034586786406456,
+        "min_distance": 0.4483894774965874,
+        "gaussian_fwhm": 2.666209712021782,
+        "soft_bias": 0.0,
+        "gain": -1.0,
+        "bg_mean": math.nan,
+        "bg_variance": 7653.334425,
+        "minarea": 59,
+        "dilation_radius": 4,
+        "max_area": 455,
+        "max_elongation": 14.02348530181493,
+        "exclude_center_pixels": 8.0,
+    },
+}
+
 
 def latest_best_json(pc_name: str, algorithm: str) -> Path | None:
     root = remove_foreground_folder(pc_name)
@@ -74,19 +108,7 @@ def load_json_params(path: Path | None) -> dict:
 
 
 def sep_params(best_json: Path | None) -> dict[str, float | int | str]:
-    params = {
-        "detect_on": "original",
-        "detect_thresh": sep_tool.DEFAULT_DETECT_THRESH,
-        "minarea": sep_tool.DEFAULT_MINAREA,
-        "deblend_nthresh": sep_tool.DEFAULT_DEBLEND_NTHRESH,
-        "deblend_cont": sep_tool.DEFAULT_DEBLEND_CONT,
-        "back_size": sep_tool.DEFAULT_BACK_SIZE,
-        "filter_size": sep_tool.DEFAULT_FILTER_SIZE,
-        "dilation_radius": sep_tool.DEFAULT_DILATION_RADIUS,
-        "max_area": sep_tool.DEFAULT_MAX_AREA,
-        "max_elongation": sep_tool.DEFAULT_MAX_ELONGATION,
-        "exclude_center_pixels": sep_tool.DEFAULT_EXCLUDE_CENTER_PIXELS,
-    }
+    params = dict(AZURE_MEAN_PARAMS["SEP"])
     for key, value in load_json_params(best_json).items():
         if key in params:
             params[key] = value
@@ -94,22 +116,7 @@ def sep_params(best_json: Path | None) -> dict[str, float | int | str]:
 
 
 def mtobjects_params(best_json: Path | None) -> dict[str, float | int | str]:
-    params = {
-        "detect_on": "original",
-        "alpha": mtobjects_tool.DEFAULT_ALPHA,
-        "move_factor": mtobjects_tool.DEFAULT_MOVE_FACTOR,
-        "min_distance": mtobjects_tool.DEFAULT_MIN_DISTANCE,
-        "gaussian_fwhm": mtobjects_tool.DEFAULT_GAUSSIAN_FWHM,
-        "soft_bias": mtobjects_tool.DEFAULT_SOFT_BIAS,
-        "gain": mtobjects_tool.DEFAULT_GAIN,
-        "bg_mean": mtobjects_tool.DEFAULT_BG_MEAN,
-        "bg_variance": mtobjects_tool.DEFAULT_BG_VARIANCE,
-        "minarea": mtobjects_tool.DEFAULT_MINAREA,
-        "dilation_radius": mtobjects_tool.DEFAULT_DILATION_RADIUS,
-        "max_area": mtobjects_tool.DEFAULT_MAX_AREA,
-        "max_elongation": mtobjects_tool.DEFAULT_MAX_ELONGATION,
-        "exclude_center_pixels": mtobjects_tool.DEFAULT_EXCLUDE_CENTER_PIXELS,
-    }
+    params = dict(AZURE_MEAN_PARAMS["MTObjects"])
     for key, value in load_json_params(best_json).items():
         if key in params:
             params[key] = value
@@ -175,7 +182,7 @@ class ToyObjectTester(tk.Tk):
         self.minsize(1150, 760)
         self.manifest = manifest
         self.pc_var = tk.StringVar(value=pc_name)
-        self.best_json = best_json or latest_best_json(pc_name, algorithm)
+        self.best_json = best_json
         self.mtobjects_root = mtobjects_root
         self.all_rows = display.read_manifest(manifest)
         self.rows: list[dict[str, str]] = []
