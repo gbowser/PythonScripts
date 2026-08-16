@@ -25,6 +25,7 @@ import sys
 import time
 import traceback
 import warnings
+import zlib
 
 import matplotlib
 
@@ -34,6 +35,7 @@ from astropy.io import fits
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 import numpy as np
+from scipy.ndimage import label as label_components
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -43,8 +45,10 @@ SUPPORT_DIRS = tuple(FOREGROUND_ROOT / name for name in ("Batch tools", "PhotUti
 for path in (PROJECT_ROOT, FOREGROUND_ROOT, SCRIPT_DIR, *SUPPORT_DIRS):
     if str(path) not in sys.path:
         sys.path.append(str(path))
+sys.path.append(str(FOREGROUND_ROOT / "Optimisation"))
 
 import mtobjects_spike_gate_processing as mto  # noqa: E402
+import optimise_toy_objects_MTObjects as mto_toy_opt  # noqa: E402
 from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
 
 
@@ -253,9 +257,19 @@ def draw_profile(
     return intensity, bridged_intensity if bridged_intensity is not None else intensity
 
 
+def draw_mask_outlines(ax, mask_view: np.ndarray, truth_view: np.ndarray, x_axis: np.ndarray, y_axis: np.ndarray) -> None:
+    labels, count = label_components(mask_view, structure=np.ones((3, 3), dtype=np.uint8))
+    for component_id in range(1, count + 1):
+        component = labels == component_id
+        colour = "#00a000" if np.any(component & truth_view) else "red"
+        ax.contour(x_axis, y_axis, component.astype(float), levels=[0.5], colors=[colour], linewidths=1.2)
+
+
 def draw_report(
     name: str,
     original: np.ndarray,
+    injected: np.ndarray,
+    truth_mask: np.ndarray,
     products: dict,
     params: dict[str, float | int | str],
     geometry: dict[str, float],
@@ -265,9 +279,12 @@ def draw_report(
 
     radius_arcsec = mto.display.profile_radius_pixels(original, geometry) * geometry["pixel_scale"]
     original_view, x_axis, y_axis = mto.display.deproject_bar_aligned_cutout(original, geometry, radius_arcsec)
+    injected_view, _, _ = mto.display.deproject_bar_aligned_cutout(injected, geometry, radius_arcsec)
     cleaned_view, _, _ = mto.display.deproject_bar_aligned_cutout(cleaned, geometry, radius_arcsec)
     mask_view, _, _ = mto.display.deproject_bar_aligned_cutout(mask.astype(float), geometry, radius_arcsec, order=0)
     mask_view = np.isfinite(mask_view) & (mask_view > 0.5)
+    truth_view, _, _ = mto.display.deproject_bar_aligned_cutout(truth_mask.astype(float), geometry, radius_arcsec, order=0)
+    truth_view = np.isfinite(truth_view) & (truth_view > 0.5)
 
     extent = [x_axis[0], x_axis[-1], y_axis[0], y_axis[-1]]
     half_width = 0.5 * mto.DEFAULT_PROFILE_WIDTH_PIXELS * geometry["pixel_scale"]
@@ -278,18 +295,19 @@ def draw_report(
     processed_profile, _replaced = mto.fill_profile_with_log_linear_bridges(original_profile, mask_profile)
     y_limits = profile_y_limits([original_profile, processed_profile])
 
-    figure = Figure(figsize=(11.2, 14.6), dpi=100, constrained_layout=False)
+    figure = Figure(figsize=(11.5, 17.0), dpi=100, constrained_layout=True)
     FigureCanvasAgg(figure)
-    figure.subplots_adjust(left=0.075, right=0.965, top=0.915, bottom=0.055, wspace=0.28, hspace=0.36)
-    grid = figure.add_gridspec(3, 2, height_ratios=[1.0, 1.0, 0.78])
+    grid = figure.add_gridspec(4, 2, height_ratios=[1.0, 1.0, 1.0, 0.76])
     ax_original = figure.add_subplot(grid[0, 0])
-    ax_mask = figure.add_subplot(grid[0, 1])
-    ax_original_isophote = figure.add_subplot(grid[1, 0])
-    ax_processed_isophote = figure.add_subplot(grid[1, 1])
-    ax_original_profile = figure.add_subplot(grid[2, 0])
-    ax_processed_profile = figure.add_subplot(grid[2, 1])
+    ax_injected = figure.add_subplot(grid[0, 1])
+    ax_mask = figure.add_subplot(grid[1, 0])
+    ax_recovered = figure.add_subplot(grid[1, 1])
+    ax_original_isophote = figure.add_subplot(grid[2, 0])
+    ax_processed_isophote = figure.add_subplot(grid[2, 1])
+    ax_original_profile = figure.add_subplot(grid[3, 0])
+    ax_processed_profile = figure.add_subplot(grid[3, 1])
 
-    vmin, vmax = mto.display.robust_limits(original_view)
+    vmin, vmax = mto.display.robust_limits(injected_view)
     ax_original.imshow(original_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
     draw_bar_guides(ax_original, half_width, bar_sma)
     draw_central_exclusion(ax_original, central_exclusion_arcsec)
@@ -297,7 +315,15 @@ def draw_report(
     ax_original.set_xlabel("deprojected arcsec")
     ax_original.set_ylabel("deprojected arcsec")
     masked_fraction = np.count_nonzero(mask) / mask.size
-    ax_original.set_title(f"{name} galaxy-centred original")
+    ax_original.set_title("Galaxy Centered Original")
+
+    ax_injected.imshow(injected_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
+    draw_bar_guides(ax_injected, half_width, bar_sma)
+    draw_central_exclusion(ax_injected, central_exclusion_arcsec)
+    ax_injected.set_aspect("equal", adjustable="box")
+    ax_injected.set_xlabel("deprojected arcsec")
+    ax_injected.set_ylabel("deprojected arcsec")
+    ax_injected.set_title("Original + Toys")
 
     ax_mask.imshow(mask_view.astype(float), origin="lower", cmap="Reds", vmin=0.0, vmax=1.0, extent=extent, alpha=0.86)
     draw_bar_guides(ax_mask, half_width, bar_sma)
@@ -305,7 +331,16 @@ def draw_report(
     ax_mask.set_aspect("equal", adjustable="box")
     ax_mask.set_xlabel("deprojected arcsec")
     ax_mask.set_ylabel("deprojected arcsec")
-    ax_mask.set_title(f"MTObjects mask | masked {masked_fraction:.2%}")
+    ax_mask.set_title(f"Mask | masked {masked_fraction:.2%}")
+
+    ax_recovered.imshow(cleaned_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
+    draw_mask_outlines(ax_recovered, mask_view, truth_view, x_axis, y_axis)
+    draw_bar_guides(ax_recovered, half_width, bar_sma)
+    draw_central_exclusion(ax_recovered, central_exclusion_arcsec)
+    ax_recovered.set_aspect("equal", adjustable="box")
+    ax_recovered.set_xlabel("deprojected arcsec")
+    ax_recovered.set_ylabel("deprojected arcsec")
+    ax_recovered.set_title("Recovered Image | green=correct, red=incorrect")
 
     draw_isophote(
         ax_original_isophote,
@@ -313,7 +348,7 @@ def draw_report(
         x_axis,
         y_axis,
         extent,
-        f"{name} original isophotes",
+        "Orig. Isophotes",
         half_width,
         bar_sma,
         central_exclusion_arcsec,
@@ -324,7 +359,7 @@ def draw_report(
         x_axis,
         y_axis,
         extent,
-        "MTObjects processed isophotes",
+        "Processed Isophotes",
         half_width,
         bar_sma,
         central_exclusion_arcsec,
@@ -337,59 +372,34 @@ def draw_report(
         half_width,
         bar_sma,
         central_exclusion_arcsec,
-        f"{name} original bar-major profile",
+        "Orig. Bar Major Profile",
         y_limits=y_limits,
     )
     draw_profile(
         ax_processed_profile,
-        original_view,
+        cleaned_view,
         x_axis,
         y_axis,
         half_width,
         bar_sma,
         central_exclusion_arcsec,
-        "MTObjects processed bar-major profile",
-        mask_profile=mask_profile,
+        "Processed Bar Major Profile",
         y_limits=y_limits,
     )
 
-    image_axes = [ax_original, ax_mask, ax_original_isophote, ax_processed_isophote]
+    image_axes = [ax_original, ax_injected, ax_mask, ax_recovered, ax_original_isophote, ax_processed_isophote]
     for ax in image_axes:
         ax.set_xlim(float(x_axis[0]), float(x_axis[-1]))
         ax.set_ylim(float(y_axis[0]), float(y_axis[-1]))
         ax.set_box_aspect(1.0)
-
-    FigureCanvasAgg(figure).draw()
-    left_image_position = ax_original.get_position()
-    right_image_position = ax_mask.get_position()
-    left_profile_position = ax_original_profile.get_position()
-    right_profile_position = ax_processed_profile.get_position()
-    ax_original_profile.set_position(
-        [left_image_position.x0, left_profile_position.y0, left_image_position.width, left_profile_position.height]
-    )
-    ax_processed_profile.set_position(
-        [right_image_position.x0, right_profile_position.y0, right_image_position.width, right_profile_position.height]
-    )
 
     kept = sum(1 for row in products["rows"] if row.get("kept"))
     source_label = str(params.get("_source_label", "optimised MTObjects parameters"))
     if len(source_label) > 58:
         source_label = source_label[:55] + "..."
     figure.suptitle(
-        "\n".join(
-            [
-                f"{name} | {source_label}",
-                f"detect_on={params['detect_on']} | segments={kept}/{len(products['rows'])}",
-                (
-                    f"move_factor={float(params['move_factor']):.2f}, "
-                    f"min_distance={float(params['min_distance']):.2f}, "
-                    f"gaussian_fwhm={float(params['gaussian_fwhm']):.2f}, "
-                    f"minarea={int(params['minarea'])}, dilation_radius={int(params['dilation_radius'])}, "
-                    f"max_area={int(params['max_area'])}, max_elongation={float(params['max_elongation']):.2f}"
-                ),
-            ]
-        ),
-        fontsize=9.5,
+        f"{name} | MTObjects Toy Objects | segments={kept}/{len(products['rows'])}",
+        fontsize=10.5,
         fontweight="bold",
         y=0.985,
     )
@@ -443,10 +453,23 @@ def process_one(
     if geometry is None:
         raise ValueError(f"{name} has incomplete geometry.")
     data, header = mto.load_fits(mto.display.image_path_for_pc(row, args.pc))
-    products = mto.mtobjects_products(data, params, geometry, mtobjects_root)
+    if args.toy_diagnostics:
+        galaxy_seed = int(args.toy_seed) + zlib.crc32(name.casefold().encode("utf-8"))
+        injected, truth_mask, _truth_labels, _toys = mto_toy_opt.inject_toys(
+            name,
+            data,
+            geometry,
+            toys_per_image=int(args.toys_per_image),
+            rng=np.random.default_rng(galaxy_seed),
+            truth_dilation=int(args.truth_dilation),
+        )
+    else:
+        injected = np.asarray(data, dtype=float)
+        truth_mask = np.zeros(data.shape, dtype=bool)
+    products = mto.mtobjects_products(injected, params, geometry, mtobjects_root)
 
     report_path = report_dir / f"{mto.display.safe_filename(name)}_mtobjects_optimised_report.png"
-    figure = draw_report(name, data, products, params, geometry)
+    figure = draw_report(name, data, injected, truth_mask, products, params, geometry)
     figure.savefig(report_path, dpi=int(args.dpi))
 
     cleaned_fits_path = ""
@@ -506,6 +529,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--names", nargs="*", help="Optional explicit galaxy names. Defaults to all usable galaxies.")
     parser.add_argument("--max-images", type=int, help="Optional limit for smoke tests.")
     parser.add_argument("--dpi", type=int, default=DEFAULT_DPI)
+    parser.add_argument("--toy-diagnostics", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument("--toys-per-image", type=int, default=6)
+    parser.add_argument("--toy-seed", type=int, default=202608299)
+    parser.add_argument("--truth-dilation", type=int, default=1)
     parser.add_argument(
         "--save-cleaned-fits",
         action=argparse.BooleanOptionalAction,

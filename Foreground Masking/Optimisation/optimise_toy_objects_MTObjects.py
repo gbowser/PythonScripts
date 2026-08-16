@@ -27,6 +27,11 @@ import warnings
 import numpy as np
 import optuna
 
+# Trial status is reported below with project metrics and ETA.  Optuna's INFO
+# handler writes to stderr, which appears as a red NativeCommandError in
+# PowerShell despite successful execution, so retain warnings/errors only.
+optuna.logging.set_verbosity(optuna.logging.WARNING)
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 FOREGROUND_ROOT = SCRIPT_DIR.parent
 PROJECT_ROOT = FOREGROUND_ROOT.parent
@@ -65,8 +70,10 @@ DEFAULT_INITIAL_POINTS = 8
 DEFAULT_MAX_ITER = 32
 DEFAULT_RANDOM_SEED = 20260719
 DEFAULT_MAX_MASKED_FRACTION = 0.15
-DEFAULT_DATA_LOSS_PENALTY = 2.0
-DEFAULT_FALSE_POSITIVE_PENALTY = 0.5
+DEFAULT_DATA_LOSS_PENALTY = 0.5
+DEFAULT_FALSE_POSITIVE_PENALTY = 0.1
+DEFAULT_MIN_TOY_DETECTION_RATE = 0.25
+DEFAULT_MIN_MEAN_TOY_RECALL = 0.20
 OPTIMISED_PARAMETER_NAMES = [
     "move_factor",
     "min_distance",
@@ -85,10 +92,10 @@ PARAMETER_BOUNDS = {
     "min_distance": (0.0, 1.0),
     "gaussian_fwhm": (0.0, 5.0),
     "bg_variance": (DEFAULT_BG_VARIANCE_MIN, DEFAULT_BG_VARIANCE_MAX),
-    "minarea": (1, 80),
-    "dilation_radius": (0, 8),
+    "minarea": (1, 40),
+    "dilation_radius": (1, 6),
     "max_area": (20, 3000),
-    "max_elongation": (1.5, 20.0),
+    "max_elongation": (2.0, 15.0),
 }
 
 
@@ -252,6 +259,8 @@ def suggest_bg_variance(trial: optuna.Trial, args: argparse.Namespace) -> float:
     step = float(args.bg_variance_step)
     if minimum == maximum:
         return minimum
+    if bool(args.bg_variance_log):
+        return trial.suggest_float("bg_variance", minimum, maximum, log=True)
     if step <= 0:
         return trial.suggest_float("bg_variance", minimum, maximum)
     return trial.suggest_float("bg_variance", minimum, maximum, step=step)
@@ -476,6 +485,8 @@ def aggregate_score(
     max_masked_fraction: float,
     data_loss_penalty: float,
     false_positive_penalty: float,
+    min_toy_detection_rate: float = DEFAULT_MIN_TOY_DETECTION_RATE,
+    min_mean_toy_recall: float = DEFAULT_MIN_MEAN_TOY_RECALL,
 ) -> dict[str, float]:
     if not case_rows:
         return {"objective": 1.0, "score": 0.0}
@@ -493,7 +504,15 @@ def aggregate_score(
     data_loss = data_loss_penalty * mean_masked + false_positive_penalty * min(false_positive, 1.0)
     score = recovery_score - data_loss
     cap_excess = max(0.0, max_masked - max_masked_fraction)
-    if cap_excess > 0.0:
+    incremental_pixels_total = sum(int(row["incremental_pixels"]) for row in case_rows)
+    recovery_rate_deficit = max(0.0, min_toy_detection_rate - toy_detection_rate)
+    recall_deficit = max(0.0, min_mean_toy_recall - mean_toy_recall)
+    recovery_infeasible = incremental_pixels_total == 0 or recovery_rate_deficit > 0.0 or recall_deficit > 0.0
+    if recovery_infeasible:
+        objective = 50.0 + 20.0 * recovery_rate_deficit + 20.0 * recall_deficit
+        if incremental_pixels_total == 0:
+            objective += 50.0
+    elif cap_excess > 0.0:
         objective = 10.0 + 100.0 * cap_excess + data_loss - recovery_score
     else:
         objective = -score
@@ -510,6 +529,10 @@ def aggregate_score(
         "max_masked_fraction_limit": max_masked_fraction,
         "masked_fraction_cap_excess": cap_excess,
         "false_positive_fraction": false_positive,
+        "recovery_score": recovery_score,
+        "recovery_infeasible": float(recovery_infeasible),
+        "min_toy_detection_rate": min_toy_detection_rate,
+        "min_mean_toy_recall": min_mean_toy_recall,
     }
 
 
@@ -590,6 +613,8 @@ class OptimisationRun:
                 max_masked_fraction=float(self.args.max_masked_fraction),
                 data_loss_penalty=float(self.args.data_loss_penalty),
                 false_positive_penalty=float(self.args.false_positive_penalty),
+                min_toy_detection_rate=float(self.args.min_toy_detection_rate),
+                min_mean_toy_recall=float(self.args.min_mean_toy_recall),
             )
             objective = float(aggregate["objective"])
             status = "ok"
@@ -618,6 +643,8 @@ class OptimisationRun:
             "max_masked_fraction_limit": aggregate.get("max_masked_fraction_limit", math.nan),
             "masked_fraction_cap_excess": aggregate.get("masked_fraction_cap_excess", math.nan),
             "false_positive_fraction": aggregate.get("false_positive_fraction", math.nan),
+            "recovery_score": aggregate.get("recovery_score", math.nan),
+            "recovery_infeasible": aggregate.get("recovery_infeasible", math.nan),
             "elapsed_seconds": elapsed,
             "error": error,
             "trial_number": "" if trial_number is None else trial_number,
@@ -642,6 +669,8 @@ class OptimisationRun:
                 "max_masked_fraction_limit",
                 "masked_fraction_cap_excess",
                 "false_positive_fraction",
+                "recovery_score",
+                "recovery_infeasible",
                 "elapsed_seconds",
                 "error",
                 "trial_number",
@@ -781,6 +810,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--bg-variance-min", type=float, default=DEFAULT_BG_VARIANCE_MIN)
     parser.add_argument("--bg-variance-max", type=float, default=DEFAULT_BG_VARIANCE_MAX)
     parser.add_argument(
+        "--bg-variance-log",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Sample bg_variance on a logarithmic scale (requires a positive minimum and continuous sampling).",
+    )
+    parser.add_argument(
         "--bg-variance-step",
         type=float,
         default=DEFAULT_BG_VARIANCE_STEP,
@@ -818,6 +853,8 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_FALSE_POSITIVE_PENALTY,
         help="Penalty weight applied to foreground-mask pixels outside injected toy-object truth.",
     )
+    parser.add_argument("--min-toy-detection-rate", type=float, default=DEFAULT_MIN_TOY_DETECTION_RATE)
+    parser.add_argument("--min-mean-toy-recall", type=float, default=DEFAULT_MIN_MEAN_TOY_RECALL)
     parser.add_argument(
         "--results-workbook",
         type=Path,

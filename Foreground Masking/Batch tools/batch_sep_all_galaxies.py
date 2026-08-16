@@ -17,6 +17,7 @@ import sys
 import time
 import traceback
 import warnings
+import zlib
 
 import matplotlib
 
@@ -26,6 +27,7 @@ from astropy.io import fits
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 import numpy as np
+from scipy.ndimage import label as label_components
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -35,9 +37,11 @@ SUPPORT_DIRS = tuple(FOREGROUND_ROOT / name for name in ("Batch tools", "PhotUti
 for path in (PROJECT_ROOT, FOREGROUND_ROOT, SCRIPT_DIR, *SUPPORT_DIRS):
     if str(path) not in sys.path:
         sys.path.append(str(path))
+sys.path.append(str(FOREGROUND_ROOT / "Optimisation"))
 
 import foreground_display_helpers as display  # noqa: E402
 import sep_processing as sep_gui  # noqa: E402
+import optimise_toy_objects_SEP as sep_toy_opt  # noqa: E402
 from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa: E402
 
 
@@ -252,17 +256,34 @@ def draw_profile(
     ax.grid(True, which="both", alpha=0.2)
 
 
-def draw_products(name: str, original: np.ndarray, products: dict, params: dict, geometry: dict[str, float]) -> Figure:
+def draw_mask_outlines(ax, mask_view: np.ndarray, truth_view: np.ndarray, x_axis: np.ndarray, y_axis: np.ndarray) -> None:
+    labels, count = label_components(mask_view, structure=np.ones((3, 3), dtype=np.uint8))
+    for component_id in range(1, count + 1):
+        component = labels == component_id
+        colour = "#00a000" if np.any(component & truth_view) else "red"
+        ax.contour(x_axis, y_axis, component.astype(float), levels=[0.5], colors=[colour], linewidths=1.2)
+
+
+def draw_products(
+    name: str,
+    original: np.ndarray,
+    injected: np.ndarray,
+    truth_mask: np.ndarray,
+    products: dict,
+    params: dict,
+    geometry: dict[str, float],
+) -> Figure:
     cleaned = np.asarray(products["cleaned"], dtype=float)
-    residual = np.asarray(products["residual"], dtype=float)
     mask = np.asarray(products["mask"], dtype=bool)
 
     radius_arcsec = display.profile_radius_pixels(original, geometry) * geometry["pixel_scale"]
     original_view, x_axis, y_axis = display.deproject_bar_aligned_cutout(original, geometry, radius_arcsec)
+    injected_view, _, _ = display.deproject_bar_aligned_cutout(injected, geometry, radius_arcsec)
     cleaned_view, _, _ = display.deproject_bar_aligned_cutout(cleaned, geometry, radius_arcsec)
-    residual_view, _, _ = display.deproject_bar_aligned_cutout(residual, geometry, radius_arcsec)
     mask_view, _, _ = display.deproject_bar_aligned_cutout(mask.astype(float), geometry, radius_arcsec, order=0)
     mask_view = np.isfinite(mask_view) & (mask_view > 0.5)
+    truth_view, _, _ = display.deproject_bar_aligned_cutout(truth_mask.astype(float), geometry, radius_arcsec, order=0)
+    truth_view = np.isfinite(truth_view) & (truth_view > 0.5)
 
     extent = [x_axis[0], x_axis[-1], y_axis[0], y_axis[-1]]
     half_width = 0.5 * sep_gui.DEFAULT_PROFILE_WIDTH_PIXELS * geometry["pixel_scale"]
@@ -270,57 +291,25 @@ def draw_products(name: str, original: np.ndarray, products: dict, params: dict,
     bar_sma = display.bar_sma_deprojected_arcsec(geometry)
     central_exclusion_arcsec = float(params["exclude_center_pixels"]) * geometry["pixel_scale"]
 
-    figure = Figure(figsize=(12.0, 15.8), dpi=100, constrained_layout=True)
+    figure = Figure(figsize=(11.5, 17.0), dpi=100, constrained_layout=True)
     FigureCanvasAgg(figure)
-    grid = figure.add_gridspec(5, 2, height_ratios=[0.38, 1.0, 1.0, 1.0, 0.72])
-    ax_parameters = figure.add_subplot(grid[0, :])
-    ax_original = figure.add_subplot(grid[1, 0])
+    grid = figure.add_gridspec(4, 2, height_ratios=[1.0, 1.0, 1.0, 0.76])
+    ax_original = figure.add_subplot(grid[0, 0])
+    ax_injected = figure.add_subplot(grid[0, 1])
+    ax_mask = figure.add_subplot(grid[1, 0])
     ax_cleaned = figure.add_subplot(grid[1, 1])
-    ax_residual = figure.add_subplot(grid[2, 0])
-    ax_mask = figure.add_subplot(grid[2, 1])
-    ax_original_isophote = figure.add_subplot(grid[3, 0])
-    ax_cleaned_isophote = figure.add_subplot(grid[3, 1])
-    ax_original_profile = figure.add_subplot(grid[4, 0])
-    ax_cleaned_profile = figure.add_subplot(grid[4, 1])
+    ax_original_isophote = figure.add_subplot(grid[2, 0])
+    ax_cleaned_isophote = figure.add_subplot(grid[2, 1])
+    ax_original_profile = figure.add_subplot(grid[3, 0])
+    ax_cleaned_profile = figure.add_subplot(grid[3, 1])
 
     kept = sum(1 for row in products["rows"] if row.get("kept"))
     raw = len(products["rows"])
     masked_fraction = np.count_nonzero(mask) / mask.size
-    ax_parameters.set_axis_off()
-    parameter_text = "\n".join(
-        [
-            (
-                f"SEP foreground detection | units=Pixels | detect_on={params['detect_on']} | "
-                f"spike_gate_detect_on={params.get('spike_gate_detect_on', 'residual')}"
-            ),
-            (
-                f"thresh={float(params['detect_thresh']):.1f} | minarea={int(params['minarea'])} | "
-                f"deblend={int(params['deblend_nthresh'])}/{float(params['deblend_cont']):.4f} | "
-                f"dilation={int(params['dilation_radius'])}"
-            ),
-            (
-                f"bkg={float(products['background_level']):.4g} | rms={float(products['background_rms']):.4g} | "
-                f"segments={kept}/{raw} | masked={masked_fraction:.2%}"
-            ),
-        ]
-    )
-    ax_parameters.text(
-        0.5,
-        0.5,
-        parameter_text,
-        transform=ax_parameters.transAxes,
-        ha="center",
-        va="center",
-        fontsize=9.0,
-        linespacing=1.28,
-        color="0.12",
-        bbox={"boxstyle": "round,pad=0.45", "facecolor": "#F4F6F9", "edgecolor": "#6B7280", "linewidth": 0.8},
-    )
-
     for ax in [
         ax_original,
+        ax_injected,
         ax_cleaned,
-        ax_residual,
         ax_mask,
         ax_original_isophote,
         ax_cleaned_isophote,
@@ -330,29 +319,28 @@ def draw_products(name: str, original: np.ndarray, products: dict, params: dict,
         ax.set_xlabel("bar-aligned arcsec")
         ax.set_ylabel("deprojected arcsec")
 
-    vmin, vmax = display.robust_limits(original_view)
+    vmin, vmax = display.robust_limits(injected_view)
     ax_original.imshow(original_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
     draw_bar_guides(ax_original, half_width, bar_sma)
     draw_central_exclusion(ax_original, central_exclusion_arcsec)
-    ax_original.set_title(f"{name} centered original")
+    ax_original.set_title("Galaxy Centered Original")
 
-    ax_cleaned.imshow(cleaned_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
-    draw_bar_guides(ax_cleaned, half_width, bar_sma)
-    draw_central_exclusion(ax_cleaned, central_exclusion_arcsec)
-    ax_cleaned.set_title("SEP masked preview")
-
-    rvmin, rvmax = display.robust_limits(residual_view, 1.0, 99.0)
-    limit = max(abs(rvmin), abs(rvmax))
-    ax_residual.imshow(residual_view, origin="lower", cmap="coolwarm", vmin=-limit, vmax=limit, extent=extent)
-    draw_bar_guides(ax_residual, half_width, bar_sma)
-    draw_central_exclusion(ax_residual, central_exclusion_arcsec)
-    ax_residual.set_title("Residual detection image")
+    ax_injected.imshow(injected_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
+    draw_bar_guides(ax_injected, half_width, bar_sma)
+    draw_central_exclusion(ax_injected, central_exclusion_arcsec)
+    ax_injected.set_title("Original + Toys")
 
     ax_mask.imshow(original_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
     ax_mask.imshow(np.ma.masked_where(~mask_view, mask_view), origin="lower", cmap="autumn", alpha=0.55, extent=extent)
     draw_bar_guides(ax_mask, half_width, bar_sma)
     draw_central_exclusion(ax_mask, central_exclusion_arcsec)
-    ax_mask.set_title(f"Mask | thresh={float(params['detect_thresh']):.1f}, area={int(params['minarea'])}")
+    ax_mask.set_title(f"Mask | masked {masked_fraction:.2%}")
+
+    ax_cleaned.imshow(cleaned_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
+    draw_mask_outlines(ax_cleaned, mask_view, truth_view, x_axis, y_axis)
+    draw_bar_guides(ax_cleaned, half_width, bar_sma)
+    draw_central_exclusion(ax_cleaned, central_exclusion_arcsec)
+    ax_cleaned.set_title("Recovered Image | green=correct, red=incorrect")
 
     draw_isophote(
         ax_original_isophote,
@@ -360,7 +348,7 @@ def draw_products(name: str, original: np.ndarray, products: dict, params: dict,
         x_axis,
         y_axis,
         extent,
-        f"{name} original isophotes",
+        "Orig. Isophotes",
         half_width,
         bar_sma,
         central_exclusion_arcsec,
@@ -371,7 +359,7 @@ def draw_products(name: str, original: np.ndarray, products: dict, params: dict,
         x_axis,
         y_axis,
         extent,
-        "SEP processed isophotes",
+        "Processed Isophotes",
         half_width,
         bar_sma,
         central_exclusion_arcsec,
@@ -384,18 +372,22 @@ def draw_products(name: str, original: np.ndarray, products: dict, params: dict,
         half_width,
         bar_sma,
         central_exclusion_arcsec,
-        f"{name} original bar-major profile",
+        "Orig. Bar Major Profile",
     )
     draw_profile(
         ax_cleaned_profile,
-        original_view,
+        cleaned_view,
         x_axis,
         y_axis,
         half_width,
         bar_sma,
         central_exclusion_arcsec,
-        "SEP processed bar-major profile",
-        mask_profile=mask_profile,
+        "Processed Bar Major Profile",
+    )
+    figure.suptitle(
+        f"{name} | SEP Toy Objects | segments={kept}/{raw} | green=toy recovery, red=false mask",
+        fontsize=11,
+        fontweight="bold",
     )
     return figure
 
@@ -468,8 +460,21 @@ def run_one(
     if geometry is None:
         raise ValueError(f"{name} has incomplete geometry in {args.manifest}.")
     data, header = sep_gui.load_fits(display.image_path_for_pc(row, args.pc))
-    products = sep_gui.sep_products(data, params, geometry)
-    figure = draw_products(name, data, products, params, geometry)
+    if args.toy_diagnostics:
+        galaxy_seed = int(args.toy_seed) + zlib.crc32(name.casefold().encode("utf-8"))
+        injected, truth_mask, _truth_labels, _toys = sep_toy_opt.inject_toys(
+            name,
+            data,
+            geometry,
+            toys_per_image=int(args.toys_per_image),
+            rng=np.random.default_rng(galaxy_seed),
+            truth_dilation=int(args.truth_dilation),
+        )
+    else:
+        injected = np.asarray(data, dtype=float)
+        truth_mask = np.zeros(data.shape, dtype=bool)
+    products = sep_gui.sep_products(injected, params, geometry)
+    figure = draw_products(name, data, injected, truth_mask, products, params, geometry)
     png_path = output_png_path(report_dir, name, params)
     figure.savefig(png_path, dpi=args.dpi)
 
@@ -536,6 +541,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--limit", type=int, default=None, help="Deprecated alias for --max-images.")
     parser.add_argument("--max-images", type=int, default=None)
     parser.add_argument("--dpi", type=int, default=DEFAULT_DPI)
+    parser.add_argument("--toy-diagnostics", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument("--toys-per-image", type=int, default=6)
+    parser.add_argument("--toy-seed", type=int, default=202608299)
+    parser.add_argument("--truth-dilation", type=int, default=1)
     parser.add_argument(
         "--save-cleaned-fits",
         action=argparse.BooleanOptionalAction,

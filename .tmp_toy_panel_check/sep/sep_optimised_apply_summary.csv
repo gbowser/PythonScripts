@@ -1,0 +1,2 @@
+name,status,report_png,cleaned_fits,raw_segments,kept_segments,masked_fraction,background_level,background_rms,elapsed_seconds,error
+ESO013-016,ok,.tmp_toy_panel_check\sep\ESO013-016_sep_thr1.9_area5_deb0.0018_dil4.png,,1523,1522,0.18657729805013928,-0.00747405830770731,0.018641212955117226,1.967576299997745,

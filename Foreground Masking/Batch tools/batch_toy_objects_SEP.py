@@ -20,4 +20,6 @@ if __name__ == "__main__":
     insert_detected_pc_arg(sys.argv)
     if "--source" not in sys.argv:
         sys.argv[1:1] = ["--source", "toy-object"]
+    if "--toy-diagnostics" not in sys.argv:
+        sys.argv[1:1] = ["--toy-diagnostics"]
     batch.main()

@@ -27,6 +27,11 @@ import warnings
 import numpy as np
 import optuna
 
+# The optimiser prints its own concise trial progress and ETA.  Suppress
+# Optuna's duplicate INFO records, which PowerShell renders as red stderr and
+# misleading NativeCommandError messages even when trials succeed.
+optuna.logging.set_verbosity(optuna.logging.WARNING)
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 FOREGROUND_ROOT = SCRIPT_DIR.parent
 PROJECT_ROOT = FOREGROUND_ROOT.parent
@@ -82,11 +87,16 @@ OPTIMISED_PARAMETER_NAMES = [
     "max_elongation",
 ]
 PARAMETER_BOUNDS = {
-    "detect_thresh": (0.2, 5.0),
-    "minarea": (1, 50),
-    "deblend_nthresh": (8, 64),
-    "deblend_cont": (0.00001, 0.1),
-    "back_size": [16, 24, 32, 48, 64, 96, 128, 192, 256],
+    # Guide2source_extractor.pdf recommends starting near 1.2 sigma, gives
+    # published examples spanning 0.6--2 sigma and 5--35 pixels, identifies
+    # 32 deblend levels as the common choice, and recommends MINCONT of order
+    # 0.01.  These ranges remain broad enough for Optuna without inviting
+    # physically implausible edge solutions.
+    "detect_thresh": (0.6, 2.0),
+    "minarea": (5, 35),
+    "deblend_nthresh": [16, 32, 64],
+    "deblend_cont": (0.001, 0.03),
+    "back_size": [32, 48, 64, 96, 128, 192, 256],
     "filter_size": [1, 3, 5, 7, 9],
     "dilation_radius": (1, 6),
     "max_area": (20, 8000),
@@ -236,7 +246,7 @@ def optuna_trial_to_params(trial: optuna.Trial, detect_on: str) -> dict[str, flo
     params = default_params(detect_on)
     params["detect_thresh"] = trial.suggest_float("detect_thresh", *PARAMETER_BOUNDS["detect_thresh"])
     params["minarea"] = trial.suggest_int("minarea", *PARAMETER_BOUNDS["minarea"])
-    params["deblend_nthresh"] = trial.suggest_int("deblend_nthresh", *PARAMETER_BOUNDS["deblend_nthresh"])
+    params["deblend_nthresh"] = trial.suggest_categorical("deblend_nthresh", PARAMETER_BOUNDS["deblend_nthresh"])
     params["deblend_cont"] = trial.suggest_float("deblend_cont", *PARAMETER_BOUNDS["deblend_cont"], log=True)
     params["back_size"] = trial.suggest_categorical("back_size", PARAMETER_BOUNDS["back_size"])
     params["filter_size"] = trial.suggest_categorical("filter_size", PARAMETER_BOUNDS["filter_size"])
