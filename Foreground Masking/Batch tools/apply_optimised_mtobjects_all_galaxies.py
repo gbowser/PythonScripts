@@ -55,6 +55,7 @@ from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa:
 DEFAULT_OUTPUT_SUBDIR = "mtobjects optimised foreground removal"
 DEFAULT_DPI = 180
 DEFAULT_SOURCE = "spike-gate"
+EXPECTED_CLEAN_GALAXIES = 40
 
 
 def timestamp() -> str:
@@ -450,6 +451,15 @@ def completed_names_from_summary(path: Path) -> set[str]:
     return completed
 
 
+def load_clean_galaxy_names(path: Path, expected_count: int = EXPECTED_CLEAN_GALAXIES) -> set[str]:
+    if not path.is_file():
+        raise FileNotFoundError(f"Clean-galaxy list not found: {path}")
+    names = {line.strip().casefold() for line in path.read_text(encoding="utf-8-sig").splitlines() if line.strip()}
+    if len(names) != expected_count:
+        raise ValueError(f"Expected {expected_count} unique clean galaxies in {path}; found {len(names)}.")
+    return names
+
+
 def process_one(
     row: dict[str, str],
     args: argparse.Namespace,
@@ -457,6 +467,7 @@ def process_one(
     mtobjects_root: Path | None,
     report_dir: Path,
     fits_dir: Path,
+    clean_galaxy_names: set[str],
 ) -> dict[str, object]:
     name = row["name"]
     geometry = mto.display.required_geometry(row)
@@ -478,7 +489,8 @@ def process_one(
         truth_mask = np.zeros(data.shape, dtype=bool)
     products = mto.mtobjects_products(injected, params, geometry, mtobjects_root)
 
-    report_path = report_dir / f"{mto.display.safe_filename(name)}_mtobjects_optimised_report.png"
+    clean_suffix = "_clean" if name.casefold() in clean_galaxy_names else ""
+    report_path = report_dir / f"{mto.display.safe_filename(name)}_mtobjects_optimised_report{clean_suffix}.png"
     figure = draw_report(name, data, injected, truth_mask, products, params, geometry)
     figure.savefig(report_path, dpi=int(args.dpi))
 
@@ -544,6 +556,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--toy-seed", type=int, default=202608299)
     parser.add_argument("--truth-dilation", type=int, default=1)
     parser.add_argument(
+        "--clean-galaxies-file",
+        type=Path,
+        default=None,
+        help="Validated 40-galaxy list used to append _clean to calibration report PNGs. "
+        "Defaults to CleanGalaxies.txt in the selected PC's Remove foreground objects folder.",
+    )
+    parser.add_argument(
         "--save-cleaned-fits",
         action=argparse.BooleanOptionalAction,
         default=False,
@@ -554,6 +573,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    clean_galaxies_file = args.clean_galaxies_file or (remove_foreground_folder(args.pc) / "CleanGalaxies.txt")
+    clean_galaxy_names = load_clean_galaxy_names(clean_galaxies_file)
+    log(f"Filename calibration list: {clean_galaxies_file} ({len(clean_galaxy_names)} galaxies; suffix=_clean)")
     best_json = args.best_json or args.params_json or latest_best_json(args.pc, args.source)
     if best_json is None:
         raise FileNotFoundError(
@@ -616,7 +638,7 @@ def main() -> int:
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
-                summary = process_one(row, args, params, mtobjects_root, report_dir, fits_dir)
+                summary = process_one(row, args, params, mtobjects_root, report_dir, fits_dir, clean_galaxy_names)
             made += 1
         except Exception as exc:  # noqa: BLE001
             failed += 1

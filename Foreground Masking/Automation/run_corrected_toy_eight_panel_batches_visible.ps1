@@ -6,6 +6,7 @@ $Repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $Python = Join-Path $Repo ".venv\Scripts\python.exe"
 $ResearchRoot = if ($PC -eq "Laptop") { "C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research" } else { "D:\Dropbox\Public Documents\UCLAN\MSc Research" }
 $DataRoot = Join-Path $ResearchRoot "Remove foreground objects"
+$CleanGalaxies = Join-Path $DataRoot "CleanGalaxies.txt"
 $Manifest = Join-Path $Repo "Erwin_s4g_image_downloader\geometry_output\s4g_image_geometry_manifest.csv"
 $MTObjectsRoot = Join-Path $Repo "mtobjects"
 $MTBest = Join-Path $DataRoot "mtobjects toy recovery followup\20260816_063455\mtobjects_toy_cross_validation_best.json"
@@ -24,6 +25,7 @@ $MTMode = if(Test-Path $MTSummary){"--resume-output-dir"}else{"--output-dir"}
 & $Python "Foreground Masking\Batch tools\batch_toy_objects_MTObjects.py" `
     --manifest $Manifest --pc $PC --mtobjects-root $MTObjectsRoot --best-json $MTBest `
     --source toy-object --run-label "MTObjects recovery aligned eight-panel" $MTMode $MTOutput `
+    --clean-galaxies-file $CleanGalaxies `
     --max-images 182 --toys-per-image 6 --toy-seed 202608299 --truth-dilation 1 `
     2>&1 | Tee-Object -FilePath (Join-Path $MTOutput "batch.log") -Append
 if($LASTEXITCODE -ne 0){Write-Host "MTObjects batch stopped with exit code $LASTEXITCODE" -ForegroundColor Red; Read-Host "Press Enter to close"; exit $LASTEXITCODE}
@@ -34,6 +36,7 @@ $SEPMode = if(Test-Path $SEPSummary){"--resume-output-dir"}else{"--output-dir"}
 & $Python "Foreground Masking\Batch tools\batch_toy_objects_SEP.py" `
     --manifest $Manifest --pc $PC --best-json $SEPBest --source toy-object `
     --run-label "SEP Toy Objects aligned eight-panel" $SEPMode $SEPOutput `
+    --clean-galaxies-file $CleanGalaxies `
     --max-images 182 --toys-per-image 6 --toy-seed 202608299 --truth-dilation 1 `
     2>&1 | Tee-Object -FilePath (Join-Path $SEPOutput "batch.log") -Append
 if($LASTEXITCODE -eq 0){Write-Host "Both corrected PNG batches completed successfully." -ForegroundColor Green}else{Write-Host "SEP batch stopped with exit code $LASTEXITCODE" -ForegroundColor Red}

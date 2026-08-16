@@ -48,6 +48,7 @@ from machine_paths import PC_RESEARCH_FOLDERS, remove_foreground_folder  # noqa:
 DEFAULT_OUTPUT_SUBDIR = "SEP all galaxy batch"
 DEFAULT_DPI = 180
 DEFAULT_SOURCE = "latest"
+EXPECTED_CLEAN_GALAXIES = 40
 
 
 def timestamp() -> str:
@@ -407,7 +408,21 @@ def draw_products(
     return figure
 
 
-def output_png_path(report_dir: Path, name: str, params: dict[str, float | int | str]) -> Path:
+def load_clean_galaxy_names(path: Path, expected_count: int = EXPECTED_CLEAN_GALAXIES) -> set[str]:
+    if not path.is_file():
+        raise FileNotFoundError(f"Clean-galaxy list not found: {path}")
+    names = {line.strip().casefold() for line in path.read_text(encoding="utf-8-sig").splitlines() if line.strip()}
+    if len(names) != expected_count:
+        raise ValueError(f"Expected {expected_count} unique clean galaxies in {path}; found {len(names)}.")
+    return names
+
+
+def output_png_path(
+    report_dir: Path,
+    name: str,
+    params: dict[str, float | int | str],
+    clean_galaxy_names: set[str],
+) -> Path:
     stem = (
         f"{display.safe_filename(name)}_sep_"
         f"thr{float(params['detect_thresh']):.1f}_"
@@ -415,7 +430,8 @@ def output_png_path(report_dir: Path, name: str, params: dict[str, float | int |
         f"deb{float(params['deblend_cont']):.4f}_"
         f"dil{int(params['dilation_radius'])}"
     )
-    return report_dir / f"{display.safe_filename(stem)}.png"
+    suffix = "_clean" if name.casefold() in clean_galaxy_names else ""
+    return report_dir / f"{display.safe_filename(stem)}{suffix}.png"
 
 
 def selected_rows(args: argparse.Namespace) -> list[dict[str, str]]:
@@ -469,6 +485,7 @@ def run_one(
     params: dict[str, float | int | str],
     report_dir: Path,
     fits_dir: Path,
+    clean_galaxy_names: set[str],
 ) -> dict[str, str | int | float]:
     name = row["name"]
     geometry = display.required_geometry(row)
@@ -490,7 +507,7 @@ def run_one(
         truth_mask = np.zeros(data.shape, dtype=bool)
     products = sep_gui.sep_products(injected, params, geometry)
     figure = draw_products(name, data, injected, truth_mask, products, params, geometry)
-    png_path = output_png_path(report_dir, name, params)
+    png_path = output_png_path(report_dir, name, params, clean_galaxy_names)
     figure.savefig(png_path, dpi=args.dpi)
 
     cleaned_fits_path = ""
@@ -561,6 +578,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--toy-seed", type=int, default=202608299)
     parser.add_argument("--truth-dilation", type=int, default=1)
     parser.add_argument(
+        "--clean-galaxies-file",
+        type=Path,
+        default=None,
+        help="Validated 40-galaxy list used to append _clean to calibration report PNGs. "
+        "Defaults to CleanGalaxies.txt in the selected PC's Remove foreground objects folder.",
+    )
+    parser.add_argument(
         "--save-cleaned-fits",
         action=argparse.BooleanOptionalAction,
         default=False,
@@ -593,6 +617,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    clean_galaxies_file = args.clean_galaxies_file or (remove_foreground_folder(args.pc) / "CleanGalaxies.txt")
+    clean_galaxy_names = load_clean_galaxy_names(clean_galaxies_file)
+    log(f"Filename calibration list: {clean_galaxies_file} ({len(clean_galaxy_names)} galaxies; suffix=_clean)")
     if args.resume_output_dir is not None and args.output_dir is not None:
         raise ValueError("Use either --resume-output-dir or --output-dir, not both.")
 
@@ -668,7 +695,7 @@ def main() -> None:
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
-                result = run_one(row, args, params, report_dir, fits_dir)
+                result = run_one(row, args, params, report_dir, fits_dir, clean_galaxy_names)
             ok_count += 1
         except Exception as exc:  # noqa: BLE001
             failed_count += 1
