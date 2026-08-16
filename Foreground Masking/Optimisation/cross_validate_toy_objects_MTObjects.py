@@ -7,6 +7,7 @@ import argparse
 import csv
 from datetime import datetime
 import json
+import multiprocessing as mp
 from pathlib import Path
 import subprocess
 import sys
@@ -42,7 +43,17 @@ def build_evaluation_cases(args: argparse.Namespace, names: list[str]):
 
 def score_cases(cases, params: dict[str, object], args: argparse.Namespace) -> tuple[dict[str, float], list[dict[str, object]]]:
     root = mto_opt.mto.find_mtobjects_root(args.mtobjects_root)
-    detail = [mto_opt.score_case(case, params, root) for case in cases]
+    worker_count = min(max(1, int(args.workers)), len(cases))
+    if worker_count == 1:
+        detail = [mto_opt.score_case(case, params, root) for case in cases]
+    else:
+        context = mp.get_context("spawn")
+        with context.Pool(
+            processes=worker_count,
+            initializer=mto_opt.initialise_score_worker,
+            initargs=(cases, root),
+        ) as pool:
+            detail = pool.map(mto_opt.score_case_worker, [(index, params) for index in range(len(cases))])
     aggregate = mto_opt.aggregate_score(
         detail,
         max_masked_fraction=args.max_masked_fraction,
@@ -57,29 +68,39 @@ def score_cases(cases, params: dict[str, object], args: argparse.Namespace) -> t
 def calibrate_bg_variance(cases, args: argparse.Namespace, root: Path) -> None:
     grid = [1.0e-4, 1.0e-3, 1.0e-2, 1.0e-1, 1.0, 10.0, 100.0, 1000.0, 3000.0, 6000.0, 10000.0]
     rows: list[dict[str, object]] = []
-    print("Calibrating bg_variance on the common 40-galaxy injection set...", flush=True)
-    for index, value in enumerate(grid, start=1):
-        params = mto_opt.default_params(args.detect_on)
-        params.update(
-            move_factor=1.0,
-            min_distance=0.0,
-            gaussian_fwhm=2.0,
-            bg_variance=value,
-            minarea=1,
-            dilation_radius=2,
-            max_area=3000,
-            max_elongation=15.0,
-        )
-        metrics, _ = score_cases(cases, params, args)
-        row = {"bg_variance": value, **metrics}
-        rows.append(row)
-        print(
-            f"  calibration {index:02d}/{len(grid)}: bg_variance={value:g}, "
-            f"detection={metrics['toy_detection_rate']:.1%}, recall={metrics['mean_toy_recall']:.1%}, "
-            f"max_masked={metrics['max_masked_fraction']:.1%}",
-            flush=True,
-        )
-        cv_common.write_csv(root / "bg_variance_calibration.csv", rows)
+    calibration_path = root / "bg_variance_calibration.csv"
+    if calibration_path.exists():
+        with calibration_path.open(newline="", encoding="utf-8") as handle:
+            cached = list(csv.DictReader(handle))
+        cached_values = [float(row["bg_variance"]) for row in cached]
+        if cached_values == grid:
+            rows = [{key: float(value) for key, value in row.items()} for row in cached]
+            print("Reusing completed bg_variance calibration (11/11 points).", flush=True)
+
+    if not rows:
+        print("Calibrating bg_variance on the common 40-galaxy injection set...", flush=True)
+        for index, value in enumerate(grid, start=1):
+            params = mto_opt.default_params(args.detect_on)
+            params.update(
+                move_factor=1.0,
+                min_distance=0.0,
+                gaussian_fwhm=2.0,
+                bg_variance=value,
+                minarea=1,
+                dilation_radius=2,
+                max_area=3000,
+                max_elongation=15.0,
+            )
+            metrics, _ = score_cases(cases, params, args)
+            row = {"bg_variance": value, **metrics}
+            rows.append(row)
+            print(
+                f"  calibration {index:02d}/{len(grid)}: bg_variance={value:g}, "
+                f"detection={metrics['toy_detection_rate']:.1%}, recall={metrics['mean_toy_recall']:.1%}, "
+                f"max_masked={metrics['max_masked_fraction']:.1%}",
+                flush=True,
+            )
+            cv_common.write_csv(calibration_path, rows)
 
     viable_indices = [
         index for index, row in enumerate(rows)

@@ -1,0 +1,19 @@
+{
+  "objective": -0.5629564974702918,
+  "score": 0.5629564974702918,
+  "selection_method": "Reconstructed from Foreground Masking Optimisation Results.xlsx and the saved cross-validation results document after the original run folder was removed.",
+  "winning_fold": 4,
+  "params": {
+    "detect_on": "residual",
+    "detect_thresh": 1.8577119745818844,
+    "minarea": 5,
+    "deblend_nthresh": 32,
+    "deblend_cont": 0.0017974489668427438,
+    "back_size": 48,
+    "filter_size": 1,
+    "dilation_radius": 4,
+    "max_area": 4309,
+    "max_elongation": 26.60125483158156,
+    "exclude_center_pixels": 8.0
+  }
+}

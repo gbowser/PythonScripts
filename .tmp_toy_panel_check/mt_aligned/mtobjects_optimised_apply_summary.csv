@@ -1,0 +1,2 @@
+name,status,segments_kept,segments_raw,masked_pixels,masked_fraction,report_png,cleaned_fits,elapsed_seconds,error
+ESO013-016,ok,1233,1672,125488,0.14564531104921077,.tmp_toy_panel_check\mt_aligned\ESO013-016_mtobjects_optimised_report.png,,4.4159779000037815,

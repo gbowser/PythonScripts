@@ -7,10 +7,11 @@ $Python = Join-Path $Repo ".venv\Scripts\python.exe"
 $ResearchRoot = if ($PC -eq "Laptop") { "C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research" } else { "D:\Dropbox\Public Documents\UCLAN\MSc Research" }
 $DataRoot = Join-Path $ResearchRoot "Remove foreground objects"
 $Manifest = Join-Path $Repo "Erwin_s4g_image_downloader\geometry_output\s4g_image_geometry_manifest.csv"
-$BestJson = Join-Path $DataRoot "sep toy cross validation\20260815_175144\sep_toy_cross_validation_best.json"
+$BestJson = Join-Path $Repo "Foreground Masking\Optimisation\sep_toy_cv_20260815_175144_reconstructed_best.json"
 $OutputRoot = Join-Path $DataRoot "SEP all galaxy batch\sep_toy_cv_20260815_175144_eight_panel_toys"
 $Summary = Join-Path $OutputRoot "sep_optimised_apply_summary.csv"
 $OutputMode = if (Test-Path -LiteralPath $Summary) { "--resume-output-dir" } else { "--output-dir" }
+New-Item -ItemType Directory -Force -Path $OutputRoot | Out-Null
 
 $Host.UI.RawUI.WindowTitle = "SEP Toy Objects - corrected eight-panel PNG batch"
 Set-Location $Repo

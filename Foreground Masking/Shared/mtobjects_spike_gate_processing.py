@@ -76,6 +76,7 @@ MTOBJECTS_DLL_DIR_CANDIDATES = [
     Path("C:/msys64/mingw64/bin"),
 ]
 _MTOBJECTS_DLL_DIRECTORY_HANDLES = []
+_MTOBJECTS_REGISTERED_DLL_DIRECTORIES: set[str] = set()
 DEFAULT_ALPHA = 1.0e-6
 DEFAULT_MOVE_FACTOR = 0.7839444068091109
 SPIKE_GATE_MOVE_FACTOR = 0.3
@@ -397,7 +398,11 @@ def add_mtobjects_dll_directories() -> None:
     for candidate in MTOBJECTS_DLL_DIR_CANDIDATES:
         if candidate is None or not candidate.is_dir():
             continue
-        _MTOBJECTS_DLL_DIRECTORY_HANDLES.append(os.add_dll_directory(str(candidate.resolve())))
+        resolved = str(candidate.resolve())
+        if resolved in _MTOBJECTS_REGISTERED_DLL_DIRECTORIES:
+            continue
+        _MTOBJECTS_DLL_DIRECTORY_HANDLES.append(os.add_dll_directory(resolved))
+        _MTOBJECTS_REGISTERED_DLL_DIRECTORIES.add(resolved)
 
 
 def expand_boolean_mask(mask: np.ndarray, radius: int) -> np.ndarray:

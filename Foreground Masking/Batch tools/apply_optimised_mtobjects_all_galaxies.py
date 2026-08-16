@@ -295,8 +295,9 @@ def draw_report(
     processed_profile, _replaced = mto.fill_profile_with_log_linear_bridges(original_profile, mask_profile)
     y_limits = profile_y_limits([original_profile, processed_profile])
 
-    figure = Figure(figsize=(11.5, 17.0), dpi=100, constrained_layout=True)
+    figure = Figure(figsize=(11.5, 17.0), dpi=100, constrained_layout=False)
     FigureCanvasAgg(figure)
+    figure.subplots_adjust(left=0.075, right=0.965, top=0.925, bottom=0.055, wspace=0.28, hspace=0.38)
     grid = figure.add_gridspec(4, 2, height_ratios=[1.0, 1.0, 1.0, 0.76])
     ax_original = figure.add_subplot(grid[0, 0])
     ax_injected = figure.add_subplot(grid[0, 1])
@@ -392,6 +393,8 @@ def draw_report(
         ax.set_xlim(float(x_axis[0]), float(x_axis[-1]))
         ax.set_ylim(float(y_axis[0]), float(y_axis[-1]))
         ax.set_box_aspect(1.0)
+    ax_original_profile.set_xlim(float(extent[0]), float(extent[1]))
+    ax_processed_profile.set_xlim(float(extent[0]), float(extent[1]))
 
     kept = sum(1 for row in products["rows"] if row.get("kept"))
     source_label = str(params.get("_source_label", "optimised MTObjects parameters"))
@@ -401,8 +404,15 @@ def draw_report(
         f"{name} | MTObjects Toy Objects | segments={kept}/{len(products['rows'])}",
         fontsize=10.5,
         fontweight="bold",
-        y=0.985,
+        y=0.982,
     )
+    FigureCanvasAgg(figure).draw()
+    left = ax_original.get_position()
+    right = ax_injected.get_position()
+    left_profile = ax_original_profile.get_position()
+    right_profile = ax_processed_profile.get_position()
+    ax_original_profile.set_position([left.x0, left_profile.y0, left.width, left_profile.height])
+    ax_processed_profile.set_position([right.x0, right_profile.y0, right.width, right_profile.height])
     return figure
 
 
