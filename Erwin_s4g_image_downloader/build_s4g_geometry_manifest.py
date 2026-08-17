@@ -296,6 +296,7 @@ def build_manifest(
     for row in scrambled_rows:
         name = row["name"]
         image_path = image_dir / f"{name}.phot.1.fits"
+        image_metadata = fits_metadata(image_path)
         s4g = s4g_rows.get(name, {})
         herrera = herrera_bars.get(name, {})
         salo = salo_galaxies.get(name, {})
@@ -314,13 +315,32 @@ def build_manifest(
             notes.append("Legacy local sma_dp_kpc value is missing or non-positive")
         notes.append("Erwin et al. manual revisions are not represented unless present in local project data")
 
+        center_x = salo.get("xc")
+        center_y = salo.get("yc")
+        naxis1 = image_metadata.get("image_naxis1")
+        naxis2 = image_metadata.get("image_naxis2")
+        center_is_outside_image = (
+            center_x is not None
+            and center_y is not None
+            and naxis1 is not None
+            and naxis2 is not None
+            and not (1.0 <= float(center_x) <= float(naxis1) and 1.0 <= float(center_y) <= float(naxis2))
+        )
+        if center_is_outside_image:
+            crpix1 = image_metadata.get("crpix1")
+            crpix2 = image_metadata.get("crpix2")
+            if crpix1 is not None and crpix2 is not None:
+                center_x = crpix1
+                center_y = crpix2
+                notes.append("Salo centre was outside the FITS image; centre replaced by FITS CRPIX1/CRPIX2")
+
         output_row: dict[str, Any] = {field: None for field in OUTPUT_FIELDS}
         output_row.update(row)
-        output_row.update(fits_metadata(image_path))
+        output_row.update(image_metadata)
         output_row.update(
             {
-                "center_x_pix": salo.get("xc"),
-                "center_y_pix": salo.get("yc"),
+                "center_x_pix": center_x,
+                "center_y_pix": center_y,
                 "disk_pa_deg": salo.get("PA"),
                 "salo_disk_ellipticity": salo.get("Ell"),
                 "salo_disk_Rmin_pix": salo.get("Rmin"),

@@ -260,6 +260,16 @@ def filter_segmentation(segmentation: np.ndarray, rows: list[dict[str, float | i
 
 def sep_products(data: np.ndarray, params: dict[str, float | int | str], geometry: dict[str, float]):
     detection, residual, nonfinite_mask = prepare_detection_image(data, str(params["detect_on"]))
+    # Science-image detection can leave substantially more pixels above the
+    # threshold than residual-image detection.  SEP's default 300k-pixel
+    # extraction stack is therefore too small for some full science frames.
+    # Size the process-local stack to the image so valid detections do not
+    # abort the optimisation or all-galaxy batch.
+    sep.set_extract_pixstack(max(300_000, int(detection.size)))
+    # A structured science frame can also create a large deblending tree.
+    # Keep a generous but image-bounded limit so this valid workload does not
+    # fail at SEP's much smaller library default.
+    sep.set_sub_object_limit(8_192)
     bw = bh = max(8, int(params["back_size"]))
     background = sep.Background(detection, mask=nonfinite_mask, bw=bw, bh=bh)
     subtracted = np.ascontiguousarray(detection - background.back(), dtype=np.float32)

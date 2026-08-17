@@ -1,0 +1,2 @@
+name,status,png,raw_segments,kept_segments,masked_fraction,background_level,background_rms,error
+NGC1313,ok,Foreground Masking\tmp_profile_overlay_sep\NGC1313_sep_thr2.0_area12_deb0.0010_dil4.png,5395,5393,0.3329165914036763,0.01984729990363121,0.008431795053184032,

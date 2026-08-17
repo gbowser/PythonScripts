@@ -151,7 +151,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--workers", type=int, default=10)
     parser.add_argument("--toys-per-image", type=int, default=6)
     parser.add_argument("--truth-dilation", type=int, default=1)
-    parser.add_argument("--detect-on", choices=["original", "residual"], default="residual")
+    parser.add_argument(
+        "--detect-on",
+        choices=["original"],
+        default="original",
+        help="SEP detection image; constrained to the original science image.",
+    )
     parser.add_argument("--max-masked-fraction", type=float, default=sep_opt.DEFAULT_MAX_MASKED_FRACTION)
     parser.add_argument("--data-loss-penalty", type=float, default=sep_opt.DEFAULT_DATA_LOSS_PENALTY)
     parser.add_argument("--false-positive-penalty", type=float, default=sep_opt.DEFAULT_FALSE_POSITIVE_PENALTY)

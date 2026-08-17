@@ -10,15 +10,17 @@ $CleanGalaxies = Join-Path $DataRoot "CleanGalaxies.txt"
 $Manifest = Join-Path $Repo "Erwin_s4g_image_downloader\geometry_output\s4g_image_geometry_manifest.csv"
 $MTObjectsRoot = Join-Path $Repo "mtobjects"
 $MTBest = Join-Path $DataRoot "mtobjects toy recovery followup\20260816_063455\mtobjects_toy_cross_validation_best.json"
-$SEPBest = Join-Path $Repo "Foreground Masking\Optimisation\sep_toy_cv_20260815_175144_reconstructed_best.json"
+$SEPBest = Join-Path $DataRoot "sep toy cross validation\20260817_161404\sep_toy_cross_validation_best.json"
 $MTOutput = Join-Path $DataRoot "mtobjects all galaxy batch\mtobjects_toy_recovery_20260816_063455_eight_panel_aligned"
-$SEPOutput = Join-Path $DataRoot "SEP all galaxy batch\sep_toy_cv_20260815_175144_eight_panel_aligned"
+$SEPOutput = Join-Path $DataRoot "SEP all galaxy batch\sep_toy_cv_20260817_161404"
 New-Item -ItemType Directory -Force -Path $MTOutput, $SEPOutput | Out-Null
 $Host.UI.RawUI.WindowTitle = "SEP and MTObjects Toy Objects - aligned eight-panel PNG batches"
 Set-Location $Repo
 
 Write-Host "Corrected Toy Objects eight-panel batches" -ForegroundColor Cyan
 Write-Host "Title is reserved above row 1; profile x-axis limits and widths match the panels above."
+Write-Host "Processed profiles use log-linear bridges: dashed green=toy mask; dotted red=other mask."
+Write-Host "SEP detection image: original science image (enforced)."
 Write-Host "Starting MTObjects (182 galaxies). Output: $MTOutput"
 $MTSummary = Join-Path $MTOutput "mtobjects_optimised_apply_summary.csv"
 $MTMode = if(Test-Path $MTSummary){"--resume-output-dir"}else{"--output-dir"}

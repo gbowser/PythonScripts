@@ -107,8 +107,11 @@ def load_best_params(path: Path) -> dict[str, float | int | str]:
         "exclude_center_pixels": sep_gui.DEFAULT_EXCLUDE_CENTER_PIXELS,
     }
     for key, value in params.items():
-        if key in loaded:
+        if key in loaded and key != "detect_on":
             loaded[key] = math.nan if value == "NaN" else value
+    # SEP science detection is a pipeline invariant.  Do not allow historical
+    # optimiser JSON files to restore the obsolete residual-image mode.
+    loaded["detect_on"] = "original"
     return loaded
 
 
@@ -140,7 +143,7 @@ def params_from_args(args: argparse.Namespace) -> dict[str, float | int | str]:
 
 def default_params(args: argparse.Namespace) -> dict[str, float | int | str]:
     return {
-        "detect_on": args.detect_on,
+        "detect_on": "original",
         "spike_gate_detect_on": args.spike_gate_detect_on,
         "detect_thresh": args.detect_thresh,
         "minarea": args.minarea,
@@ -197,6 +200,7 @@ def draw_profile(
     central_exclusion_arcsec,
     title,
     mask_profile: np.ndarray | None = None,
+    toy_mask_profile: np.ndarray | None = None,
 ) -> None:
     radii, intensity = display.bar_major_axis_profile(image, x_axis, y_axis, half_width)
     if mask_profile is not None:
@@ -219,29 +223,36 @@ def draw_profile(
 
     ax.semilogy(radii, displayed_intensity, color="#1f77b4", linewidth=1.4)
     if bridged_intensity is not None:
-        for start, stop in sep_gui.contiguous_true_runs(bridged_samples):
-            ax.axvspan(radii[start], radii[stop], color="#f4a6b8", alpha=0.28, linewidth=0)
-        bridge_label = "log-linear interpolation"
-        for start, stop in sep_gui.contiguous_true_runs(bridged_samples):
-            plot_start = max(0, start - 1)
-            plot_stop = min(bridged_intensity.size - 1, stop + 1)
-            bridge_slice = slice(plot_start, plot_stop + 1)
-            bridge_good = (
-                np.isfinite(radii[bridge_slice])
-                & np.isfinite(bridged_intensity[bridge_slice])
-                & (bridged_intensity[bridge_slice] > 0)
-            )
-            if np.count_nonzero(bridge_good) < 2:
-                continue
-            ax.semilogy(
-                radii[bridge_slice][bridge_good],
-                bridged_intensity[bridge_slice][bridge_good],
-                color="#1f77b4",
-                linestyle="--",
-                linewidth=1.4,
-                label=bridge_label,
-            )
-            bridge_label = "_nolegend_"
+        toy_samples = bridged_samples & (
+            np.asarray(toy_mask_profile, dtype=bool) if toy_mask_profile is not None else np.zeros_like(bridged_samples)
+        )
+        other_samples = bridged_samples & ~toy_samples
+        styles = [
+            (toy_samples, "#00a000", "--", "toy-object mask (log-linear bridge)"),
+            (other_samples, "red", ":", "other mask (log-linear bridge)"),
+        ]
+        for styled_samples, colour, linestyle, label in styles:
+            bridge_label = label
+            for start, stop in sep_gui.contiguous_true_runs(styled_samples):
+                plot_start = max(0, start - 1)
+                plot_stop = min(bridged_intensity.size - 1, stop + 1)
+                bridge_slice = slice(plot_start, plot_stop + 1)
+                bridge_good = (
+                    np.isfinite(radii[bridge_slice])
+                    & np.isfinite(bridged_intensity[bridge_slice])
+                    & (bridged_intensity[bridge_slice] > 0)
+                )
+                if np.count_nonzero(bridge_good) < 2:
+                    continue
+                ax.semilogy(
+                    radii[bridge_slice][bridge_good],
+                    bridged_intensity[bridge_slice][bridge_good],
+                    color=colour,
+                    linestyle=linestyle,
+                    linewidth=1.8,
+                    label=bridge_label,
+                )
+                bridge_label = "_nolegend_"
 
     ax.axvline(bar_sma, color="#1f77b4", linewidth=1.0)
     ax.axvline(-bar_sma, color="#1f77b4", linewidth=1.0)
@@ -255,6 +266,8 @@ def draw_profile(
     ax.set_ylabel("intensity")
     ax.set_title(title)
     ax.grid(True, which="both", alpha=0.2)
+    if bridged_intensity is not None and np.any(bridged_samples):
+        ax.legend(loc="best", fontsize=7)
 
 
 def draw_mask_outlines(ax, mask_view: np.ndarray, truth_view: np.ndarray, x_axis: np.ndarray, y_axis: np.ndarray) -> None:
@@ -289,6 +302,7 @@ def draw_products(
     extent = [x_axis[0], x_axis[-1], y_axis[0], y_axis[-1]]
     half_width = 0.5 * sep_gui.DEFAULT_PROFILE_WIDTH_PIXELS * geometry["pixel_scale"]
     mask_profile = sep_gui.profile_mask_at_bar_major(mask_view, y_axis, half_width)
+    toy_mask_profile = sep_gui.profile_mask_at_bar_major(mask_view & truth_view, y_axis, half_width)
     bar_sma = display.bar_sma_deprojected_arcsec(geometry)
     central_exclusion_arcsec = float(params["exclude_center_pixels"]) * geometry["pixel_scale"]
 
@@ -385,6 +399,8 @@ def draw_products(
         bar_sma,
         central_exclusion_arcsec,
         "Processed Bar Major Profile",
+        mask_profile=mask_profile,
+        toy_mask_profile=toy_mask_profile,
     )
     for ax in [ax_original, ax_injected, ax_mask, ax_cleaned, ax_original_isophote, ax_cleaned_isophote]:
         ax.set_xlim(float(extent[0]), float(extent[1]))
@@ -590,7 +606,12 @@ def parse_args() -> argparse.Namespace:
         default=False,
         help="Optionally write cleaned FITS products and masks. Default is reports/summary only.",
     )
-    parser.add_argument("--detect-on", choices=["residual", "original"], default="original")
+    parser.add_argument(
+        "--detect-on",
+        choices=["original"],
+        default="original",
+        help="SEP detection is constrained to the original science image.",
+    )
     parser.add_argument(
         "--spike-gate-detect-on",
         choices=["residual", "original"],

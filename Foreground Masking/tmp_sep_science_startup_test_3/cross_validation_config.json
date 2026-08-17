@@ -1,0 +1,112 @@
+{
+  "clean_list": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\CleanGalaxies.txt",
+  "manifest": "Erwin_s4g_image_downloader\\geometry_output\\s4g_image_geometry_manifest.csv",
+  "pc": "Desktop",
+  "output_dir": "Foreground Masking\\tmp_sep_science_startup_test_3",
+  "fold_seed": 202608150,
+  "seed": 202608151,
+  "evaluation_seed": 202608199,
+  "initial_points": 0,
+  "max_iter": 0,
+  "workers": 1,
+  "toys_per_image": 6,
+  "truth_dilation": 1,
+  "detect_on": "original",
+  "max_masked_fraction": 0.15,
+  "data_loss_penalty": 0.35,
+  "false_positive_penalty": 0.05,
+  "parameter_bounds": {
+    "detect_thresh": [
+      0.6,
+      2.0
+    ],
+    "minarea": [
+      5,
+      35
+    ],
+    "deblend_nthresh": [
+      16,
+      32,
+      64
+    ],
+    "deblend_cont": [
+      0.001,
+      0.03
+    ],
+    "back_size": [
+      32,
+      64,
+      128,
+      256
+    ],
+    "filter_size": [
+      1,
+      3,
+      5,
+      7,
+      9
+    ],
+    "dilation_radius": [
+      1,
+      6
+    ],
+    "max_area": [
+      20,
+      8000
+    ],
+    "max_elongation": [
+      1.5,
+      30.0
+    ]
+  },
+  "folds": {
+    "fold_1": [
+      "IC1953",
+      "IC2007",
+      "NGC0289",
+      "NGC0578",
+      "NGC0701",
+      "NGC3627",
+      "NGC4293",
+      "NGC4639",
+      "NGC7531",
+      "PGC013821"
+    ],
+    "fold_2": [
+      "NGC0210",
+      "NGC1022",
+      "NGC1097",
+      "NGC1350",
+      "NGC1367",
+      "NGC3359",
+      "NGC3953",
+      "NGC4064",
+      "NGC4450",
+      "NGC4579"
+    ],
+    "fold_3": [
+      "IC0600",
+      "IC1954",
+      "NGC1302",
+      "NGC3681",
+      "NGC3992",
+      "NGC4133",
+      "NGC4314",
+      "NGC4405",
+      "NGC4981",
+      "UGC07129"
+    ],
+    "fold_4": [
+      "IC4901",
+      "NGC0298",
+      "NGC0986",
+      "NGC1291",
+      "NGC2681",
+      "NGC2903",
+      "NGC3227",
+      "NGC3486",
+      "NGC4102",
+      "NGC4457"
+    ]
+  }
+}

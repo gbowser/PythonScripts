@@ -31,6 +31,7 @@ Set-Location $Repo
 
 Write-Host "SEP Toy Objects four-fold cross-validation" -ForegroundColor Cyan
 Write-Host "Design: four rotations of 30 training + 10 held-out galaxies"
+Write-Host "SEP detection image: original science image (enforced)"
 Write-Host "Trials per fold: 40 (8 startup + 32 TPE); workers: 10"
 Write-Host "The optimiser prints progress, rough ETA, and expected completion after every trial."
 Write-Host "Run folder: $RunRoot"
@@ -45,19 +46,17 @@ Write-Host ""
     --max-iter 32 `
     --workers 10 `
     --toys-per-image 6 `
-    --detect-on residual 2>&1 | Tee-Object -FilePath $CvLog
+    --detect-on original 2>&1 | Tee-Object -FilePath $CvLog
 
 $cvExit = $LASTEXITCODE
 if ($cvExit -ne 0) {
     Write-Host "Cross-validation failed with exit code $cvExit. Batch not started." -ForegroundColor Red
-    Read-Host "Press Enter to close"
     exit $cvExit
 }
 
 $BestJson = Join-Path $RunRoot "sep_toy_cross_validation_best.json"
 if (-not (Test-Path -LiteralPath $BestJson)) {
     Write-Host "Winner JSON was not created: $BestJson" -ForegroundColor Red
-    Read-Host "Press Enter to close"
     exit 1
 }
 
@@ -88,5 +87,4 @@ if ($batchExit -eq 0) {
     Write-Host "SEP batch failed with exit code $batchExit." -ForegroundColor Red
 }
 Write-Host "Logs: $LogRoot"
-Read-Host "Press Enter to close"
 exit $batchExit

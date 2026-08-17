@@ -96,7 +96,10 @@ PARAMETER_BOUNDS = {
     "minarea": (5, 35),
     "deblend_nthresh": [16, 32, 64],
     "deblend_cont": (0.001, 0.03),
-    "back_size": [32, 48, 64, 96, 128, 192, 256],
+    # Use the power-of-two mesh sizes demonstrated in Guide2source_extractor.
+    # Exclude intermediate meshes so the search remains inside that documented
+    # Source Extractor operating region.
+    "back_size": [32, 64, 128, 256],
     "filter_size": [1, 3, 5, 7, 9],
     "dilation_radius": (1, 6),
     "max_area": (20, 8000),
@@ -211,8 +214,10 @@ def truth_from_model(model: np.ndarray, truth_dilation: int) -> np.ndarray:
 
 
 def default_params(detect_on: str) -> dict[str, float | int | str]:
+    if detect_on != "original":
+        raise ValueError("SEP Toy Objects optimisation must detect on the original science image.")
     return {
-        "detect_on": detect_on,
+        "detect_on": "original",
         "detect_thresh": sep_tool.DEFAULT_DETECT_THRESH,
         "minarea": sep_tool.DEFAULT_MINAREA,
         "deblend_nthresh": sep_tool.DEFAULT_DEBLEND_NTHRESH,
@@ -376,6 +381,24 @@ def build_cases(args: argparse.Namespace) -> list[ImageCase]:
     cases = []
     rows = select_rows(args.manifest, args.pc, args.names, int(args.max_images), int(args.seed))
     baseline_params = default_params(args.detect_on)
+    # The historic shared defaults were tuned on residual images and are far
+    # too permissive for a science-frame baseline.  Use a conservative point
+    # wholly inside the documented optimisation bounds; this baseline exists
+    # only to distinguish newly injected toy detections from pre-existing
+    # science-image detections.
+    baseline_params.update(
+        {
+            "detect_thresh": 2.0,
+            "minarea": 35,
+            "deblend_nthresh": 16,
+            "deblend_cont": 0.03,
+            "back_size": 64,
+            "filter_size": 9,
+            "dilation_radius": 1,
+            "max_area": 8000,
+            "max_elongation": 30.0,
+        }
+    )
     for row in rows:
         name = row["name"]
         geometry = sep_tool.display.required_geometry(row)
@@ -735,11 +758,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--detect-on",
         dest="detect_on",
-        choices=["original", "residual"],
-        default="residual",
+        choices=["original"],
+        default="original",
         help=(
-            "Image SEP uses during toy-object optimisation. "
-            "Use 'original' for the science image or 'residual' for the smooth-model residual. "
+            "Image SEP uses during toy-object optimisation. SEP is constrained to "
+            "the original science image."
         ),
     )
     parser.add_argument("--initial-points", type=int, default=DEFAULT_INITIAL_POINTS)

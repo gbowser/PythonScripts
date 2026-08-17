@@ -203,6 +203,7 @@ def draw_profile(
     title,
     *,
     mask_profile: np.ndarray | None = None,
+    toy_mask_profile: np.ndarray | None = None,
     y_limits: tuple[float, float] | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     radii, intensity = mto.display.bar_major_axis_profile(image, x_axis, y_axis, half_width)
@@ -213,32 +214,39 @@ def draw_profile(
     if mask_profile is not None:
         bridged_intensity, bridged_samples = mto.fill_profile_with_log_linear_bridges(intensity, mask_profile)
         displayed_intensity[bridged_samples] = np.nan
-        for start, stop in mto.contiguous_true_runs(mask_profile):
-            ax.axvspan(radii[start], radii[stop], color="red", alpha=0.13, linewidth=0)
 
     ax.semilogy(radii, displayed_intensity, color="#1f77b4", linewidth=1.4)
     if bridged_intensity is not None:
-        bridge_label = "log-linear interpolation"
-        for start, stop in mto.contiguous_true_runs(bridged_samples):
-            plot_start = max(0, start - 1)
-            plot_stop = min(bridged_intensity.size - 1, stop + 1)
-            bridge_slice = slice(plot_start, plot_stop + 1)
-            bridge_good = (
-                np.isfinite(radii[bridge_slice])
-                & np.isfinite(bridged_intensity[bridge_slice])
-                & (bridged_intensity[bridge_slice] > 0)
-            )
-            if np.count_nonzero(bridge_good) < 2:
-                continue
-            ax.semilogy(
-                radii[bridge_slice][bridge_good],
-                bridged_intensity[bridge_slice][bridge_good],
-                color="#1f77b4",
-                linestyle="--",
-                linewidth=1.4,
-                label=bridge_label,
-            )
-            bridge_label = "_nolegend_"
+        toy_samples = bridged_samples & (
+            np.asarray(toy_mask_profile, dtype=bool) if toy_mask_profile is not None else np.zeros_like(bridged_samples)
+        )
+        other_samples = bridged_samples & ~toy_samples
+        styles = [
+            (toy_samples, "#00a000", "--", "toy-object mask (log-linear bridge)"),
+            (other_samples, "red", ":", "other mask (log-linear bridge)"),
+        ]
+        for styled_samples, colour, linestyle, label in styles:
+            bridge_label = label
+            for start, stop in mto.contiguous_true_runs(styled_samples):
+                plot_start = max(0, start - 1)
+                plot_stop = min(bridged_intensity.size - 1, stop + 1)
+                bridge_slice = slice(plot_start, plot_stop + 1)
+                bridge_good = (
+                    np.isfinite(radii[bridge_slice])
+                    & np.isfinite(bridged_intensity[bridge_slice])
+                    & (bridged_intensity[bridge_slice] > 0)
+                )
+                if np.count_nonzero(bridge_good) < 2:
+                    continue
+                ax.semilogy(
+                    radii[bridge_slice][bridge_good],
+                    bridged_intensity[bridge_slice][bridge_good],
+                    color=colour,
+                    linestyle=linestyle,
+                    linewidth=1.8,
+                    label=bridge_label,
+                )
+                bridge_label = "_nolegend_"
 
     ax.axvline(bar_sma, color="#1f77b4", linewidth=1.0)
     ax.axvline(-bar_sma, color="#1f77b4", linewidth=1.0)
@@ -290,6 +298,7 @@ def draw_report(
     extent = [x_axis[0], x_axis[-1], y_axis[0], y_axis[-1]]
     half_width = 0.5 * mto.DEFAULT_PROFILE_WIDTH_PIXELS * geometry["pixel_scale"]
     mask_profile = mto.profile_mask_at_bar_major(mask_view, y_axis, half_width)
+    toy_mask_profile = mto.profile_mask_at_bar_major(mask_view & truth_view, y_axis, half_width)
     bar_sma = mto.display.bar_sma_deprojected_arcsec(geometry)
     central_exclusion_arcsec = float(params["exclude_center_pixels"]) * geometry["pixel_scale"]
     radii, original_profile = mto.display.bar_major_axis_profile(original_view, x_axis, y_axis, half_width)
@@ -386,6 +395,8 @@ def draw_report(
         bar_sma,
         central_exclusion_arcsec,
         "Processed Bar Major Profile",
+        mask_profile=mask_profile,
+        toy_mask_profile=toy_mask_profile,
         y_limits=y_limits,
     )
 

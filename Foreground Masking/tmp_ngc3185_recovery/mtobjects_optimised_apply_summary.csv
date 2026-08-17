@@ -1,0 +1,2 @@
+name,status,segments_kept,segments_raw,masked_pixels,masked_fraction,report_png,cleaned_fits,elapsed_seconds,error
+NGC3185,ok,1391,1917,134299,0.08983258773291095,C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\tmp_ngc3185_recovery\NGC3185_mtobjects_optimised_report.png,,7.811334899975918,

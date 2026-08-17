@@ -1,0 +1,2 @@
+name,status,segments_kept,segments_raw,masked_pixels,masked_fraction,report_png,cleaned_fits,elapsed_seconds,error
+NGC1313,ok,4681,6122,442137,0.19015173018863055,Foreground Masking\tmp_profile_overlay_mto\NGC1313_mtobjects_optimised_report.png,,37.25545570004033,

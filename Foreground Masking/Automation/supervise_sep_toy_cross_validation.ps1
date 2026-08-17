@@ -28,7 +28,7 @@ function Completed-Galaxies {
 }
 
 function Start-Workflow {
-    $arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$Launcher`" -PC Desktop -ResumeRunRoot `"$RunRoot`""
+    $arguments = "-NoExit -NoProfile -ExecutionPolicy Bypass -File `"$Launcher`" -PC Desktop -ResumeRunRoot `"$RunRoot`""
     $process = Start-Process -FilePath "powershell.exe" -ArgumentList $arguments `
         -WorkingDirectory $Repo -WindowStyle Normal -PassThru
     Write-Monitor "Restarted visible workflow pid=$($process.Id), restart=$($Restarts)/$MaxRestarts"
@@ -40,14 +40,6 @@ while ($true) {
     $completed = Completed-Galaxies
     if ((Test-Path -LiteralPath $Winner) -and $completed -ge 182) {
         Write-Monitor "Workflow complete: winner exists and batch rows=$completed"
-        $mtStamp = Get-Date -Format "yyyyMMdd_HHmmss"
-        $mtRunRoot = Join-Path $ResearchRoot "Remove foreground objects\mtobjects toy cross validation\$mtStamp"
-        New-Item -ItemType Directory -Force -Path (Join-Path $mtRunRoot "logs") | Out-Null
-        $mtSupervisor = Join-Path $PSScriptRoot "supervise_mtobjects_toy_cross_validation.ps1"
-        $mtArguments = "-NoProfile -ExecutionPolicy Bypass -File `"$mtSupervisor`" -RunRoot `"$mtRunRoot`" -MaxRestarts 8"
-        $mtProcess = Start-Process -FilePath "powershell.exe" -ArgumentList $mtArguments `
-            -WorkingDirectory $Repo -WindowStyle Hidden -PassThru
-        Write-Monitor "Started MTObjects supervisor pid=$($mtProcess.Id), run_root=$mtRunRoot"
         exit 0
     }
 
