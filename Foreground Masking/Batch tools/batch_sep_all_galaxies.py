@@ -221,7 +221,13 @@ def draw_profile(
         ymin = max(float(np.nanpercentile(reference[positive], 2)) * 0.8, np.finfo(float).tiny)
         ymax = float(np.nanmax(reference[positive])) * 1.25
 
-    ax.semilogy(radii, displayed_intensity, color="#1f77b4", linewidth=1.4)
+    positive_profile = np.isfinite(displayed_intensity) & (displayed_intensity > 0)
+    if np.any(positive_profile):
+        ax.semilogy(radii, displayed_intensity, color="#1f77b4", linewidth=1.4)
+    else:
+        # An entirely non-positive profile has no logarithmic representation.
+        # Keep the panel usable and avoid Matplotlib's noisy log-scale warning.
+        ax.plot(radii, displayed_intensity, color="#1f77b4", linewidth=1.4)
     if bridged_intensity is not None:
         toy_samples = bridged_samples & (
             np.asarray(toy_mask_profile, dtype=bool) if toy_mask_profile is not None else np.zeros_like(bridged_samples)

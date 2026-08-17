@@ -1,9 +1,9 @@
 $ErrorActionPreference = 'Stop'
 
 $outDir = 'C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\Documentation\comparison_presentation'
-$pptx = Join-Path $outDir 'SEP and MTObjects Masking Recommendations 20260816.pptx'
+$pptx = Join-Path $outDir 'SEP and MTObjects Masking Recommendations 20260817.pptx'
 $renderDir = Join-Path $outDir 'rendered'
-$sepImage = 'D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy batch\sep_toy_cv_20260816_185737\NGC1313_sep_thr1.9_area14_deb0.0030_dil6.png'
+$sepImage = 'D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy batch\sep_toy_cv_20260817_161404\NGC1313_sep_thr2.0_area12_deb0.0010_dil4.png'
 $mtoImage = 'D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\mtobjects all galaxy batch\mtobjects_toy_recovery_20260816_063455_eight_panel_aligned\NGC1313_mtobjects_optimised_report.png'
 New-Item -ItemType Directory -Path $outDir,$renderDir -Force | Out-Null
 
@@ -47,7 +47,7 @@ function Add-Title($slide, $title, $number) {
     $r = $slide.Shapes.AddLine(64, 112, 1216, 112); $r.Line.ForeColor.RGB = 0xB8BCB4; $r.Line.Weight = 1
 }
 function Add-Footer($slide) {
-    Add-Text $slide 'MSc Research | Toy-object foreground masking | 16 August 2026' 64 684 780 18 11 $false $muted | Out-Null
+    Add-Text $slide 'MSc Research | Toy-object foreground masking | 17 August 2026' 64 684 780 18 11 $false $muted | Out-Null
 }
 function Add-Notes($slide, $sourceText) {
     try {
@@ -78,18 +78,18 @@ Add-Text $s 'MASKING DECISION' 72 68 420 28 18 $true $blue | Out-Null
 Add-Text $s 'SEP or MTObjects?' 72 190 820 76 58 $true $ink | Out-Null
 Add-Text $s 'Evidence from four-fold toy-object optimisation and 182-galaxy production runs' 72 286 860 78 27 $false $muted | Out-Null
 Add-Rect $s 72 410 1136 4 $blue | Out-Null
-Add-Text $s 'Recommendation: combine both methods with explicit scientific safety gates.' 72 450 980 64 28 $true $ink | Out-Null
-Add-Text $s 'Decision briefing | 16 August 2026' 72 624 600 25 16 $false $muted | Out-Null
-Add-Notes $s 'Project SEP and MTObjects optimisation outputs; comparison report dated 16 August 2026.'
+Add-Text $s 'Recommendation: use MTObjects first, with SEP as a gated diagnostic.' 72 450 980 64 28 $true $ink | Out-Null
+Add-Text $s 'Decision briefing | 17 August 2026' 72 624 600 25 16 $false $muted | Out-Null
+Add-Notes $s 'Project SEP and MTObjects optimisation outputs; comparison report dated 17 August 2026.'
 
 # 2 - decision
-$s = $deck.Slides.Add(2, 12); Add-Title $s 'The evidence supports a gated two-algorithm workflow' 2
-Add-Text $s 'USE TOGETHER' 64 150 260 28 18 $true $blue | Out-Null
-Add-Text $s 'SEP finds more toys.' 64 198 500 54 34 $true $ink | Out-Null
-Add-Text $s 'MTObjects is less likely to over-mask galaxy structure.' 64 270 500 84 26 $false $muted | Out-Null
+$s = $deck.Slides.Add(2, 12); Add-Title $s 'The evidence supports MTObjects-led gated processing' 2
+Add-Text $s 'PRIMARY METHOD' 64 150 260 28 18 $true $blue | Out-Null
+Add-Text $s 'MTObjects recovers more toys.' 64 198 500 54 34 $true $ink | Out-Null
+Add-Text $s 'It also has the safer upper masking tail.' 64 270 500 84 26 $false $muted | Out-Null
 Add-Rect $s 630 152 2 420 $panel | Out-Null
 Add-Text $s 'Operating rule' 684 150 440 32 22 $true $ink | Out-Null
-Add-BulletList $s @('Accept components found by both methods','Screen SEP-only components by size, shape and position','Quarantine masks above 15% or with profile damage','Fall back to MTObjects or a conservative SEP rerun') 684 204 470 300 22 | Out-Null
+Add-BulletList $s @('Use MTObjects as the default mask','Use science-image SEP as an independent check','Review algorithm-only components','Quarantine masks above 15% or with profile damage') 684 204 470 300 22 | Out-Null
 Add-Rect $s 684 525 470 64 0xE1F3E8 0xE1F3E8 | Out-Null
 Add-Text $s 'One unattended method: MTObjects' 704 542 430 30 22 $true $ink | Out-Null
 Add-Footer $s; Add-Notes $s 'Project comparison report, sections 4–5.'
@@ -107,34 +107,34 @@ foreach ($i in 0..3) {
 }
 Add-Text $s 'Then: selected model to all 182 galaxies, producing aligned eight-panel PNG reports' 78 446 1070 44 28 $true $ink | Out-Null
 Add-Text $s 'Caveat: the SEP and MTObjects runs used different toy-injection seeds and different scalar objectives. Compare shared recovery and masking metrics, not raw objective scores.' 78 524 1080 78 19 $false $muted | Out-Null
-Add-Footer $s; Add-Notes $s 'SEP CV run 20260816_185737; MTObjects recovery run 20260816_063455.'
+Add-Footer $s; Add-Notes $s 'SEP science-image CV run 20260817_161404; MTObjects recovery run 20260816_063455.'
 
 # 4 - CV evidence
-$s = $deck.Slides.Add(4, 12); Add-Title $s 'SEP recovered more injected contaminants across held-out folds' 4
+$s = $deck.Slides.Add(4, 12); Add-Title $s 'MTObjects recovered more contaminants across held-out folds' 4
 Add-Text $s 'Four-fold held-out mean' 76 140 360 28 20 $true $muted | Out-Null
-Add-MetricBar $s 'Toy recall | SEP' 57.3 65 76 205 470 $blue
-Add-MetricBar $s 'Toy recall | MTO' 47.6 65 76 255 470 $brown
-Add-MetricBar $s 'Toy detection | SEP' 57.9 65 76 335 470 $blue
-Add-MetricBar $s 'Toy detection | MTO' 50.4 65 76 385 470 $brown
-Add-MetricBar $s 'Masked area | SEP' 6.6 15 76 485 470 $blue
+Add-MetricBar $s 'Toy recall | SEP' 40.4 60 76 205 470 $blue
+Add-MetricBar $s 'Toy recall | MTO' 47.6 60 76 255 470 $brown
+Add-MetricBar $s 'Toy detection | SEP' 40.8 60 76 335 470 $blue
+Add-MetricBar $s 'Toy detection | MTO' 50.4 60 76 385 470 $brown
+Add-MetricBar $s 'Masked area | SEP' 4.9 15 76 485 470 $blue
 Add-MetricBar $s 'Masked area | MTO' 7.5 15 76 535 470 $brown
 Add-Rect $s 895 185 285 290 0xF7F7F7 | Out-Null
-Add-Text $s '+9.7 pp' 925 222 220 54 38 $true $blue | Out-Null
-Add-Text $s 'SEP toy-recall advantage' 925 280 210 56 18 $false $muted | Out-Null
-Add-Text $s '+7.5 pp' 925 355 220 54 38 $true $blue | Out-Null
-Add-Text $s 'SEP toy-detection advantage' 925 413 220 56 18 $false $muted | Out-Null
+Add-Text $s '+7.1 pp' 925 222 220 54 38 $true $brown | Out-Null
+Add-Text $s 'MTO toy-recall advantage' 925 280 210 56 18 $false $muted | Out-Null
+Add-Text $s '+9.6 pp' 925 355 220 54 38 $true $brown | Out-Null
+Add-Text $s 'MTO toy-detection advantage' 925 413 220 56 18 $false $muted | Out-Null
 Add-Footer $s; Add-Notes $s 'Held-out means calculated from four-fold SEP and MTObjects result summaries.'
 
 # 5 - production risk
-$s = $deck.Slides.Add(5, 12); Add-Title $s 'Production behaviour reverses the safety ranking' 5
+$s = $deck.Slides.Add(5, 12); Add-Title $s 'Typical masking is similar, but SEP has the heavier tail' 5
 Add-Text $s 'Masked image area across 182 galaxies' 76 140 500 30 20 $true $muted | Out-Null
-Add-MetricBar $s 'Mean | SEP' 11.7 45 76 205 520 $blue
-Add-MetricBar $s 'Mean | MTO' 8.9 45 76 255 520 $brown
-Add-MetricBar $s '95th percentile | SEP' 20.0 45 76 335 520 $blue
-Add-MetricBar $s '95th percentile | MTO' 12.7 45 76 385 520 $brown
-Add-MetricBar $s 'Maximum | SEP' 42.0 45 76 465 520 $blue
-Add-MetricBar $s 'Maximum | MTO' 19.0 45 76 515 520 $brown
-Add-Text $s '30' 980 210 150 52 40 $true $red | Out-Null
+Add-MetricBar $s 'Mean | SEP' 8.8 35 76 205 520 $blue
+Add-MetricBar $s 'Mean | MTO' 8.9 35 76 255 520 $brown
+Add-MetricBar $s '95th percentile | SEP' 15.2 35 76 335 520 $blue
+Add-MetricBar $s '95th percentile | MTO' 12.7 35 76 385 520 $brown
+Add-MetricBar $s 'Maximum | SEP' 33.3 35 76 465 520 $blue
+Add-MetricBar $s 'Maximum | MTO' 19.0 35 76 515 520 $brown
+Add-Text $s '10' 980 210 150 52 40 $true $red | Out-Null
 Add-Text $s 'SEP galaxies above 15%' 980 263 190 52 18 $false $muted | Out-Null
 Add-Text $s '1' 980 386 150 52 40 $true $brown | Out-Null
 Add-Text $s 'MTObjects galaxy above 15%' 980 439 190 52 18 $false $muted | Out-Null
@@ -142,7 +142,7 @@ Add-Footer $s; Add-Notes $s 'SEP and MTObjects 182-galaxy apply-summary CSV file
 
 # 6 - visual evidence
 $s = $deck.Slides.Add(6, 12); Add-Title $s 'NGC1313 illustrates why recovery needs a safety gate' 6
-Add-Text $s 'SEP | 42.0% masked' 68 132 540 30 22 $true $blue | Out-Null
+Add-Text $s 'SEP | 33.3% masked' 68 132 540 30 22 $true $blue | Out-Null
 Add-Text $s 'MTObjects | 19.0% masked' 672 132 540 30 22 $true $brown | Out-Null
 $s.Shapes.AddPicture($sepImage, 0, -1, 68, 174, 540, 405) | Out-Null
 $s.Shapes.AddPicture($mtoImage, 0, -1, 672, 174, 540, 405) | Out-Null
@@ -153,12 +153,12 @@ Add-Footer $s; Add-Notes $s "User-generated PNG reports: $sepImage ; $mtoImage"
 $s = $deck.Slides.Add(7, 12); Add-Title $s 'Choose the operating mode before choosing the algorithm' 7
 Add-Text $s 'UNATTENDED SCIENTIFIC BATCH' 72 160 500 28 18 $true $brown | Out-Null
 Add-Text $s 'Use MTObjects' 72 207 500 48 34 $true $ink | Out-Null
-Add-BulletList $s @('Lower mean and tail masking','Only one result above the 15% review gate','Safer default for preserving galaxy structure') 72 280 500 200 22 | Out-Null
+Add-BulletList $s @('Higher held-out toy recovery','Only one result above the 15% review gate','Safer default for preserving galaxy structure') 72 280 500 200 22 | Out-Null
 Add-Rect $s 630 158 2 400 $panel | Out-Null
-Add-Text $s 'RECOVERY-FIRST + HUMAN REVIEW' 686 160 500 28 18 $true $blue | Out-Null
-Add-Text $s 'Use gated SEP' 686 207 500 48 34 $true $ink | Out-Null
-Add-BulletList $s @('Higher toy recall and detection','Review every mask above 15%','Reject obvious isophote or bar-profile damage') 686 280 500 200 22 | Out-Null
-Add-Text $s 'Best overall: retain both component maps and accept agreement automatically.' 72 586 1100 42 25 $true $ink | Out-Null
+Add-Text $s 'SECONDARY VALIDATION' 686 160 500 28 18 $true $blue | Out-Null
+Add-Text $s 'Use science-image SEP' 686 207 500 48 34 $true $ink | Out-Null
+Add-BulletList $s @('Independent component comparison','Review every mask above 15%','Treat disagreement as a review signal') 686 280 500 200 22 | Out-Null
+Add-Text $s 'Best overall: MTObjects first; use SEP agreement as supporting evidence.' 72 586 1100 42 25 $true $ink | Out-Null
 Add-Footer $s; Add-Notes $s 'Project comparison report, decision and operating recommendation.'
 
 # 8 - objective
@@ -180,7 +180,7 @@ Add-Footer $s; Add-Notes $s 'Recommendations derived from observed cross-validat
 
 # 9 - close
 $s = $deck.Slides.Add(9, 12); Add-Title $s 'Build a robust masking pipeline in six steps' 9
-$steps=@('Review the 30 SEP reports above 15%','Save labelled components from both algorithms','Implement agreement and SEP-only screening rules','Add masked-area and profile-damage release gates','Re-optimise with repeated seeds and tail-risk loss','Benchmark Photutils as an independent third method')
+$steps=@('Review the 10 SEP reports above 15%','Save labelled components from both algorithms','Implement agreement and disagreement-review rules','Add masked-area and profile-damage release gates','Re-optimise with repeated seeds and tail-risk loss','Benchmark Photutils as an independent third method')
 for($i=0;$i -lt $steps.Count;$i++){
     $y=146+$i*78
     Add-Text $s ("{0}" -f ($i+1)) 78 ($y-2) 44 44 28 $true $(if($i -lt 3){$blue}else{$brown}) | Out-Null

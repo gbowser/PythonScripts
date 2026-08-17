@@ -24,11 +24,11 @@ from docx.shared import Inches, Pt, RGBColor
 REPO = Path(r"C:\Users\gordo\Documents\Github\PythonScripts")
 OUT_DIR = REPO / "Foreground Masking" / "Documentation" / "comparison_report"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
-DOCX = OUT_DIR / "SEP and MTObjects Masking Comparison and Recommendations 20260816.docx"
+DOCX = OUT_DIR / "SEP and MTObjects Masking Comparison and Recommendations 20260817.docx"
 
-SEP_CV = Path(r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\sep toy cross validation\20260816_185737")
+SEP_CV = Path(r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\sep toy cross validation\20260817_161404")
 MTO_CV = Path(r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\mtobjects toy recovery followup\20260816_063455")
-SEP_BATCH = Path(r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy batch\sep_toy_cv_20260816_185737\sep_optimised_apply_summary.csv")
+SEP_BATCH = Path(r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\SEP all galaxy batch\sep_toy_cv_20260817_161404\sep_optimised_apply_summary.csv")
 MTO_BATCH = Path(r"D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\mtobjects all galaxy batch\mtobjects_toy_recovery_20260816_063455_eight_panel_aligned\mtobjects_optimised_apply_summary.csv")
 
 BLUE = RGBColor(46, 116, 181)
@@ -297,7 +297,7 @@ for run in header.runs:
     run.font.size = Pt(8.5)
     run.font.color.rgb = GRAY
 footer = section.footer.paragraphs[0]
-footer.text = "MSc Research - Toy Objects optimisation | 16 August 2026"
+footer.text = "MSc Research - Toy Objects optimisation | 17 August 2026"
 footer.alignment = WD_ALIGN_PARAGRAPH.RIGHT
 for run in footer.runs:
     run.font.name = "Arial"
@@ -319,7 +319,7 @@ r.font.name = "Arial"
 r.font.size = Pt(14)
 r.font.color.rgb = GRAY
 for label, value in (
-    ("Date", "16 August 2026"),
+    ("Date", "17 August 2026"),
     ("Scope", "Four-fold optimisation on 40 calibration galaxies and aligned eight-panel application to 182 galaxies"),
     ("Decision", "Select a masking strategy that balances contaminant recovery against damage to galaxy structure and bar profiles"),
     ("Status", "Both algorithms completed; 182/182 PNG reports available for each method"),
@@ -333,12 +333,12 @@ for label, value in (
 add_callout(
     doc,
     "Recommendation.",
-    "Use a gated two-algorithm workflow. Use SEP as the higher-recovery candidate generator, but do not accept its mask unconditionally. Automatically accept agreement between SEP and MTObjects, review or constrain SEP-only components, and fall back to MTObjects or an adaptive SEP rerun when total masked area exceeds 15% or bar-profile damage is detected. If only one unattended algorithm can be used, MTObjects is the safer scientific default; if manual review is available and recovery is the priority, use SEP with the gates below.",
+    "Use MTObjects as the primary production algorithm. It achieved higher held-out toy recovery and a substantially safer upper masking tail. Retain SEP as a secondary diagnostic: agreement can raise confidence, while SEP-only components should not be accepted automatically. Quarantine either result when total masked area exceeds 15% or the isophote/bar-profile diagnostics show structural damage.",
 )
 
 add_heading(doc, "1. What was completed", 1)
 add_body(doc, "Both methods used the same 40-galaxy fold membership: four rotations of 30 training galaxies and 10 held-out galaxies, with 40 Optuna trials per fold. Each candidate was compared on a common 40-galaxy injected evaluation set within its own run. Both selected models were then applied to all 182 galaxies to create aligned eight-panel PNG reports.")
-add_body(doc, "The SEP run completed on 16 August 2026 with fold 4 selected and 182/182 successful PNGs. The MTObjects recovery follow-up selected fold 3 and, after correcting the NGC3185 manifest centre, also completed 182/182 PNGs. Neither final batch contains a failed row.")
+add_body(doc, "The corrected SEP run completed on 17 August 2026 with fold 4 selected and 182/182 successful PNGs. SEP detection was constrained to the original science image throughout optimisation and production; the earlier residual-image run was discarded. The MTObjects recovery follow-up selected fold 3 and also completed 182/182 PNGs. Neither final batch contains a failed row.")
 add_body(doc, "Important comparability caveat: the two cross-validation runs used the same fold membership but different random injection seeds and different objective formulas. Therefore their scalar objective scores must not be compared directly. The decision below uses shared metrics (toy recall, toy detection rate and masked fraction), plus the same-size production batches.")
 
 add_heading(doc, "2. Selected models", 1)
@@ -348,10 +348,10 @@ table.rows[0].cells[1].text = "SEP"
 table.rows[0].cells[2].text = "MTObjects"
 selected_rows = [
     ("Winning fold", "4", "3"),
-    ("Detection image", "Residual", "Original"),
+    ("Detection image", "Original science image", "Original science image"),
     ("Detection threshold / move factor", f"Threshold {sep_best['params']['detect_thresh']:.3f} RMS", f"Move factor {mto_best['params']['move_factor']:.3f}"),
     ("Minimum area", str(sep_best["params"]["minarea"]), str(mto_best["params"]["minarea"])),
-    ("Deblending", f"64 levels; contrast {sep_best['params']['deblend_cont']:.4f}", "MTObjects tree segmentation"),
+    ("Deblending", f"{sep_best['params']['deblend_nthresh']} levels; contrast {sep_best['params']['deblend_cont']:.4f}", "MTObjects tree segmentation"),
     ("Background", f"Mesh {sep_best['params']['back_size']}; filter {sep_best['params']['filter_size']}", f"Variance {mto_best['params']['bg_variance']:.6f}"),
     ("Dilation radius", str(sep_best["params"]["dilation_radius"]), str(mto_best["params"]["dilation_radius"])),
     ("Maximum area", str(sep_best["params"]["max_area"]), str(mto_best["params"]["max_area"])),
@@ -369,12 +369,12 @@ table = doc.add_table(rows=1, cols=4)
 for index, value in enumerate(("Metric", "SEP", "MTObjects", "Interpretation")):
     table.rows[0].cells[index].text = value
 cv_rows = [
-    ("Four-fold held-out toy recall", pct(shared_metrics["SEP"]["held_toy_recall"]), pct(shared_metrics["MTObjects"]["held_toy_recall"]), "SEP +9.7 percentage points"),
-    ("Four-fold held-out toy detection", pct(shared_metrics["SEP"]["held_detection"]), pct(shared_metrics["MTObjects"]["held_detection"]), "SEP +7.5 percentage points"),
-    ("Four-fold held-out masked area", pct(shared_metrics["SEP"]["held_mask"]), pct(shared_metrics["MTObjects"]["held_mask"]), "SEP lower by 0.85 points across folds"),
-    ("Winner common-40 toy recall", pct(shared_metrics["SEP"]["all40_toy_recall"]), pct(shared_metrics["MTObjects"]["all40_toy_recall"]), "SEP higher; seeds differ between runs"),
-    ("Winner common-40 toy detection", pct(shared_metrics["SEP"]["all40_detection"]), pct(shared_metrics["MTObjects"]["all40_detection"]), "SEP higher; seeds differ between runs"),
-    ("Winner common-40 masked area", pct(shared_metrics["SEP"]["all40_mask"]), pct(shared_metrics["MTObjects"]["all40_mask"]), "Similar, with SEP slightly lower"),
+    ("Four-fold held-out toy recall", pct(shared_metrics["SEP"]["held_toy_recall"]), pct(shared_metrics["MTObjects"]["held_toy_recall"]), "MTObjects +7.1 percentage points"),
+    ("Four-fold held-out toy detection", pct(shared_metrics["SEP"]["held_detection"]), pct(shared_metrics["MTObjects"]["held_detection"]), "MTObjects +9.6 percentage points"),
+    ("Four-fold held-out masked area", pct(shared_metrics["SEP"]["held_mask"]), pct(shared_metrics["MTObjects"]["held_mask"]), "SEP lower by 2.6 points across folds"),
+    ("Winner common-40 toy recall", pct(shared_metrics["SEP"]["all40_toy_recall"]), pct(shared_metrics["MTObjects"]["all40_toy_recall"]), "MTObjects higher; seeds differ between runs"),
+    ("Winner common-40 toy detection", pct(shared_metrics["SEP"]["all40_detection"]), pct(shared_metrics["MTObjects"]["all40_detection"]), "MTObjects higher; seeds differ between runs"),
+    ("Winner common-40 masked area", pct(shared_metrics["SEP"]["all40_mask"]), pct(shared_metrics["MTObjects"]["all40_mask"]), "SEP lower; seeds differ between runs"),
 ]
 for values in cv_rows:
     cells = table.add_row().cells
@@ -390,8 +390,8 @@ for index, value in enumerate(("Production measure", "SEP", "MTObjects", "Prefer
     table.rows[0].cells[index].text = value
 prod_rows = [
     ("Successful reports", f"{sep_prod['successful']}/182", f"{mto_prod['successful']}/182", "Tie"),
-    ("Mean masked area", pct(sep_prod["mean"]), pct(mto_prod["mean"]), "MTObjects"),
-    ("Median masked area", pct(sep_prod["median"]), pct(mto_prod["median"]), "MTObjects"),
+    ("Mean masked area", pct(sep_prod["mean"]), pct(mto_prod["mean"]), "SEP (small difference)"),
+    ("Median masked area", pct(sep_prod["median"]), pct(mto_prod["median"]), "SEP"),
     ("95th percentile masked area", pct(sep_prod["p95"]), pct(mto_prod["p95"]), "MTObjects"),
     ("Maximum masked area", pct(sep_prod["max"]), pct(mto_prod["max"]), "MTObjects"),
     ("Galaxies above 15%", str(sep_prod["over15"]), str(mto_prod["over15"]), "MTObjects"),
@@ -416,16 +416,16 @@ for run in caption.runs:
     run.font.italic = True
     run.font.color.rgb = GRAY
 
-add_body(doc, "On paired production galaxies, MTObjects masked less area than SEP in 157 of 182 cases; SEP masked less in 25. SEP exceeded MTObjects by 2.84 percentage points on average and 1.81 points at the median. SEP's most extreme case was NGC1313 at 42.0%, compared with 19.0% for MTObjects.")
+add_body(doc, "On paired production galaxies, SEP masked less area than MTObjects in 121 of 182 cases; MTObjects masked less in 61. SEP was lower by 0.07 percentage points on average and 0.90 points at the median, so their typical masking burden was similar. The important difference was tail risk: SEP reached 33.3% on NGC1313 and exceeded 15% on 10 galaxies, whereas MTObjects peaked at 19.0% and exceeded 15% once.")
 
 add_heading(doc, "5. Decision and operating recommendation", 1)
-add_heading(doc, "5.1 Recommended production workflow: gated ensemble", 2)
+add_heading(doc, "5.1 Recommended production workflow: MTObjects-led gated ensemble", 2)
 steps = [
-    ("Run both methods", "Generate SEP and MTObjects component masks with the selected parameters and retain component labels rather than only the final binary union."),
-    ("Accept agreement", "Automatically accept components substantially overlapping in the two methods. Agreement is a practical confidence signal and should reduce SEP-only galaxy-structure detections."),
-    ("Screen SEP-only components", "Accept only when they satisfy size, elongation, central exclusion and bar-proximity rules. Prefer components with a PSF-like shape or an external catalogue match."),
+    ("Run MTObjects first", "Use MTObjects as the default mask generator and retain labelled components rather than only the final binary union."),
+    ("Use SEP as a diagnostic", "Generate the science-image SEP mask for comparison. Agreement can raise confidence, but disagreement is a review signal rather than a reason to union both masks."),
+    ("Screen algorithm-only components", "Apply size, elongation, central exclusion and bar-proximity rules. Prefer components with a PSF-like shape or an external catalogue match."),
     ("Enforce image-level gates", "If the candidate union masks more than 15%, if a single component dominates the mask, or if the processed bar-major profile changes beyond a defined tolerance, quarantine the image for review."),
-    ("Use a conservative fallback", "For quarantined galaxies, use MTObjects alone or rerun SEP with reduced dilation, increased threshold and/or a tighter maximum-area limit. Never silently release a >15% mask."),
+    ("Use a conservative fallback", "For quarantined galaxies, review the component map, reduce dilation or tighten the maximum-area limit, and rerun. Never silently release a >15% mask."),
 ]
 for index, (title, text) in enumerate(steps, 1):
     p = doc.add_paragraph(style="Heading 3")
@@ -433,8 +433,8 @@ for index, (title, text) in enumerate(steps, 1):
     add_body(doc, text)
 
 add_heading(doc, "5.2 If only one algorithm can be used", 2)
-add_callout(doc, "Unattended scientific processing.", "Use MTObjects. Its lower masking tail is materially safer for preserving galaxy structure: one image exceeded 15%, compared with 30 for SEP.", PALE_GOLD)
-add_callout(doc, "Recovery-first processing with human review.", "Use SEP. It achieved higher held-out toy recall and detection, but every >15% image and every obvious bar/isophote disturbance must be reviewed or rerun.", PALE_GOLD)
+add_callout(doc, "Unattended scientific processing.", "Use MTObjects. It achieved higher held-out toy recovery and the safer masking tail: one image exceeded 15%, compared with 10 for science-image SEP.", PALE_GOLD)
+add_callout(doc, "Secondary validation.", "Use SEP on the science image as an independent comparison, not as an unconditional union mask. Review disagreements and every >15% result.", PALE_GOLD)
 
 add_heading(doc, "6. Recommended objective-function changes", 1)
 objective_rows = [
@@ -466,8 +466,8 @@ add_body(doc, "Mask R-CNN and related instance-segmentation methods can jointly 
 
 add_heading(doc, "8. Immediate next actions", 1)
 actions = [
-    ("1", "Review SEP high-mask set", "Inspect the 30 SEP reports above 15%, beginning with NGC1313, NGC1808, NGC4214, NGC3319 and NGC5236."),
-    ("2", "Build component-level ensemble", "Save SEP and MTObjects labelled components, compute overlap and apply agreement/SEP-only decision rules."),
+    ("1", "Review SEP high-mask set", "Inspect the 10 SEP reports above 15%, beginning with NGC1313, NGC3319, NGC4214, NGC1808 and NGC1800."),
+    ("2", "Build component-level comparison", "Save SEP and MTObjects labelled components, compute overlap and apply agreement/disagreement review rules."),
     ("3", "Add release gates", "Fail or quarantine outputs above 15% masked area or above a bar-profile/isophote damage tolerance."),
     ("4", "Re-optimise robustly", "Use hard constraints, tail-risk loss, repeated toy seeds and a manually annotated real-contaminant validation set."),
     ("5", "Benchmark one independent method", "Start with Photutils for implementation comparability; test NoiseChisel if diffuse-wing/background failures remain important."),
