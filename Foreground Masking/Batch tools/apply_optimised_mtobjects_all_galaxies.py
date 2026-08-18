@@ -126,6 +126,9 @@ def load_best_params(path: Path) -> dict[str, float | int | str]:
     loaded = dict(defaults)
     for key, value in params.items():
         loaded[key] = math.nan if value == "NaN" else value
+    # MTObjects masking is constrained to the science image. Spike Gate may
+    # still identify target profile samples from the residual image.
+    loaded["detect_on"] = "original"
     return loaded
 
 
@@ -172,7 +175,10 @@ def draw_central_exclusion(ax, radius_arcsec: float) -> None:
 def draw_isophote(ax, image, x_axis, y_axis, extent, title, half_width, bar_sma, central_exclusion_arcsec) -> None:
     log_image, levels = mto.display.robust_log_image(image)
     ax.imshow(log_image, origin="lower", extent=extent, cmap="Greys", vmin=levels[0], vmax=levels[-1])
-    ax.contour(x_axis, y_axis, log_image, levels=levels[1:-1], colors="0.25", linewidths=0.45)
+    contour_levels = np.unique(np.asarray(levels[1:-1], dtype=float))
+    contour_levels = contour_levels[np.isfinite(contour_levels)]
+    if contour_levels.size:
+        ax.contour(x_axis, y_axis, log_image, levels=contour_levels, colors="0.25", linewidths=0.45)
     draw_bar_guides(ax, half_width, bar_sma)
     draw_central_exclusion(ax, central_exclusion_arcsec)
     ax.set_aspect("equal", adjustable="box")

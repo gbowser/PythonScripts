@@ -57,13 +57,13 @@ DEFAULT_MAX_PROFILE_AFFECTED_FRACTION = 1.0
 DEFAULT_MAX_NON_SPIKE_PROFILE_FRACTION = 1.0
 DEFAULT_MAX_BRIDGE_SPAN_ARCSEC = 1.0e6
 DEFAULT_BRIDGE_SPAN_PENALTY = 0.0
-DEFAULT_MAX_AREA_SEARCH = 8000
-DEFAULT_DETECT_THRESH_MIN = 0.2
-DEFAULT_DETECT_THRESH_MAX = 5.0
+DEFAULT_MAX_AREA_SEARCH = 5000
+DEFAULT_DETECT_THRESH_MIN = 0.5
+DEFAULT_DETECT_THRESH_MAX = 8.0
 DEFAULT_MINAREA_MIN = 1
-DEFAULT_MINAREA_MAX = 50
+DEFAULT_MINAREA_MAX = 80
 DEFAULT_DILATION_RADIUS_MIN = 0
-DEFAULT_DILATION_RADIUS_MAX = 4
+DEFAULT_DILATION_RADIUS_MAX = 8
 OPTIMISED_PARAMETER_NAMES = [
     "detect_thresh",
     "minarea",
@@ -132,6 +132,8 @@ def score_case_worker(
 
 
 def default_params(detect_on: str) -> dict[str, float | int | str]:
+    if detect_on != "original":
+        raise ValueError("SEP Spike Gate optimisation must operate on the original science image.")
     return {
         "detect_on": detect_on,
         "detect_thresh": sep_tool.DEFAULT_DETECT_THRESH,
@@ -164,7 +166,7 @@ def optuna_trial_to_params(trial: optuna.Trial, args: argparse.Namespace) -> dic
     )
     params["minarea"] = trial.suggest_int("minarea", int(args.minarea_min), int(args.minarea_max))
     params["deblend_nthresh"] = trial.suggest_int("deblend_nthresh", 8, 64)
-    params["deblend_cont"] = trial.suggest_float("deblend_cont", 0.00001, 0.1, log=True)
+    params["deblend_cont"] = trial.suggest_float("deblend_cont", 0.0001, 0.1, log=True)
     params["back_size"] = trial.suggest_categorical("back_size", [16, 24, 32, 48, 64, 96, 128, 192, 256])
     params["filter_size"] = trial.suggest_categorical("filter_size", [1, 3, 5, 7, 9])
     params["dilation_radius"] = trial.suggest_int(
@@ -173,7 +175,7 @@ def optuna_trial_to_params(trial: optuna.Trial, args: argparse.Namespace) -> dic
         int(args.dilation_radius_max),
     )
     params["max_area"] = trial.suggest_int("max_area", 20, int(args.max_area_search))
-    params["max_elongation"] = trial.suggest_float("max_elongation", 1.5, 30.0)
+    params["max_elongation"] = trial.suggest_float("max_elongation", 1.5, 20.0)
     return params
 
 
@@ -639,7 +641,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--require-spikes", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument(
         "--detect-on",
-        choices=["original", "residual"],
+        choices=["original"],
         default="original",
         help="Image used by SEP for the global segmentation being optimised.",
     )

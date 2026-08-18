@@ -125,6 +125,8 @@ def score_case_worker(
 
 
 def default_params(detect_on: str, spike_gate_detect_on: str) -> dict[str, float | int | str]:
+    if detect_on != "original":
+        raise ValueError("MTObjects Spike Gate optimisation must operate on the original science image.")
     return {
         "detect_on": detect_on,
         "spike_gate_detect_on": spike_gate_detect_on,
@@ -567,8 +569,8 @@ def parse_args() -> argparse.Namespace:
         "--mtobjects-detect-on",
         "--detect-on",
         dest="detect_on",
-        choices=["original", "residual"],
-        default="residual",
+        choices=["original"],
+        default="original",
         help=(
             "Image MTObjects uses for the optimised foreground-mask pass. "
             "The older --detect-on spelling is kept as an alias."

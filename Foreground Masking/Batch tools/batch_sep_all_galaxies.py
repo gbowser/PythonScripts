@@ -183,7 +183,10 @@ def draw_central_exclusion(ax, radius_arcsec: float) -> None:
 def draw_isophote(ax, image, x_axis, y_axis, extent, title, half_width, bar_sma, central_exclusion_arcsec) -> None:
     log_image, levels = display.robust_log_image(image)
     ax.imshow(log_image, origin="lower", extent=extent, cmap="Greys", vmin=levels[0], vmax=levels[-1])
-    ax.contour(x_axis, y_axis, log_image, levels=levels[1:-1], colors="0.25", linewidths=0.45)
+    contour_levels = np.unique(np.asarray(levels[1:-1], dtype=float))
+    contour_levels = contour_levels[np.isfinite(contour_levels)]
+    if contour_levels.size:
+        ax.contour(x_axis, y_axis, log_image, levels=contour_levels, colors="0.25", linewidths=0.45)
     draw_bar_guides(ax, half_width, bar_sma)
     draw_central_exclusion(ax, central_exclusion_arcsec)
     ax.set_aspect("equal", adjustable="box")
