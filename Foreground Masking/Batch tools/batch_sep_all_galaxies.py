@@ -287,6 +287,13 @@ def draw_mask_outlines(ax, mask_view: np.ndarray, truth_view: np.ndarray, x_axis
         ax.contour(x_axis, y_axis, component.astype(float), levels=[0.5], colors=[colour], linewidths=1.2)
 
 
+def draw_generic_mask_outlines(ax, mask_view: np.ndarray, x_axis: np.ndarray, y_axis: np.ndarray) -> None:
+    labels, count = label_components(mask_view, structure=np.ones((3, 3), dtype=np.uint8))
+    for component_id in range(1, count + 1):
+        component = labels == component_id
+        ax.contour(x_axis, y_axis, component.astype(float), levels=[0.5], colors=["#e67e22"], linewidths=1.2)
+
+
 def draw_products(
     name: str,
     original: np.ndarray,
@@ -298,6 +305,7 @@ def draw_products(
 ) -> Figure:
     cleaned = np.asarray(products["cleaned"], dtype=float)
     mask = np.asarray(products["mask"], dtype=bool)
+    has_toys = bool(np.any(truth_mask))
 
     radius_arcsec = display.profile_radius_pixels(original, geometry) * geometry["pixel_scale"]
     original_view, x_axis, y_axis = display.deproject_bar_aligned_cutout(original, geometry, radius_arcsec)
@@ -307,6 +315,10 @@ def draw_products(
     mask_view = np.isfinite(mask_view) & (mask_view > 0.5)
     truth_view, _, _ = display.deproject_bar_aligned_cutout(truth_mask.astype(float), geometry, radius_arcsec, order=0)
     truth_view = np.isfinite(truth_view) & (truth_view > 0.5)
+    residual_view = None
+    if not has_toys:
+        residual = np.asarray(products["residual"], dtype=float)
+        residual_view, _, _ = display.deproject_bar_aligned_cutout(residual, geometry, radius_arcsec)
 
     extent = [x_axis[0], x_axis[-1], y_axis[0], y_axis[-1]]
     half_width = 0.5 * sep_gui.DEFAULT_PROFILE_WIDTH_PIXELS * geometry["pixel_scale"]
@@ -350,8 +362,8 @@ def draw_products(
     draw_central_exclusion(ax_original, central_exclusion_arcsec)
     ax_original.set_title("Galaxy Centered Original")
 
-    ax_injected.imshow(injected_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
-    if np.any(truth_view):
+    if has_toys:
+        ax_injected.imshow(injected_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
         ax_injected.contour(
             x_axis,
             y_axis,
@@ -360,9 +372,22 @@ def draw_products(
             colors=["#00a000"],
             linewidths=1.35,
         )
+        ax_injected.set_title("Original + Toys | green=toy boundary")
+    else:
+        residual_limit = float(np.nanpercentile(np.abs(residual_view[np.isfinite(residual_view)]), 99.0))
+        if not np.isfinite(residual_limit) or residual_limit <= 0:
+            residual_limit = 1.0
+        ax_injected.imshow(
+            residual_view,
+            origin="lower",
+            cmap="coolwarm",
+            vmin=-residual_limit,
+            vmax=residual_limit,
+            extent=extent,
+        )
+        ax_injected.set_title("Residual Spike Gate Image")
     draw_bar_guides(ax_injected, half_width, bar_sma)
     draw_central_exclusion(ax_injected, central_exclusion_arcsec)
-    ax_injected.set_title("Original + Toys | green=toy boundary")
 
     ax_mask.imshow(original_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
     ax_mask.imshow(np.ma.masked_where(~mask_view, mask_view), origin="lower", cmap="autumn", alpha=0.55, extent=extent)
@@ -371,10 +396,15 @@ def draw_products(
     ax_mask.set_title(f"Mask | masked {masked_fraction:.2%}")
 
     ax_cleaned.imshow(cleaned_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
-    draw_mask_outlines(ax_cleaned, mask_view, truth_view, x_axis, y_axis)
+    if has_toys:
+        draw_mask_outlines(ax_cleaned, mask_view, truth_view, x_axis, y_axis)
+    else:
+        draw_generic_mask_outlines(ax_cleaned, mask_view, x_axis, y_axis)
     draw_bar_guides(ax_cleaned, half_width, bar_sma)
     draw_central_exclusion(ax_cleaned, central_exclusion_arcsec)
-    ax_cleaned.set_title("Recovered Image | green=correct, red=incorrect")
+    ax_cleaned.set_title(
+        "Recovered Image | green=correct, red=incorrect" if has_toys else "Recovered Image | orange=SEP mask"
+    )
 
     draw_isophote(
         ax_original_isophote,
@@ -426,8 +456,13 @@ def draw_products(
         ax.set_box_aspect(1.0)
     ax_original_profile.set_xlim(float(extent[0]), float(extent[1]))
     ax_cleaned_profile.set_xlim(float(extent[0]), float(extent[1]))
+    title = (
+        f"{name} | SEP Toy Objects | segments={kept}/{raw} | green=toy recovery, red=false mask"
+        if has_toys
+        else f"{name} | SEP Spike Gate | segments={kept}/{raw}"
+    )
     figure.suptitle(
-        f"{name} | SEP Toy Objects | segments={kept}/{raw} | green=toy recovery, red=false mask",
+        title,
         fontsize=11,
         fontweight="bold",
         y=0.982,

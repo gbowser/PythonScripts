@@ -36,6 +36,7 @@ for path in (PROJECT_ROOT, FOREGROUND_ROOT, SCRIPT_DIR, *SUPPORT_DIRS):
         sys.path.append(str(path))
 
 import mtobjects_spike_gate_processing as mto  # noqa: E402
+import spike_gate_objective as gate_objective  # noqa: E402
 from machine_paths import PC_RESEARCH_FOLDERS, detect_pc, remove_foreground_folder  # noqa: E402
 from optimisation_results_workbook import append_run_to_workbook  # noqa: E402
 
@@ -55,8 +56,8 @@ OPTIMISED_PARAMETER_NAMES = [
     "max_area",
     "max_elongation",
 ]
-DEFAULT_BG_VARIANCE_MIN = 0.0001
-DEFAULT_BG_VARIANCE_MAX = 10000.0
+DEFAULT_BG_VARIANCE_MIN = 0.001
+DEFAULT_BG_VARIANCE_MAX = 100.0
 DEFAULT_BG_VARIANCE_STEP = 0.0001
 
 
@@ -160,7 +161,7 @@ def suggest_bg_variance(trial: optuna.Trial, args: argparse.Namespace) -> float:
     if minimum == maximum:
         return minimum
     if step <= 0:
-        return trial.suggest_float("bg_variance", minimum, maximum)
+        return trial.suggest_float("bg_variance", minimum, maximum, log=True)
     return trial.suggest_float("bg_variance", minimum, maximum, step=step)
 
 
@@ -292,6 +293,21 @@ def score_case(
     products = mto.mtobjects_products(case.data, params, case.geometry, mtobjects_root)
     mask = np.asarray(products["mask"], dtype=bool)
     profile_mask = profile_mask_for_image_mask(case.data, mask, case.geometry, profile_width_pixels)
+    radius_arcsec = mto.display.profile_radius_pixels(case.data, case.geometry) * case.geometry["pixel_scale"]
+    mask_view, x_axis, y_axis = mto.display.deproject_bar_aligned_cutout(
+        mask.astype(float), case.geometry, radius_arcsec, order=0
+    )
+    mask_view = np.isfinite(mask_view) & (mask_view > 0.5)
+    half_width = 0.5 * int(profile_width_pixels) * case.geometry["pixel_scale"]
+    bar_sma = mto.display.bar_sma_deprojected_arcsec(case.geometry)
+    gate_metrics = gate_objective.score_mask(
+        mask_view,
+        x_axis,
+        y_axis,
+        case.spike_samples,
+        half_width,
+        max(2.0 * bar_sma, 0.35 * radius_arcsec),
+    )
 
     spike_count = int(np.count_nonzero(case.spike_samples))
     covered_spikes = int(np.count_nonzero(profile_mask & case.spike_samples))
@@ -305,7 +321,7 @@ def score_case(
     profile_change = 0.0
     if np.count_nonzero(finite) >= 5:
         profile_change = float(np.nanmedian(np.abs(np.log10(bridged_profile[finite]) - np.log10(case.original_profile[finite]))))
-    return {
+    result = {
         "image": case.name,
         "spike_samples": spike_count,
         "covered_spike_samples": covered_spikes,
@@ -317,10 +333,16 @@ def score_case(
         "profile_change": profile_change,
         "bridged_profile_samples": int(np.count_nonzero(replaced)),
         "segments": len(products["rows"]),
+        "normalised_bridge_span": 0.0,
     }
+    result.update(gate_metrics)
+    return result
 
 
 def aggregate_score(case_rows: list[dict[str, float | int | str]]) -> dict[str, float]:
+    constrained = gate_objective.aggregate_constrained(case_rows)
+    if "mean_gate_recovery" in constrained:
+        return constrained
     spike_rows = [row for row in case_rows if int(row["spike_samples"]) > 0]
     rows_for_coverage = spike_rows if spike_rows else case_rows
     mean_spike_coverage = float(np.mean([float(row["spike_coverage"]) for row in rows_for_coverage]))
@@ -443,6 +465,14 @@ class OptimisationRun:
             "mean_profile_affected_fraction": aggregate.get("mean_profile_affected_fraction", math.nan),
             "mean_non_spike_profile_fraction": aggregate.get("mean_non_spike_profile_fraction", math.nan),
             "mean_profile_change": aggregate.get("mean_profile_change", math.nan),
+            "mean_gate_recovery": aggregate.get("mean_gate_recovery", math.nan),
+            "min_gate_recovery": aggregate.get("min_gate_recovery", math.nan),
+            "mean_candidate_detection_rate": aggregate.get("mean_candidate_detection_rate", math.nan),
+            "mean_supported_mask_precision": aggregate.get("mean_supported_mask_precision", math.nan),
+            "mean_excess_mask_fraction": aggregate.get("mean_excess_mask_fraction", math.nan),
+            "mean_protected_galaxy_loss": aggregate.get("mean_protected_galaxy_loss", math.nan),
+            "zero_detection_cases": aggregate.get("zero_detection_cases", math.nan),
+            "infeasible": aggregate.get("infeasible", math.nan),
             "elapsed_seconds": elapsed,
             "error": error,
             "detect_on": params["detect_on"],
@@ -462,6 +492,14 @@ class OptimisationRun:
                 "mean_profile_affected_fraction",
                 "mean_non_spike_profile_fraction",
                 "mean_profile_change",
+                "mean_gate_recovery",
+                "min_gate_recovery",
+                "mean_candidate_detection_rate",
+                "mean_supported_mask_precision",
+                "mean_excess_mask_fraction",
+                "mean_protected_galaxy_loss",
+                "zero_detection_cases",
+                "infeasible",
                 "elapsed_seconds",
                 "error",
                 "detect_on",
@@ -486,6 +524,17 @@ class OptimisationRun:
                     "profile_change",
                     "bridged_profile_samples",
                     "segments",
+                    "gate_candidate_count",
+                    "recovered_gate_candidates",
+                    "gate_target_pixels",
+                    "gate_overlap_pixels",
+                    "gate_recovery",
+                    "candidate_detection_rate",
+                    "supported_mask_precision",
+                    "excess_mask_fraction",
+                    "protected_galaxy_loss",
+                    "zero_detection_with_gate",
+                    "normalised_bridge_span",
                 ],
             )
 

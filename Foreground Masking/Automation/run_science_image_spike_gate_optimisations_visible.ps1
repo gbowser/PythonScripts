@@ -17,8 +17,8 @@ $RunRoot = Join-Path $DataRoot "spike gate science image comparison\$Stamp"
 $LogRoot = Join-Path $RunRoot "logs"
 $SepOptimisationRoot = Join-Path $RunRoot "SEP optimisation"
 $MtoOptimisationRoot = Join-Path $RunRoot "MTObjects optimisation"
-$SepBatch = Join-Path $DataRoot "SEP all galaxy batch\sep_spike_gate_science_$Stamp"
-$MtoBatch = Join-Path $DataRoot "mtobjects all galaxy batch\mtobjects_spike_gate_science_$Stamp"
+$SepBatch = Join-Path $DataRoot "SEP all galaxy batch\sep_spike_gate_$Stamp"
+$MtoBatch = Join-Path $DataRoot "mtobjects all galaxy batch\mtobjects_spike_gate_$Stamp"
 
 New-Item -ItemType Directory -Path $LogRoot -Force | Out-Null
 $Host.UI.RawUI.WindowTitle = "Science-image SEP + MTObjects - residual Spike Gate"

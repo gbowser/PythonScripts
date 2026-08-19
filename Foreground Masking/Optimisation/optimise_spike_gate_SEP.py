@@ -39,6 +39,7 @@ if os.name != "nt":
     os.environ.setdefault("FOREGROUND_MASKING_PC", "Desktop")
 
 import interactive_sep_spike_gate_parameter_tester as sep_tool  # noqa: E402
+import spike_gate_objective as gate_objective  # noqa: E402
 from machine_paths import PC_RESEARCH_FOLDERS, detect_pc, remove_foreground_folder  # noqa: E402
 from optimisation_results_workbook import append_run_to_workbook  # noqa: E402
 
@@ -288,6 +289,21 @@ def score_case(
     products = sep_tool.sep_products(case.data, params, case.geometry)
     mask = np.asarray(products["mask"], dtype=bool)
     profile_mask = profile_mask_for_image_mask(case.data, mask, case.geometry, profile_width_pixels)
+    radius_arcsec = sep_tool.display.profile_radius_pixels(case.data, case.geometry) * case.geometry["pixel_scale"]
+    mask_view, x_axis, y_axis = sep_tool.display.deproject_bar_aligned_cutout(
+        mask.astype(float), case.geometry, radius_arcsec, order=0
+    )
+    mask_view = np.isfinite(mask_view) & (mask_view > 0.5)
+    half_width = 0.5 * int(profile_width_pixels) * case.geometry["pixel_scale"]
+    bar_sma = sep_tool.display.bar_sma_deprojected_arcsec(case.geometry)
+    gate_metrics = gate_objective.score_mask(
+        mask_view,
+        x_axis,
+        y_axis,
+        case.spike_samples,
+        half_width,
+        max(2.0 * bar_sma, 0.35 * radius_arcsec),
+    )
 
     spike_count = int(np.count_nonzero(case.spike_samples))
     covered_spikes = int(np.count_nonzero(profile_mask & case.spike_samples))
@@ -309,7 +325,7 @@ def score_case(
             span = abs(float(case.radii[stop]) - float(case.radii[start]))
             if math.isfinite(span):
                 longest_bridge_span_arcsec = max(longest_bridge_span_arcsec, span)
-    return {
+    result = {
         "image": case.name,
         "spike_samples": spike_count,
         "covered_spike_samples": covered_spikes,
@@ -323,7 +339,10 @@ def score_case(
         "longest_bridge_run_samples": longest_bridge_run_samples,
         "longest_bridge_span_arcsec": longest_bridge_span_arcsec,
         "segments": len(products["rows"]),
+        "normalised_bridge_span": longest_bridge_span_arcsec / max(1.0, 2.0 * bar_sma),
     }
+    result.update(gate_metrics)
+    return result
 
 
 def aggregate_score(
@@ -339,6 +358,9 @@ def aggregate_score(
     max_bridge_span_arcsec: float,
     bridge_span_penalty: float,
 ) -> dict[str, float]:
+    constrained = gate_objective.aggregate_constrained(case_rows)
+    if "mean_gate_recovery" in constrained:
+        return constrained
     spike_rows = [row for row in case_rows if int(row["spike_samples"]) > 0]
     rows_for_coverage = spike_rows if spike_rows else case_rows
     mean_spike_coverage = float(np.mean([float(row["spike_coverage"]) for row in rows_for_coverage]))
@@ -510,6 +532,14 @@ class OptimisationRun:
             "mean_profile_affected_fraction": aggregate.get("mean_profile_affected_fraction", math.nan),
             "mean_non_spike_profile_fraction": aggregate.get("mean_non_spike_profile_fraction", math.nan),
             "mean_profile_change": aggregate.get("mean_profile_change", math.nan),
+            "mean_gate_recovery": aggregate.get("mean_gate_recovery", math.nan),
+            "min_gate_recovery": aggregate.get("min_gate_recovery", math.nan),
+            "mean_candidate_detection_rate": aggregate.get("mean_candidate_detection_rate", math.nan),
+            "mean_supported_mask_precision": aggregate.get("mean_supported_mask_precision", math.nan),
+            "mean_excess_mask_fraction": aggregate.get("mean_excess_mask_fraction", math.nan),
+            "mean_protected_galaxy_loss": aggregate.get("mean_protected_galaxy_loss", math.nan),
+            "zero_detection_cases": aggregate.get("zero_detection_cases", math.nan),
+            "infeasible": aggregate.get("infeasible", math.nan),
             "elapsed_seconds": elapsed,
             "error": error,
             **parameter_values,
@@ -540,6 +570,14 @@ class OptimisationRun:
                 "mean_profile_affected_fraction",
                 "mean_non_spike_profile_fraction",
                 "mean_profile_change",
+                "mean_gate_recovery",
+                "min_gate_recovery",
+                "mean_candidate_detection_rate",
+                "mean_supported_mask_precision",
+                "mean_excess_mask_fraction",
+                "mean_protected_galaxy_loss",
+                "zero_detection_cases",
+                "infeasible",
                 "elapsed_seconds",
                 "error",
                 *OPTIMISED_PARAMETER_NAMES,
@@ -564,6 +602,17 @@ class OptimisationRun:
                     "longest_bridge_run_samples",
                     "longest_bridge_span_arcsec",
                     "segments",
+                    "gate_candidate_count",
+                    "recovered_gate_candidates",
+                    "gate_target_pixels",
+                    "gate_overlap_pixels",
+                    "gate_recovery",
+                    "candidate_detection_rate",
+                    "supported_mask_precision",
+                    "excess_mask_fraction",
+                    "protected_galaxy_loss",
+                    "zero_detection_with_gate",
+                    "normalised_bridge_span",
                 ],
             )
 
