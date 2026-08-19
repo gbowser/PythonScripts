@@ -286,6 +286,13 @@ def draw_mask_outlines(ax, mask_view: np.ndarray, truth_view: np.ndarray, x_axis
         ax.contour(x_axis, y_axis, component.astype(float), levels=[0.5], colors=[colour], linewidths=1.2)
 
 
+def draw_generic_mask_outlines(ax, mask_view: np.ndarray, x_axis: np.ndarray, y_axis: np.ndarray) -> None:
+    labels, count = label_components(mask_view, structure=np.ones((3, 3), dtype=np.uint8))
+    for component_id in range(1, count + 1):
+        component = labels == component_id
+        ax.contour(x_axis, y_axis, component.astype(float), levels=[0.5], colors=["#ff7f0e"], linewidths=1.2)
+
+
 def draw_report(
     name: str,
     original: np.ndarray,
@@ -297,10 +304,15 @@ def draw_report(
 ) -> Figure:
     cleaned = np.asarray(products["cleaned"], dtype=float)
     mask = np.asarray(products["mask"], dtype=bool)
+    has_toys = bool(np.any(truth_mask))
 
     radius_arcsec = mto.display.profile_radius_pixels(original, geometry) * geometry["pixel_scale"]
     original_view, x_axis, y_axis = mto.display.deproject_bar_aligned_cutout(original, geometry, radius_arcsec)
     injected_view, _, _ = mto.display.deproject_bar_aligned_cutout(injected, geometry, radius_arcsec)
+    residual_view = None
+    if not has_toys:
+        residual = np.asarray(products["residual"], dtype=float)
+        residual_view, _, _ = mto.display.deproject_bar_aligned_cutout(residual, geometry, radius_arcsec)
     cleaned_view, _, _ = mto.display.deproject_bar_aligned_cutout(cleaned, geometry, radius_arcsec)
     mask_view, _, _ = mto.display.deproject_bar_aligned_cutout(mask.astype(float), geometry, radius_arcsec, order=0)
     mask_view = np.isfinite(mask_view) & (mask_view > 0.5)
@@ -340,13 +352,35 @@ def draw_report(
     masked_fraction = np.count_nonzero(mask) / mask.size
     ax_original.set_title("Galaxy Centered Original")
 
-    ax_injected.imshow(injected_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
+    if has_toys:
+        ax_injected.imshow(injected_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
+        ax_injected.contour(
+            x_axis,
+            y_axis,
+            truth_view.astype(float),
+            levels=[0.5],
+            colors=["#00a000"],
+            linewidths=1.35,
+        )
+        secondary_title = "Original + Toys | green=toy boundary"
+    else:
+        rvmin, rvmax = mto.display.robust_limits(residual_view, 1.0, 99.0)
+        residual_limit = max(abs(rvmin), abs(rvmax), np.finfo(float).eps)
+        ax_injected.imshow(
+            residual_view,
+            origin="lower",
+            cmap="coolwarm",
+            vmin=-residual_limit,
+            vmax=residual_limit,
+            extent=extent,
+        )
+        secondary_title = "Residual Spike Gate Image"
     draw_bar_guides(ax_injected, half_width, bar_sma)
     draw_central_exclusion(ax_injected, central_exclusion_arcsec)
     ax_injected.set_aspect("equal", adjustable="box")
     ax_injected.set_xlabel("deprojected arcsec")
     ax_injected.set_ylabel("deprojected arcsec")
-    ax_injected.set_title("Original + Toys")
+    ax_injected.set_title(secondary_title)
 
     ax_mask.imshow(mask_view.astype(float), origin="lower", cmap="Reds", vmin=0.0, vmax=1.0, extent=extent, alpha=0.86)
     draw_bar_guides(ax_mask, half_width, bar_sma)
@@ -357,13 +391,18 @@ def draw_report(
     ax_mask.set_title(f"Mask | masked {masked_fraction:.2%}")
 
     ax_recovered.imshow(cleaned_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
-    draw_mask_outlines(ax_recovered, mask_view, truth_view, x_axis, y_axis)
+    if has_toys:
+        draw_mask_outlines(ax_recovered, mask_view, truth_view, x_axis, y_axis)
+        recovered_title = "Recovered Image | green=correct, red=incorrect"
+    else:
+        draw_generic_mask_outlines(ax_recovered, mask_view, x_axis, y_axis)
+        recovered_title = "Recovered Image | orange=MTObjects mask"
     draw_bar_guides(ax_recovered, half_width, bar_sma)
     draw_central_exclusion(ax_recovered, central_exclusion_arcsec)
     ax_recovered.set_aspect("equal", adjustable="box")
     ax_recovered.set_xlabel("deprojected arcsec")
     ax_recovered.set_ylabel("deprojected arcsec")
-    ax_recovered.set_title("Recovered Image | green=correct, red=incorrect")
+    ax_recovered.set_title(recovered_title)
 
     draw_isophote(
         ax_original_isophote,
@@ -424,8 +463,9 @@ def draw_report(
     source_label = str(params.get("_source_label", "optimised MTObjects parameters"))
     if len(source_label) > 58:
         source_label = source_label[:55] + "..."
+    method_label = "MTObjects Toy Objects" if has_toys else "MTObjects Spike Gate"
     figure.suptitle(
-        f"{name} | MTObjects Toy Objects | segments={kept}/{len(products['rows'])}",
+        f"{name} | {method_label} | segments={kept}/{len(products['rows'])}",
         fontsize=10.5,
         fontweight="bold",
         y=0.982,
@@ -506,6 +546,8 @@ def process_one(
             toys_per_image=int(args.toys_per_image),
             rng=np.random.default_rng(galaxy_seed),
             truth_dilation=int(args.truth_dilation),
+            peak_sigma_min=float(args.toy_peak_sigma_min),
+            peak_sigma_max=float(args.toy_peak_sigma_max),
         )
     else:
         injected = np.asarray(data, dtype=float)
@@ -578,6 +620,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--toys-per-image", type=int, default=6)
     parser.add_argument("--toy-seed", type=int, default=202608299)
     parser.add_argument("--truth-dilation", type=int, default=1)
+    parser.add_argument("--toy-peak-sigma-min", type=float, default=5.0)
+    parser.add_argument("--toy-peak-sigma-max", type=float, default=25.0)
     parser.add_argument(
         "--clean-galaxies-file",
         type=Path,
@@ -590,6 +634,11 @@ def parse_args() -> argparse.Namespace:
         action=argparse.BooleanOptionalAction,
         default=False,
         help="Optionally write cleaned FITS products and masks. Default is reports/summary only.",
+    )
+    parser.add_argument(
+        "--replace-summary",
+        action="store_true",
+        help="Replace the summary CSV before regenerating a complete batch in the same output folder.",
     )
     return parser.parse_args()
 
@@ -635,6 +684,8 @@ def main() -> int:
     log(f"Prepared {len(rows)} galaxies. Output: {output_dir}")
 
     summary_path = output_dir / "mtobjects_optimised_apply_summary.csv"
+    if args.replace_summary and summary_path.exists():
+        summary_path.unlink()
     completed_names = completed_names_from_summary(summary_path) if args.resume_output_dir is not None else set()
     if completed_names:
         rows = [row for row in rows if row["name"] not in completed_names]

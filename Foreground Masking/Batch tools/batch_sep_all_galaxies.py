@@ -351,9 +351,18 @@ def draw_products(
     ax_original.set_title("Galaxy Centered Original")
 
     ax_injected.imshow(injected_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
+    if np.any(truth_view):
+        ax_injected.contour(
+            x_axis,
+            y_axis,
+            truth_view.astype(float),
+            levels=[0.5],
+            colors=["#00a000"],
+            linewidths=1.35,
+        )
     draw_bar_guides(ax_injected, half_width, bar_sma)
     draw_central_exclusion(ax_injected, central_exclusion_arcsec)
-    ax_injected.set_title("Original + Toys")
+    ax_injected.set_title("Original + Toys | green=toy boundary")
 
     ax_mask.imshow(original_view, origin="lower", cmap="gist_gray_r", vmin=vmin, vmax=vmax, extent=extent)
     ax_mask.imshow(np.ma.masked_where(~mask_view, mask_view), origin="lower", cmap="autumn", alpha=0.55, extent=extent)

@@ -329,7 +329,11 @@ def inject_toys(
     toys_per_image: int,
     rng: np.random.Generator,
     truth_dilation: int,
+    peak_sigma_min: float = 5.0,
+    peak_sigma_max: float = 25.0,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[ToyObject]]:
+    if not (0.0 < peak_sigma_min < peak_sigma_max):
+        raise ValueError("Toy peak-sigma bounds must satisfy 0 < minimum < maximum.")
     sigma = robust_sigma(data)
     injected = np.array(data, dtype=float, copy=True)
     truth_mask = np.zeros(data.shape, dtype=bool)
@@ -355,7 +359,7 @@ def inject_toys(
             x0 = float(valid_x[chosen])
             y0 = float(valid_y[chosen])
             toy_type = str(rng.choice(["star", "cluster", "galaxy"], p=[0.5, 0.2, 0.3]))
-            peak_sigma = float(rng.uniform(5.0, 25.0))
+            peak_sigma = float(rng.uniform(peak_sigma_min, peak_sigma_max))
             fwhm_pixels = float(rng.uniform(2.0, 10.0) if toy_type != "galaxy" else rng.uniform(5.0, 22.0))
             axis_ratio = float(rng.uniform(0.35, 0.95) if toy_type == "galaxy" else 1.0)
             pa_deg = float(rng.uniform(0.0, 180.0))
@@ -418,6 +422,8 @@ def build_cases(args: argparse.Namespace) -> list[ImageCase]:
             toys_per_image=int(args.toys_per_image),
             rng=rng,
             truth_dilation=int(args.truth_dilation),
+            peak_sigma_min=float(args.toy_peak_sigma_min),
+            peak_sigma_max=float(args.toy_peak_sigma_max),
         )
         cases.append(
             ImageCase(
@@ -793,6 +799,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-images", type=int, default=DEFAULT_MAX_IMAGES)
     parser.add_argument("--toys-per-image", type=int, default=DEFAULT_TOYS_PER_IMAGE)
     parser.add_argument("--truth-dilation", type=int, default=1)
+    parser.add_argument("--toy-peak-sigma-min", type=float, default=5.0)
+    parser.add_argument("--toy-peak-sigma-max", type=float, default=25.0)
     parser.add_argument(
         "--mtobjects-detect-on",
         "--detect-on",
