@@ -28,6 +28,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 import numpy as np
 from scipy.ndimage import label as label_components
+import spike_gate_component_filter
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -575,6 +576,8 @@ def run_one(
         injected = np.asarray(data, dtype=float)
         truth_mask = np.zeros(data.shape, dtype=bool)
     products = sep_gui.sep_products(injected, params, geometry)
+    if args.source == "spike-gate":
+        products = spike_gate_component_filter.filter_products(injected, geometry, params, products, sep_gui)
     figure = draw_products(name, data, injected, truth_mask, products, params, geometry)
     png_path = output_png_path(report_dir, name, params, clean_galaxy_names)
     figure.savefig(png_path, dpi=args.dpi)

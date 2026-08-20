@@ -1,0 +1,154 @@
+SPIKE GATE PHASE 2 - AUTHORITATIVE ARTIFACT SOURCE
+Prepared: 20 August 2026
+
+PURPOSE
+Source content for four requested deliverables:
+1. Spike Gate Phase 2 Methodology.docx
+2. Spike Gate Phase 2 Results.docx
+3. Spike Gate Phase 2 Improvement Options.docx
+4. Spike Gate Phase 2 Results Summary.pptx
+
+SCOPE AND TERMINOLOGY
+- Masking algorithms: SEP and MTObjects (MTO).
+- Both algorithms operate on the original science image.
+- Spike Gate operates on the residual image and identifies candidate foreground interference along the deprojected bar-major profile.
+- Phase 2 converts Spike Gate from an objective-only reward into a component selector: only connected mask components credibly associated with the gate can enter the final mask.
+- Connected components are labelled in native science-image coordinates and projected once into the common deprojected diagnostic view.
+- A retained component must intersect the compact gate target, have at least 20% of its projected pixels inside the wider permitted support region, and occupy no more than 8% of the diagnostic view.
+- Masked profile samples are replaced by a log-linear bridge for profile diagnostics.
+- A zero or near-zero detection is penalised when credible gate candidates exist.
+
+IMPLEMENTATION FILES
+- Foreground Masking/Shared/spike_gate_objective.py
+- Foreground Masking/Shared/spike_gate_component_filter.py
+- Foreground Masking/Optimisation/optimise_spike_gate_SEP.py
+- Foreground Masking/Optimisation/optimise_spike_gate_MTObjects.py
+- Foreground Masking/Optimisation/evaluate_constrained_spike_gate_batch.py
+- Foreground Masking/Automation/run_phase2_spike_gate_audit_visible.ps1
+- Foreground Masking/Automation/run_phase2_mtobjects_182_visible.ps1
+
+OBJECTIVE COMPONENTS
+- Gate target recovery.
+- Gate candidate detection rate.
+- Supported-mask precision.
+- Excess mask fraction outside permitted gate support.
+- Protected galaxy loss.
+- Total native-image masked fraction and per-image maximum.
+- Non-gate bar-profile masking and bridge-span penalties.
+- Explicit penalty for zero detection when gate candidates are present.
+
+AUDIT DESIGN
+- Fifteen gate-positive, high-risk galaxies were used as a stress-test audit.
+- The audit used short 24-trial searches for each algorithm.
+- SEP and MTO parameter searches operated on science images; gate evidence came from residual images.
+- Full four-fold and 182-galaxy execution was conditional on passing the audit.
+
+AUDIT RESULTS
+SEP:
+- Objective: 153.6543; infeasible.
+- Mean gate recovery: 0.110706 (11.1%).
+- Mean candidate detection rate: 0.116667 (11.7%).
+- Zero-detection cases: 11/15.
+- Mean native-image masked fraction: 0.000025815 (0.00258%).
+- Conclusion: component gating exposed that earlier apparent SEP recovery was largely produced by galaxy-scale components. SEP did not pass.
+
+MTObjects:
+- Objective: 57.8821; narrowly infeasible under the provisional hard constraints.
+- Mean gate recovery: 0.492879 (49.3%).
+- Mean candidate detection rate: 0.633333 (63.3%).
+- Mean supported-mask precision: 0.580912 (58.1%).
+- Zero-detection cases: 2/15 (NGC4020 and NGC4532).
+- Mean native-image masked fraction: 0.0000499703 (0.00500%).
+- Conclusion: sufficiently promising for a conservative 182-galaxy diagnostic PNG run, while retaining the two zero-detection cases as explicit caveats.
+
+NGC3627 AUDIT EXAMPLE
+- SEP: zero retained components, zero recovery, zero masking.
+- MTO: 3 gate-supported components; gate recovery 1.0; candidate detection 1.0.
+- MTO native masked fraction: 0.000145762 (0.0146%).
+- Visual result: compact off-centre masks, preserved spiral structure, closely aligned original and processed isophotes.
+
+182-GALAXY MTO RESULTS
+- Output: D:/Dropbox/Public Documents/UCLAN/MSc Research/Remove foreground objects/MTO/Spike Gate/20260819_202509
+- PNGs: 182.
+- Successful: 182; failed: 0.
+- Gate-positive galaxies: 127.
+- Gate-negative galaxies: 55; all 55 were left unmasked.
+- Gate-positive galaxies with a non-zero accepted mask: 97/127 (76.4%).
+- Gate-positive galaxies with no accepted component: 30/127 (23.6%).
+- Overall zero-mask galaxies: 85/182.
+- Overall non-zero-mask galaxies: 97/182.
+- Mean masked area: 0.002778%.
+- Median masked area: 0.000685%.
+- 75th percentile: 0.003443%.
+- 90th percentile: 0.010300%.
+- 95th percentile: 0.013278%.
+- 99th percentile: 0.016678%.
+- Maximum masked area: 0.021179% (NGC6412).
+
+HIGH-MASK VISUAL REVIEW
+- NGC6412 (0.02118%): two compact off-centre masks; galaxy structure preserved.
+- NGC1672 (0.01946%): four narrow, profile-associated masks; isophotes stable.
+- NGC3627 (0.01458%): major improvement over earlier aggressive SEP result.
+- NGC5236 (0.01428%): 25 accepted components from 11,537 raw segments; low total area but several profile bridges. Flag for manual review and performance optimisation.
+
+SCIENTIFIC INTERPRETATION
+- Phase 2 sharply reduces damage to coherent galaxy morphology.
+- Low masked area is evidence of conservatism, not by itself proof of correct recovery.
+- MTO is presently the stronger candidate for Spike Gate profile protection.
+- The result should not be described as a complete foreground-object catalogue because 30 gate-positive galaxies received no accepted mask.
+- SEP should remain excluded from a production-style Phase 2 batch until its science-image segmentation can generate compact gate-associated components reliably.
+
+IMPROVEMENT OPTIONS - PRIORITISED
+1. Gate credibility model.
+   Quantify spike amplitude, side-drop strength, width, residual compactness, persistence across profile widths, and agreement with a 2-D residual component. Distinguish credible foreground candidates from galaxy-structure spikes before applying the zero-detection penalty.
+2. Native-coordinate target/support masks.
+   Construct gate support directly in native image coordinates, or transform it once with traceable area conservation, so recovery, precision, excess area and protected loss use the same denominator.
+3. Candidate-specific component association.
+   Assign each gate candidate to the best intersecting MTO component and report matched, unmatched, split and merged candidates. Optimise candidate-level recall and precision rather than only aggregate pixel overlap.
+4. Morphology protection.
+   Penalise components with large azimuthal span, annular coherence, tangential elongation along spiral arms, or strong overlap with low-frequency galaxy/isophotal structure.
+5. Two-stage recovery for misses.
+   Use conservative Phase 2 MTO first. For credible unmatched gates only, run a constrained local recovery search in a small native-coordinate window, with tighter area and morphology caps.
+6. Manual labelled validation set.
+   Label approximately 20-30 galaxies, including NGC4020, NGC4532, NGC5236 and high-discrepancy examples. Record true foreground regions, galaxy structure, uncertain regions and profile relevance.
+7. Cross-validation redesign.
+   Stratify folds by image scale, inclination, galaxy morphology, gate count and foreground density. Report uncertainty intervals and fold-to-fold parameter stability.
+8. Runtime controls.
+   Cap raw component count, add per-image time/memory limits and checkpoint/resume. NGC5236 required 4m17s and generated 11,537 raw segments.
+
+PROPOSED ACCEPTANCE CRITERIA FOR NEXT ITERATION
+- Mean credible-candidate recovery >= 0.70.
+- Candidate detection >= 0.75.
+- No unexplained zero detections for high-credibility candidates.
+- Mean protected galaxy loss <= 0.01.
+- Mean native-image masked fraction <= 0.02; per-image maximum <= 0.05.
+- No visually confirmed removal of coherent spiral arms, rings or bar structure in the labelled audit set.
+- Stable performance across four stratified folds.
+
+POWERPOINT NARRATIVE (8 SLIDES)
+1. Title: Spike Gate Phase 2 - conservative foreground masking.
+2. Problem: objective-only agreement allowed galaxy-scale masks to receive recovery credit.
+3. Method: residual gate -> science-image MTO/SEP -> connected-component gate -> final mask -> log-linear profile bridge.
+4. Audit comparison: SEP fails; MTO approaches threshold with much better component behaviour.
+5. NGC3627 before/after evidence using the Phase 2 PNG.
+6. 182-galaxy results: 182/182 success, 127 gate-positive, 97 masked, very low area distribution.
+7. Limitations: 30 gate-positive misses; NGC5236 complexity; low area is not correctness.
+8. Recommendation and next steps: retain MTO Phase 2 as diagnostic candidate; implement credibility, local recovery and labelled validation before production.
+
+FIGURE ASSETS
+- NGC3627:
+  D:/Dropbox/Public Documents/UCLAN/MSc Research/Remove foreground objects/MTO/Spike Gate/20260819_202509/NGC3627_mtobjects_optimised_report_clean.png
+- NGC6412:
+  D:/Dropbox/Public Documents/UCLAN/MSc Research/Remove foreground objects/MTO/Spike Gate/20260819_202509/NGC6412_mtobjects_optimised_report.png
+- NGC1672:
+  D:/Dropbox/Public Documents/UCLAN/MSc Research/Remove foreground objects/MTO/Spike Gate/20260819_202509/NGC1672_mtobjects_optimised_report.png
+- NGC5236:
+  D:/Dropbox/Public Documents/UCLAN/MSc Research/Remove foreground objects/MTO/Spike Gate/20260819_202509/NGC5236_mtobjects_optimised_report.png
+
+DELIVERABLE DESTINATION
+D:/Dropbox/Public Documents/UCLAN/MSc Research/Remove foreground objects/documentation
+
+DOCUMENTATION GENERATION PREFERENCE
+- Default on this Windows workstation: create DOCX deliverables through Microsoft Word COM.
+- Default for PPTX deliverables: create decks through Microsoft PowerPoint COM.
+- Save locally, perform visual QA by PDF/PNG export, then copy verified final files to the requested Dropbox destination.

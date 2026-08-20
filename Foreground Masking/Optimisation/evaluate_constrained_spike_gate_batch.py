@@ -48,10 +48,11 @@ def main() -> None:
     parser.add_argument("--algorithm", choices=["SEP", "MTObjects"], required=True)
     parser.add_argument("--best-json", type=Path, required=True)
     parser.add_argument("--output-csv", type=Path, required=True)
+    parser.add_argument("--names", nargs="+", default=None, help="Optional audit subset of galaxy identifiers.")
     args = parser.parse_args()
     module = sep_opt if args.algorithm == "SEP" else mto_opt
     params = json.loads(args.best_json.read_text(encoding="utf-8"))["params"]
-    ns = config_namespace(module)
+    ns = config_namespace(module, args.names)
     cases = module.build_cases(ns)
     rows = []
     started = time.perf_counter()

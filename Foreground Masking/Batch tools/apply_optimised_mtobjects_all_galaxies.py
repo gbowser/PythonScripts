@@ -36,6 +36,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 import numpy as np
 from scipy.ndimage import label as label_components
+import spike_gate_component_filter
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -553,6 +554,8 @@ def process_one(
         injected = np.asarray(data, dtype=float)
         truth_mask = np.zeros(data.shape, dtype=bool)
     products = mto.mtobjects_products(injected, params, geometry, mtobjects_root)
+    if args.source == "spike-gate":
+        products = spike_gate_component_filter.filter_products(injected, geometry, params, products, mto)
 
     clean_suffix = "_clean" if name.casefold() in clean_galaxy_names else ""
     report_path = report_dir / f"{mto.display.safe_filename(name)}_mtobjects_optimised_report{clean_suffix}.png"

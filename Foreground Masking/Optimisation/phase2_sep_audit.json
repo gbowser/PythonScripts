@@ -1,0 +1,22 @@
+{
+  "objective": 172.35208407514244,
+  "base_objective": 30.98303645609482,
+  "mean_gate_recovery": 0.044642857142857144,
+  "min_gate_recovery": 0.0,
+  "mean_spike_coverage": 0.044642857142857144,
+  "min_spike_coverage": 0.0,
+  "mean_candidate_detection_rate": 0.041666666666666664,
+  "mean_supported_mask_precision": 0.5028169014084507,
+  "mean_excess_mask_fraction": 0.00015172204521316947,
+  "mean_protected_galaxy_loss": 0.0004376823676531889,
+  "mean_masked_fraction": 1.7349690769447712e-06,
+  "max_masked_fraction": 2.6024536154171567e-05,
+  "mean_non_spike_profile_fraction": 0.0017316017316017318,
+  "mean_profile_affected_fraction": 0.0039447731755424065,
+  "mean_profile_change": 0.0,
+  "max_longest_bridge_span_arcsec": 101.53253482421866,
+  "zero_detection_cases": 7.0,
+  "constraint_deficit": 0.9136904761904762,
+  "constraint_cap_excess": 0.0,
+  "infeasible": 1.0
+}

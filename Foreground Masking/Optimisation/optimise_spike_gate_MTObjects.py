@@ -291,14 +291,25 @@ def score_case(
     profile_width_pixels: int,
 ) -> dict[str, float | int | str]:
     products = mto.mtobjects_products(case.data, params, case.geometry, mtobjects_root)
-    mask = np.asarray(products["mask"], dtype=bool)
-    profile_mask = profile_mask_for_image_mask(case.data, mask, case.geometry, profile_width_pixels)
     radius_arcsec = mto.display.profile_radius_pixels(case.data, case.geometry) * case.geometry["pixel_scale"]
-    mask_view, x_axis, y_axis = mto.display.deproject_bar_aligned_cutout(
+    raw_mask = np.asarray(products["mask"], dtype=bool)
+    _raw_view, x_axis, y_axis = mto.display.deproject_bar_aligned_cutout(
+        raw_mask.astype(float), case.geometry, radius_arcsec, order=0
+    )
+    half_width = 0.5 * int(profile_width_pixels) * case.geometry["pixel_scale"]
+    def labels_to_view(component_labels: np.ndarray) -> np.ndarray:
+        view, _x, _y = mto.display.deproject_bar_aligned_cutout(
+            component_labels.astype(float), case.geometry, radius_arcsec, order=0
+        )
+        return np.where(np.isfinite(view), view, 0.0)
+    mask, component_metrics = gate_objective.retain_gate_supported_components(
+        raw_mask, labels_to_view, x_axis, y_axis, case.spike_samples, half_width
+    )
+    profile_mask = profile_mask_for_image_mask(case.data, mask, case.geometry, profile_width_pixels)
+    mask_view, _x_axis, _y_axis = mto.display.deproject_bar_aligned_cutout(
         mask.astype(float), case.geometry, radius_arcsec, order=0
     )
     mask_view = np.isfinite(mask_view) & (mask_view > 0.5)
-    half_width = 0.5 * int(profile_width_pixels) * case.geometry["pixel_scale"]
     bar_sma = mto.display.bar_sma_deprojected_arcsec(case.geometry)
     gate_metrics = gate_objective.score_mask(
         mask_view,
@@ -336,6 +347,7 @@ def score_case(
         "normalised_bridge_span": 0.0,
     }
     result.update(gate_metrics)
+    result.update(component_metrics)
     return result
 
 

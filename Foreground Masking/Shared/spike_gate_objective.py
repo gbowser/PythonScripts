@@ -13,6 +13,7 @@ import math
 from typing import Iterable
 
 import numpy as np
+from scipy.ndimage import label
 
 
 DEFAULT_MIN_GATE_RECOVERY = 0.50
@@ -116,6 +117,65 @@ def score_mask(
         "excess_mask_fraction": excess_mask_fraction,
         "protected_galaxy_loss": galaxy_loss,
         "zero_detection_with_gate": int(candidate_count > 0 and overlap_pixels == 0),
+    }
+
+
+def retain_gate_supported_components(
+    native_mask: np.ndarray,
+    labels_to_view,
+    x_axis: np.ndarray,
+    y_axis: np.ndarray,
+    spike_samples: np.ndarray,
+    profile_half_width_arcsec: float,
+    *,
+    min_target_pixels: int = 1,
+    min_supported_fraction: float = 0.20,
+    max_component_view_fraction: float = 0.08,
+) -> tuple[np.ndarray, dict[str, int]]:
+    """Keep only connected mask components credibly associated with the gate.
+
+    Components are labelled in native science-image coordinates, then projected
+    into the common deprojected diagnostic view.  A component must intersect a
+    compact gate target, have a useful fraction inside the wider support area,
+    and must not occupy a galaxy-scale fraction of the view.  This makes Spike
+    Gate an actual selector rather than only a term in the objective function.
+    """
+    raw = np.asarray(native_mask, dtype=bool)
+    target, support, _candidates = build_gate_regions(
+        x_axis, y_axis, spike_samples, profile_half_width_arcsec
+    )
+    labels, count = label(raw, structure=np.ones((3, 3), dtype=np.uint8))
+    projected_labels = np.rint(np.asarray(labels_to_view(labels), dtype=float)).astype(np.int32)
+    kept = np.zeros_like(raw)
+    accepted = 0
+    rejected_no_target = 0
+    rejected_low_support = 0
+    rejected_galaxy_scale = 0
+    for component_id in range(1, count + 1):
+        native_component = labels == component_id
+        view = projected_labels == component_id
+        view_pixels = int(np.count_nonzero(view))
+        if view_pixels == 0:
+            rejected_no_target += 1
+            continue
+        target_pixels = int(np.count_nonzero(view & target))
+        supported_fraction = float(np.count_nonzero(view & support) / view_pixels)
+        view_fraction = float(view_pixels / max(1, view.size))
+        if target_pixels < int(min_target_pixels):
+            rejected_no_target += 1
+        elif supported_fraction < float(min_supported_fraction):
+            rejected_low_support += 1
+        elif view_fraction > float(max_component_view_fraction):
+            rejected_galaxy_scale += 1
+        else:
+            kept |= native_component
+            accepted += 1
+    return kept, {
+        "raw_components": int(count),
+        "gate_supported_components": accepted,
+        "rejected_no_gate_intersection": rejected_no_target,
+        "rejected_low_gate_support": rejected_low_support,
+        "rejected_galaxy_scale": rejected_galaxy_scale,
     }
 
 

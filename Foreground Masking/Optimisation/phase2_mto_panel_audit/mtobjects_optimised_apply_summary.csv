@@ -1,0 +1,4 @@
+name,status,segments_kept,segments_raw,masked_pixels,masked_fraction,report_png,cleaned_fits,elapsed_seconds,error
+NGC3627,ok,6,1772,450,0.00014576220677502738,Foreground Masking\Optimisation\phase2_mto_panel_audit\NGC3627_mtobjects_optimised_report_clean.png,,15.401423099996464,
+NGC4020,ok,0,465,0,0.0,Foreground Masking\Optimisation\phase2_mto_panel_audit\NGC4020_mtobjects_optimised_report.png,,1.700643800002581,
+NGC4532,ok,0,951,0,0.0,Foreground Masking\Optimisation\phase2_mto_panel_audit\NGC4532_mtobjects_optimised_report.png,,3.89822180000192,
