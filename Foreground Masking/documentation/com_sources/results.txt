@@ -1,0 +1,37 @@
+SPIKE GATE PHASE 2 RESULTS
+Audit comparison and 182-galaxy MTObjects diagnostic batch
+Prepared: 20 August 2026
+
+EXECUTIVE CONCLUSION
+Phase 2 removed the galaxy-scale overmasking failure mode. MTObjects is the stronger diagnostic candidate; SEP failed the stress-test audit and should not enter a production-style batch in its present configuration.
+
+1. STRESS-TEST AUDIT
+SEP: objective 153.6543 (infeasible); mean gate recovery 11.1%; candidate detection 11.7%; zero detections 11/15; mean masked area 0.00258%. Decision: do not proceed.
+
+MTObjects: objective 57.8821 (narrowly infeasible); mean gate recovery 49.3%; candidate detection 63.3%; supported precision 58.1%; zero detections 2/15; mean masked area 0.00500%. Decision: proceed diagnostically.
+
+The two MTO zero-detection cases were NGC4020 and NGC4532.
+
+2. NGC3627
+SEP produced zero retained components and zero recovery. MTO produced three gate-supported components, recovery 1.0 and candidate detection 1.0. MTO masked 0.0146% while preserving spiral structure and isophotal alignment.
+
+3. 182-GALAXY MTO DIAGNOSTIC BATCH
+Successful: 182/182; failed: 0.
+Gate-positive: 127. Gate-negative: 55; all left unmasked.
+Accepted non-zero mask: 97/127 gate-positive galaxies (76.4%).
+No accepted component: 30/127 gate-positive galaxies (23.6%).
+Overall: 97 non-zero masks and 85 zero masks.
+
+4. MASKED-AREA DISTRIBUTION
+Mean 0.002778%; median 0.000685%; P75 0.003443%; P90 0.010300%; P95 0.013278%; P99 0.016678%; maximum 0.021179% (NGC6412).
+
+5. HIGH-MASK REVIEW
+NGC6412 (0.02118%): two compact off-centre masks; galaxy preserved.
+NGC1672 (0.01946%): four narrow profile-associated masks; stable isophotes.
+NGC3627 (0.01458%): major improvement over the earlier aggressive SEP result.
+NGC5236 (0.01428%): 25 accepted from 11,537 raw segments; manual/performance flag.
+
+6. SCIENTIFIC INTERPRETATION
+Phase 2 sharply reduces damage to coherent galaxy morphology. MTO is presently the stronger Spike Gate profile-protection candidate. Thirty gate-positive galaxies received no accepted mask, so recall remains incomplete. SEP remains excluded until it reliably yields compact gate-associated components. This remains a conservative diagnostic, not a complete foreground catalogue.
+
+Output: D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\MTO\Spike Gate\20260819_202509

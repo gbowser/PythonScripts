@@ -1,0 +1,35 @@
+SPIKE GATE PHASE 2 IMPROVEMENT OPTIONS
+Prioritised route from conservative diagnostic to validated masking workflow
+Prepared: 20 August 2026
+
+RECOMMENDED DIRECTION
+Retain MTObjects Phase 2 as the diagnostic baseline. Improve gate credibility and candidate matching first, then add local recovery only for credible unmatched candidates. Do not broaden the global mask to recover misses.
+
+1. PRIORITISED IMPROVEMENTS
+1. Gate credibility model: score amplitude, side-drop, width, residual compactness, multi-width persistence and 2-D residual agreement.
+2. Native-coordinate target and support: use one traceable coordinate system and conserved denominators.
+3. Candidate-specific association: report matched, unmatched, split and merged candidates; optimise candidate-level recall and precision.
+4. Morphology protection: penalise annular coherence, azimuthal span, arm-like elongation and low-frequency galaxy overlap.
+5. Two-stage local recovery: search a small native window for credible misses under tighter area and morphology caps.
+6. Manual labelled validation: label approximately 20-30 galaxies including NGC4020, NGC4532 and NGC5236.
+7. Stratified cross-validation: balance image scale, inclination, morphology, gate count and foreground density.
+8. Runtime controls: cap raw components, enforce time and memory limits and checkpoint/resume.
+
+2. STAGED PROGRAMME
+Stage A: build gate-credibility labels and candidate-level matching diagnostics.
+Stage B: implement morphology protection and native-coordinate accounting.
+Stage C: run stratified four-fold optimisation on the labelled subset.
+Stage D: add local recovery for credible unmatched gates and re-audit misses.
+Stage E: approve a new 182-galaxy batch only if quantitative and visual criteria pass.
+
+3. ACCEPTANCE CRITERIA
+Mean credible-candidate recovery at least 0.70.
+Candidate detection at least 0.75.
+No unexplained zero detections for high-credibility candidates.
+Mean protected galaxy loss no more than 0.01.
+Mean and maximum native masked fractions no more than 0.02 and 0.05.
+No confirmed coherent structure removal in the labelled audit.
+Stable behaviour across four stratified folds.
+
+4. DECISION RULE
+Advance to production-style use only when candidate recovery improves without exceeding morphology-protection and area limits. If local recovery increases galaxy loss, retain the conservative baseline and route uncertain cases to manual review.

@@ -1,0 +1,51 @@
+galaxy,status,error
+ESO013-016,failed,"RuntimeError: MTObjects could not load its compiled C libraries. Set --mtobjects-root or MTOBJECTS_ROOT to a compiled CarolineHaigh/mtobjects checkout and run its recompile.sh if the mtolib/lib shared libraries are missing.
+concurrent.futures.process._RemoteTraceback: 
+""""""
+Traceback (most recent call last):
+  File ""C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\Shared\mtobjects_spike_gate_processing.py"", line 493, in mtobjects_context
+    yield
+  File ""C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\Shared\mtobjects_spike_gate_processing.py"", line 562, in mtobjects_products
+    init_double_filtering(mto_params)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File ""C:\Users\gordo\Documents\Github\PythonScripts\mtobjects\mtolib\tree_filtering.py"", line 21, in init_double_filtering
+    mto_lib = ct.CDLL('mtolib/lib/mt_objects_double.so')
+  File ""C:\Users\gordo\AppData\Roaming\uv\python\cpython-3.13-windows-x86_64-none\Lib\ctypes\__init__.py"", line 361, in __init__
+    self._handle = self._load_library(name, mode, handle, winmode)
+                   ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""C:\Users\gordo\AppData\Roaming\uv\python\cpython-3.13-windows-x86_64-none\Lib\ctypes\__init__.py"", line 379, in _load_library
+    return _LoadLibrary(self._name, winmode)
+OSError: [WinError 4551] An Application Control policy has blocked this file
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File ""C:\Users\gordo\AppData\Roaming\uv\python\cpython-3.13-windows-x86_64-none\Lib\concurrent\futures\process.py"", line 254, in _process_worker
+    r = call_item.fn(*call_item.args, **call_item.kwargs)
+  File ""C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\documentation\compute_toy_batch_comparison.py"", line 89, in process_one
+    mto_products = mto_tool.mtobjects_products(injected, mto_cfg[""params""], geometry, mto_root)
+  File ""C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\Shared\mtobjects_spike_gate_processing.py"", line 553, in mtobjects_products
+    with mtobjects_context(mtobjects_root):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File ""C:\Users\gordo\AppData\Roaming\uv\python\cpython-3.13-windows-x86_64-none\Lib\contextlib.py"", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File ""C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\Shared\mtobjects_spike_gate_processing.py"", line 499, in mtobjects_context
+    raise RuntimeError(
+    ...<3 lines>...
+    ) from exc
+RuntimeError: MTObjects could not load its compiled C libraries. Set --mtobjects-root or MTOBJECTS_ROOT to a compiled CarolineHaigh/mtobjects checkout and run its recompile.sh if the mtolib/lib shared libraries are missing.
+""""""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File ""C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\documentation\compute_toy_batch_comparison.py"", line 133, in main
+    result = future.result()
+  File ""C:\Users\gordo\AppData\Roaming\uv\python\cpython-3.13-windows-x86_64-none\Lib\concurrent\futures\_base.py"", line 453, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File ""C:\Users\gordo\AppData\Roaming\uv\python\cpython-3.13-windows-x86_64-none\Lib\concurrent\futures\_base.py"", line 402, in __get_result
+    raise self._exception
+RuntimeError: MTObjects could not load its compiled C libraries. Set --mtobjects-root or MTOBJECTS_ROOT to a compiled CarolineHaigh/mtobjects checkout and run its recompile.sh if the mtolib/lib shared libraries are missing.
+"

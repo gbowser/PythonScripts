@@ -1,6 +1,7 @@
 param(
     [string]$OutputDir = "D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\documentation",
-    [string]$QaDir = "C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\documentation\phase2_com_qa"
+    [string]$QaDir = "C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\documentation\phase2_com_qa",
+    [switch]$SkipDocs
 )
 
 $ErrorActionPreference = "Stop"
@@ -330,7 +331,7 @@ function Add-PptText($slide, $text, $left, $top, $width, $height, $size=22, $bol
 }
 
 function Add-PptTitle($slide, $title, $number) {
-    Add-PptText $slide $title 48 30 840 55 30 $true $navy | Out-Null
+    Add-PptText $slide $title 48 30 840 55 35 $true $navy | Out-Null
     Add-PptText $slide ("{0:D2}" -f $number) 900 34 35 28 13 $true $blue 3 | Out-Null
     $line = $slide.Shapes.AddLine(48,92,912,92)
     $line.Line.ForeColor.RGB = $blue
@@ -365,7 +366,7 @@ function Build-Presentation($ppt) {
     Add-PptText $s "Release gate" 650 260 220 35 21 $true $blue 2 | Out-Null
     Add-PptText $s "Audit first; run 182 galaxies only`nwhen component behaviour is credible" 630 305 260 80 19 $false $darkGray 2 | Out-Null
 
-    $s = $pres.Slides.Add(3,$blank); Add-PptTitle $s "Method: evidence and segmentation remain separate" 3
+    $s = $pres.Slides.Add(3,$blank); Add-PptTitle $s "Residual evidence; science-image segmentation" 3
     $steps = @(
         @("1","Residual image","Spike Gate candidates"), @("2","Science image","SEP or MTObjects"),
         @("3","Native components","Target + support + size rules"), @("4","Final mask","Log-linear profile bridge")
@@ -382,7 +383,7 @@ function Build-Presentation($ppt) {
     Add-PptText $s "Protection terms" 530 300 180 35 23 $true $navy | Out-Null
     Add-PptText $s "Excess-area penalty`nProtected galaxy loss`nZero-detection penalty for credible gates" 530 345 340 100 19 $false $darkGray | Out-Null
 
-    $s = $pres.Slides.Add(4,$blank); Add-PptTitle $s "Stress-test audit: MTObjects is substantially stronger" 4
+    $s = $pres.Slides.Add(4,$blank); Add-PptTitle $s "MTObjects outperforms SEP in the stress test" 4
     Add-Metric $s "11.1%" "SEP mean gate recovery" 65 135 190
     Add-Metric $s "49.3%" "MTO mean gate recovery" 285 135 190
     Add-Metric $s "11/15" "SEP zero detections" 505 135 190
@@ -392,7 +393,7 @@ function Build-Presentation($ppt) {
     Add-PptText $s "MTObjects" 600 300 180 35 25 $true $green 2 | Out-Null
     Add-PptText $s "Narrowly infeasible, but compact component behaviour justified a conservative diagnostic batch." 540 345 360 100 19 $false $darkGray 2 | Out-Null
 
-    $s = $pres.Slides.Add(5,$blank); Add-PptTitle $s "NGC3627: the component gate resolves aggressive masking" 5
+    $s = $pres.Slides.Add(5,$blank); Add-PptTitle $s "NGC3627: compact masks preserve structure" 5
     $img = "D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\MTO\Spike Gate\20260819_202509\NGC3627_mtobjects_optimised_report_clean.png"
     if (Test-Path -LiteralPath $img) { $s.Shapes.AddPicture($img,0,-1,55,112,560,398) | Out-Null }
     Add-PptText $s "MTO Phase 2" 650 145 240 35 25 $true $green 2 | Out-Null
@@ -418,7 +419,7 @@ function Build-Presentation($ppt) {
     Add-PptText $s "Phase 2 protects bar-profile analysis; it is not yet a complete foreground-object inventory." 660 210 250 90 19 $false $darkGray 2 | Out-Null
     Add-PptText $s "Low area is a safety signal. Candidate-level validation is the missing correctness signal." 120 385 720 65 25 $true $blue 2 | Out-Null
 
-    $s = $pres.Slides.Add(8,$blank); Add-PptTitle $s "Recommendation: improve recall locally, not globally" 8
+    $s = $pres.Slides.Add(8,$blank); Add-PptTitle $s "Improve recall locally, not globally" 8
     Add-PptText $s "Retain MTO Phase 2 as the conservative diagnostic baseline." 70 125 820 45 28 $true $navy 2 | Out-Null
     Add-PptText $s "1" 90 225 45 40 26 $true $blue 2 | Out-Null
     Add-PptText $s "Score gate credibility and match candidates explicitly" 145 220 700 42 21 $true $darkGray | Out-Null
@@ -442,17 +443,19 @@ function Build-Presentation($ppt) {
 
 $word = $null; $ppt = $null
 try {
-    $word = New-Object -ComObject Word.Application
-    $word.Visible = $false
-    $word.DisplayAlerts = 0
-    $word.ScreenUpdating = $false
     $outputs = @()
-    $outputs += Build-Methodology $word
-    $outputs += Build-Results $word
-    $outputs += Build-Improvements $word
-    $word.Quit()
-    [System.Runtime.InteropServices.Marshal]::FinalReleaseComObject($word) | Out-Null
-    $word = $null
+    if (-not $SkipDocs) {
+        $word = New-Object -ComObject Word.Application
+        $word.Visible = $false
+        $word.DisplayAlerts = 0
+        $word.ScreenUpdating = $false
+        $outputs += Build-Methodology $word
+        $outputs += Build-Results $word
+        $outputs += Build-Improvements $word
+        $word.Quit()
+        [System.Runtime.InteropServices.Marshal]::FinalReleaseComObject($word) | Out-Null
+        $word = $null
+    }
     $ppt = New-Object -ComObject PowerPoint.Application
     $ppt.Visible = -1
     $outputs += Build-Presentation $ppt

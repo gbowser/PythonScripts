@@ -1,0 +1,39 @@
+SPIKE GATE PHASE 2 METHODOLOGY
+Component-constrained optimisation of SEP and MTObjects on science images
+Prepared: 20 August 2026
+
+METHODOLOGICAL PRINCIPLE
+Spike Gate supplies evidence from residual images; SEP and MTObjects segment only the original science images. Gate evidence selects credible connected components, but never becomes the science-image input.
+
+1. PURPOSE AND RATIONALE
+Earlier objective-only agreement could reward a large mask simply because it overlapped a Spike Gate target. Phase 2 changes the gate from a score-only term into an explicit connected-component selector. Recovery credit is conditional on compact, gate-supported science-image segmentation.
+
+2. PROCESSING ARCHITECTURE
+1. Generate Spike Gate candidate evidence from the residual image.
+2. Run SEP or MTObjects on the original science image within documentation-supported parameter ranges.
+3. Label connected components in native science-image coordinates.
+4. Project each native label map once into the common deprojected diagnostic view.
+5. Retain only components satisfying target intersection, support fraction and size constraints.
+6. Apply the accepted mask and replace masked profile samples with a log-linear bridge.
+
+3. COMPONENT RETENTION RULES
+Target intersection: the component must intersect the compact gate target.
+Support fraction: at least 20% of projected component pixels must fall inside permitted support.
+Maximum extent: a component may occupy no more than 8% of the diagnostic view.
+Coordinate handling: native labels are projected once to avoid denominator drift.
+
+4. OPTIMISATION OBJECTIVE
+The scalar objective balances gate recovery, candidate detection, supported-mask precision, excess area, protected galaxy loss, native masked fraction, non-gate profile masking, bridge span and an explicit zero-detection penalty when credible candidates exist.
+
+5. AUDIT AND RELEASE GATE
+Fifteen gate-positive, high-risk galaxies formed a stress-test audit. Each algorithm used a short 24-trial search. MTO was permitted to proceed as a conservative diagnostic run; SEP was not.
+
+6. IMPLEMENTATION
+Objective: Foreground Masking/Shared/spike_gate_objective.py
+Batch filter: Foreground Masking/Shared/spike_gate_component_filter.py
+SEP optimiser: Foreground Masking/Optimisation/optimise_spike_gate_SEP.py
+MTO optimiser: Foreground Masking/Optimisation/optimise_spike_gate_MTObjects.py
+Audit evaluator: Foreground Masking/Optimisation/evaluate_constrained_spike_gate_batch.py
+
+7. INTERPRETATION LIMITS
+Low masked area demonstrates conservatism, not necessarily correct foreground recovery. Phase 2 is a profile-protection diagnostic and is not yet a complete foreground-object catalogue.
