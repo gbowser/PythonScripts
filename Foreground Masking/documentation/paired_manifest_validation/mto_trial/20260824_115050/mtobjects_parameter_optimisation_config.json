@@ -1,0 +1,33 @@
+{
+  "manifest": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Erwin_s4g_image_downloader\\geometry_output\\s4g_image_geometry_manifest.csv",
+  "pc": "Desktop",
+  "mtobjects_root": "mtobjects",
+  "output_dir": "Foreground Masking\\documentation\\paired_manifest_validation\\mto_trial\\20260824_115050",
+  "names": [
+    "IC0600"
+  ],
+  "max_images": 1,
+  "toys_per_image": 6,
+  "truth_dilation": 1,
+  "toy_peak_sigma_min": 5.0,
+  "toy_peak_sigma_max": 25.0,
+  "injection_manifest": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\documentation\\paired_manifest_validation\\paired_toy_injection_manifest.json",
+  "injection_set": "cross_validation",
+  "detect_on": "original",
+  "initial_points": 1,
+  "max_iter": 0,
+  "bg_variance_min": 0.001,
+  "bg_variance_max": 1.0,
+  "bg_variance_log": true,
+  "bg_variance_step": 0.0001,
+  "workers": 1,
+  "seed": 202608299,
+  "study_name": "mtobjects-toy-optimisation",
+  "max_masked_fraction": 0.15,
+  "data_loss_penalty": 0.5,
+  "false_positive_penalty": 0.1,
+  "min_toy_detection_rate": 0.25,
+  "min_mean_toy_recall": 0.2,
+  "results_workbook": null,
+  "prepare_only": false
+}

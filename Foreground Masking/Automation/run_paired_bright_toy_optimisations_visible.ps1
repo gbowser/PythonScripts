@@ -21,21 +21,24 @@ if (-not $RunStamp) { $RunStamp = Get-Date -Format "yyyyMMdd_HHmmss" }
 
 $CommonFoldSeed = 202608150
 $CommonInjectionSeed = 202608299
+$IndependentSelectionSeed = 202608399
 $ToyPeakSigmaMin = 6.0
 $ToyPeakSigmaMax = 30.0
 $SepRoot = Join-Path $DataRoot "SEP\Toy Objects\$RunStamp\optimisation"
 $MtoRoot = Join-Path $DataRoot "MTObjects\Toy Objects\$RunStamp\optimisation"
 $ControlRoot = Join-Path $DataRoot "Toy Objects paired optimisation\$RunStamp"
 $LogRoot = Join-Path $ControlRoot "logs"
-New-Item -ItemType Directory -Force -Path $SepRoot,$MtoRoot,$LogRoot | Out-Null
+$InjectionRoot = Join-Path $ControlRoot "immutable_injections"
+$InjectionManifest = Join-Path $InjectionRoot "paired_toy_injection_manifest.json"
+New-Item -ItemType Directory -Force -Path $SepRoot,$MtoRoot,$LogRoot,$InjectionRoot | Out-Null
 
 $config = [ordered]@{
     run_stamp = $RunStamp
     design = "four-fold cross-validation; 30 training and 10 held out"
     common_fold_seed = $CommonFoldSeed
-    common_training_injection_seed_base = $CommonInjectionSeed
-    per_fold_training_seeds = @(1..4 | ForEach-Object { $CommonInjectionSeed + $_ })
-    common_evaluation_seed = $CommonInjectionSeed
+    cross_validation_global_seed = $CommonInjectionSeed
+    independent_selection_global_seed = $IndependentSelectionSeed
+    per_galaxy_seeds = "stored in immutable manifest and derived from global seed plus CRC32 galaxy identifier"
     toy_peak_sigma_original = "5.0 to 25.0"
     toy_peak_sigma_new = "$ToyPeakSigmaMin to $ToyPeakSigmaMax"
     brightness_scale = 1.20
@@ -43,6 +46,7 @@ $config = [ordered]@{
     science_image_detection = $true
     sep_output = $SepRoot
     mtobjects_output = $MtoRoot
+    immutable_injection_manifest = $InjectionManifest
 }
 $config | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $ControlRoot "paired_run_config.json") -Encoding UTF8
 
@@ -72,11 +76,23 @@ function Run-Stage {
     return 0
 }
 
+$manifestArgs = @(
+    "Foreground Masking\Optimisation\generate_paired_toy_manifest.py",
+    "--clean-list", $CleanList, "--source-manifest", $Manifest, "--output-dir", $InjectionRoot,
+    "--pc", $PC, "--fold-seed", "$CommonFoldSeed", "--cv-seed", "$CommonInjectionSeed",
+    "--selection-seed", "$IndependentSelectionSeed", "--toys-per-image", "6", "--truth-dilation", "1",
+    "--toy-peak-sigma-min", "$ToyPeakSigmaMin", "--toy-peak-sigma-max", "$ToyPeakSigmaMax"
+)
+$code = Run-Stage "immutable paired injection generation" (Join-Path $LogRoot "injection_manifest.log") $manifestArgs
+if ($code -ne 0) { exit $code }
+
 $sepArgs = @(
     "Foreground Masking\Optimisation\cross_validate_toy_objects_SEP.py",
     "--clean-list", $CleanList, "--manifest", $Manifest, "--pc", $PC,
     "--output-dir", $SepRoot, "--fold-seed", "$CommonFoldSeed",
-    "--seed", "$CommonInjectionSeed", "--evaluation-seed", "$CommonInjectionSeed",
+    "--seed", "$CommonInjectionSeed", "--evaluation-seed", "$IndependentSelectionSeed",
+    "--injection-manifest", $InjectionManifest, "--cv-injection-set", "cross_validation",
+    "--evaluation-injection-set", "winner_selection",
     "--initial-points", "8", "--max-iter", "32", "--workers", "10",
     "--toys-per-image", "6", "--truth-dilation", "1",
     "--toy-peak-sigma-min", "$ToyPeakSigmaMin", "--toy-peak-sigma-max", "$ToyPeakSigmaMax",
@@ -90,7 +106,9 @@ $mtoArgs = @(
     "--clean-list", $CleanList, "--manifest", $Manifest, "--pc", $PC,
     "--mtobjects-root", $MTObjectsRoot, "--output-dir", $MtoRoot,
     "--fold-seed", "$CommonFoldSeed", "--seed", "$CommonInjectionSeed",
-    "--evaluation-seed", "$CommonInjectionSeed",
+    "--evaluation-seed", "$IndependentSelectionSeed",
+    "--injection-manifest", $InjectionManifest, "--cv-injection-set", "cross_validation",
+    "--evaluation-injection-set", "winner_selection",
     "--initial-points", "8", "--max-iter", "32", "--workers", "10",
     "--toys-per-image", "6", "--truth-dilation", "1",
     "--toy-peak-sigma-min", "$ToyPeakSigmaMin", "--toy-peak-sigma-max", "$ToyPeakSigmaMax",

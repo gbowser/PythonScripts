@@ -39,6 +39,8 @@ def build_evaluation_cases(args: argparse.Namespace, names: list[str]):
         truth_dilation=args.truth_dilation,
         toy_peak_sigma_min=args.toy_peak_sigma_min,
         toy_peak_sigma_max=args.toy_peak_sigma_max,
+        injection_manifest=args.injection_manifest,
+        injection_set=args.evaluation_injection_set,
     )
     return mto_opt.build_cases(case_args)
 
@@ -158,6 +160,8 @@ def run_fold(args: argparse.Namespace, root: Path, fold_number: int, training: l
         "--truth-dilation", str(args.truth_dilation),
         "--toy-peak-sigma-min", str(args.toy_peak_sigma_min),
         "--toy-peak-sigma-max", str(args.toy_peak_sigma_max),
+        "--injection-manifest", str(args.injection_manifest),
+        "--injection-set", args.cv_injection_set,
         "--mtobjects-detect-on", args.detect_on,
         "--initial-points", str(args.initial_points),
         "--max-iter", str(args.max_iter),
@@ -205,6 +209,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--truth-dilation", type=int, default=1)
     parser.add_argument("--toy-peak-sigma-min", type=float, default=5.0)
     parser.add_argument("--toy-peak-sigma-max", type=float, default=25.0)
+    parser.add_argument("--injection-manifest", type=Path, required=True)
+    parser.add_argument("--cv-injection-set", default="cross_validation")
+    parser.add_argument("--evaluation-injection-set", default="winner_selection")
     parser.add_argument("--detect-on", choices=["original", "residual"], default="original")
     parser.add_argument("--bg-variance-min", type=float, default=mto_opt.DEFAULT_BG_VARIANCE_MIN)
     parser.add_argument("--bg-variance-max", type=float, default=mto_opt.DEFAULT_BG_VARIANCE_MAX)
@@ -240,6 +247,7 @@ def main() -> int:
     cases_by_name = {case.name: case for case in evaluation_cases}
     candidates: list[dict[str, object]] = []
     details: list[dict[str, object]] = []
+    result_metadata = {"algorithm": "MTObjects", **mto_opt.paired_toy_common.runtime_metadata(PROJECT_ROOT), "worker_count": args.workers, "injection_manifest": str(args.injection_manifest)}
     started = time.perf_counter()
     for index, held_out in enumerate(folds, start=1):
         training = sorted(set(names) - set(held_out))
@@ -261,6 +269,8 @@ def main() -> int:
         )
         row = {
             "fold": index,
+            **result_metadata,
+            "parameter_set_json": json.dumps(params, sort_keys=True),
             "best_json": str(best_path),
             "training_objective": best.get("objective"),
             "candidate_feasible": int(feasible),
@@ -271,7 +281,7 @@ def main() -> int:
             **{f"all40_{key}": value for key, value in all_metrics.items()},
         }
         candidates.append(row)
-        details.extend({"fold": index, **detail} for detail in held_detail)
+        details.extend({"fold": index, **result_metadata, "injection_set": args.evaluation_injection_set, "parameter_set_json": json.dumps(params, sort_keys=True), **detail} for detail in held_detail)
         eta = (time.perf_counter() - started) / index * (4 - index)
         print(
             f"MTObjects fold {index}/4 complete: held_out_score={held_metrics['score']:.4f}, "

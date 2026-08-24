@@ -1,0 +1,107 @@
+{
+  "schema_version": "paired-toy-injections-v1",
+  "fold_seed": 202608150,
+  "toy_configuration": {
+    "peak_sigma_min": 6.0,
+    "peak_sigma_max": 30.0
+  },
+  "injection_sets": {
+    "cross_validation": {
+      "global_seed": 202608299,
+      "galaxies": {
+        "IC0600": {
+          "galaxy_identifier": "IC0600",
+          "science_image_path": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Erwin\\s4g_images_36um\\IC0600.phot.1.fits",
+          "science_image_sha256": "67125a0dc3505e2eeb4f3e246a1c72327948bb6b2e7326dfd65f2927ca67e99e",
+          "global_seed": 202608299,
+          "per_galaxy_seed": 1980572699,
+          "payload_path": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\documentation\\paired_manifest_validation\\payloads\\cross_validation\\IC0600.npz",
+          "payload_sha256": "0058467921d8dee3fc1c1ea4609362adad403017708e16dd6c308f71e63356de",
+          "delta_sha256": "f29cf9932edf23a04f25bbe72b8223f7b4fa2d0410678b7973820dee789837df",
+          "truth_mask_sha256": "9dbf3ab5a6cd72aa276ec137e244e1f3e7ed87f03c2ff1578b02c4a4cb2517db",
+          "truth_pixels": 414,
+          "toys": [
+            {
+              "image_name": "IC0600",
+              "toy_id": 1,
+              "object_type": "star",
+              "x": 445.0,
+              "y": 793.0,
+              "peak_sigma": 25.331388149972604,
+              "fwhm_pixels": 2.440584249616932,
+              "axis_ratio": 1.0,
+              "pa_deg": 158.2301130043943,
+              "truth_pixels": 37,
+              "amplitude_image_units": 0.4461541742589353
+            },
+            {
+              "image_name": "IC0600",
+              "toy_id": 2,
+              "object_type": "cluster",
+              "x": 463.0,
+              "y": 789.0,
+              "peak_sigma": 27.532477926845278,
+              "fwhm_pixels": 3.9815038661127726,
+              "axis_ratio": 1.0,
+              "pa_deg": 5.571914090654695,
+              "truth_pixels": 97,
+              "amplitude_image_units": 0.4849213111428835
+            },
+            {
+              "image_name": "IC0600",
+              "toy_id": 3,
+              "object_type": "star",
+              "x": 460.0,
+              "y": 816.0,
+              "peak_sigma": 19.130085732743876,
+              "fwhm_pixels": 5.626792854320237,
+              "axis_ratio": 1.0,
+              "pa_deg": 77.98594042268076,
+              "truth_pixels": 121,
+              "amplitude_image_units": 0.33693248680507915
+            },
+            {
+              "image_name": "IC0600",
+              "toy_id": 4,
+              "object_type": "star",
+              "x": 489.0,
+              "y": 741.0,
+              "peak_sigma": 22.99524224657958,
+              "fwhm_pixels": 4.996527050172241,
+              "axis_ratio": 1.0,
+              "pa_deg": 172.14797834335107,
+              "truth_pixels": 97,
+              "amplitude_image_units": 0.4050083341531361
+            },
+            {
+              "image_name": "IC0600",
+              "toy_id": 5,
+              "object_type": "star",
+              "x": 439.0,
+              "y": 823.0,
+              "peak_sigma": 8.092622312465412,
+              "fwhm_pixels": 2.2263733816863134,
+              "axis_ratio": 1.0,
+              "pa_deg": 163.7410514749879,
+              "truth_pixels": 25,
+              "amplitude_image_units": 0.14253293992541607
+            },
+            {
+              "image_name": "IC0600",
+              "toy_id": 6,
+              "object_type": "star",
+              "x": 491.0,
+              "y": 766.0,
+              "peak_sigma": 9.922822943216337,
+              "fwhm_pixels": 2.698456976989748,
+              "axis_ratio": 1.0,
+              "pa_deg": 91.54412516302686,
+              "truth_pixels": 37,
+              "amplitude_image_units": 0.17476771704487465
+            }
+          ]
+        }
+      }
+    }
+  }
+}

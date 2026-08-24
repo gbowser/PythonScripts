@@ -571,6 +571,8 @@ def run_one(
             toys_per_image=int(args.toys_per_image),
             rng=np.random.default_rng(galaxy_seed),
             truth_dilation=int(args.truth_dilation),
+            peak_sigma_min=float(args.toy_peak_sigma_min),
+            peak_sigma_max=float(args.toy_peak_sigma_max),
         )
     else:
         injected = np.asarray(data, dtype=float)
@@ -649,6 +651,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--toys-per-image", type=int, default=6)
     parser.add_argument("--toy-seed", type=int, default=202608299)
     parser.add_argument("--truth-dilation", type=int, default=1)
+    parser.add_argument("--toy-peak-sigma-min", type=float, default=5.0)
+    parser.add_argument("--toy-peak-sigma-max", type=float, default=25.0)
     parser.add_argument(
         "--clean-galaxies-file",
         type=Path,

@@ -26,6 +26,7 @@ import warnings
 
 import numpy as np
 import optuna
+import paired_toy_common
 
 # The optimiser prints its own concise trial progress and ETA.  Suppress
 # Optuna's duplicate INFO records, which PowerShell renders as red stderr and
@@ -408,20 +409,23 @@ def build_cases(args: argparse.Namespace) -> list[ImageCase]:
         geometry = sep_tool.display.required_geometry(row)
         if geometry is None:
             continue
-        data, _header = sep_tool.load_fits(sep_tool.display.image_path_for_pc(row, args.pc))
+        image_path = sep_tool.display.image_path_for_pc(row, args.pc)
+        data, _header = sep_tool.load_fits(image_path)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)
             baseline_products = sep_tool.sep_products(data, baseline_params, geometry)
-        injected, truth_mask, truth_labels, toys = inject_toys(
-            name,
-            data,
-            geometry,
-            toys_per_image=int(args.toys_per_image),
-            rng=rng,
-            truth_dilation=int(args.truth_dilation),
-            peak_sigma_min=float(args.toy_peak_sigma_min),
-            peak_sigma_max=float(args.toy_peak_sigma_max),
-        )
+        if args.injection_manifest:
+            delta, truth_mask, truth_labels, toy_rows, _record = paired_toy_common.load_materialized_injection(
+                Path(args.injection_manifest), args.injection_set, name, Path(image_path)
+            )
+            injected = np.asarray(data, dtype=float) + delta
+            toys = [ToyObject(**{key: row[key] for key in ToyObject.__dataclass_fields__}) for row in toy_rows]
+        else:
+            injected, truth_mask, truth_labels, toys = inject_toys(
+                name, data, geometry, toys_per_image=int(args.toys_per_image), rng=rng,
+                truth_dilation=int(args.truth_dilation), peak_sigma_min=float(args.toy_peak_sigma_min),
+                peak_sigma_max=float(args.toy_peak_sigma_max),
+            )
         cases.append(
             ImageCase(
                 name=name,
@@ -443,42 +447,7 @@ def score_case(
     params: dict[str, float | int | str],
 ) -> dict[str, float | int | str]:
     products = sep_tool.sep_products(case.injected, params, case.geometry)
-    mask = np.asarray(products["mask"], dtype=bool)
-    incremental = mask & ~case.baseline_mask
-    truth = case.truth_mask
-    truth_pixels = int(np.count_nonzero(truth))
-    incremental_pixels = int(np.count_nonzero(incremental))
-    overlap = int(np.count_nonzero(incremental & truth))
-    masked_fraction = incremental_pixels / incremental.size if incremental.size else 0.0
-    recall = overlap / truth_pixels if truth_pixels else 0.0
-    precision = overlap / incremental_pixels if incremental_pixels else 0.0
-    f_score = 2.0 * recall * precision / (recall + precision) if recall + precision > 0 else 0.0
-    toy_recalls = []
-    recovered_toys = 0
-    for toy in case.toys:
-        toy_truth = case.truth_labels == toy.toy_id
-        toy_pixels = int(np.count_nonzero(toy_truth))
-        toy_overlap = int(np.count_nonzero(incremental & toy_truth))
-        toy_recall = toy_overlap / toy_pixels if toy_pixels else 0.0
-        toy_recalls.append(toy_recall)
-        if toy_recall >= 0.5:
-            recovered_toys += 1
-    false_positive_fraction = (incremental_pixels - overlap) / max(1, incremental.size - truth_pixels)
-    return {
-        "image": case.name,
-        "truth_pixels": truth_pixels,
-        "incremental_pixels": incremental_pixels,
-        "overlap_pixels": overlap,
-        "masked_fraction": masked_fraction,
-        "recall": recall,
-        "precision": precision,
-        "f_score": f_score,
-        "mean_toy_recall": float(np.mean(toy_recalls)) if toy_recalls else 0.0,
-        "recovered_toys": recovered_toys,
-        "toy_count": len(case.toys),
-        "false_positive_fraction": false_positive_fraction,
-        "segments": len(products["rows"]),
-    }
+    return paired_toy_common.evaluate_mask(case, products["mask"], len(products["rows"]))
 
 
 def aggregate_score(
@@ -561,6 +530,11 @@ class OptimisationRun:
         self.trial_durations: list[float] = []
         self.worker_pool: mp.pool.Pool | None = None
         worker_count = min(max(1, int(args.workers)), len(cases))
+        self.result_metadata = {
+            "algorithm": "SEP", **paired_toy_common.runtime_metadata(PROJECT_ROOT),
+            "worker_count": worker_count, "injection_manifest": str(args.injection_manifest),
+            "injection_set": args.injection_set,
+        }
         if worker_count > 1:
             start_method = "fork" if os.name == "posix" else "spawn"
             context = mp.get_context(start_method)
@@ -604,8 +578,9 @@ class OptimisationRun:
             objective = float(aggregate["objective"])
             status = "ok"
             error = ""
+            parameter_set_json = json.dumps(params_to_jsonable(params), sort_keys=True)
             for row in case_rows:
-                detail_rows.append({"evaluation": self.evaluation_index, **row})
+                detail_rows.append({"evaluation": self.evaluation_index, **self.result_metadata, "parameter_set_json": parameter_set_json, **row})
         except Exception as exc:  # noqa: BLE001
             aggregate = {"objective": 1.0e6, "score": -1.0e6}
             objective = 1.0e6
@@ -615,6 +590,8 @@ class OptimisationRun:
         elapsed = time.perf_counter() - started
         summary = {
             "evaluation": self.evaluation_index,
+            **self.result_metadata,
+            "parameter_set_json": json.dumps(params_to_jsonable(params), sort_keys=True),
             "status": status,
             "objective": objective,
             "score": aggregate.get("score", math.nan),
@@ -639,6 +616,8 @@ class OptimisationRun:
             [summary],
             [
                 "evaluation",
+                "algorithm", "software_version", "python_version", "runtime_platform", "metric_version",
+                "worker_count", "injection_manifest", "injection_set", "parameter_set_json",
                 "status",
                 "objective",
                 "score",
@@ -665,6 +644,8 @@ class OptimisationRun:
                 detail_rows,
                 [
                     "evaluation",
+                    "algorithm", "software_version", "python_version", "runtime_platform", "metric_version",
+                    "worker_count", "injection_manifest", "injection_set", "parameter_set_json",
                     "image",
                     "truth_pixels",
                     "incremental_pixels",
@@ -677,6 +658,9 @@ class OptimisationRun:
                     "recovered_toys",
                     "toy_count",
                     "false_positive_fraction",
+                    "incremental_overlap_pixels", "incremental_masked_fraction", "incremental_recall", "incremental_precision", "incremental_f_score", "incremental_false_positive_fraction",
+                    "final_pixels", "final_overlap_pixels", "final_masked_fraction", "final_recall", "final_precision", "final_f_score", "final_false_positive_fraction",
+                    "final_mean_toy_recall", "final_recovered_toys",
                     "segments",
                 ],
             )
@@ -763,6 +747,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--truth-dilation", type=int, default=1)
     parser.add_argument("--toy-peak-sigma-min", type=float, default=5.0)
     parser.add_argument("--toy-peak-sigma-max", type=float, default=25.0)
+    parser.add_argument("--injection-manifest", type=Path, default=None)
+    parser.add_argument("--injection-set", default="cross_validation")
     parser.add_argument(
         "--detect-on",
         dest="detect_on",
