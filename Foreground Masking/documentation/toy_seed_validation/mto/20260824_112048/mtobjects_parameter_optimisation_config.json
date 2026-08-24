@@ -1,0 +1,31 @@
+{
+  "manifest": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Erwin_s4g_image_downloader\\geometry_output\\s4g_image_geometry_manifest.csv",
+  "pc": "Desktop",
+  "mtobjects_root": "mtobjects",
+  "output_dir": "Foreground Masking\\documentation\\toy_seed_validation\\mto\\20260824_112048",
+  "names": [
+    "IC0600"
+  ],
+  "max_images": 1,
+  "toys_per_image": 6,
+  "truth_dilation": 1,
+  "toy_peak_sigma_min": 6.0,
+  "toy_peak_sigma_max": 30.0,
+  "detect_on": "original",
+  "initial_points": 8,
+  "max_iter": 32,
+  "bg_variance_min": 0.0001,
+  "bg_variance_max": 10000.0,
+  "bg_variance_log": false,
+  "bg_variance_step": 0.0001,
+  "workers": 1,
+  "seed": 202608300,
+  "study_name": "mtobjects-toy-optimisation",
+  "max_masked_fraction": 0.15,
+  "data_loss_penalty": 0.5,
+  "false_positive_penalty": 0.1,
+  "min_toy_detection_rate": 0.25,
+  "min_mean_toy_recall": 0.2,
+  "results_workbook": null,
+  "prepare_only": true
+}

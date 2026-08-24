@@ -67,6 +67,8 @@ def build_evaluation_cases(args: argparse.Namespace, names: list[str]):
         detect_on=args.detect_on,
         toys_per_image=args.toys_per_image,
         truth_dilation=args.truth_dilation,
+        toy_peak_sigma_min=args.toy_peak_sigma_min,
+        toy_peak_sigma_max=args.toy_peak_sigma_max,
     )
     return sep_opt.build_cases(case_args)
 
@@ -113,6 +115,8 @@ def run_fold(args: argparse.Namespace, root: Path, fold_number: int, training: l
         "--max-images", str(len(training)),
         "--toys-per-image", str(args.toys_per_image),
         "--truth-dilation", str(args.truth_dilation),
+        "--toy-peak-sigma-min", str(args.toy_peak_sigma_min),
+        "--toy-peak-sigma-max", str(args.toy_peak_sigma_max),
         "--detect-on", args.detect_on,
         "--initial-points", str(args.initial_points),
         "--max-iter", str(args.max_iter),
@@ -151,6 +155,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--workers", type=int, default=10)
     parser.add_argument("--toys-per-image", type=int, default=6)
     parser.add_argument("--truth-dilation", type=int, default=1)
+    parser.add_argument("--toy-peak-sigma-min", type=float, default=5.0)
+    parser.add_argument("--toy-peak-sigma-max", type=float, default=25.0)
     parser.add_argument(
         "--detect-on",
         choices=["original"],

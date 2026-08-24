@@ -1,11 +1,15 @@
 $ErrorActionPreference='Stop'
-$w=New-Object -ComObject Word.Application
-$w.Visible=$false
-$w.DisplayAlerts=0
-$d=$w.Documents.Add()
-$d.Content.Text='COM save test'
-$p='C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\documentation\phase2_com_qa\com_save_test.docx'
-$d.SaveAs2($p,16)
-$d.Close(0)
-$w.Quit()
-Write-Output (Test-Path -LiteralPath $p)
+$out='C:\Users\gordo\Documents\Github\PythonScripts\Foreground Masking\documentation\toy_comparison_doc_qa\word_com_save_test.docx'
+$word=New-Object -ComObject Word.Application
+$word.Visible=$false
+$word.DisplayAlerts=0
+try {
+  $doc=$word.Documents.Add()
+  $word.Selection.TypeText('Word COM save test')
+  Write-Output 'BEFORE_SAVE'
+  $doc.SaveAs2($out,16)
+  Write-Output 'AFTER_SAVE'
+  $doc.Close(0)
+} finally {
+  $word.Quit()
+}
