@@ -4,6 +4,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName Microsoft.Office.Interop.Word
 $DocDir = Join-Path $ResearchRoot 'documentation'
 $Control = Join-Path $ResearchRoot "Toy Objects paired optimisation\$RunStamp"
 $AnalysisPath = Join-Path $Control 'analysis\paired_toy_run_analysis.json'
@@ -34,45 +35,63 @@ function Param($value,[int]$places=4) {
 }
 
 $navy=Ole '#0B2545'; $blue=Ole '#2E74B5'; $darkBlue=Ole '#1F4D78'; $gray=Ole '#555555'; $light=Ole '#F2F4F7'; $callout=Ole '#E8EEF5'; $white=Ole '#FFFFFF'; $orange=Ole '#D97904'
+$wdStyleNormal=[Microsoft.Office.Interop.Word.WdBuiltinStyle]::wdStyleNormal
+$wdStyleHeading1=[Microsoft.Office.Interop.Word.WdBuiltinStyle]::wdStyleHeading1
+$wdStyleHeading2=[Microsoft.Office.Interop.Word.WdBuiltinStyle]::wdStyleHeading2
+$wdStyleHeading3=[Microsoft.Office.Interop.Word.WdBuiltinStyle]::wdStyleHeading3
+
+function Style-Id([string]$style) {
+    switch ($style) {
+        'Normal' { return $wdStyleNormal }
+        'Heading 1' { return $wdStyleHeading1 }
+        'Heading 2' { return $wdStyleHeading2 }
+        'Heading 3' { return $wdStyleHeading3 }
+        default { throw "Unsupported Word style: $style" }
+    }
+}
 
 function Configure-Document($doc,[string]$runningTitle) {
     foreach($section in $doc.Sections){
         $section.PageSetup.PageWidth=612; $section.PageSetup.PageHeight=792
         $section.PageSetup.TopMargin=72; $section.PageSetup.BottomMargin=72; $section.PageSetup.LeftMargin=72; $section.PageSetup.RightMargin=72
         $section.PageSetup.HeaderDistance=35.4; $section.PageSetup.FooterDistance=35.4
-        $header=$section.Headers.Item(1).Range; $header.Text=$runningTitle; $header.Font.Name='Calibri'; $header.Font.Size=9; $header.Font.Color=$gray
-        $footer=$section.Footers.Item(1).Range; $footer.Text='Foreground Masking Research  |  '; $footer.Font.Name='Calibri'; $footer.Font.Size=9; $footer.Font.Color=$gray
-        $footer.Collapse(0); [void]$footer.Fields.Add($footer,-1,'PAGE',$true)
+        $section.PageSetup.OddAndEvenPagesHeaderFooter=0; $section.PageSetup.DifferentFirstPageHeaderFooter=0
+        foreach($headerIndex in @(1,2,3)) {
+            $header=$section.Headers.Item($headerIndex).Range; $header.Text=$runningTitle; $header.Font.Name='Calibri'; $header.Font.Size=9; $header.Font.Color=$gray
+            $footer=$section.Footers.Item($headerIndex).Range; $footer.Text='Foreground Masking Research  |  '; $footer.Font.Name='Calibri'; $footer.Font.Size=9; $footer.Font.Color=$gray
+            $footer.Collapse(0); [void]$footer.Fields.Add($footer,-1,'PAGE',$true)
+        }
     }
-    $normal=$doc.Styles.Item('Normal'); $normal.Font.Name='Calibri'; $normal.Font.Size=11; $normal.Font.Color=$gray
+    # Built-in numeric style IDs work across localized and stricter Word COM installations.
+    $normal=$doc.Styles.Item($wdStyleNormal); $normal.Font.Name='Calibri'; $normal.Font.Size=11; $normal.Font.Color=$gray
     $normal.ParagraphFormat.SpaceBefore=0; $normal.ParagraphFormat.SpaceAfter=6; $normal.ParagraphFormat.LineSpacingRule=5; $normal.ParagraphFormat.LineSpacing=13.2
-    $h1=$doc.Styles.Item('Heading 1'); $h1.Font.Name='Calibri'; $h1.Font.Size=16; $h1.Font.Bold=$true; $h1.Font.Color=$blue
+    $h1=$doc.Styles.Item($wdStyleHeading1); $h1.Font.Name='Calibri'; $h1.Font.Size=16; $h1.Font.Bold=$true; $h1.Font.Color=$blue
     $h1.ParagraphFormat.SpaceBefore=16; $h1.ParagraphFormat.SpaceAfter=8; $h1.ParagraphFormat.KeepWithNext=$true
-    $h2=$doc.Styles.Item('Heading 2'); $h2.Font.Name='Calibri'; $h2.Font.Size=13; $h2.Font.Bold=$true; $h2.Font.Color=$blue
+    $h2=$doc.Styles.Item($wdStyleHeading2); $h2.Font.Name='Calibri'; $h2.Font.Size=13; $h2.Font.Bold=$true; $h2.Font.Color=$blue
     $h2.ParagraphFormat.SpaceBefore=12; $h2.ParagraphFormat.SpaceAfter=6; $h2.ParagraphFormat.KeepWithNext=$true
-    $h3=$doc.Styles.Item('Heading 3'); $h3.Font.Name='Calibri'; $h3.Font.Size=12; $h3.Font.Bold=$true; $h3.Font.Color=$darkBlue
+    $h3=$doc.Styles.Item($wdStyleHeading3); $h3.Font.Name='Calibri'; $h3.Font.Size=12; $h3.Font.Bold=$true; $h3.Font.Color=$darkBlue
     $h3.ParagraphFormat.SpaceBefore=8; $h3.ParagraphFormat.SpaceAfter=4; $h3.ParagraphFormat.KeepWithNext=$true
 }
 function Add-Text($sel,[string]$text,[string]$style='Normal') {
-    $sel.Style=$style; $sel.Font.Bold=0; $sel.Font.Italic=0; $sel.ParagraphFormat.Alignment=0; $sel.TypeText($text); $sel.TypeParagraph()
+    $sel.Style=(Style-Id $style); $sel.Font.Bold=0; $sel.Font.Italic=0; $sel.ParagraphFormat.Alignment=0; $sel.TypeText($text); $sel.TypeParagraph()
 }
 function Add-TitleBlock($sel,[string]$title,[string]$subtitle,[string]$status) {
-    $sel.Style='Normal'; $sel.Font.Name='Calibri'; $sel.Font.Size=10; $sel.Font.Bold=1; $sel.Font.Color=$blue; $sel.TypeText('FOREGROUND MASKING RESEARCH'); $sel.TypeParagraph()
+    $sel.Style=$wdStyleNormal; $sel.Font.Name='Calibri'; $sel.Font.Size=10; $sel.Font.Bold=1; $sel.Font.Color=$blue; $sel.TypeText('FOREGROUND MASKING RESEARCH'); $sel.TypeParagraph()
     $sel.Font.Size=25; $sel.Font.Bold=1; $sel.Font.Color=$navy; $sel.TypeText($title); $sel.TypeParagraph()
     $sel.Font.Size=13; $sel.Font.Bold=0; $sel.Font.Color=$gray; $sel.TypeText($subtitle); $sel.TypeParagraph()
     $sel.Font.Size=10; $sel.TypeText('Prepared: 24 August 2026'); $sel.TypeParagraph(); $sel.TypeText('Run: '+$RunStamp); $sel.TypeParagraph(); $sel.TypeText('Status: '+$status); $sel.TypeParagraph(); $sel.TypeParagraph()
 }
 function Add-Callout($sel,[string]$label,[string]$text) {
-    $sel.Style='Normal'; $p=$sel.Paragraphs.Item(1); $p.Shading.BackgroundPatternColor=$callout; $p.Format.LeftIndent=10; $p.Format.RightIndent=10; $p.Format.SpaceBefore=6; $p.Format.SpaceAfter=10
+    $sel.Style=$wdStyleNormal; $p=$sel.Paragraphs.Item(1); $p.Shading.BackgroundPatternColor=$callout; $p.Format.LeftIndent=10; $p.Format.RightIndent=10; $p.Format.SpaceBefore=6; $p.Format.SpaceAfter=10
     $sel.Font.Color=$navy; $sel.Font.Bold=1; $sel.TypeText($label+': '); $sel.Font.Bold=0; $sel.TypeText($text); $sel.TypeParagraph()
     $sel.ParagraphFormat.LeftIndent=0; $sel.ParagraphFormat.RightIndent=0; $sel.Shading.BackgroundPatternColor=$white
 }
 function Add-Bullets($sel,[string[]]$items) {
-    foreach($item in $items){ $sel.Style='Normal'; $sel.Range.ListFormat.ApplyBulletDefault(); $sel.TypeText($item); $sel.TypeParagraph() }
+    foreach($item in $items){ $sel.Style=$wdStyleNormal; $sel.Range.ListFormat.ApplyBulletDefault(); $sel.TypeText($item); $sel.TypeParagraph() }
     $sel.Range.ListFormat.RemoveNumbers(); $sel.ParagraphFormat.LeftIndent=0; $sel.ParagraphFormat.FirstLineIndent=0
 }
 function Add-Numbered($sel,[string[]]$items) {
-    foreach($item in $items){ $sel.Style='Normal'; $sel.Range.ListFormat.ApplyNumberDefault(); $sel.TypeText($item); $sel.TypeParagraph() }
+    foreach($item in $items){ $sel.Style=$wdStyleNormal; $sel.Range.ListFormat.ApplyNumberDefault(); $sel.TypeText($item); $sel.TypeParagraph() }
     $sel.Range.ListFormat.RemoveNumbers(); $sel.ParagraphFormat.LeftIndent=0; $sel.ParagraphFormat.FirstLineIndent=0
 }
 function Add-Table($doc,$sel,[object[]]$rows,[double[]]$widths) {
@@ -90,20 +109,13 @@ function Add-Table($doc,$sel,[object[]]$rows,[double[]]$widths) {
 }
 function Add-Figure($sel,[string]$path,[double]$width,[string]$caption) {
     $shape=$sel.InlineShapes.AddPicture($path,$false,$true); $shape.LockAspectRatio=-1; $shape.Width=$width; $sel.TypeParagraph()
-    $sel.Style='Normal'; $sel.Font.Name='Calibri'; $sel.Font.Size=9; $sel.Font.Italic=1; $sel.Font.Color=$gray; $sel.ParagraphFormat.Alignment=1; $sel.TypeText($caption); $sel.TypeParagraph(); $sel.ParagraphFormat.Alignment=0; $sel.Font.Italic=0
+    $sel.Style=$wdStyleNormal; $sel.Font.Name='Calibri'; $sel.Font.Size=9; $sel.Font.Italic=1; $sel.Font.Color=$gray; $sel.ParagraphFormat.Alignment=1; $sel.TypeText($caption); $sel.TypeParagraph(); $sel.ParagraphFormat.Alignment=0; $sel.Font.Italic=0
     [void][Runtime.InteropServices.Marshal]::ReleaseComObject($shape)
 }
 function Add-PageBreak($sel){$sel.InsertBreak(7)}
 function Open-For-Rewrite($word,[string]$path) {
-    for($index=1; $index -le $word.Documents.Count; $index++) {
-        $candidate=$word.Documents.Item($index)
-        if ($candidate.FullName -eq $path) { $candidate.Activate(); $candidate.Content.Delete(); return $candidate }
-    }
-    if (Test-Path -LiteralPath $path) {
-        $doc=$word.Documents.Open($path,$false,$false)
-        if($doc.ReadOnly){$doc.Close(0); throw "Document is read-only or locked by another Word instance: $path"}
-        $doc.Content.Delete(); return $doc
-    }
+    # Build from a clean document and let SaveAs2 replace the named deliverable.
+    # This avoids inheriting locks or malformed state from an older report file.
     return $word.Documents.Add()
 }
 function Save-Doc($doc,[string]$path) {
@@ -117,7 +129,10 @@ $sepProd=$a.sep.production_182; $mtoProd=$a.mtobjects.production_182
 
 $word=$null; $startedWord=$false; $docs=@()
 try {
-    try { $word=[Runtime.InteropServices.Marshal]::GetActiveObject('Word.Application') } catch { $word=New-Object -ComObject Word.Application; $word.Visible=$false; $startedWord=$true }
+    # Use an isolated Word instance. Attaching to an existing instance can inherit a
+    # stale COM server after a failed automation run and can interfere with documents
+    # the user already has open.
+    $word=New-Object -ComObject Word.Application; $word.Visible=$false; $startedWord=$true
     $word.DisplayAlerts=0
 
     # Methodology
@@ -206,7 +221,7 @@ try {
     Add-Text $sel '1. Validation status' 'Heading 1'
     Add-Table $doc $sel @(
         @('Deliverable','SEP','MTObjects','Combined'),
-        @('Four-fold optimisation','Complete; winner fold '+$sepWinner.winning_fold,'Complete; winner fold '+$mtoWinner.winning_fold,'n/a'),
+        @('Four-fold optimisation',('Complete; winner fold '+$sepWinner.winning_fold),('Complete; winner fold '+$mtoWinner.winning_fold),'n/a'),
         @('Held-out galaxy rows','40','40','Paired one-to-one'),
         @('182-galaxy PNG batch','182 successful','182 successful','182 successful'),
         @('Failures','0','0','0')
@@ -232,11 +247,12 @@ try {
         'SEP had the larger final mask on average despite its smaller incremental response. This indicates more baseline masking on uninjected images and demonstrates why incremental and final metrics must be reported together.'
     )
     Add-Text $sel '3. Fold stability and independent winner selection' 'Heading 1'
-    $foldRows=@(@('Method/fold','Held-out score','Toy recall','Detection rate','Mean incremental mask'))
+    $foldRows=,@('Method/fold','Held-out score','Toy recall','Detection rate','Mean incremental mask')
     foreach($f in $a.sep.cross_validation.folds){$foldRows+=,@(('SEP '+$f.fold),(Num $f.held_out_score 4),(Pct $f.held_out_mean_toy_recall),(Pct $f.held_out_toy_detection_rate),(Pct $f.held_out_mean_masked_fraction))}
     foreach($f in $a.mtobjects.cross_validation.folds){$foldRows+=,@(('MTObjects '+$f.fold),(Num $f.held_out_score 4),(Pct $f.held_out_mean_toy_recall),(Pct $f.held_out_toy_detection_rate),(Pct $f.held_out_mean_masked_fraction))}
     Add-Table $doc $sel $foldRows @(85,85,92,92,114)
     Add-Text $sel ('SEP winner fold '+$sepWinner.winning_fold+' achieved independent all-40 score '+(Num $sepAll.score 4)+', mean toy recall '+(Pct $sepAll.mean_toy_recall)+', detection rate '+(Pct $sepAll.toy_detection_rate)+' and mean incremental mask '+(Pct $sepAll.mean_masked_fraction)+'. MTObjects winner fold '+$mtoWinner.winning_fold+' achieved score '+(Num $mtoAll.score 4)+', mean toy recall '+(Pct $mtoAll.mean_toy_recall)+', detection rate '+(Pct $mtoAll.toy_detection_rate)+' and mean incremental mask '+(Pct $mtoAll.mean_masked_fraction)+'. The scores use different method-specific recovery weightings, so component metrics are the safer head-to-head evidence.')
+    Add-PageBreak $sel
     Add-Text $sel '4. Production 182-galaxy mask extent' 'Heading 1'
     Add-Table $doc $sel @(
         @('Statistic','SEP final mask','MTObjects final mask'),

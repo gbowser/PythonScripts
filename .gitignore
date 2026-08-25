@@ -22,6 +22,7 @@ build/
 dist/
 *.egg-info/
 tmp/
+Foreground Masking/documentation/_qa/
 
 # Generated analytical outputs
 mtobjects/
