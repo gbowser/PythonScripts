@@ -82,7 +82,7 @@ def calibrate_bg_variance(cases, args: argparse.Namespace, root: Path) -> None:
             print("Reusing completed bg_variance calibration (11/11 points).", flush=True)
 
     if not rows:
-        print("Calibrating bg_variance on the common 40-galaxy injection set...", flush=True)
+        print(f"Calibrating bg_variance on the common {len(cases)}-galaxy injection set...", flush=True)
         for index, value in enumerate(grid, start=1):
             params = mto_opt.default_params(args.detect_on)
             params.update(
@@ -129,7 +129,7 @@ def calibrate_bg_variance(cases, args: argparse.Namespace, root: Path) -> None:
     print(f"Calibrated search range: {args.bg_variance_min:g} to {args.bg_variance_max:g} (log scale).", flush=True)
 
 
-def run_fold(args: argparse.Namespace, root: Path, fold_number: int, training: list[str], held_out: list[str]) -> Path:
+def run_fold(args: argparse.Namespace, root: Path, fold_number: int, fold_count: int, training: list[str], held_out: list[str]) -> Path:
     fold_dir = root / f"fold_{fold_number}"
     optimiser_parent = fold_dir / "training_optimisation"
     fold_dir.mkdir(parents=True, exist_ok=True)
@@ -144,7 +144,7 @@ def run_fold(args: argparse.Namespace, root: Path, fold_number: int, training: l
             with summary.open(newline="", encoding="utf-8") as handle:
                 completed = sum(1 for _row in csv.DictReader(handle))
         if completed >= required_trials:
-            print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Reusing completed fold {fold_number}/4 ({completed} trials).", flush=True)
+            print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Reusing completed fold {fold_number}/{fold_count} ({completed} trials).", flush=True)
             return existing[-1]
 
     command = [
@@ -178,7 +178,7 @@ def run_fold(args: argparse.Namespace, root: Path, fold_number: int, training: l
         "--min-toy-detection-rate", str(args.min_toy_detection_rate),
         "--min-mean-toy-recall", str(args.min_mean_toy_recall),
     ]
-    print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Starting MTObjects fold {fold_number}/4: train=30, validate=10", flush=True)
+    print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Starting MTObjects fold {fold_number}/{fold_count}: train={len(training)}, validate={len(held_out)}", flush=True)
     completed = subprocess.run(command, check=False)
     if completed.returncode:
         raise RuntimeError(f"MTObjects fold {fold_number} failed with exit code {completed.returncode}")
@@ -249,9 +249,11 @@ def main() -> int:
     details: list[dict[str, object]] = []
     result_metadata = {"algorithm": "MTObjects", **mto_opt.paired_toy_common.runtime_metadata(PROJECT_ROOT), "worker_count": args.workers, "injection_manifest": str(args.injection_manifest)}
     started = time.perf_counter()
+    fold_count = len(folds)
+    sample_label = f"all{len(names)}"
     for index, held_out in enumerate(folds, start=1):
         training = sorted(set(names) - set(held_out))
-        best_path = run_fold(args, root, index, training, held_out)
+        best_path = run_fold(args, root, index, fold_count, training, held_out)
         best = json.loads(best_path.read_text(encoding="utf-8"))
         params = best["params"]
         held_metrics, held_detail = score_cases([cases_by_name[name] for name in held_out], params, args)
@@ -278,14 +280,14 @@ def main() -> int:
             "min_fold_mean_toy_recall": min_fold_recall,
             "max_fold_masked_fraction": max_fold_masked,
             **{f"held_out_{key}": value for key, value in held_metrics.items()},
-            **{f"all40_{key}": value for key, value in all_metrics.items()},
+            **{f"{sample_label}_{key}": value for key, value in all_metrics.items()},
         }
         candidates.append(row)
         details.extend({"fold": index, **result_metadata, "injection_set": args.evaluation_injection_set, "parameter_set_json": json.dumps(params, sort_keys=True), **detail} for detail in held_detail)
-        eta = (time.perf_counter() - started) / index * (4 - index)
+        eta = (time.perf_counter() - started) / index * (fold_count - index)
         print(
-            f"MTObjects fold {index}/4 complete: held_out_score={held_metrics['score']:.4f}, "
-            f"all40_score={all_metrics['score']:.4f}, remaining_eta={mto_opt.format_duration(eta)}",
+            f"MTObjects fold {index}/{fold_count} complete: held_out_score={held_metrics['score']:.4f}, "
+            f"{sample_label}_score={all_metrics['score']:.4f}, remaining_eta={mto_opt.format_duration(eta)}",
             flush=True,
         )
         cv_common.write_csv(root / "cross_validation_candidates.csv", candidates)
@@ -295,7 +297,7 @@ def main() -> int:
     if not feasible_candidates:
         rejection = {
             "status": "rejected",
-            "reason": "No candidate met the final all-40 recovery thresholds and non-zero recovery in every fold.",
+            "reason": f"No candidate met the final all-{len(names)} recovery thresholds and non-zero recovery in every fold.",
             "required_toy_detection_rate": args.final_min_toy_detection_rate,
             "required_mean_toy_recall": args.final_min_mean_toy_recall,
             "required_max_masked_fraction": args.max_masked_fraction,
@@ -303,11 +305,11 @@ def main() -> int:
         }
         (root / "mtobjects_toy_cross_validation_rejected.json").write_text(json.dumps(rejection, indent=2), encoding="utf-8")
         raise RuntimeError(rejection["reason"])
-    winner = min(feasible_candidates, key=lambda row: float(row["all40_objective"]))
+    winner = min(feasible_candidates, key=lambda row: float(row[f"{sample_label}_objective"]))
     source = json.loads(Path(str(winner["best_json"])).read_text(encoding="utf-8"))
     final = {
         **source,
-        "selection_method": "four-fold-30-train-10-held-out; winner selected on common independent 40-galaxy injection set",
+        "selection_method": f"{fold_count}-fold galaxy CV; winner selected on common independent {len(names)}-galaxy injection set",
         "winning_fold": int(winner["fold"]),
         "cross_validation_metrics": winner,
         "cross_validation_root": str(root),

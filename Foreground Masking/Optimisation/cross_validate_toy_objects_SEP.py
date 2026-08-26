@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Four-fold cross-validation driver for SEP Toy Objects optimisation.
+"""Galaxy-fold cross-validation driver for SEP Toy Objects optimisation.
 
-Each fold optimises on 30 galaxies.  Its best parameters are evaluated on the
-held-out 10, and all four candidates are then compared on one common,
-independently injected 40-galaxy evaluation set.  The winning JSON is directly
-compatible with the canonical all-galaxy SEP batch tool.
+For the canonical 40-galaxy sample this retains four 30/10 folds.  Other sample
+sizes use leave-one-galaxy-out folds.  Fold candidates are compared on a common,
+independently injected evaluation set.  The winning JSON remains compatible
+with the canonical all-galaxy SEP batch tool.
 """
 
 from __future__ import annotations
@@ -37,15 +37,16 @@ def read_names(path: Path) -> list[str]:
     duplicates = sorted({name for name in names if names.count(name) > 1})
     if duplicates:
         raise ValueError(f"Duplicate galaxy names: {', '.join(duplicates)}")
-    if len(names) != 40:
-        raise ValueError(f"Expected exactly 40 unique galaxies, found {len(names)}")
+    if len(names) < 2:
+        raise ValueError(f"Expected at least two unique galaxies, found {len(names)}")
     return names
 
 
 def make_folds(names: list[str], seed: int) -> list[list[str]]:
     shuffled = list(names)
     random.Random(seed).shuffle(shuffled)
-    return [sorted(shuffled[index::4]) for index in range(4)]
+    fold_count = 4 if len(shuffled) == 40 else len(shuffled)
+    return [sorted(shuffled[index::fold_count]) for index in range(fold_count)]
 
 
 def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
@@ -86,7 +87,7 @@ def score_cases(cases, params: dict[str, object], args: argparse.Namespace) -> t
     return aggregate, detail
 
 
-def run_fold(args: argparse.Namespace, root: Path, fold_number: int, training: list[str], held_out: list[str]) -> Path:
+def run_fold(args: argparse.Namespace, root: Path, fold_number: int, fold_count: int, training: list[str], held_out: list[str]) -> Path:
     fold_dir = root / f"fold_{fold_number}"
     optimiser_parent = fold_dir / "training_optimisation"
     fold_dir.mkdir(parents=True, exist_ok=True)
@@ -102,7 +103,7 @@ def run_fold(args: argparse.Namespace, root: Path, fold_number: int, training: l
                 completed_trials = sum(1 for _row in csv.DictReader(handle))
         if completed_trials >= required_trials:
             print(
-                f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Reusing completed fold {fold_number}/4 "
+                f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Reusing completed fold {fold_number}/{fold_count} "
                 f"({completed_trials} trials): {existing[-1]}",
                 flush=True,
             )
@@ -131,7 +132,7 @@ def run_fold(args: argparse.Namespace, root: Path, fold_number: int, training: l
         "--data-loss-penalty", str(args.data_loss_penalty),
         "--false-positive-penalty", str(args.false_positive_penalty),
     ]
-    print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Starting fold {fold_number}/4: train=30, validate=10", flush=True)
+    print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Starting fold {fold_number}/{fold_count}: train={len(training)}, validate={len(held_out)}", flush=True)
     completed = subprocess.run(command, check=False)
     if completed.returncode:
         raise RuntimeError(f"Fold {fold_number} optimiser failed with exit code {completed.returncode}")
@@ -195,9 +196,11 @@ def main() -> int:
     detail_rows: list[dict[str, object]] = []
     result_metadata = {"algorithm": "SEP", **sep_opt.paired_toy_common.runtime_metadata(PROJECT_ROOT), "worker_count": args.workers, "injection_manifest": str(args.injection_manifest)}
     started = time.perf_counter()
+    fold_count = len(folds)
+    sample_label = f"all{len(names)}"
     for index, held_out in enumerate(folds, start=1):
         training = sorted(set(names) - set(held_out))
-        best_path = run_fold(args, root, index, training, held_out)
+        best_path = run_fold(args, root, index, fold_count, training, held_out)
         best = json.loads(best_path.read_text(encoding="utf-8"))
         params = best["params"]
         held_cases = [cases_by_name[name] for name in held_out]
@@ -210,25 +213,25 @@ def main() -> int:
             "best_json": str(best_path),
             "training_objective": best.get("objective"),
             **{f"held_out_{key}": value for key, value in held_metrics.items()},
-            **{f"all40_{key}": value for key, value in all_metrics.items()},
+            **{f"{sample_label}_{key}": value for key, value in all_metrics.items()},
         }
         candidate_rows.append(row)
         detail_rows.extend({"fold": index, **result_metadata, "injection_set": args.evaluation_injection_set, "parameter_set_json": json.dumps(params, sort_keys=True), **detail} for detail in held_detail)
         elapsed = time.perf_counter() - started
-        eta = elapsed / index * (4 - index)
+        eta = elapsed / index * (fold_count - index)
         print(
-            f"Fold {index}/4 complete: held_out_score={held_metrics['score']:.4f}, "
-            f"all40_score={all_metrics['score']:.4f}, remaining_eta={sep_opt.format_duration(eta)}",
+            f"Fold {index}/{fold_count} complete: held_out_score={held_metrics['score']:.4f}, "
+            f"{sample_label}_score={all_metrics['score']:.4f}, remaining_eta={sep_opt.format_duration(eta)}",
             flush=True,
         )
         write_csv(root / "cross_validation_candidates.csv", candidate_rows)
         write_csv(root / "held_out_details.csv", detail_rows)
 
-    winner = min(candidate_rows, key=lambda row: float(row["all40_objective"]))
+    winner = min(candidate_rows, key=lambda row: float(row[f"{sample_label}_objective"]))
     source = json.loads(Path(str(winner["best_json"])).read_text(encoding="utf-8"))
     final = {
         **source,
-        "selection_method": "four-fold-30-train-10-held-out; winner selected on common independent 40-galaxy injection set",
+        "selection_method": f"{fold_count}-fold galaxy CV; winner selected on common independent {len(names)}-galaxy injection set",
         "winning_fold": int(winner["fold"]),
         "cross_validation_metrics": winner,
         "cross_validation_root": str(root),

@@ -26,14 +26,15 @@ from paired_toy_common import SCHEMA_VERSION, sha256_array, sha256_file  # noqa:
 def read_names(path: Path) -> list[str]:
     names = [x.strip() for x in path.read_text(encoding="utf-8-sig").splitlines()]
     names = [x for x in names if x and not x.startswith("#")]
-    if len(names) != 40 or len(set(names)) != 40:
-        raise ValueError(f"Expected 40 unique calibration galaxies, found {len(names)} rows and {len(set(names))} unique")
+    if len(names) < 2 or len(set(names)) != len(names):
+        raise ValueError(f"Expected at least two unique calibration galaxies, found {len(names)} rows and {len(set(names))} unique")
     return names
 
 
 def folds(names: list[str], seed: int) -> list[list[str]]:
     values = list(names); random.Random(seed).shuffle(values)
-    return [sorted(values[index::4]) for index in range(4)]
+    fold_count = 4 if len(values) == 40 else len(values)
+    return [sorted(values[index::fold_count]) for index in range(fold_count)]
 
 
 def galaxy_seed(global_seed: int, name: str) -> int:
