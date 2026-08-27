@@ -2,7 +2,8 @@ param(
     [ValidateSet("Desktop", "Laptop")]
     [string]$PC = "Desktop",
     [string]$RunStamp = (Get-Date -Format "yyyyMMdd_HHmmss"),
-    [int]$Workers = 4
+    [int]$Workers = 4,
+    [switch]$ResumeFinal
 )
 
 $ErrorActionPreference = "Stop"
@@ -31,15 +32,25 @@ if (-not (Test-Path -LiteralPath $Python -PathType Leaf)) { throw "Python not fo
 if (-not (Test-Path -LiteralPath $Manifest -PathType Leaf)) { throw "S4G manifest not found: $Manifest" }
 $GalaxyNames = @(Get-Content -LiteralPath $Names | Where-Object { $_.Trim() -and -not $_.Trim().StartsWith('#') })
 if ($GalaxyNames.Count -ne 11) { throw "Expected 11 clean galaxies, found $($GalaxyNames.Count) in $Names" }
-if (Test-Path -LiteralPath $Control) { throw "Output already exists; refusing to overwrite: $Control" }
+if ((Test-Path -LiteralPath $Control) -and -not $ResumeFinal) { throw "Output already exists; refusing to overwrite: $Control" }
+if ($ResumeFinal -and -not (Test-Path -LiteralPath $InjectionManifest -PathType Leaf)) {
+    throw "Cannot resume final stages because the paired injection manifest is missing: $InjectionManifest"
+}
 New-Item -ItemType Directory -Force -Path $LogRoot | Out-Null
 
 function Run-Stage {
     param([string]$Name, [string]$Log, [string[]]$Arguments)
     Write-Host "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] Starting $Name" -ForegroundColor Yellow
     $started = Get-Date
-    & $Python @Arguments 2>&1 | Tee-Object -FilePath $Log -Append | ForEach-Object { Write-Host $_ }
-    $code = $LASTEXITCODE
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        & $Python @Arguments 2>&1 | Tee-Object -FilePath $Log -Append | ForEach-Object { Write-Host $_ }
+        $code = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
     $elapsed = (Get-Date) - $started
     if ($code -ne 0) { throw "$Name failed with exit code $code after $($elapsed.ToString('hh\:mm\:ss'))." }
     Write-Host "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] $Name complete in $($elapsed.ToString('hh\:mm\:ss'))." -ForegroundColor Green
@@ -53,6 +64,7 @@ Write-Host "Design: 11 leave-one-galaxy-out folds, 10 train / 1 held out; indepe
 Write-Host "Final production fits use all 11 galaxies after cross-validation."
 Write-Host "Output: $Control"
 
+if (-not $ResumeFinal) {
 Run-Stage "paired injection generation" (Join-Path $LogRoot "01_generate_injections.log") @(
     "Foreground Masking\Optimisation\generate_paired_toy_manifest.py",
     "--clean-list", $Names, "--source-manifest", $Manifest, "--output-dir", $InjectionRoot,
@@ -79,25 +91,31 @@ Run-Stage "MTObjects 11-fold leave-one-out CV" (Join-Path $LogRoot "03_mtobjects
     "--toys-per-image", "6", "--truth-dilation", "1", "--toy-peak-sigma-min", "6",
     "--toy-peak-sigma-max", "30", "--detect-on", "original"
 )
+}
 
-Run-Stage "SEP final optimisation on all 11" (Join-Path $LogRoot "04_sep_final_all11.log") @(
+$SepFinalArguments = @(
     "Foreground Masking\Optimisation\optimise_toy_objects_SEP.py",
-    "--manifest", $Manifest, "--pc", $PC, "--output-dir", $SepFinal, "--names", $GalaxyNames,
+    "--manifest", $Manifest, "--pc", $PC, "--output-dir", $SepFinal
+) + @("--names") + @($GalaxyNames) + @(
     "--max-images", "11", "--injection-manifest", $InjectionManifest, "--injection-set", "cross_validation",
     "--initial-points", "8", "--max-iter", "32", "--workers", "$Workers", "--seed", "202608263",
     "--study-name", "sep-toy-clean11-final", "--toys-per-image", "6", "--truth-dilation", "1",
     "--toy-peak-sigma-min", "6", "--toy-peak-sigma-max", "30", "--detect-on", "original"
 )
+Run-Stage "SEP final optimisation on all 11" (Join-Path $LogRoot "04_sep_final_all11.log") $SepFinalArguments
 
-Run-Stage "MTObjects final optimisation on all 11" (Join-Path $LogRoot "05_mtobjects_final_all11.log") @(
+$MtoFinalArguments = @(
     "Foreground Masking\Optimisation\optimise_toy_objects_MTObjects.py",
     "--manifest", $Manifest, "--pc", $PC, "--mtobjects-root", $MTObjectsRoot,
-    "--output-dir", $MtoFinal, "--names", $GalaxyNames, "--max-images", "11",
+    "--output-dir", $MtoFinal
+) + @("--names") + @($GalaxyNames) + @(
+    "--max-images", "11",
     "--injection-manifest", $InjectionManifest, "--injection-set", "cross_validation",
     "--initial-points", "8", "--max-iter", "32", "--workers", "$Workers", "--seed", "202608264",
     "--study-name", "mtobjects-toy-clean11-final", "--toys-per-image", "6", "--truth-dilation", "1",
     "--toy-peak-sigma-min", "6", "--toy-peak-sigma-max", "30", "--mtobjects-detect-on", "original"
 )
+Run-Stage "MTObjects final optimisation on all 11" (Join-Path $LogRoot "05_mtobjects_final_all11.log") $MtoFinalArguments
 
 Write-Host "All clean-11 leave-one-out and final optimisation stages completed." -ForegroundColor Green
 Write-Host "Results: $Control"

@@ -629,8 +629,14 @@ def parse_args() -> argparse.Namespace:
         "--clean-galaxies-file",
         type=Path,
         default=None,
-        help="Validated 40-galaxy list used to append _clean to calibration report PNGs. "
+        help="Validated galaxy list used to append _clean to calibration report PNGs. "
         "Defaults to CleanGalaxies.txt in the selected PC's Remove foreground objects folder.",
+    )
+    parser.add_argument(
+        "--expected-clean-galaxies",
+        type=int,
+        default=EXPECTED_CLEAN_GALAXIES,
+        help="Required number of unique names in --clean-galaxies-file (default: 40).",
     )
     parser.add_argument(
         "--save-cleaned-fits",
@@ -649,7 +655,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     clean_galaxies_file = args.clean_galaxies_file or (remove_foreground_folder(args.pc) / "CleanGalaxies.txt")
-    clean_galaxy_names = load_clean_galaxy_names(clean_galaxies_file)
+    clean_galaxy_names = load_clean_galaxy_names(clean_galaxies_file, args.expected_clean_galaxies)
     log(f"Filename calibration list: {clean_galaxies_file} ({len(clean_galaxy_names)} galaxies; suffix=_clean)")
     best_json = args.best_json or args.params_json or latest_best_json(args.pc, args.source)
     if best_json is None:
