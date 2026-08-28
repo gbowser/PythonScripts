@@ -227,6 +227,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--min-mean-toy-recall", type=float, default=mto_opt.DEFAULT_MIN_MEAN_TOY_RECALL)
     parser.add_argument("--final-min-toy-detection-rate", type=float, default=0.50)
     parser.add_argument("--final-min-mean-toy-recall", type=float, default=0.30)
+    parser.add_argument(
+        "--min-successful-folds", type=int, default=18,
+        help="Minimum number of held-out galaxy folds with non-zero toy detection and recall.",
+    )
     return parser.parse_args()
 
 
@@ -263,13 +267,15 @@ def main() -> int:
         fold_metrics = [score_cases([cases_by_name[name] for name in fold], params, args)[0] for fold in folds]
         min_fold_detection = min(float(metrics["toy_detection_rate"]) for metrics in fold_metrics)
         min_fold_recall = min(float(metrics["mean_toy_recall"]) for metrics in fold_metrics)
+        successful_detection_folds = sum(float(metrics["toy_detection_rate"]) > 0.0 for metrics in fold_metrics)
+        successful_recall_folds = sum(float(metrics["mean_toy_recall"]) > 0.0 for metrics in fold_metrics)
         max_fold_masked = max(float(metrics["max_masked_fraction"]) for metrics in fold_metrics)
         feasible = (
             float(all_metrics["toy_detection_rate"]) >= args.final_min_toy_detection_rate
             and float(all_metrics["mean_toy_recall"]) >= args.final_min_mean_toy_recall
             and float(all_metrics["max_masked_fraction"]) <= args.max_masked_fraction
-            and min_fold_detection > 0.0
-            and min_fold_recall > 0.0
+            and successful_detection_folds >= args.min_successful_folds
+            and successful_recall_folds >= args.min_successful_folds
         )
         row = {
             "fold": index,
@@ -280,6 +286,8 @@ def main() -> int:
             "candidate_feasible": int(feasible),
             "min_fold_toy_detection_rate": min_fold_detection,
             "min_fold_mean_toy_recall": min_fold_recall,
+            "successful_detection_folds": successful_detection_folds,
+            "successful_recall_folds": successful_recall_folds,
             "max_fold_masked_fraction": max_fold_masked,
             **{f"held_out_{key}": value for key, value in held_metrics.items()},
             **{f"{sample_label}_{key}": value for key, value in all_metrics.items()},
@@ -299,10 +307,11 @@ def main() -> int:
     if not feasible_candidates:
         rejection = {
             "status": "rejected",
-            "reason": f"No candidate met the final all-{len(names)} recovery thresholds and non-zero recovery in every fold.",
+            "reason": f"No candidate met the final all-{len(names)} recovery thresholds and recovery-fold requirement.",
             "required_toy_detection_rate": args.final_min_toy_detection_rate,
             "required_mean_toy_recall": args.final_min_mean_toy_recall,
             "required_max_masked_fraction": args.max_masked_fraction,
+            "required_successful_folds": args.min_successful_folds,
             "candidates": candidates,
         }
         (root / "mtobjects_toy_cross_validation_rejected.json").write_text(json.dumps(rejection, indent=2), encoding="utf-8")

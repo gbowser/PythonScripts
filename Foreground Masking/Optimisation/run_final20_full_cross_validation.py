@@ -31,6 +31,7 @@ def main() -> int:
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--initial-points", type=int, default=8)
     parser.add_argument("--max-iter", type=int, default=32)
+    parser.add_argument("--toys-per-image", type=int, default=10)
     args = parser.parse_args()
     common = [
         "--clean-list", str(args.clean_list),
@@ -42,7 +43,7 @@ def main() -> int:
         "--workers", str(args.workers),
         "--initial-points", str(args.initial_points),
         "--max-iter", str(args.max_iter),
-        "--toys-per-image", "6",
+        "--toys-per-image", str(args.toys_per_image),
         "--toy-peak-sigma-min", "6",
         "--toy-peak-sigma-max", "30",
     ]
