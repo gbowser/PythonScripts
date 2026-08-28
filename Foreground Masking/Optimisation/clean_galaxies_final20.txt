@@ -1,0 +1,22 @@
+# Final cleanest-20 selection, 2026-08-28.
+# Ordered by blind visual contamination severity and documented tie-breaks.
+NGC0298
+NGC0986
+NGC1255
+NGC1341
+NGC1367
+NGC3486
+NGC3681
+NGC4405
+NGC4579
+NGC4765
+NGC1347
+NGC2681
+IC1954
+NGC7531
+NGC7418
+NGC1559
+PGC042160
+NGC3726
+NGC4102
+NGC0918

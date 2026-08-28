@@ -128,6 +128,7 @@ def run_fold(args: argparse.Namespace, root: Path, fold_number: int, fold_count:
         "--workers", str(args.workers),
         "--seed", str(args.seed + fold_number),
         "--study-name", f"sep-toy-cv-fold-{fold_number}",
+        "--study-storage-dir", str(args.study_storage_dir),
         "--max-masked-fraction", str(args.max_masked_fraction),
         "--data-loss-penalty", str(args.data_loss_penalty),
         "--false-positive-penalty", str(args.false_positive_penalty),
@@ -152,6 +153,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--manifest", type=Path, default=sep_opt.sep_tool.DEFAULT_MANIFEST)
     parser.add_argument("--pc", choices=["Desktop", "Laptop"], default=default_pc)
     parser.add_argument("--output-dir", type=Path, default=None)
+    parser.add_argument("--study-storage-dir", type=Path, default=Path("/tmp/sep-toy-cv-optuna"))
     parser.add_argument("--fold-seed", type=int, default=202608150)
     parser.add_argument("--seed", type=int, default=202608151)
     parser.add_argument("--evaluation-seed", type=int, default=202608199)

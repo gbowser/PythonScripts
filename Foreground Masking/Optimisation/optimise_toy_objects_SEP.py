@@ -712,7 +712,10 @@ def run_optuna(run: OptimisationRun) -> None:
         seed=int(run.args.seed),
         n_startup_trials=int(run.args.initial_points),
     )
-    storage_url = f"sqlite:///{(run.output_dir / 'sep_toy_object_optimisation_study.sqlite3').as_posix()}"
+    storage_dir = run.args.study_storage_dir or run.output_dir
+    storage_dir.mkdir(parents=True, exist_ok=True)
+    storage_path = storage_dir / f"{run.args.study_name}.sqlite3"
+    storage_url = f"sqlite:///{storage_path.as_posix()}"
     study = optuna.create_study(
         study_name=run.args.study_name,
         direction="minimize",
@@ -769,6 +772,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--seed", type=int, default=DEFAULT_RANDOM_SEED)
     parser.add_argument("--study-name", default="sep-toy-object-optimisation")
+    parser.add_argument("--study-storage-dir", type=Path, default=None)
     parser.add_argument(
         "--max-masked-fraction",
         type=float,

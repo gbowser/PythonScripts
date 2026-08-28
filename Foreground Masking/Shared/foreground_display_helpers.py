@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import csv
 import math
+import os
 from pathlib import Path
+import re
 import sys
 
 import numpy as np
@@ -53,6 +55,13 @@ def image_path_for_pc(row: dict[str, str], pc_name: str) -> Path:
     if machine_path.exists():
         return machine_path
     manifest_path = Path(row.get("image_path", ""))
+    if os.name != "nt":
+        match = re.match(r"^([A-Za-z]):[\\/](.*)$", str(manifest_path))
+        if match:
+            drive, remainder = match.groups()
+            wsl_path = Path(f"/mnt/{drive.lower()}") / Path(remainder.replace("\\", "/"))
+            if wsl_path.exists():
+                return wsl_path
     return manifest_path
 
 

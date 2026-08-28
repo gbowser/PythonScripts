@@ -1,0 +1,2 @@
+rank,name,status,pollution_score,source_score,source_count,contaminated_pixels,coverage_fraction,residual_sigma,aperture_radius_pixels,center_radius_pixels,rejected_large_segments,image_path,error
+1,ESO013-016,ok,152.69836317791626,151.05608422399348,20,844,0.06569115815691158,0.021368734558169056,64.4000015258789,7.513333511352538,0,/mnt/d/Dropbox/Public Documents/UCLAN/MSc Research/Erwin/s4g_images_36um/ESO013-016.phot.1.fits,
