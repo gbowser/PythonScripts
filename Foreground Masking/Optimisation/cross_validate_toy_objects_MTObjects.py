@@ -130,6 +130,8 @@ def calibrate_bg_variance(cases, args: argparse.Namespace, root: Path) -> None:
 
 
 def run_fold(args: argparse.Namespace, root: Path, fold_number: int, fold_count: int, training: list[str], held_out: list[str]) -> Path:
+    started_at = datetime.now()
+    started_clock = time.perf_counter()
     fold_dir = root / f"fold_{fold_number}"
     optimiser_parent = fold_dir / "training_optimisation"
     fold_dir.mkdir(parents=True, exist_ok=True)
@@ -137,15 +139,18 @@ def run_fold(args: argparse.Namespace, root: Path, fold_number: int, fold_count:
     (fold_dir / "held_out_names.txt").write_text("\n".join(held_out) + "\n", encoding="utf-8")
     existing = sorted(optimiser_parent.glob("*/mtobjects_parameter_optimisation_best.json"), key=lambda p: p.stat().st_mtime)
     required_trials = int(args.initial_points) + int(args.max_iter)
+    completed = cv_common.count_trial_rows(optimiser_parent, "*/mtobjects_parameter_optimisation_summary.csv")
+    trials_before = completed
     if existing:
-        summary = existing[-1].with_name("mtobjects_parameter_optimisation_summary.csv")
-        completed = 0
-        if summary.exists():
-            with summary.open(newline="", encoding="utf-8") as handle:
-                completed = sum(1 for _row in csv.DictReader(handle))
         if completed >= required_trials:
             print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Reusing completed fold {fold_number}/{fold_count} ({completed} trials).", flush=True)
-            return existing[-1]
+            cv_common.append_fold_timing(
+                root, algorithm="MTObjects", fold_number=fold_number, training_count=len(training),
+                held_out_count=len(held_out), workers=args.workers, started_at=started_at,
+                wall_seconds=time.perf_counter() - started_clock, trials_before=trials_before,
+                trials_after=completed, target_trials=required_trials, status="reused_maximum",
+            )
+            return min(existing, key=lambda path: float(json.loads(path.read_text(encoding="utf-8"))["objective"]))
 
     command = [
         sys.executable,
@@ -169,6 +174,10 @@ def run_fold(args: argparse.Namespace, root: Path, fold_number: int, fold_count:
         "--seed", str(args.seed + fold_number),
         "--study-name", f"mtobjects-toy-cv-fold-{fold_number}",
         "--study-storage-dir", str(args.study_storage_dir),
+        "--convergence-min-trials", str(args.convergence_min_trials),
+        "--convergence-patience", str(args.convergence_patience),
+        "--convergence-relative-tolerance", str(args.convergence_relative_tolerance),
+        "--convergence-absolute-tolerance", str(args.convergence_absolute_tolerance),
         "--bg-variance-min", str(args.bg_variance_min),
         "--bg-variance-max", str(args.bg_variance_max),
         "--bg-variance-step", str(args.bg_variance_step),
@@ -181,12 +190,30 @@ def run_fold(args: argparse.Namespace, root: Path, fold_number: int, fold_count:
     ]
     print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Starting MTObjects fold {fold_number}/{fold_count}: train={len(training)}, validate={len(held_out)}", flush=True)
     completed = subprocess.run(command, check=False)
+    trials_after = cv_common.count_trial_rows(optimiser_parent, "*/mtobjects_parameter_optimisation_summary.csv")
     if completed.returncode:
+        cv_common.append_fold_timing(
+            root, algorithm="MTObjects", fold_number=fold_number, training_count=len(training),
+            held_out_count=len(held_out), workers=args.workers, started_at=started_at,
+            wall_seconds=time.perf_counter() - started_clock, trials_before=trials_before,
+            trials_after=trials_after, target_trials=required_trials, status=f"failed_{completed.returncode}",
+        )
         raise RuntimeError(f"MTObjects fold {fold_number} failed with exit code {completed.returncode}")
     outputs = sorted(optimiser_parent.glob("*/mtobjects_parameter_optimisation_best.json"), key=lambda p: p.stat().st_mtime)
     if not outputs:
         raise FileNotFoundError(f"MTObjects fold {fold_number} did not produce a best JSON")
-    return outputs[-1]
+    convergence_files = sorted(optimiser_parent.glob("*/optuna_convergence.json"), key=lambda p: p.stat().st_mtime)
+    converged = False
+    if convergence_files:
+        converged = bool(json.loads(convergence_files[-1].read_text(encoding="utf-8")).get("converged"))
+    cv_common.append_fold_timing(
+        root, algorithm="MTObjects", fold_number=fold_number, training_count=len(training),
+        held_out_count=len(held_out), workers=args.workers, started_at=started_at,
+        wall_seconds=time.perf_counter() - started_clock, trials_before=trials_before,
+        trials_after=trials_after, target_trials=required_trials,
+        status="converged_early" if converged and trials_after < required_trials else "maximum_reached",
+    )
+    return min(outputs, key=lambda path: float(json.loads(path.read_text(encoding="utf-8"))["objective"]))
 
 
 def parse_args() -> argparse.Namespace:
@@ -206,6 +233,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--evaluation-seed", type=int, default=202608299)
     parser.add_argument("--initial-points", type=int, default=8)
     parser.add_argument("--max-iter", type=int, default=32)
+    parser.add_argument("--convergence-min-trials", type=int, default=0)
+    parser.add_argument("--convergence-patience", type=int, default=0)
+    parser.add_argument("--convergence-relative-tolerance", type=float, default=0.001)
+    parser.add_argument("--convergence-absolute-tolerance", type=float, default=1.0e-5)
     parser.add_argument("--workers", type=int, default=10)
     parser.add_argument("--toys-per-image", type=int, default=6)
     parser.add_argument("--truth-dilation", type=int, default=1)

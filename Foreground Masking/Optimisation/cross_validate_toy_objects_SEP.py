@@ -13,7 +13,9 @@ import argparse
 import csv
 from datetime import datetime
 import json
+import os
 from pathlib import Path
+import platform
 import random
 import subprocess
 import sys
@@ -29,6 +31,47 @@ for path in (PROJECT_ROOT, FOREGROUND_ROOT, SCRIPT_DIR, FOREGROUND_ROOT / "Share
 
 import optimise_toy_objects_SEP as sep_opt  # noqa: E402
 from machine_paths import detect_pc, remove_foreground_folder  # noqa: E402
+
+
+def count_trial_rows(parent: Path, pattern: str) -> int:
+    total = 0
+    for summary in parent.glob(pattern):
+        with summary.open(newline="", encoding="utf-8") as handle:
+            total += sum(1 for _row in csv.DictReader(handle))
+    return total
+
+
+def append_fold_timing(
+    root: Path, *, algorithm: str, fold_number: int, training_count: int,
+    held_out_count: int, workers: int, started_at: datetime, wall_seconds: float,
+    trials_before: int, trials_after: int, target_trials: int, status: str,
+) -> None:
+    path = root / "fold_timing.csv"
+    row = {
+        "algorithm": algorithm,
+        "fold": fold_number,
+        "started_at": started_at.astimezone().isoformat(timespec="seconds"),
+        "completed_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "wall_seconds": f"{wall_seconds:.6f}",
+        "training_galaxies": training_count,
+        "held_out_galaxies": held_out_count,
+        "workers": workers,
+        "trials_before": trials_before,
+        "trials_after": trials_after,
+        "new_trials": max(0, trials_after - trials_before),
+        "target_trials": target_trials,
+        "status": status,
+        "hostname": platform.node(),
+        "platform": platform.platform(),
+        "python_version": platform.python_version(),
+        "logical_cpu_count": os.cpu_count() or "",
+    }
+    write_header = not path.exists() or path.stat().st_size == 0
+    with path.open("a", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(row))
+        if write_header:
+            writer.writeheader()
+        writer.writerow(row)
 
 
 def read_names(path: Path) -> list[str]:
@@ -88,6 +131,8 @@ def score_cases(cases, params: dict[str, object], args: argparse.Namespace) -> t
 
 
 def run_fold(args: argparse.Namespace, root: Path, fold_number: int, fold_count: int, training: list[str], held_out: list[str]) -> Path:
+    started_at = datetime.now()
+    started_clock = time.perf_counter()
     fold_dir = root / f"fold_{fold_number}"
     optimiser_parent = fold_dir / "training_optimisation"
     fold_dir.mkdir(parents=True, exist_ok=True)
@@ -95,19 +140,22 @@ def run_fold(args: argparse.Namespace, root: Path, fold_number: int, fold_count:
     (fold_dir / "held_out_names.txt").write_text("\n".join(held_out) + "\n", encoding="utf-8")
     existing = sorted(optimiser_parent.glob("*/sep_toy_object_optimisation_best.json"), key=lambda p: p.stat().st_mtime)
     required_trials = int(args.initial_points) + int(args.max_iter)
+    completed_trials = count_trial_rows(optimiser_parent, "*/sep_toy_object_optimisation_summary.csv")
+    trials_before = completed_trials
     if existing:
-        summary_path = existing[-1].with_name("sep_toy_object_optimisation_summary.csv")
-        completed_trials = 0
-        if summary_path.exists():
-            with summary_path.open(newline="", encoding="utf-8") as handle:
-                completed_trials = sum(1 for _row in csv.DictReader(handle))
         if completed_trials >= required_trials:
             print(
                 f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Reusing completed fold {fold_number}/{fold_count} "
                 f"({completed_trials} trials): {existing[-1]}",
                 flush=True,
             )
-            return existing[-1]
+            append_fold_timing(
+                root, algorithm="SEP", fold_number=fold_number, training_count=len(training),
+                held_out_count=len(held_out), workers=args.workers, started_at=started_at,
+                wall_seconds=time.perf_counter() - started_clock, trials_before=trials_before,
+                trials_after=completed_trials, target_trials=required_trials, status="reused_maximum",
+            )
+            return min(existing, key=lambda path: float(json.loads(path.read_text(encoding="utf-8"))["objective"]))
     command = [
         sys.executable,
         str(SCRIPT_DIR / "optimise_toy_objects_SEP.py"),
@@ -129,18 +177,40 @@ def run_fold(args: argparse.Namespace, root: Path, fold_number: int, fold_count:
         "--seed", str(args.seed + fold_number),
         "--study-name", f"sep-toy-cv-fold-{fold_number}",
         "--study-storage-dir", str(args.study_storage_dir),
+        "--convergence-min-trials", str(args.convergence_min_trials),
+        "--convergence-patience", str(args.convergence_patience),
+        "--convergence-relative-tolerance", str(args.convergence_relative_tolerance),
+        "--convergence-absolute-tolerance", str(args.convergence_absolute_tolerance),
         "--max-masked-fraction", str(args.max_masked_fraction),
         "--data-loss-penalty", str(args.data_loss_penalty),
         "--false-positive-penalty", str(args.false_positive_penalty),
     ]
     print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Starting fold {fold_number}/{fold_count}: train={len(training)}, validate={len(held_out)}", flush=True)
     completed = subprocess.run(command, check=False)
+    trials_after = count_trial_rows(optimiser_parent, "*/sep_toy_object_optimisation_summary.csv")
     if completed.returncode:
+        append_fold_timing(
+            root, algorithm="SEP", fold_number=fold_number, training_count=len(training),
+            held_out_count=len(held_out), workers=args.workers, started_at=started_at,
+            wall_seconds=time.perf_counter() - started_clock, trials_before=trials_before,
+            trials_after=trials_after, target_trials=required_trials, status=f"failed_{completed.returncode}",
+        )
         raise RuntimeError(f"Fold {fold_number} optimiser failed with exit code {completed.returncode}")
     run_dirs = sorted(optimiser_parent.glob("*/sep_toy_object_optimisation_best.json"), key=lambda p: p.stat().st_mtime)
     if not run_dirs:
         raise FileNotFoundError(f"Fold {fold_number} did not produce a best-parameter JSON")
-    return run_dirs[-1]
+    convergence_files = sorted(optimiser_parent.glob("*/optuna_convergence.json"), key=lambda p: p.stat().st_mtime)
+    converged = False
+    if convergence_files:
+        converged = bool(json.loads(convergence_files[-1].read_text(encoding="utf-8")).get("converged"))
+    append_fold_timing(
+        root, algorithm="SEP", fold_number=fold_number, training_count=len(training),
+        held_out_count=len(held_out), workers=args.workers, started_at=started_at,
+        wall_seconds=time.perf_counter() - started_clock, trials_before=trials_before,
+        trials_after=trials_after, target_trials=required_trials,
+        status="converged_early" if converged and trials_after < required_trials else "maximum_reached",
+    )
+    return min(run_dirs, key=lambda path: float(json.loads(path.read_text(encoding="utf-8"))["objective"]))
 
 
 def parse_args() -> argparse.Namespace:
@@ -159,6 +229,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--evaluation-seed", type=int, default=202608199)
     parser.add_argument("--initial-points", type=int, default=8)
     parser.add_argument("--max-iter", type=int, default=32)
+    parser.add_argument("--convergence-min-trials", type=int, default=0)
+    parser.add_argument("--convergence-patience", type=int, default=0)
+    parser.add_argument("--convergence-relative-tolerance", type=float, default=0.001)
+    parser.add_argument("--convergence-absolute-tolerance", type=float, default=1.0e-5)
     parser.add_argument("--workers", type=int, default=10)
     parser.add_argument("--toys-per-image", type=int, default=6)
     parser.add_argument("--truth-dilation", type=int, default=1)

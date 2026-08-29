@@ -132,6 +132,7 @@ class ImageCase:
     truth_labels: np.ndarray
     toys: list[ToyObject]
     baseline_mask: np.ndarray
+    analysis_region: np.ndarray
 
 
 _WORKER_CASES: list[ImageCase] | None = None
@@ -442,6 +443,7 @@ def build_cases(args: argparse.Namespace) -> list[ImageCase]:
                 truth_labels=truth_labels,
                 toys=toys,
                 baseline_mask=np.asarray(baseline_products["mask"], dtype=bool),
+                analysis_region=investigated_region_mask(data, geometry),
             )
         )
         print(f"Prepared {name}: {len(toys)} injected toy objects.")
@@ -729,16 +731,103 @@ def run_optuna(run: OptimisationRun) -> None:
         storage=storage_url,
         load_if_exists=True,
     )
+    interrupted = 0
+    for trial in study.get_trials(deepcopy=False):
+        if trial.state == optuna.trial.TrialState.RUNNING:
+            study._storage.set_trial_state_values(trial._trial_id, optuna.trial.TrialState.FAIL)
+            interrupted += 1
+    if interrupted:
+        print(f"Recovered {interrupted} interrupted Optuna trial(s) as failed; replacement trials will run.")
     run.completed_before_run = len(study.trials)
-    remaining = max(0, total_trials - len(study.trials))
+    completed_count = sum(
+        trial.state == optuna.trial.TrialState.COMPLETE for trial in study.trials
+    )
+    remaining = max(0, total_trials - completed_count)
+    converged, convergence = convergence_status(study, run.args)
+    if converged:
+        remaining = 0
     print(
         f"Optuna study '{study.study_name}' using TPESampler: "
-        f"{len(study.trials)} existing trials, {remaining} new trials."
+        f"{completed_count} completed trials, {remaining} new trials."
     )
+    if converged:
+        print(
+            "Early-stop criterion already satisfied: "
+            f"{convergence['stagnant_trials']} completed trials without meaningful improvement."
+        )
     if remaining:
-        study.optimize(run.evaluate_trial, n_trials=remaining, gc_after_trial=True, show_progress_bar=False)
+        study.optimize(
+            run.evaluate_trial,
+            n_trials=remaining,
+            callbacks=[convergence_callback(run.args)],
+            gc_after_trial=True,
+            show_progress_bar=False,
+        )
+    converged, convergence = convergence_status(study, run.args)
+    convergence.update({
+        "study_name": study.study_name,
+        "maximum_trials": total_trials,
+        "stopped_early": bool(converged and convergence["completed_trials"] < total_trials),
+    })
+    (run.output_dir / "optuna_convergence.json").write_text(
+        json.dumps(convergence, indent=2), encoding="utf-8"
+    )
     if study.best_trial is not None:
         print(f"Optuna best objective={study.best_value:.6g}, params={study.best_params}")
+
+
+def convergence_status(study, args: argparse.Namespace) -> tuple[bool, dict]:
+    """Return study-level convergence using completed trials in chronological order."""
+    completed = [
+        trial for trial in study.trials
+        if trial.state == optuna.trial.TrialState.COMPLETE and trial.value is not None
+    ]
+    meaningful_best = None
+    last_improvement = 0
+    for position, trial in enumerate(completed, start=1):
+        value = float(trial.value)
+        if meaningful_best is None:
+            meaningful_best = value
+            last_improvement = position
+            continue
+        tolerance = max(
+            float(args.convergence_absolute_tolerance),
+            float(args.convergence_relative_tolerance) * max(abs(meaningful_best), abs(value)),
+        )
+        if meaningful_best - value > tolerance:
+            meaningful_best = value
+            last_improvement = position
+    stagnant = len(completed) - last_improvement
+    converged = (
+        int(args.convergence_min_trials) > 0
+        and int(args.convergence_patience) > 0
+        and len(completed) >= int(args.convergence_min_trials)
+        and stagnant >= int(args.convergence_patience)
+    )
+    return converged, {
+        "converged": bool(converged),
+        "completed_trials": len(completed),
+        "minimum_trials": int(args.convergence_min_trials),
+        "patience": int(args.convergence_patience),
+        "relative_tolerance": float(args.convergence_relative_tolerance),
+        "absolute_tolerance": float(args.convergence_absolute_tolerance),
+        "last_meaningful_improvement_trial": last_improvement,
+        "stagnant_trials": stagnant,
+        "meaningful_best_objective": meaningful_best,
+    }
+
+
+def convergence_callback(args: argparse.Namespace):
+    def callback(study, _trial) -> None:
+        converged, status = convergence_status(study, args)
+        if converged:
+            print(
+                "Study convergence detected after "
+                f"{status['completed_trials']} trials; stopping this fold early.",
+                flush=True,
+            )
+            study.stop()
+    return callback
 
 
 def parse_args() -> argparse.Namespace:
@@ -779,6 +868,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=DEFAULT_RANDOM_SEED)
     parser.add_argument("--study-name", default="sep-toy-object-optimisation")
     parser.add_argument("--study-storage-dir", type=Path, default=None)
+    parser.add_argument("--convergence-min-trials", type=int, default=0)
+    parser.add_argument("--convergence-patience", type=int, default=0)
+    parser.add_argument("--convergence-relative-tolerance", type=float, default=0.001)
+    parser.add_argument("--convergence-absolute-tolerance", type=float, default=1.0e-5)
     parser.add_argument(
         "--max-masked-fraction",
         type=float,

@@ -41,6 +41,32 @@ def galaxy_seed(global_seed: int, name: str) -> int:
     return (int(global_seed) + zlib.crc32(name.casefold().encode("utf-8"))) & 0xFFFFFFFF
 
 
+def inject_with_fallback(args, name: str, data: np.ndarray, geometry: dict, seed: int):
+    """Place paired toys deterministically, relaxing size then count if necessary."""
+    requested = int(args.toys_per_image)
+    attempts: list[tuple[int, float]] = [
+        (requested, 1.0),
+        (requested, 0.85),
+        (requested, 0.70),
+    ]
+    attempts.extend((count, 1.0) for count in range(requested - 1, 0, -1))
+    last_error: ValueError | None = None
+    for toy_count, fwhm_scale in attempts:
+        try:
+            result = sep_opt.inject_toys(
+                name, data, geometry, toys_per_image=toy_count,
+                rng=np.random.default_rng(seed), truth_dilation=args.truth_dilation,
+                peak_sigma_min=args.toy_peak_sigma_min, peak_sigma_max=args.toy_peak_sigma_max,
+                fwhm_scale=fwhm_scale,
+            )
+            return (*result, toy_count, fwhm_scale)
+        except ValueError as error:
+            if "could not place toy" not in str(error) and "no injection candidates" not in str(error):
+                raise
+            last_error = error
+    raise ValueError(f"{name}: all adaptive toy-placement attempts failed") from last_error
+
+
 def build_set(args, set_name: str, global_seed: int, names: list[str], output: Path) -> dict:
     rows = sep_opt.select_rows(args.source_manifest, args.pc, names, len(names), global_seed)
     by_name = {row["name"]: row for row in rows}
@@ -52,11 +78,10 @@ def build_set(args, set_name: str, global_seed: int, names: list[str], output: P
         geometry = sep_opt.sep_tool.display.required_geometry(row)
         image_path = sep_opt.sep_tool.display.image_path_for_pc(row, args.pc)
         data, _ = sep_opt.sep_tool.load_fits(image_path)
+        analysis_region = sep_opt.investigated_region_mask(data, geometry)
         seed = galaxy_seed(global_seed, name)
-        injected, truth_mask, truth_labels, toys = sep_opt.inject_toys(
-            name, data, geometry, toys_per_image=args.toys_per_image,
-            rng=np.random.default_rng(seed), truth_dilation=args.truth_dilation,
-            peak_sigma_min=args.toy_peak_sigma_min, peak_sigma_max=args.toy_peak_sigma_max,
+        injected, truth_mask, truth_labels, toys, actual_toy_count, fwhm_scale = inject_with_fallback(
+            args, name, data, geometry, seed
         )
         delta = np.asarray(injected - data, dtype=np.float32)
         payload_path = (payload_dir / f"{name}.npz").resolve()
@@ -73,15 +98,22 @@ def build_set(args, set_name: str, global_seed: int, names: list[str], output: P
             "science_image_sha256": sha256_file(Path(image_path)),
             "global_seed": global_seed,
             "per_galaxy_seed": seed,
+            "requested_toy_count": int(args.toys_per_image),
+            "actual_toy_count": actual_toy_count,
+            "toy_fwhm_scale": fwhm_scale,
+            "placement_fallback_used": actual_toy_count != int(args.toys_per_image) or fwhm_scale != 1.0,
             "payload_path": str(payload_path),
             "payload_sha256": sha256_file(payload_path),
             "delta_sha256": sha256_array(delta),
             "truth_mask_sha256": sha256_array(truth_mask.astype(np.uint8)),
             "truth_pixels": int(np.count_nonzero(truth_mask)),
+            "analysis_region_definition": "finite pixels in the displayed deprojected centred square",
+            "analysis_region_pixels": int(np.count_nonzero(analysis_region)),
             "toys": toy_rows,
         }
         payload_path.chmod(0o444)
-        print(f"[{set_name} {index:02d}/{len(names)}] {name}: seed={seed}, toys={len(toys)}", flush=True)
+        fallback = "" if actual_toy_count == int(args.toys_per_image) and fwhm_scale == 1.0 else f", fallback scale={fwhm_scale:.2f}"
+        print(f"[{set_name} {index:02d}/{len(names)}] {name}: seed={seed}, toys={len(toys)}{fallback}", flush=True)
     return {"global_seed": global_seed, "galaxies": galaxies}
 
 
@@ -100,7 +132,8 @@ def main() -> int:
         "clean_list":str(args.clean_list.resolve()), "fold_seed":args.fold_seed,
         "folds":{f"fold_{i+1}":v for i,v in enumerate(folds(names,args.fold_seed))},
         "toy_configuration":{"toys_per_image":args.toys_per_image,"truth_dilation":args.truth_dilation,
-            "peak_sigma_min":args.toy_peak_sigma_min,"peak_sigma_max":args.toy_peak_sigma_max,"brightness_scale_vs_previous":1.2},
+            "peak_sigma_min":args.toy_peak_sigma_min,"peak_sigma_max":args.toy_peak_sigma_max,"brightness_scale_vs_previous":1.2,
+            "placement_fallback":"requested count at FWHM scales 1.0, 0.85, 0.70; then progressively fewer toys at original size"},
         "injection_sets":{},
     }
     manifest["injection_sets"]["cross_validation"]=build_set(args,"cross_validation",args.cv_seed,names,args.output_dir)

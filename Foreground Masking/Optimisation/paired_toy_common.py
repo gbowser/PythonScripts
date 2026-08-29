@@ -12,8 +12,8 @@ from typing import Any
 import numpy as np
 
 
-SCHEMA_VERSION = "paired-toy-injections-v1"
-METRIC_VERSION = "paired-toy-metrics-v1"
+SCHEMA_VERSION = "paired-toy-injections-displayed-frame-v2"
+METRIC_VERSION = "paired-toy-metrics-displayed-frame-v2"
 
 
 def sha256_file(path: Path) -> str:
@@ -74,17 +74,26 @@ def evaluate_mask(case: Any, mask: np.ndarray, segments: int) -> dict[str, float
     mask = np.asarray(mask, dtype=bool)
     baseline = np.asarray(case.baseline_mask, dtype=bool)
     truth = np.asarray(case.truth_mask, dtype=bool)
+    analysis_region = np.asarray(case.analysis_region, dtype=bool)
+    if analysis_region.shape != mask.shape:
+        raise ValueError(f"Analysis-region shape mismatch for {case.name}")
+    region_pixels = int(np.count_nonzero(analysis_region))
+    if region_pixels == 0:
+        raise ValueError(f"Displayed analysis region is empty for {case.name}")
+    mask &= analysis_region
+    baseline &= analysis_region
+    truth &= analysis_region
     incremental = mask & ~baseline
     truth_pixels = int(np.count_nonzero(truth))
 
     def measures(candidate: np.ndarray, prefix: str) -> dict[str, float | int]:
         pixels = int(np.count_nonzero(candidate))
         overlap = int(np.count_nonzero(candidate & truth))
-        fraction = pixels / candidate.size if candidate.size else 0.0
+        fraction = pixels / region_pixels
         recall = overlap / truth_pixels if truth_pixels else 0.0
         precision = overlap / pixels if pixels else 0.0
         f_score = 2.0 * recall * precision / (recall + precision) if recall + precision > 0 else 0.0
-        false_positive = (pixels - overlap) / max(1, candidate.size - truth_pixels)
+        false_positive = (pixels - overlap) / max(1, region_pixels - truth_pixels)
         return {
             f"{prefix}_pixels": pixels,
             f"{prefix}_overlap_pixels": overlap,
@@ -114,6 +123,7 @@ def evaluate_mask(case: Any, mask: np.ndarray, segments: int) -> dict[str, float
     return {
         "metric_version": METRIC_VERSION,
         "image": case.name,
+        "analysis_region_pixels": region_pixels,
         "truth_pixels": truth_pixels,
         "incremental_pixels": inc["incremental_pixels"],
         "overlap_pixels": inc["incremental_overlap_pixels"],
