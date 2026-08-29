@@ -518,7 +518,11 @@ def completed_names_from_summary(path: Path) -> set[str]:
 def load_clean_galaxy_names(path: Path, expected_count: int = EXPECTED_CLEAN_GALAXIES) -> set[str]:
     if not path.is_file():
         raise FileNotFoundError(f"Clean-galaxy list not found: {path}")
-    names = {line.strip().casefold() for line in path.read_text(encoding="utf-8-sig").splitlines() if line.strip()}
+    names = {
+        line.strip().casefold()
+        for line in path.read_text(encoding="utf-8-sig").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
     if len(names) != expected_count:
         raise ValueError(f"Expected {expected_count} unique clean galaxies in {path}; found {len(names)}.")
     return names
@@ -538,21 +542,35 @@ def process_one(
     if geometry is None:
         raise ValueError(f"{name} has incomplete geometry.")
     data, header = mto.load_fits(mto.display.image_path_for_pc(row, args.pc))
+    toy_seed_offset = 0
     if args.toy_diagnostics:
         galaxy_seed = int(args.toy_seed) + zlib.crc32(name.casefold().encode("utf-8"))
-        injected, truth_mask, _truth_labels, _toys = mto_toy_opt.inject_toys(
-            name,
-            data,
-            geometry,
-            toys_per_image=int(args.toys_per_image),
-            rng=np.random.default_rng(galaxy_seed),
-            truth_dilation=int(args.truth_dilation),
-            peak_sigma_min=float(args.toy_peak_sigma_min),
-            peak_sigma_max=float(args.toy_peak_sigma_max),
-        )
+        constrained = name.casefold() in {"ngc4294", "ngc4559"}
+        effective_toy_count = 8 if constrained else int(args.toys_per_image)
+        fwhm_scale = 1.0
+        for retry_index in range(10):
+            toy_seed_offset = retry_index * 1_000_003
+            try:
+                injected, truth_mask, _truth_labels, _toys = mto_toy_opt.inject_toys(
+                    name, data, geometry,
+                    toys_per_image=effective_toy_count,
+                    rng=np.random.default_rng(galaxy_seed + toy_seed_offset),
+                    truth_dilation=int(args.truth_dilation),
+                    peak_sigma_min=float(args.toy_peak_sigma_min),
+                    peak_sigma_max=float(args.toy_peak_sigma_max),
+                    fwhm_scale=fwhm_scale,
+                )
+                break
+            except ValueError as exc:
+                if "could not place toy" not in str(exc) or retry_index == 9:
+                    raise
     else:
         injected = np.asarray(data, dtype=float)
         truth_mask = np.zeros(data.shape, dtype=bool)
+    if toy_seed_offset:
+        log(f"{name}: toy placement used deterministic seed offset +{toy_seed_offset}.")
+    if args.toy_diagnostics and effective_toy_count < int(args.toys_per_image):
+        log(f"{name}: constrained-area fallback used {effective_toy_count} standard-size toys.")
     products = mto.mtobjects_products(injected, params, geometry, mtobjects_root)
     if args.source == "spike-gate":
         products = spike_gate_component_filter.filter_products(injected, geometry, params, products, mto)

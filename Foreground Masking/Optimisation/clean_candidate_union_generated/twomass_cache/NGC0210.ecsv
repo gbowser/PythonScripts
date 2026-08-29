@@ -1,0 +1,365 @@
+# %ECSV 1.0
+# ---
+# datatype:
+# - name: ra
+#   unit: deg
+#   datatype: float64
+#   format: '{:.6f}'
+#   description: right ascension (J2000 decimal deg)
+#   meta: !!omap
+#   - {ucd: pos.eq.ra;meta.main}
+#   - {precision: F6}
+# - name: dec
+#   unit: deg
+#   datatype: float64
+#   format: '{:.6f}'
+#   description: declination (J2000 decimal deg)
+#   meta: !!omap
+#   - {ucd: pos.eq.dec;meta.main}
+#   - {precision: F6}
+# - name: err_maj
+#   unit: arcsec
+#   datatype: float32
+#   format: '{:.2f}'
+#   description: Semi-major axis length of the one sigma position uncertainty ellipse
+#   meta: !!omap
+#   - {precision: F2}
+# - name: err_min
+#   unit: arcsec
+#   datatype: float32
+#   format: '{:.2f}'
+#   description: Semi-minor axis length of the one sigma position uncertainty ellipse
+#   meta: !!omap
+#   - {precision: F2}
+# - {name: err_ang, unit: deg, datatype: int32, description: angle of error ellipse major axis (E of N)}
+# - name: designation
+#   datatype: string
+#   description: source designation formed from sexigesimal coordinates
+#   meta: !!omap
+#   - {ucd: meta.id;meta.main}
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - name: j_m
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: J band selected "default" magnitude
+#   meta: !!omap
+#   - {ucd: phot.mag;em.IR.J}
+#   - {precision: F3}
+# - name: j_cmsig
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: corrected J band photometric uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - name: j_msigcom
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: combined (total) J band photometric uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - name: j_snr
+#   datatype: float64
+#   format: '{:.1f}'
+#   description: J band "scan" signal-to-noise ratio
+#   meta: !!omap
+#   - {precision: F1}
+# - name: h_m
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: H band selected "default" magnitude
+#   meta: !!omap
+#   - {ucd: hot.mag;em.IR.H}
+#   - {precision: F3}
+# - name: h_cmsig
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: corrected H band photometric uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - name: h_msigcom
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: combined (total) H band photometric uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - name: h_snr
+#   datatype: float64
+#   format: '{:.1f}'
+#   description: H band "scan" signal-to-noise ratio
+#   meta: !!omap
+#   - {precision: F1}
+# - name: k_m
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: K band selected "default" magnitude
+#   meta: !!omap
+#   - {ucd: phot.mag;em.IR.K}
+#   - {precision: F3}
+# - name: k_cmsig
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: corrected K band photometric uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - name: k_msigcom
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: combined (total) K band photometric uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - name: k_snr
+#   datatype: float64
+#   format: '{:.1f}'
+#   description: K band "scan" signal-to-noise ratio
+#   meta: !!omap
+#   - {precision: F1}
+# - name: ph_qual
+#   datatype: string
+#   description: flag indicating photometric quality of source
+#   meta: !!omap
+#   - {ucd: meta.code.qual}
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - name: rd_flg
+#   datatype: string
+#   description: source of JHK "default" mags (AKA "read flag")
+#   meta: !!omap
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - name: bl_flg
+#   datatype: string
+#   description: 'indicates # JHK components fit simultaneously to source'
+#   meta: !!omap
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - name: cc_flg
+#   datatype: string
+#   description: indicates JHK artifact contamination and/or confusion
+#   meta: !!omap
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - name: ndet
+#   datatype: string
+#   description: 'number of >3-sig. ap. mag measurements, # possible (jjhhkk)'
+#   meta: !!omap
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - name: prox
+#   unit: arcsec
+#   datatype: float32
+#   format: '{:.1f}'
+#   description: distance in arcsec to nearest catalog point source
+#   meta: !!omap
+#   - {precision: F1}
+# - {name: pxpa, unit: deg, datatype: int32, description: angle (deg E of N) to nearest catalog point source}
+# - {name: pxcntr, datatype: int64, description: cntr of nearest catalog point source}
+# - {name: gal_contam, datatype: int32, description: flag indicating if src is contaminated by extended source}
+# - {name: mp_flg, datatype: int32, description: 'src is positionally associated with an asteroid, comet, etc'}
+# - name: cntr
+#   datatype: int64
+#   description: entry key (counter) number (unique within table)
+#   meta: !!omap
+#   - {ucd: meta.record;meta.main}
+# - name: hemis
+#   datatype: string
+#   description: hemisphere (N/S) of facility from which src was observed
+#   meta: !!omap
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - name: xdate
+#   datatype: string
+#   description: observation reference date
+#   meta: !!omap
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - {name: scan, datatype: int32, description: scan number (unique within date)}
+# - name: glon
+#   unit: deg
+#   datatype: float64
+#   format: '{:.3f}'
+#   description: galactic longitude (decimal deg)
+#   meta: !!omap
+#   - {precision: F3}
+# - name: glat
+#   unit: deg
+#   datatype: float64
+#   format: '{:.3f}'
+#   description: galactic latitude (decimal deg)
+#   meta: !!omap
+#   - {precision: F3}
+# - name: x
+#   datatype: float64
+#   format: '{:.16f}'
+#   description: unit sphere x value
+#   meta: !!omap
+#   - {ucd: pos.cartesian.x}
+#   - {precision: F16}
+# - name: y
+#   datatype: float64
+#   format: '{:.16f}'
+#   description: unit sphere y value
+#   meta: !!omap
+#   - {ucd: pos.cartesian.y}
+#   - {precision: F16}
+# - name: z
+#   datatype: float64
+#   format: '{:.16f}'
+#   description: unit sphere z value
+#   meta: !!omap
+#   - {ucd: pos.cartesian.z}
+#   - {precision: F16}
+# - name: x_scan
+#   unit: arcsec
+#   datatype: float32
+#   format: '{:.1f}'
+#   description: x (cross-scan) position (U-Scan coord.)
+#   meta: !!omap
+#   - {precision: F1}
+# - name: jdate
+#   unit: d
+#   datatype: float64
+#   format: '{:.4f}'
+#   description: julian date of source measurement to +/- 30 sec
+#   meta: !!omap
+#   - {precision: F4}
+# - name: j_psfchi
+#   datatype: float32
+#   format: '{:.2f}'
+#   description: J band reduced chi-squared goodness-of-fit value
+#   meta: !!omap
+#   - {precision: F2}
+# - name: h_psfchi
+#   datatype: float32
+#   format: '{:.2f}'
+#   description: H band reduced chi-squared goodness-of-fit value
+#   meta: !!omap
+#   - {precision: F2}
+# - name: k_psfchi
+#   datatype: float32
+#   format: '{:.2f}'
+#   description: K band reduced chi-squared goodness-of-fit value
+#   meta: !!omap
+#   - {precision: F2}
+# - name: j_m_stdap
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: J band standard (r=4") aperture magnitude
+#   meta: !!omap
+#   - {precision: F3}
+# - name: j_msig_stdap
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: J band standard (r=4") aperture mag uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - name: h_m_stdap
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: H band standard (r=4") aperture magnitude
+#   meta: !!omap
+#   - {precision: F3}
+# - name: h_msig_stdap
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: H band standard (r=4") aperture mag uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - name: k_m_stdap
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: K band standard (r=4") aperture magnitude
+#   meta: !!omap
+#   - {precision: F3}
+# - name: k_msig_stdap
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: K band standard (r=4") aperture mag uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - {name: dist_edge_ns, unit: arcsec, datatype: float32, description: distance to nearest north or south full-coverage scan edge}
+# - {name: dist_edge_ew, unit: arcsec, datatype: float32, description: distance to nearest east or west full-coverage scan edge}
+# - name: dist_edge_flg
+#   datatype: string
+#   description: flag indicating which edges ([n|s][e|w]) are nearest to src
+#   meta: !!omap
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - {name: dup_src, datatype: int32, description: duplicate source extractions flag (overlap areas)}
+# - {name: use_src, datatype: int32, description: use source flag -- source is to be used in catalog}
+# - name: a
+#   datatype: string
+#   description: optical source catalog identifier of closest match within 5"
+#   meta: !!omap
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - name: dist_opt
+#   unit: arcsec
+#   datatype: float32
+#   format: '{:.1f}'
+#   description: distance in arcsec relative to associated optical source
+#   meta: !!omap
+#   - {precision: F1}
+# - {name: phi_opt, unit: deg, datatype: int32, description: position angle relative to optical source (E of N)}
+# - name: b_m_opt
+#   unit: mag
+#   datatype: float32
+#   format: '{:.2f}'
+#   description: catalog blue mag of associated optical source
+#   meta: !!omap
+#   - {precision: F2}
+# - name: vr_m_opt
+#   unit: mag
+#   datatype: float32
+#   format: '{:.2f}'
+#   description: catalog visual or red mag of associated optical source
+#   meta: !!omap
+#   - {precision: F2}
+# - {name: nopt_mchs, datatype: int32, description: number of optical sources matched to this 2MASS source}
+# - {name: ext_key, datatype: int64, description: key to extended source data DB record}
+# - {name: scan_key, datatype: int64, description: key to scan data record in the scan information table}
+# - {name: coadd_key, datatype: int64, description: key to coadd data record in the atlas image data table}
+# - {name: coadd, datatype: int32, description: number of atlas image in which the source falls}
+# - name: htm20
+#   datatype: int64
+#   description: HTM 20 spatial (x,y,z) index key
+#   meta: !!omap
+#   - {ucd: pos.HTM}
+# schema: astropy-2.0
+ra dec err_maj err_min err_ang designation j_m j_cmsig j_msigcom j_snr h_m h_cmsig h_msigcom h_snr k_m k_cmsig k_msigcom k_snr ph_qual rd_flg bl_flg cc_flg ndet prox pxpa pxcntr gal_contam mp_flg cntr hemis xdate scan glon glat x y z x_scan jdate j_psfchi h_psfchi k_psfchi j_m_stdap j_msig_stdap h_m_stdap h_msig_stdap k_m_stdap k_msig_stdap dist_edge_ns dist_edge_ew dist_edge_flg dup_src use_src a dist_opt phi_opt b_m_opt vr_m_opt nopt_mchs ext_key scan_key coadd_key coadd htm20
+10.1613 -13.906135 0.09 0.08 90 """00403871-1354220""" 15.651 0.053 0.054 20.5 15.338 0.107 0.108 11.3 14.775 "" "" "" """AAU""" """220""" """110""" """000""" """360600""" 76.9 112 36478495 0 0 36478491 """s""" """1998-07-12""" 134 111.61 -76.54 0.955465463077 0.171249197199 -0.240331981489 -158.8 2451006.8772 0.93 1.04 "" 15.796 0.098 15.012 0.074 "" "" 7401.9 93.2 """ne""" 0 1 """U""" 0.8 175 17.9 17.1 1 "" 1761 40488 92 4800964929999858176
+10.177483 -13.879958 0.26 0.21 81 """00404259-1352478""" 16.475 0.114 0.115 9.6 15.686 0.14 0.14 8.2 15.42 0.172 0.172 5.9 """BBC""" """222""" """111""" """000""" """060606""" 91.5 115 36490737 0 0 36478445 """s""" """1998-07-12""" 134 111.697 -76.517 0.955525030409 0.171538442188 -0.239888472241 -215.4 2451006.8771 0.89 1.11 0.9 16.606 0.241 15.999 0.179 16.778 1.252 7307.4 36.6 """ne""" 1 1 """0""" "" "" "" "" 0 "" 1761 40488 92 4800964930208070144
+10.133458 -13.832294 0.06 0.06 45 """00403202-1349562""" 13.286 0.02 0.023 181.2 12.916 0.025 0.027 105.3 12.862 0.03 0.032 62.6 """AAA""" """222""" """111""" """000""" """666666""" 48.0 32 36478362 0 0 36478379 """s""" """1998-07-12""" 134 111.553 -76.463 0.955852673208 0.17083923625 -0.239080786512 -61.5 2451006.8771 0.83 0.67 1.0 13.302 0.021 12.944 0.032 12.827 0.039 7136.4 190.5 """ne""" 0 1 """U""" 0.5 177 15.3 14.5 1 "" 1761 40488 92 4800964991721568768
+10.126064 -13.844719 0.06 0.06 45 """00403025-1350409""" 13.333 0.02 0.023 173.5 12.686 0.027 0.028 130.2 12.488 0.028 0.029 88.3 """AAA""" """222""" """111""" """000""" """666666""" 51.7 30 36478379 0 0 36478400 """s""" """1998-07-12""" 134 111.514 -76.473 0.955823650731 0.170706763017 -0.239291349121 -35.7 2451006.8771 0.66 1.43 1.14 13.337 0.012 12.661 0.049 12.474 0.031 7181.2 216.3 """ne""" 0 1 """U""" 0.9 102 17.3 15.5 1 "" 1761 40488 92 4800964991727962624
+10.128231 -13.885858 0.09 0.09 45 """00403077-1353090""" 16.077 0.111 0.112 13.9 15.138 0.122 0.122 13.6 14.658 0.097 0.098 12.0 """BBA""" """222""" """111""" """000""" """564506""" 24.1 339 36478443 0 0 36478455 """s""" """1998-07-12""" 134 111.49 -76.514 0.955647810945 0.170712655596 -0.239988438588 -43.2 2451006.8771 1.79 1.42 1.12 15.397 0.116 14.589 0.09 14.393 0.086 7329.3 208.7 """ne""" 0 1 """U""" 0.1 180 18.4 16.6 3 66546 1761 40488 92 4800964991827680256
+10.125773 -13.879594 0.06 0.06 45 """00403018-1352465""" 11.545 0.018 0.022 900.4 11.242 0.024 0.025 492.2 11.204 0.018 0.02 288.3 """AAA""" """222""" """111""" """000""" """666666""" 24.1 159 36478455 0 0 36478443 """s""" """1998-07-12""" 134 111.485 -76.508 0.955680956611 0.170676269714 -0.239882304742 -34.6 2451006.8771 0.67 0.86 0.45 11.56 0.011 11.282 0.023 11.217 0.005 7306.8 217.3 """ne""" 0 1 """U""" 0.7 213 13.9 13.2 1 "" 1761 40488 92 4800964991841126912
+10.145761 -13.872804 0.06 0.06 45 """00403498-1352220""" 11.359 0.051 0.053 1068.6 11.025 0.091 0.091 601.0 10.359 0.061 0.062 627.8 """EEE""" """222""" """111""" """000""" """666666""" 5.5 214 36478433 2 0 36478432 """s""" """1998-07-12""" 134 111.572 -76.505 0.955649333641 0.171014661215 -0.239767255397 -104.5 2451006.8771 28.51 30.35 25.42 11.089 0.006 10.331 0.003 10.047 0.01 7282.1 147.5 """ne""" 0 1 """U""" 1.1 196 8.1 11.5 1 "" 1761 40488 92 4800964991845104640
+10.14488 -13.874065 0.11 0.11 45 """00403477-1352266""" 13.939 0.015 0.019 99.3 11.422 "" "" "" 11.142 "" "" "" """EUU""" """200""" """100""" """c00""" """660000""" 5.5 34 36478432 2 0 36478433 """s""" """1998-07-12""" 134 111.568 -76.506 0.955646768438 0.170999037285 -0.239788621958 -101.4 2451006.8771 15.83 "" "" 12.155 0.023 "" "" "" "" 7286.6 150.5 """ne""" 0 1 """0""" "" "" "" "" 0 "" 1761 40488 92 4800964991846721536
+10.146978 -13.880887 0.21 0.2 65 """00403527-1352511""" 16.519 0.183 0.183 9.2 14.037 "" "" "" 13.985 "" "" "" """CUU""" """200""" """100""" """000""" """560000""" 25.6 343 36478433 2 0 36478449 """s""" """1998-07-12""" 134 111.571 -76.513 0.955612395353 0.171028998985 -0.239904212873 -108.7 2451006.8771 1.98 "" "" 15.102 0.058 "" "" "" "" 7311.2 143.2 """ne""" 0 1 """0""" "" "" "" "" 0 "" 1761 40488 92 4800964991850998784
+10.118992 -13.861658 0.33 0.28 61 """00402855-1351419""" 16.534 0.128 0.128 9.1 15.558 0.127 0.127 9.2 15.667 0.223 0.223 4.7 """BBD""" """222""" """111""" """000""" """161605""" 65.8 22 36478400 0 0 36478420 """s""" """1998-07-12""" 134 111.471 -76.489 0.955775027979 0.170576347949 -0.239578390953 -10.9 2451006.8771 0.78 1.23 1.08 16.076 0.166 15.322 0.265 15.71 0.26 7242.3 241.0 """ne""" 0 1 """U""" 0.3 185 19.3 17.6 1 "" 1761 40488 92 4800964992620322304
+10.118248 -13.901772 0.06 0.06 45 """00402837-1354063""" 14.397 0.026 0.029 65.1 13.821 0.032 0.034 45.8 13.729 0.049 0.049 28.2 """AAA""" """222""" """111""" """000""" """666666""" 67.1 31 36478455 0 0 36478484 """s""" """1998-07-12""" 134 111.437 -76.528 0.955611883409 0.170534427611 -0.240258063938 -8.3 2451006.8771 0.88 1.2 1.03 14.438 0.039 13.91 0.07 13.723 0.051 7386.7 243.6 """ne""" 0 1 """U""" 0.8 167 16.7 15.6 1 "" 1761 40488 92 4800964992830485504

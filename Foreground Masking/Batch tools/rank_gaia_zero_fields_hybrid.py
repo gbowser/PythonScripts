@@ -134,28 +134,36 @@ def save_sheet(results: list[dict], output: Path) -> None:
 
 
 def save_review_panel(result: dict, output: Path) -> None:
-    """Write a self-contained original/residual/catalogue panel for the reviewer."""
-    image, z = result["image"], result["z_image"]
-    radius = int(math.ceil(result["aperture"]))
-    x0, y0 = int(round(result["x0"])), int(round(result["y0"]))
-    x1, x2 = max(0, x0 - radius), min(image.shape[1], x0 + radius + 1)
-    y1, y2 = max(0, y0 - radius), min(image.shape[0], y0 + radius + 1)
-    view, zview = image[y1:y2, x1:x2], z[y1:y2, x1:x2]
-    finite = view[np.isfinite(view)]
-    lo, hi = np.percentile(finite, [5, 99.5])
-    fig, axes = plt.subplots(1, 3, figsize=(12, 4))
-    axes[0].imshow(view, origin="lower", cmap="gray", vmin=lo, vmax=hi)
-    axes[0].set_title("Original 3.6 μm")
-    axes[1].imshow(zview, origin="lower", cmap="coolwarm", vmin=-5, vmax=10)
-    axes[1].set_title("Gaussian residual (σ)")
-    axes[2].imshow(view, origin="lower", cmap="gray", vmin=lo, vmax=hi)
-    axes[2].set_title("Catalogue candidates")
+    """Write a wide, galaxy-centred panel matching the masking diagnostics."""
+    image, z, geometry = result["image"], result["z_image"], result["geometry"]
+    radius_arcsec = display.profile_radius_pixels(image, geometry) * geometry["pixel_scale"]
+    view, x_axis, y_axis = display.deproject_bar_aligned_cutout(image, geometry, radius_arcsec)
+    zview, _, _ = display.deproject_bar_aligned_cutout(z, geometry, radius_arcsec)
+    extent = [x_axis[0], x_axis[-1], y_axis[0], y_axis[-1]]
+    lo, hi = display.robust_limits(view, low=1.0, high=99.5)
+    fig, axes = plt.subplots(1, 3, figsize=(13.5, 4.6))
+    axes[0].imshow(view, origin="lower", cmap="gist_gray_r", vmin=lo, vmax=hi, extent=extent)
+    axes[0].set_title("Galaxy-centred original (negative)")
+    axes[1].imshow(zview, origin="lower", cmap="coolwarm", vmin=-5, vmax=10, extent=extent)
+    axes[1].set_title("Centred Gaussian residual (σ)")
+    axes[2].imshow(view, origin="lower", cmap="gist_gray_r", vmin=lo, vmax=hi, extent=extent)
+    axes[2].set_title("Centred original + catalogue candidates")
+    transform = display.image_transform(geometry["disk_pa"], geometry["inclination"], geometry["bar_pa"])
+    x0, y0 = result["x0"], result["y0"]
+
+    def centred_position(source: dict) -> tuple[float, float]:
+        offset = transform @ np.array([source["x"] - x0, source["y"] - y0])
+        return float(offset[0] * geometry["pixel_scale"]), float(offset[1] * geometry["pixel_scale"])
+
     for source in result["two_mass"][:5]:
-        axes[2].add_patch(plt.Circle((source["x"] - x1, source["y"] - y1), 4, fill=False, color="#ff3b30", lw=1.2))
+        axes[2].add_patch(plt.Circle(centred_position(source), 2.0, fill=False, color="#ff3b30", lw=1.5))
     for source in result["weak_gaia"][:5]:
-        axes[2].add_patch(plt.Circle((source["x"] - x1, source["y"] - y1), 3, fill=False, color="#ffcc00", lw=1.0))
+        axes[2].add_patch(plt.Circle(centred_position(source), 1.5, fill=False, color="#ffcc00", lw=1.2))
     for axis in axes:
-        axis.set_axis_off()
+        axis.axvline(0, color="#e53935", linestyle="--", linewidth=0.7, alpha=0.75)
+        axis.axhline(0, color="#1976d2", linestyle="--", linewidth=0.7, alpha=0.75)
+        axis.set_xlabel("bar-aligned arcsec")
+        axis.set_ylabel("deprojected arcsec")
     fig.suptitle(
         f"{result['name']} — hybrid score {result['hybrid_score']:.3f}; "
         f"2MASS={len(result['two_mass'])}; weak Gaia={len(result['weak_gaia'])}"
@@ -231,7 +239,7 @@ def main() -> int:
             detector="dao", dao_fwhm=2.5,
         )
         hybrid = sum(item["score"] for item in two_mass[:5]) + sum(item["score"] for item in weak_gaia[:5]) + 0.01 * float(image_metrics["pollution_score"])
-        results.append({"name": name, "hybrid_score": hybrid, "twomass_count": len(two_mass), "weak_gaia_count": len(weak_gaia), "image_tiebreak_score": image_metrics["pollution_score"], "image": image, "z_image": z, "two_mass": two_mass, "weak_gaia": weak_gaia, "aperture": aperture, "x0": x0, "y0": y0})
+        results.append({"name": name, "hybrid_score": hybrid, "twomass_count": len(two_mass), "weak_gaia_count": len(weak_gaia), "image_tiebreak_score": image_metrics["pollution_score"], "image": image, "z_image": z, "two_mass": two_mass, "weak_gaia": weak_gaia, "aperture": aperture, "x0": x0, "y0": y0, "geometry": geometry})
         print(f"[{index}/{len(selected_names)}] {name}: {hybrid:.3f} (2MASS={len(two_mass)}, weak Gaia={len(weak_gaia)})", flush=True)
     results.sort(key=lambda item: item["hybrid_score"])
     fields = ["rank", "name", "hybrid_score", "twomass_count", "weak_gaia_count", "image_tiebreak_score"]

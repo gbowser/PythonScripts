@@ -20,7 +20,11 @@ def completed(summary: Path, expected: int) -> bool:
         return False
     with summary.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
-    return len(rows) >= expected and all(row.get("status", "").casefold() == "ok" for row in rows)
+    latest_by_name = {row.get("name", ""): row for row in rows if row.get("name")}
+    return (
+        len(latest_by_name) >= expected
+        and all(row.get("status", "").casefold() == "ok" for row in latest_by_name.values())
+    )
 
 
 def run(command: list[str], label: str) -> None:

@@ -6,11 +6,12 @@ from __future__ import annotations
 import argparse
 import csv
 from datetime import datetime
-import math
 import os
 from pathlib import Path
 import tkinter as tk
 from tkinter import messagebox, ttk
+
+from PIL import Image, ImageTk
 
 
 if os.name == "nt":
@@ -20,6 +21,8 @@ else:
 DEFAULT_ROOT = REVIEW_ROOT / "gaia_zero_57_hybrid_ranking"
 PHASE2_ROOT = REVIEW_ROOT / "catalogue_review_phase2_next30"
 PHASE3_ROOT = REVIEW_ROOT / "catalogue_review_phase3_clean_similarity"
+CLEANEST30_ROOT = REVIEW_ROOT / "cleanest30_catalogue_rereview"
+CANDIDATE_UNION_ROOT = REVIEW_ROOT / "clean_candidate_union_rereview"
 CLASSIFICATIONS = ("Clean", "Ambiguous", "Polluted")
 INSTRUCTIONS = """Purpose
 
@@ -67,11 +70,14 @@ class CatalogueReviewer(tk.Tk):
             raise ValueError(f"No ranking rows found in {ranking}")
         self.decisions = self._read_decisions(decisions)
         self.index = 0
-        self.photo: tk.PhotoImage | None = None
+        self.photo: ImageTk.PhotoImage | None = None
+        self.panel_path: Path | None = None
+        self.resize_job: str | None = None
         self.classification_var = tk.StringVar()
         self.notes_var = tk.StringVar()
         self.name_var = tk.StringVar()
         self.progress_var = tk.StringVar()
+        self.current_decision_var = tk.StringVar(value="Current classification: NOT REVIEWED")
         self._build_ui()
         self._bind_keys()
         self.protocol("WM_DELETE_WINDOW", self.close)
@@ -111,27 +117,48 @@ class CatalogueReviewer(tk.Tk):
 
         controls = ttk.Frame(self, padding=10)
         controls.pack(fill="x")
-        ttk.Label(controls, text="Decision:").grid(row=0, column=0, sticky="w")
+        self.current_decision_label = tk.Label(
+            controls, textvariable=self.current_decision_var,
+            font=("TkDefaultFont", 11, "bold"), padx=10, pady=5,
+            background="#555555", foreground="white",
+        )
+        self.current_decision_label.grid(row=0, column=0, columnspan=5, sticky="ew", pady=(0, 8))
+        ttk.Label(controls, text="Change decision:").grid(row=1, column=0, sticky="w")
         for column, label in enumerate(CLASSIFICATIONS, start=1):
             ttk.Radiobutton(
                 controls, text=f"{label} (Ctrl+{label[0].upper()})",
                 variable=self.classification_var, value=label,
                 command=self.save_current,
-            ).grid(row=0, column=column, padx=10, sticky="w")
-        ttk.Label(controls, text="Notes:").grid(row=1, column=0, sticky="w", pady=(10, 0))
+            ).grid(row=1, column=column, padx=10, sticky="w")
+        ttk.Label(controls, text="Notes:").grid(row=2, column=0, sticky="w", pady=(10, 0))
         notes = ttk.Entry(controls, textvariable=self.notes_var)
-        notes.grid(row=1, column=1, columnspan=4, sticky="ew", pady=(10, 0))
+        notes.grid(row=2, column=1, columnspan=4, sticky="ew", pady=(10, 0))
         notes.bind("<FocusOut>", lambda _event: self.save_current())
         notes.bind("<Return>", lambda _event: (self.save_current(), self.next()))
         controls.columnconfigure(4, weight=1)
         ttk.Label(
             controls,
             text="Red = scored 2MASS point source; yellow = weak Gaia evidence; cyan = excluded centre (when shown).",
-        ).grid(row=2, column=0, columnspan=5, sticky="w", pady=(10, 0))
+        ).grid(row=3, column=0, columnspan=5, sticky="w", pady=(10, 0))
         ttk.Label(
             controls,
             text="Goal: judge plausible unrelated compact sources and their scientific impact—not the galaxy's own structure.",
-        ).grid(row=3, column=0, columnspan=5, sticky="w", pady=(4, 0))
+        ).grid(row=4, column=0, columnspan=5, sticky="w", pady=(4, 0))
+
+    def _show_decision_status(self, classification: str) -> None:
+        colours = {
+            "Clean": ("#197a35", "white"),
+            "Ambiguous": ("#d99600", "black"),
+            "Polluted": ("#b3261e", "white"),
+        }
+        if classification in colours:
+            background, foreground = colours[classification]
+            text = f"Current classification: {classification.upper()}"
+        else:
+            background, foreground = "#555555", "white"
+            text = "Current classification: NOT REVIEWED"
+        self.current_decision_var.set(text)
+        self.current_decision_label.configure(background=background, foreground=foreground)
 
     def _bind_keys(self) -> None:
         self.bind("<Left>", lambda _event: self.previous())
@@ -159,9 +186,29 @@ class CatalogueReviewer(tk.Tk):
         return self.rows[self.index]
 
     def _canvas_resized(self, event) -> None:
-        """Keep the review panel centred after Tk lays out or resizes the canvas."""
-        if self.photo is not None:
-            self.canvas.coords(self.image_item, max(self.photo.width() // 2, event.width // 2), 0)
+        """Debounce redraws while making the panel as large as the canvas permits."""
+        if self.resize_job is not None:
+            self.after_cancel(self.resize_job)
+        self.resize_job = self.after(100, self._render_current_panel)
+
+    def _render_current_panel(self) -> None:
+        self.resize_job = None
+        if self.panel_path is None or not self.panel_path.exists():
+            self.photo = None
+            self.canvas.itemconfigure(self.image_item, image="")
+            return
+        self.update_idletasks()
+        available_width = max(300, self.canvas.winfo_width() - 12)
+        available_height = max(250, self.canvas.winfo_height() - 12)
+        with Image.open(self.panel_path) as source:
+            scale = min(available_width / source.width, available_height / source.height)
+            width = max(1, int(round(source.width * scale)))
+            height = max(1, int(round(source.height * scale)))
+            resized = source.resize((width, height), Image.Resampling.LANCZOS)
+            self.photo = ImageTk.PhotoImage(resized)
+        self.canvas.itemconfigure(self.image_item, image=self.photo)
+        self.canvas.coords(self.image_item, self.canvas.winfo_width() // 2, 6)
+        self.canvas.configure(scrollregion=(0, 0, self.canvas.winfo_width(), height + 12))
 
     def show_current(self) -> None:
         row = self.current_row()
@@ -169,35 +216,42 @@ class CatalogueReviewer(tk.Tk):
         self.name_var.set(name)
         decision = self.decisions.get(name, {})
         self.classification_var.set(decision.get("classification", ""))
+        self._show_decision_status(decision.get("classification", ""))
         self.notes_var.set(decision.get("notes", ""))
         panel = self.panels_dir / f"{name}.png"
         if panel.exists():
-            original = tk.PhotoImage(file=panel)
-            # Tk reports a width of 1 before its first layout pass.  Force that
-            # pass so the initial galaxy is scaled and positioned correctly.
-            self.update_idletasks()
-            canvas_width = self.canvas.winfo_width()
-            if canvas_width <= 10:
-                canvas_width = self.winfo_screenwidth() - 40
-            available_width = max(300, canvas_width - 20)
-            factor = max(1, math.ceil(original.width() / available_width))
-            self.photo = original.subsample(factor, factor) if factor > 1 else original
-            self.canvas.itemconfigure(self.image_item, image=self.photo)
-            center_x = max(self.photo.width() // 2, canvas_width // 2)
-            self.canvas.coords(self.image_item, center_x, 0)
-            self.canvas.configure(scrollregion=(0, 0, max(canvas_width, self.photo.width()), self.photo.height()))
+            self.panel_path = panel
+            self._render_current_panel()
         else:
+            self.panel_path = None
             self.photo = None
             self.canvas.itemconfigure(self.image_item, image="")
         reviewed = sum(1 for row in self.rows if row["name"] in self.decisions and self.decisions[row["name"]].get("classification"))
+        class_counts = {
+            label: sum(
+                1 for candidate in self.rows
+                if self.decisions.get(candidate["name"], {}).get("classification") == label
+            )
+            for label in CLASSIFICATIONS
+        }
+        membership = []
+        if row.get("in_original40", "").lower() == "yes":
+            membership.append("original 40")
+        if row.get("in_latest_top50", "").lower() == "yes":
+            membership.append("latest top 50")
+        membership_text = "  |  " + " + ".join(membership) if membership else ""
         self.progress_var.set(
             f"Rank {row['rank']} of {len(self.rows)}  |  score {float(row['hybrid_score']):.3f}  |  "
-            f"2MASS {row['twomass_count']}  |  weak Gaia {row['weak_gaia_count']}  |  reviewed {reviewed}/{len(self.rows)}"
+            f"2MASS {row['twomass_count']}  |  weak Gaia {row['weak_gaia_count']}"
+            f"{membership_text}  |  Clean {class_counts['Clean']}  |  "
+            f"Ambiguous {class_counts['Ambiguous']}  |  Polluted {class_counts['Polluted']}  |  "
+            f"reviewed {reviewed}/{len(self.rows)}"
         )
 
     def save_current(self) -> None:
         row = self.current_row()
         classification = self.classification_var.get().strip()
+        self._show_decision_status(classification)
         notes = self.notes_var.get().strip()
         if classification or notes:
             self.decisions[row["name"]] = {
@@ -206,13 +260,43 @@ class CatalogueReviewer(tk.Tk):
                 "hybrid_score": row["hybrid_score"],
                 "twomass_count": row["twomass_count"],
                 "weak_gaia_count": row["weak_gaia_count"],
+                "in_original40": row.get("in_original40", ""),
+                "in_latest_top50": row.get("in_latest_top50", ""),
                 "reviewed_at": datetime.now().isoformat(timespec="seconds"),
             }
         self.write_decisions()
+        self._update_running_totals()
+
+    def _update_running_totals(self) -> None:
+        """Refresh the header after a decision without reloading the panel image."""
+        row = self.current_row()
+        reviewed = sum(
+            1 for candidate in self.rows
+            if self.decisions.get(candidate["name"], {}).get("classification")
+        )
+        counts = {
+            label: sum(
+                1 for candidate in self.rows
+                if self.decisions.get(candidate["name"], {}).get("classification") == label
+            )
+            for label in CLASSIFICATIONS
+        }
+        membership = []
+        if row.get("in_original40", "").lower() == "yes":
+            membership.append("original 40")
+        if row.get("in_latest_top50", "").lower() == "yes":
+            membership.append("latest top 50")
+        membership_text = "  |  " + " + ".join(membership) if membership else ""
+        self.progress_var.set(
+            f"Rank {row['rank']} of {len(self.rows)}  |  score {float(row['hybrid_score']):.3f}  |  "
+            f"2MASS {row['twomass_count']}  |  weak Gaia {row['weak_gaia_count']}"
+            f"{membership_text}  |  Clean {counts['Clean']}  |  Ambiguous {counts['Ambiguous']}  |  "
+            f"Polluted {counts['Polluted']}  |  reviewed {reviewed}/{len(self.rows)}"
+        )
 
     def write_decisions(self) -> None:
         self.decisions_path.parent.mkdir(parents=True, exist_ok=True)
-        fields = ["rank", "name", "classification", "notes", "hybrid_score", "twomass_count", "weak_gaia_count", "reviewed_at"]
+        fields = ["rank", "name", "classification", "notes", "hybrid_score", "twomass_count", "weak_gaia_count", "in_original40", "in_latest_top50", "reviewed_at"]
         temporary = self.decisions_path.with_suffix(self.decisions_path.suffix + ".tmp")
         with temporary.open("w", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=fields)
@@ -266,6 +350,14 @@ def main() -> int:
     parser.add_argument("--decisions", type=Path, default=DEFAULT_ROOT / "catalogue_cleanliness_reviews.csv")
     parser.add_argument("--phase2", action="store_true", help="Open the prepared next-30 review set.")
     parser.add_argument("--phase3", action="store_true", help="Open the clean-reference similarity review set.")
+    parser.add_argument(
+        "--cleanest30", action="store_true",
+        help="Open the fresh categorical re-review of the 30 least-polluted finalists.",
+    )
+    parser.add_argument(
+        "--candidate-union", action="store_true",
+        help="Review the union of the original 40 and latest all-galaxy top 50.",
+    )
     args = parser.parse_args()
     if args.phase2:
         args.ranking = PHASE2_ROOT / "gaia_zero_hybrid_ranking.csv"
@@ -275,6 +367,14 @@ def main() -> int:
         args.ranking = PHASE3_ROOT / "gaia_zero_hybrid_ranking.csv"
         args.panels = PHASE3_ROOT / "review_panels"
         args.decisions = PHASE3_ROOT / "catalogue_cleanliness_reviews_phase3.csv"
+    if args.cleanest30:
+        args.ranking = CLEANEST30_ROOT / "gaia_zero_hybrid_ranking.csv"
+        args.panels = CLEANEST30_ROOT / "review_panels"
+        args.decisions = CLEANEST30_ROOT / "cleanest30_rereview_decisions.csv"
+    if args.candidate_union:
+        args.ranking = CANDIDATE_UNION_ROOT / "gaia_zero_hybrid_ranking.csv"
+        args.panels = CANDIDATE_UNION_ROOT / "review_panels"
+        args.decisions = CANDIDATE_UNION_ROOT / "candidate_union_rereview_decisions.csv"
     app = CatalogueReviewer(args.ranking, args.panels, args.decisions)
     app.mainloop()
     return 0

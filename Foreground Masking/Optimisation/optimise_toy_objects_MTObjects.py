@@ -332,9 +332,12 @@ def inject_toys(
     truth_dilation: int,
     peak_sigma_min: float = 5.0,
     peak_sigma_max: float = 25.0,
+    fwhm_scale: float = 1.0,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[ToyObject]]:
     if not (0.0 < peak_sigma_min < peak_sigma_max):
         raise ValueError("Toy peak-sigma bounds must satisfy 0 < minimum < maximum.")
+    if not (0.0 < fwhm_scale <= 1.0):
+        raise ValueError("Toy FWHM scale must satisfy 0 < scale <= 1.")
     sigma = robust_sigma(data)
     injected = np.array(data, dtype=float, copy=True)
     truth_mask = np.zeros(data.shape, dtype=bool)
@@ -355,13 +358,16 @@ def inject_toys(
 
     for toy_id in range(1, toys_per_image + 1):
         selected: tuple[str, float, float, float, float, float, float, np.ndarray, np.ndarray] | None = None
-        for _attempt in range(1000):
+        for _attempt in range(10000):
             chosen = int(rng.choice(candidates))
             x0 = float(valid_x[chosen])
             y0 = float(valid_y[chosen])
             toy_type = str(rng.choice(["star", "cluster", "galaxy"], p=[0.5, 0.2, 0.3]))
             peak_sigma = float(rng.uniform(peak_sigma_min, peak_sigma_max))
-            fwhm_pixels = float(rng.uniform(2.0, 10.0) if toy_type != "galaxy" else rng.uniform(5.0, 22.0))
+            fwhm_pixels = float(
+                (rng.uniform(2.0, 10.0) if toy_type != "galaxy" else rng.uniform(5.0, 22.0))
+                * fwhm_scale
+            )
             axis_ratio = float(rng.uniform(0.35, 0.95) if toy_type == "galaxy" else 1.0)
             pa_deg = float(rng.uniform(0.0, 180.0))
             model = toy_model(data.shape, toy_type, x0, y0, peak_sigma * sigma, fwhm_pixels, axis_ratio, pa_deg)

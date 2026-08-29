@@ -1,0 +1,391 @@
+# %ECSV 1.0
+# ---
+# datatype:
+# - name: ra
+#   unit: deg
+#   datatype: float64
+#   format: '{:.6f}'
+#   description: right ascension (J2000 decimal deg)
+#   meta: !!omap
+#   - {ucd: pos.eq.ra;meta.main}
+#   - {precision: F6}
+# - name: dec
+#   unit: deg
+#   datatype: float64
+#   format: '{:.6f}'
+#   description: declination (J2000 decimal deg)
+#   meta: !!omap
+#   - {ucd: pos.eq.dec;meta.main}
+#   - {precision: F6}
+# - name: err_maj
+#   unit: arcsec
+#   datatype: float32
+#   format: '{:.2f}'
+#   description: Semi-major axis length of the one sigma position uncertainty ellipse
+#   meta: !!omap
+#   - {precision: F2}
+# - name: err_min
+#   unit: arcsec
+#   datatype: float32
+#   format: '{:.2f}'
+#   description: Semi-minor axis length of the one sigma position uncertainty ellipse
+#   meta: !!omap
+#   - {precision: F2}
+# - {name: err_ang, unit: deg, datatype: int32, description: angle of error ellipse major axis (E of N)}
+# - name: designation
+#   datatype: string
+#   description: source designation formed from sexigesimal coordinates
+#   meta: !!omap
+#   - {ucd: meta.id;meta.main}
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - name: j_m
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: J band selected "default" magnitude
+#   meta: !!omap
+#   - {ucd: phot.mag;em.IR.J}
+#   - {precision: F3}
+# - name: j_cmsig
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: corrected J band photometric uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - name: j_msigcom
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: combined (total) J band photometric uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - name: j_snr
+#   datatype: float64
+#   format: '{:.1f}'
+#   description: J band "scan" signal-to-noise ratio
+#   meta: !!omap
+#   - {precision: F1}
+# - name: h_m
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: H band selected "default" magnitude
+#   meta: !!omap
+#   - {ucd: hot.mag;em.IR.H}
+#   - {precision: F3}
+# - name: h_cmsig
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: corrected H band photometric uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - name: h_msigcom
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: combined (total) H band photometric uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - name: h_snr
+#   datatype: float64
+#   format: '{:.1f}'
+#   description: H band "scan" signal-to-noise ratio
+#   meta: !!omap
+#   - {precision: F1}
+# - name: k_m
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: K band selected "default" magnitude
+#   meta: !!omap
+#   - {ucd: phot.mag;em.IR.K}
+#   - {precision: F3}
+# - name: k_cmsig
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: corrected K band photometric uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - name: k_msigcom
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: combined (total) K band photometric uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - name: k_snr
+#   datatype: float64
+#   format: '{:.1f}'
+#   description: K band "scan" signal-to-noise ratio
+#   meta: !!omap
+#   - {precision: F1}
+# - name: ph_qual
+#   datatype: string
+#   description: flag indicating photometric quality of source
+#   meta: !!omap
+#   - {ucd: meta.code.qual}
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - name: rd_flg
+#   datatype: string
+#   description: source of JHK "default" mags (AKA "read flag")
+#   meta: !!omap
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - name: bl_flg
+#   datatype: string
+#   description: 'indicates # JHK components fit simultaneously to source'
+#   meta: !!omap
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - name: cc_flg
+#   datatype: string
+#   description: indicates JHK artifact contamination and/or confusion
+#   meta: !!omap
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - name: ndet
+#   datatype: string
+#   description: 'number of >3-sig. ap. mag measurements, # possible (jjhhkk)'
+#   meta: !!omap
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - name: prox
+#   unit: arcsec
+#   datatype: float32
+#   format: '{:.1f}'
+#   description: distance in arcsec to nearest catalog point source
+#   meta: !!omap
+#   - {precision: F1}
+# - {name: pxpa, unit: deg, datatype: int32, description: angle (deg E of N) to nearest catalog point source}
+# - {name: pxcntr, datatype: int64, description: cntr of nearest catalog point source}
+# - {name: gal_contam, datatype: int32, description: flag indicating if src is contaminated by extended source}
+# - {name: mp_flg, datatype: int32, description: 'src is positionally associated with an asteroid, comet, etc'}
+# - name: cntr
+#   datatype: int64
+#   description: entry key (counter) number (unique within table)
+#   meta: !!omap
+#   - {ucd: meta.record;meta.main}
+# - name: hemis
+#   datatype: string
+#   description: hemisphere (N/S) of facility from which src was observed
+#   meta: !!omap
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - name: xdate
+#   datatype: string
+#   description: observation reference date
+#   meta: !!omap
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - {name: scan, datatype: int32, description: scan number (unique within date)}
+# - name: glon
+#   unit: deg
+#   datatype: float64
+#   format: '{:.3f}'
+#   description: galactic longitude (decimal deg)
+#   meta: !!omap
+#   - {precision: F3}
+# - name: glat
+#   unit: deg
+#   datatype: float64
+#   format: '{:.3f}'
+#   description: galactic latitude (decimal deg)
+#   meta: !!omap
+#   - {precision: F3}
+# - name: x
+#   datatype: float64
+#   format: '{:.16f}'
+#   description: unit sphere x value
+#   meta: !!omap
+#   - {ucd: pos.cartesian.x}
+#   - {precision: F16}
+# - name: y
+#   datatype: float64
+#   format: '{:.16f}'
+#   description: unit sphere y value
+#   meta: !!omap
+#   - {ucd: pos.cartesian.y}
+#   - {precision: F16}
+# - name: z
+#   datatype: float64
+#   format: '{:.16f}'
+#   description: unit sphere z value
+#   meta: !!omap
+#   - {ucd: pos.cartesian.z}
+#   - {precision: F16}
+# - name: x_scan
+#   unit: arcsec
+#   datatype: float32
+#   format: '{:.1f}'
+#   description: x (cross-scan) position (U-Scan coord.)
+#   meta: !!omap
+#   - {precision: F1}
+# - name: jdate
+#   unit: d
+#   datatype: float64
+#   format: '{:.4f}'
+#   description: julian date of source measurement to +/- 30 sec
+#   meta: !!omap
+#   - {precision: F4}
+# - name: j_psfchi
+#   datatype: float32
+#   format: '{:.2f}'
+#   description: J band reduced chi-squared goodness-of-fit value
+#   meta: !!omap
+#   - {precision: F2}
+# - name: h_psfchi
+#   datatype: float32
+#   format: '{:.2f}'
+#   description: H band reduced chi-squared goodness-of-fit value
+#   meta: !!omap
+#   - {precision: F2}
+# - name: k_psfchi
+#   datatype: float32
+#   format: '{:.2f}'
+#   description: K band reduced chi-squared goodness-of-fit value
+#   meta: !!omap
+#   - {precision: F2}
+# - name: j_m_stdap
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: J band standard (r=4") aperture magnitude
+#   meta: !!omap
+#   - {precision: F3}
+# - name: j_msig_stdap
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: J band standard (r=4") aperture mag uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - name: h_m_stdap
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: H band standard (r=4") aperture magnitude
+#   meta: !!omap
+#   - {precision: F3}
+# - name: h_msig_stdap
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: H band standard (r=4") aperture mag uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - name: k_m_stdap
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: K band standard (r=4") aperture magnitude
+#   meta: !!omap
+#   - {precision: F3}
+# - name: k_msig_stdap
+#   unit: mag
+#   datatype: float32
+#   format: '{:.3f}'
+#   description: K band standard (r=4") aperture mag uncertainty
+#   meta: !!omap
+#   - {precision: F3}
+# - {name: dist_edge_ns, unit: arcsec, datatype: float32, description: distance to nearest north or south full-coverage scan edge}
+# - {name: dist_edge_ew, unit: arcsec, datatype: float32, description: distance to nearest east or west full-coverage scan edge}
+# - name: dist_edge_flg
+#   datatype: string
+#   description: flag indicating which edges ([n|s][e|w]) are nearest to src
+#   meta: !!omap
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - {name: dup_src, datatype: int32, description: duplicate source extractions flag (overlap areas)}
+# - {name: use_src, datatype: int32, description: use source flag -- source is to be used in catalog}
+# - name: a
+#   datatype: string
+#   description: optical source catalog identifier of closest match within 5"
+#   meta: !!omap
+#   - {_votable_string_dtype: char}
+#   - {_votable_arraysize: '*'}
+#   subtype: json
+# - name: dist_opt
+#   unit: arcsec
+#   datatype: float32
+#   format: '{:.1f}'
+#   description: distance in arcsec relative to associated optical source
+#   meta: !!omap
+#   - {precision: F1}
+# - {name: phi_opt, unit: deg, datatype: int32, description: position angle relative to optical source (E of N)}
+# - name: b_m_opt
+#   unit: mag
+#   datatype: float32
+#   format: '{:.2f}'
+#   description: catalog blue mag of associated optical source
+#   meta: !!omap
+#   - {precision: F2}
+# - name: vr_m_opt
+#   unit: mag
+#   datatype: float32
+#   format: '{:.2f}'
+#   description: catalog visual or red mag of associated optical source
+#   meta: !!omap
+#   - {precision: F2}
+# - {name: nopt_mchs, datatype: int32, description: number of optical sources matched to this 2MASS source}
+# - {name: ext_key, datatype: int64, description: key to extended source data DB record}
+# - {name: scan_key, datatype: int64, description: key to scan data record in the scan information table}
+# - {name: coadd_key, datatype: int64, description: key to coadd data record in the atlas image data table}
+# - {name: coadd, datatype: int32, description: number of atlas image in which the source falls}
+# - name: htm20
+#   datatype: int64
+#   description: HTM 20 spatial (x,y,z) index key
+#   meta: !!omap
+#   - {ucd: pos.HTM}
+# schema: astropy-2.0
+ra dec err_maj err_min err_ang designation j_m j_cmsig j_msigcom j_snr h_m h_cmsig h_msigcom h_snr k_m k_cmsig k_msigcom k_snr ph_qual rd_flg bl_flg cc_flg ndet prox pxpa pxcntr gal_contam mp_flg cntr hemis xdate scan glon glat x y z x_scan jdate j_psfchi h_psfchi k_psfchi j_m_stdap j_msig_stdap h_m_stdap h_msig_stdap k_m_stdap k_msig_stdap dist_edge_ns dist_edge_ew dist_edge_flg dup_src use_src a dist_opt phi_opt b_m_opt vr_m_opt nopt_mchs ext_key scan_key coadd_key coadd htm20
+64.384758 -62.787888 0.3 0.23 94 """04173234-6247163""" 17.171 0.215 0.215 5.6 15.872 0.2 0.2 7.4 15.612 0.23 0.23 4.6 """CCD""" """222""" """111""" """c00""" """060606""" 10.1 303 225155711 2 0 225155701 """s""" """1998-10-28""" 84 274.519 -41.203 0.197696435057 0.412342752264 -0.889319725532 -53.9 2451114.7332 0.91 1.12 1.02 17.612 0.571 15.77 0.213 15.813 0.464 10582.7 198.4 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035132722913792
+64.392414 -62.783791 0.12 0.11 71 """04173417-6247016""" 15.191 0.238 0.238 34.8 14.586 0.328 0.328 24.2 13.939 0.252 0.252 21.7 """EDD""" """222""" """111""" """000""" """666666""" 8.3 252 225155718 2 0 225155722 """s""" """1998-10-28""" 84 274.512 -41.201 0.197668819268 0.412426509736 -0.889287024507 -66.5 2451114.7332 11.53 6.89 5.81 13.868 0.025 13.134 0.045 12.789 0.046 10567.9 185.8 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035132724305920
+64.387617 -62.784512 0.41 0.36 5 """04173302-6247042""" 17.048 0.396 0.396 6.3 15.912 0.35 0.35 7.2 13.742 "" "" "" """DDU""" """220""" """110""" """000""" """160600""" 8.3 72 225155722 2 0 225155718 """s""" """1998-10-28""" 84 274.514 -41.203 0.197698510834 0.412399867713 -0.889292779642 -58.6 2451114.7332 0.87 1.21 "" 15.202 0.095 14.529 0.069 "" "" 10570.6 193.7 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035132724435456
+64.372531 -62.784031 0.22 0.19 86 """04172940-6247025""" 14.364 "" "" "" 15.515 0.228 0.229 10.3 13.532 "" "" "" """UDU""" """626""" """020""" """0c0""" """004600""" 0.3 49 225155720 2 0 225155719 """s""" """1998-10-28""" 84 274.517 -41.209 0.197810318036 0.412354530525 -0.88928894024 -33.8 2451114.7332 "" 1.29 "" "" "" 14.125 0.078 "" "" 10568.9 218.5 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035132726817792
+64.372676 -62.783974 0.22 0.21 155 """04172944-6247023""" 14.375 "" "" "" 15.369 0.245 0.245 11.8 13.558 "" "" "" """UDU""" """626""" """020""" """0c0""" """005600""" 0.3 229 225155719 2 0 225155720 """s""" """1998-10-28""" 84 274.517 -41.209 0.197809657124 0.412355828795 -0.889288485255 -34.0 2451114.7332 "" 1.33 "" "" "" 14.011 0.119 "" "" 10568.7 218.3 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035132726833664
+64.370891 -62.785892 0.25 0.23 85 """04172901-6247092""" 16.899 0.261 0.262 7.2 14.658 "" "" "" 14.076 "" "" "" """DUU""" """200""" """100""" """000""" """060000""" 7.2 22 225155719 2 0 225155712 """s""" """1998-10-28""" 84 274.52 -41.209 0.197809626975 0.412322825391 -0.889303794627 -31.1 2451114.7332 2.0 "" "" 15.692 0.204 "" "" "" "" 10575.7 221.2 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035132726962688
+64.379977 -62.784737 0.21 0.21 45 """04173119-6247050""" 16.03 0.211 0.211 16.1 15.365 0.263 0.263 11.8 15.03 0.239 0.239 7.9 """CDD""" """222""" """111""" """000""" """461606""" 5.9 186 225155711 2 0 225155717 """s""" """1998-10-28""" 84 274.516 -41.206 0.197751989724 0.412370353408 -0.889294575599 -46.0 2451114.7332 2.66 1.86 1.64 14.9 0.067 14.196 0.05 14.088 0.046 10571.4 206.2 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035132727446016
+64.379619 -62.786381 0.28 0.26 82 """04173110-6247109""" 14.704 "" "" "" 15.909 0.293 0.293 7.2 13.736 "" "" "" """UDU""" """020""" """010""" """000""" """000600""" 5.9 6 225155717 2 0 225155711 """s""" """1998-10-28""" 84 274.518 -41.205 0.197743532648 0.412346109738 -0.889307697639 -45.5 2451114.7332 "" 1.91 "" "" "" 14.684 0.18 "" "" 10577.4 206.8 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035132728125440
+64.387735 -62.776817 0.24 0.23 16 """04173305-6246365""" 16.646 0.166 0.167 9.1 15.993 0.168 0.168 6.6 15.542 0.245 0.245 5.0 """CCD""" """222""" """111""" """000""" """160605""" 9.8 221 225155743 2 0 225155750 """s""" """1998-10-28""" 84 274.505 -41.206 0.197749288833 0.412507970257 -0.889231349673 -58.8 2451114.7332 1.56 0.89 1.19 15.481 0.176 15.003 0.201 15.488 0.705 10542.9 193.5 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035132735634944
+64.383837 -62.778885 0.13 0.12 9 """04173212-6246439""" 16.593 0.116 0.117 9.6 14.786 "" "" "" 14.262 "" "" "" """BUU""" """200""" """100""" """000""" """060000""" 9.8 41 225155750 2 0 225155743 """s""" """1998-10-28""" 84 274.508 -41.206 0.197763476248 0.412465574815 -0.889247860304 -52.4 2451114.7332 1.33 "" "" 16.628 0.309 "" "" "" "" 10550.3 199.9 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035132753182720
+64.390924 -62.790619 0.06 0.06 90 """04173382-6247262""" 12.29 0.027 0.03 502.8 11.977 0.031 0.032 268.0 11.904 0.029 0.03 141.2 """AAA""" """222""" """111""" """000""" """556666""" 9.0 230 225155685 2 0 225155690 """s""" """1998-10-28""" 84 274.521 -41.199 0.197633736698 0.412325799692 -0.88934152103 -64.1 2451114.7332 1.72 1.34 0.92 12.237 0.021 11.954 0.044 11.893 0.018 10592.5 188.2 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133392427520
+64.430283 -62.788136 0.06 0.06 90 """04174326-6247172""" 13.963 0.027 0.03 107.7 13.432 0.027 0.029 70.2 13.404 0.044 0.045 35.5 """AAA""" """222""" """111""" """000""" """666666""" 10.7 55 225155710 2 0 225155699 """s""" """1998-10-28""" 84 274.509 -41.183 0.197367079743 0.412496231643 -0.889321704848 -128.9 2451114.7332 1.08 1.0 0.98 13.93 0.044 13.378 0.03 13.353 0.019 10583.4 123.4 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133411549184
+64.3967 -62.789009 0.12 0.11 10 """04173520-6247204""" 15.937 0.217 0.217 17.5 15.265 0.214 0.214 13.0 14.939 0.194 0.194 8.6 """CCC""" """222""" """111""" """c00""" """463605""" 8.0 347 225155709 2 0 225155694 """s""" """1998-10-28""" 84 274.518 -41.197 0.197602968221 0.412368257395 -0.889328672226 -73.6 2451114.7332 3.59 2.64 1.39 14.581 0.035 13.882 0.048 13.775 0.083 10586.7 178.7 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133661301760
+64.404309 -62.787178 0.26 0.23 6 """04173703-6247138""" 16.194 0.217 0.217 13.8 15.626 0.292 0.292 9.3 13.599 "" "" "" """CDU""" """220""" """110""" """000""" """061600""" 8.3 7 225155715 2 0 225155706 """s""" """1998-10-28""" 84 274.514 -41.195 0.197560481066 0.412420126874 -0.889314058851 -86.1 2451114.7332 2.92 1.87 "" 15.005 0.064 14.471 0.203 "" "" 10580.1 166.2 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133663887360
+64.404475 -62.783184 0.18 0.18 45 """04173707-6246594""" 15.349 0.225 0.225 30.1 12.735 "" "" "" 12.456 "" "" "" """EUU""" """200""" """100""" """c00""" """660000""" 3.7 256 225155730 2 0 225155731 """s""" """1998-10-28""" 84 274.509 -41.196 0.197586067501 0.412476607381 -0.889282179228 -86.4 2451114.7332 10.02 "" "" 13.616 0.041 "" "" "" "" 10565.7 165.9 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133665705984
+64.402313 -62.783436 0.14 0.13 25 """04173655-6247003""" 13.216 "" "" "" 12.48 "" "" "" 13.424 0.161 0.161 34.8 """UUC""" """002""" """001""" """000""" """000066""" 3.7 76 225155731 2 0 225155730 """s""" """1998-10-28""" 84 274.509 -41.197 0.197599941897 0.412465623991 -0.889284190789 -82.8 2451114.7332 "" "" 9.15 "" "" "" "" 12.317 0.037 10566.6 169.5 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133666082816
+64.398961 -62.783699 0.09 0.09 45 """04173575-6247013""" 14.279 0.185 0.185 80.5 13.395 0.184 0.184 72.6 13.22 0.182 0.183 42.0 """EEE""" """222""" """111""" """000""" """666666""" 5.6 80 225155730 1 0 225155724 """s""" """1998-10-28""" 84 274.511 -41.198 0.19762230837 0.412450381751 -0.889286290138 -77.3 2451114.7332 21.41 17.89 11.01 13.045 0.009 12.303 0.012 12.039 0.028 10567.6 175.0 """ne""" 0 1 """0""" "" "" "" "" 0 583565 14468 332753 139 4801035133666680320
+64.404932 -62.784885 0.29 0.25 86 """04173718-6247055""" 16.163 0.301 0.301 14.2 13.491 "" "" "" 13.258 "" "" "" """DUU""" """200""" """100""" """c00""" """660000""" 6.2 353 225155731 2 0 225155715 """s""" """1998-10-28""" 84 274.511 -41.195 0.19757137196 0.412454372852 -0.889295756932 -87.1 2451114.7332 4.68 "" "" 14.501 0.046 "" "" "" "" 10571.8 165.2 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133666810880
+64.395617 -62.786842 0.25 0.23 135 """04173494-6247126""" 14.576 "" "" "" 15.744 0.283 0.283 8.3 13.53 "" "" "" """UDU""" """020""" """010""" """000""" """000600""" 8.0 167 225155694 2 0 225155709 """s""" """1998-10-28""" 84 274.515 -41.198 0.197625298358 0.412394854476 -0.889311377106 -71.8 2451114.7332 "" 1.5 "" "" "" 14.789 0.094 "" "" 10578.9 180.5 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133667453952
+64.430253 -62.778629 0.22 0.22 45 """04174326-6246430""" 16.525 0.226 0.226 10.2 15.501 0.22 0.221 10.4 13.671 "" "" "" """DDU""" """220""" """110""" """000""" """060600""" 7.6 298 225155749 2 0 225155745 """s""" """1998-10-28""" 84 274.497 -41.187 0.197430982936 0.412629234082 -0.889245816497 -128.8 2451114.7332 2.42 1.41 "" 15.397 0.086 14.711 0.125 "" "" 10549.1 123.4 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133671255552
+64.425465 -62.780537 0.17 0.16 68 """04174211-6246499""" 14.19 "" "" "" 13.475 "" "" "" 14.612 0.188 0.188 11.7 """UUC""" """002""" """002""" """00c""" """000055""" 2.0 318 225155739 2 0 225155738 """s""" """1998-10-28""" 84 274.501 -41.188 0.19745268072 0.412586022469 -0.889261048815 -120.9 2451114.7332 "" "" 1.91 "" "" "" "" 13.409 0.051 10556.0 131.3 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133671744512
+64.424644 -62.780121 0.13 0.13 135 """04174191-6246484""" 15.558 0.206 0.206 24.8 14.918 0.222 0.223 17.9 13.071 "" "" "" """CDU""" """226""" """210""" """c00""" """666600""" 2.0 138 225155738 2 0 225155739 """s""" """1998-10-28""" 84 274.5 -41.189 0.197461379978 0.412589017005 -0.889257727807 -119.6 2451114.7332 2.84 4.12 "" 14.368 0.036 13.644 0.055 "" "" 10554.5 132.7 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133671817216
+64.426556 -62.782574 0.25 0.22 84 """04174237-6246572""" 16.14 0.221 0.221 14.5 15.693 0.246 0.246 8.7 15.089 0.229 0.229 7.5 """DDD""" """222""" """111""" """000""" """360605""" 4.2 120 225155732 2 0 225155734 """s""" """1998-10-28""" 84 274.503 -41.187 0.19743117697 0.412561263879 -0.889277309902 -122.7 2451114.7332 3.15 1.89 1.39 15.081 0.1 14.872 0.156 14.301 0.165 10563.4 129.5 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133675598336
+64.428737 -62.783161 0.23 0.22 85 """04174289-6246593""" 14.794 "" "" "" 15.729 0.252 0.252 8.5 13.683 "" "" "" """UDU""" """020""" """010""" """0c0""" """001600""" 4.2 300 225155734 2 0 225155732 """s""" """1998-10-28""" 84 274.503 -41.186 0.197411539921 0.412560560584 -0.889281995633 -126.3 2451114.7332 "" 1.98 "" "" "" 14.774 0.214 "" "" 10565.5 126.0 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133676964864
+64.409073 -62.778667 0.24 0.22 135 """04173817-6246432""" 16.454 0.251 0.252 10.9 15.61 0.283 0.283 9.4 13.67 "" "" "" """DDU""" """220""" """110""" """000""" """162600""" 6.8 67 225155747 2 0 225155744 """s""" """1998-10-28""" 84 274.502 -41.196 0.197583247522 0.412555691494 -0.889246119876 -94.0 2451114.7332 1.98 2.02 "" 14.99 0.063 14.296 0.102 "" "" 10549.4 158.3 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133679933440
+64.412855 -62.777916 0.23 0.21 179 """04173908-6246404""" 16.424 0.237 0.237 11.2 13.767 "" "" "" 13.638 "" "" "" """DUU""" """200""" """100""" """000""" """160000""" 6.8 247 225155744 2 0 225155747 """s""" """1998-10-28""" 84 274.5 -41.194 0.197561048868 0.412579245346 -0.889240124084 -100.2 2451114.7332 2.38 "" "" 15.101 0.146 "" "" "" "" 10546.7 152.1 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133682545152
+64.417038 -62.777855 0.27 0.26 74 """04174008-6246402""" 16.754 0.282 0.283 8.2 14.278 "" "" "" 15.505 0.284 0.284 5.1 """DUD""" """202""" """101""" """000""" """060005""" 6.9 268 225155747 2 0 225155748 """s""" """1998-10-28""" 84 274.499 -41.193 0.197531335932 0.412594521523 -0.889239637069 -107.1 2451114.7332 1.49 "" 1.02 15.571 0.112 "" "" 14.985 0.223 10546.4 145.2 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133682708480
+64.42617 -62.77763 0.22 0.2 135 """04174228-6246394""" 16.177 0.214 0.214 14.0 15.699 0.247 0.247 8.7 13.711 "" "" "" """CDU""" """220""" """110""" """000""" """361600""" 4.6 257 225155746 2 0 225155749 """s""" """1998-10-28""" 84 274.497 -41.189 0.197467080097 0.412629149429 -0.889237840693 -122.1 2451114.7332 2.66 1.48 "" 15.167 0.06 14.675 0.146 "" "" 10545.6 130.2 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133685707264
+64.423444 -62.777924 0.3 0.29 160 """04174162-6246405""" 16.278 0.193 0.193 12.8 15.824 0.327 0.327 7.8 13.706 "" "" "" """CDU""" """220""" """110""" """c00""" """160600""" 4.6 77 225155749 2 0 225155746 """s""" """1998-10-28""" 84 274.498 -41.19 0.197484741919 0.412615638138 -0.889240187954 -117.6 2451114.7332 1.9 1.23 "" 15.177 0.03 14.684 0.156 "" "" 10546.6 134.7 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133686070272
+64.42247 -62.780045 0.11 0.11 45 """04174139-6246481""" 15.749 0.156 0.157 20.8 15.2 0.184 0.184 13.8 13.168 "" "" "" """CCU""" """226""" """210""" """cc0""" """666600""" 3.6 94 225155739 2 0 225155741 """s""" """1998-10-28""" 84 274.501 -41.19 0.197477544142 0.412582588302 -0.889257121079 -116.0 2451114.7332 3.05 2.33 "" 14.564 0.055 13.886 0.061 "" "" 10554.3 136.3 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133686834176
+64.407931 -62.78352 0.25 0.23 5 """04173790-6247006""" 13.928 "" "" "" 15.011 0.304 0.304 16.4 12.986 "" "" "" """UDU""" """020""" """010""" """000""" """006600""" 5.8 282 225155731 2 0 225155728 """s""" """1998-10-28""" 84 274.508 -41.194 0.197558934449 0.412483821345 -0.889284861306 -92.1 2451114.7332 "" 4.85 "" "" "" 13.533 0.043 "" "" 10566.9 160.2 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133691909120
+64.417835 -62.782593 0.38 0.33 170 """04174028-6246573""" 16.833 0.183 0.183 7.7 15.743 0.159 0.16 8.3 15.88 0.335 0.335 3.6 """CCD""" """222""" """111""" """000""" """060606""" 11.9 40 225155741 2 0 225155733 """s""" """1998-10-28""" 84 274.505 -41.191 0.197493843363 0.412530942083 -0.889277461571 -108.4 2451114.7332 1.03 1.08 1.0 17.968 0.658 16.708 0.788 17.944 8.079 10563.5 143.9 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035133692733440
+64.386746 -62.792225 0.19 0.18 20 """04173281-6247320""" 16.306 0.198 0.198 12.4 15.499 0.23 0.231 10.4 14.978 0.202 0.202 8.3 """CDC""" """222""" """111""" """ccc""" """061506""" 6.5 322 225155689 2 0 225155685 """s""" """1998-10-28""" 84 274.524 -41.2 0.197653026498 0.412288908412 -0.889354337211 -57.2 2451114.7332 2.95 2.4 1.55 15.265 0.078 14.405 0.143 14.256 0.115 10598.3 195.1 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035139163843584
+64.396352 -62.794773 0.08 0.08 45 """04173512-6247411""" 15.955 0.064 0.065 17.2 15.367 0.083 0.084 11.8 15.357 0.194 0.194 5.9 """AAC""" """222""" """111""" """00s""" """060604""" 17.4 329 225155690 2 0 225155679 """s""" """1998-10-28""" 84 274.525 -41.195 0.197566809217 0.412286373181 -0.889374669296 -73.0 2451114.7332 1.11 1.31 1.11 16.367 0.245 16.375 0.479 17.814 6.896 10607.5 179.3 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035139170284544
+64.384346 -62.790806 0.28 0.24 83 """04173224-6247269""" 14.62 "" "" "" 15.843 0.275 0.275 7.6 13.984 "" "" "" """UDU""" """020""" """010""" """0c0""" """000500""" 6.5 142 225155685 2 0 225155689 """s""" """1998-10-28""" 84 274.523 -41.202 0.197679818706 0.412300489768 -0.889343013361 -53.2 2451114.7332 "" 1.81 "" "" "" 14.451 0.057 "" "" 10593.3 199.1 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035139834571264
+64.37657 -62.790527 0.06 0.06 45 """04173037-6247258""" 14.031 0.059 0.06 101.2 13.414 0.068 0.068 71.3 13.219 0.066 0.067 42.1 """AAA""" """222""" """111""" """000""" """666666""" 5.8 55 225155693 2 0 225155691 """s""" """1998-10-28""" 84 274.524 -41.205 0.197737645787 0.412277562229 -0.889340786831 -40.4 2451114.7332 2.28 1.9 1.69 13.825 0.035 13.211 0.053 12.964 0.043 10592.3 211.9 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035139836061184
+64.379474 -62.7896 0.1 0.1 45 """04173107-6247225""" 15.93 0.176 0.176 17.6 15.214 0.192 0.192 13.6 14.669 0.196 0.196 11.1 """CCC""" """222""" """111""" """ccc""" """463626""" 5.8 235 225155691 2 0 225155693 """s""" """1998-10-28""" 84 274.522 -41.204 0.197722971336 0.412300557933 -0.889333388856 -45.2 2451114.7332 3.04 2.22 1.72 14.805 0.075 14.185 0.096 13.799 0.124 10588.9 207.1 """ne""" 0 1 """0""" "" "" "" "" 0 "" 14468 332753 139 4801035139836289024
