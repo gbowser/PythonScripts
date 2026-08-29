@@ -36,6 +36,24 @@ do {
         Write-Host ""
     }
 
+    $stabilityPath = Join-Path $base "optuna_parameter_stability.csv"
+    if (Test-Path -LiteralPath $stabilityPath) {
+        Write-Host "=== Objective + parameter stability ===" -ForegroundColor Magenta
+        $stability = Import-Csv -LiteralPath $stabilityPath
+        foreach ($group in $stability | Group-Object method,classification | Sort-Object Name) {
+            "{0,2}  {1}" -f $group.Count, $group.Name
+        }
+        $latestUnstable = $stability | Where-Object parameter_stable -eq "False" |
+            Sort-Object method,{ [int]$_.fold } | Select-Object -Last 4
+        if ($latestUnstable) {
+            Write-Host "Latest folds with dispersed elite parameters:" -ForegroundColor DarkYellow
+            foreach ($row in $latestUnstable) {
+                "{0} fold {1}: clusters={2}; unstable={3}" -f $row.method,$row.fold,$row.cluster_count,$row.unstable_parameters
+            }
+        }
+        Write-Host ""
+    }
+
     $log = Join-Path $base "80trial_convergence_continuation.log"
     if (Test-Path -LiteralPath $log) {
         Write-Host "=== Latest activity ===" -ForegroundColor Cyan

@@ -45,6 +45,8 @@ import foreground_display_helpers as display  # noqa: E402
 import mtobjects_spike_gate_processing as mto_processing  # noqa: E402
 import sep_processing  # noqa: E402
 import toy_object_interactive_core as core  # noqa: E402
+import apply_optimised_mtobjects_all_galaxies as mto_batch  # noqa: E402
+import batch_sep_all_galaxies as sep_batch  # noqa: E402
 from machine_paths import PC_RESEARCH_FOLDERS, detect_pc, remove_foreground_folder  # noqa: E402
 
 
@@ -60,6 +62,9 @@ MTO_KEYS = (
 )
 INTEGER_KEYS = {"minarea", "deblend_nthresh", "back_size", "filter_size", "dilation_radius", "max_area"}
 REQUIRED_METRIC_VERSION = "paired-toy-metrics-displayed-frame-v2"
+CURRENT_OPTIMISATION_DIR = "clean22_displayed_frame_5toy_optimisation"
+SEP_WINNER_RELATIVE = Path("SEP_cross_validation/sep_toy_cross_validation_best.json")
+MTO_WINNER_RELATIVE = Path("MTObjects_cross_validation/mtobjects_toy_cross_validation_best.json")
 MASKING_DIRECTIONS = {
     "SEP parameters": {
         "detect_on": "↔", "detect_thresh": "↓", "minarea": "↓", "deblend_nthresh": "↔",
@@ -90,6 +95,20 @@ def newest_file(root: Path, name: str) -> Path | None:
     return max(candidates, key=lambda path: path.stat().st_mtime) if candidates else None
 
 
+def current_optimisation_winner(root: Path, relative_path: Path, fallback_name: str) -> Path | None:
+    """Prefer the declared clean-22 winner; only fall back for older installations."""
+    candidate = root / CURRENT_OPTIMISATION_DIR / relative_path
+    if candidate.is_file():
+        try:
+            with candidate.open("r", encoding="utf-8") as handle:
+                payload = json.load(handle)
+        except (OSError, json.JSONDecodeError):
+            payload = {}
+        if payload.get("metric_version") == REQUIRED_METRIC_VERSION:
+            return candidate
+    return newest_file(root, fallback_name)
+
+
 def research_output_root(pc_name: str) -> Path:
     if os.name == "nt":
         return remove_foreground_folder(pc_name)
@@ -97,18 +116,12 @@ def research_output_root(pc_name: str) -> Path:
     return Path(f"/mnt/{drive}/Dropbox/Public Documents/UCLAN/MSc Research/Remove foreground objects")
 
 
-def json_params(path: Path | None, defaults: dict) -> dict:
-    result = dict(defaults)
+def production_params(path: Path | None, defaults: dict, loader) -> dict:
+    """Load parameters through the exact loader used by the 182-galaxy batch."""
     if path is None:
-        return result
-    with path.open("r", encoding="utf-8") as handle:
-        payload = json.load(handle)
-    values = payload.get("params", payload)
-    if isinstance(values, dict):
-        for key, value in values.items():
-            if key in result:
-                result[key] = value
-    return result
+        return dict(defaults)
+    loaded = loader(path)
+    return {key: loaded.get(key, value) for key, value in defaults.items()}
 
 
 def format_parameter(value) -> str:
@@ -287,10 +300,19 @@ class CombinedToyTester(tk.Tk):
                 for path in cache_dir.glob("*.ecsv"):
                     self.twomass_cache[path.stem] = path
         self.catalogue_sources = {"2MASS": [], "Gaia": []}
-        self.sep_best = args.sep_best or newest_file(research_root, "sep_toy_cross_validation_best.json")
-        self.mto_best = args.mto_best or newest_file(research_root, "mtobjects_toy_cross_validation_best.json")
-        self.sep_defaults = json_params(self.sep_best, core.AZURE_MEAN_PARAMS["SEP"])
-        self.mto_defaults = json_params(self.mto_best, core.AZURE_MEAN_PARAMS["MTObjects"])
+        self.research_root = research_root
+        self.sep_best = args.sep_best or current_optimisation_winner(
+            research_root, SEP_WINNER_RELATIVE, "sep_toy_cross_validation_best.json"
+        )
+        self.mto_best = args.mto_best or current_optimisation_winner(
+            research_root, MTO_WINNER_RELATIVE, "mtobjects_toy_cross_validation_best.json"
+        )
+        self.sep_defaults = production_params(
+            self.sep_best, core.AZURE_MEAN_PARAMS["SEP"], sep_batch.load_best_params
+        )
+        self.mto_defaults = production_params(
+            self.mto_best, core.AZURE_MEAN_PARAMS["MTObjects"], mto_batch.load_best_params
+        )
         self.output_dir = research_root / "interactive_sep_mtobjects_toy_laboratory"
 
         self._build_controls()
@@ -447,7 +469,8 @@ class CombinedToyTester(tk.Tk):
         )
         action_row = ttk.Frame(action)
         action_row.pack(fill=tk.X, pady=(5, 0))
-        ttk.Button(action_row, text="Reset optimised parameters", command=self.reset_parameters).pack(side=tk.LEFT, fill=tk.X, expand=True)
+        ttk.Button(action_row, text="Reload current optimum", command=self.reload_optimised_parameters).pack(side=tk.LEFT, fill=tk.X, expand=True)
+        ttk.Button(action_row, text="Reset displayed values", command=self.reset_parameters).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 0))
         ttk.Button(action_row, text="Save PNG", command=self.save_png).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 0))
         self.status = tk.StringVar(value="Select a galaxy, add toys on the Original panel, then Calculate.")
         ttk.Label(action, textvariable=self.status, foreground="#1f4d78", wraplength=570).pack(fill=tk.X, pady=(7, 0))
@@ -575,6 +598,32 @@ class CombinedToyTester(tk.Tk):
                 value = defaults[key]
                 variable.set(format_parameter(value))
         self.status.set("Restored the most recent optimised parameter sets.")
+
+    def reload_optimised_parameters(self) -> None:
+        """Reload completed clean-22 winners using the production batch loaders."""
+        sep_path = current_optimisation_winner(
+            self.research_root, SEP_WINNER_RELATIVE, "sep_toy_cross_validation_best.json"
+        )
+        mto_path = current_optimisation_winner(
+            self.research_root, MTO_WINNER_RELATIVE, "mtobjects_toy_cross_validation_best.json"
+        )
+        try:
+            sep_defaults = production_params(
+                sep_path, core.AZURE_MEAN_PARAMS["SEP"], sep_batch.load_best_params
+            )
+            mto_defaults = production_params(
+                mto_path, core.AZURE_MEAN_PARAMS["MTObjects"], mto_batch.load_best_params
+            )
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            messagebox.showerror("Parameter reload failed", str(exc))
+            return
+        self.sep_best, self.mto_best = sep_path, mto_path
+        self.sep_defaults, self.mto_defaults = sep_defaults, mto_defaults
+        self.reset_parameters()
+        sep_source = str(sep_path) if sep_path else "built-in defaults (current winner not yet available)"
+        mto_source = str(mto_path) if mto_path else "built-in defaults (current winner not yet available)"
+        self.source_var.set(f"Production parameters: SEP {sep_source}; MTObjects {mto_source}")
+        self.status.set("Reloaded parameters through the same loaders used by the 182-galaxy batch.")
 
     def _injected(self) -> tuple[np.ndarray, np.ndarray]:
         assert self.data is not None and self.geometry_data is not None
