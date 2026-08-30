@@ -44,6 +44,7 @@ def main() -> int:
     parser.add_argument("--divider-width", type=int, default=10)
     parser.add_argument("--dash-length", type=int, default=48)
     parser.add_argument("--dash-gap", type=int, default=28)
+    parser.add_argument("--resume", action="store_true", help="Reuse a partial output directory and skip existing PNGs.")
     args = parser.parse_args()
 
     mto = indexed(args.mto_dir, "mto")
@@ -53,7 +54,7 @@ def main() -> int:
     if missing_mto or missing_sep:
         raise ValueError(f"Unmatched galaxies: missing MTO={missing_mto}; missing SEP={missing_sep}")
 
-    args.output_dir.mkdir(parents=True, exist_ok=False)
+    args.output_dir.mkdir(parents=True, exist_ok=args.resume)
     names = sorted(mto, key=str.casefold)
     started = time.perf_counter()
     for index, galaxy in enumerate(names, 1):
@@ -61,6 +62,11 @@ def main() -> int:
         sep_path, sep_clean = sep[galaxy]
         if mto_clean != sep_clean:
             raise ValueError(f"Calibration suffix mismatch for {galaxy}")
+        suffix = "_clean" if mto_clean else ""
+        output = args.output_dir / f"{galaxy}_MTO_left_SEP_right{suffix}.png"
+        if args.resume and output.is_file():
+            print(f"[{index}/{len(names)}] {galaxy}: already complete", flush=True)
+            continue
         with Image.open(mto_path) as left_source, Image.open(sep_path) as right_source:
             left = left_source.convert("RGB")
             right = right_source.convert("RGB")
@@ -76,8 +82,6 @@ def main() -> int:
             for y0 in range(0, target_height, step):
                 y1 = min(target_height - 1, y0 + args.dash_length)
                 draw.line((divider_x, y0, divider_x, y1), fill="black", width=args.divider_width)
-            suffix = "_clean" if mto_clean else ""
-            output = args.output_dir / f"{galaxy}_MTO_left_SEP_right{suffix}.png"
             canvas.save(output, format="PNG", optimize=True)
         elapsed = time.perf_counter() - started
         remaining = len(names) - index
