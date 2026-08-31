@@ -281,8 +281,14 @@ class CombinedToyTester(tk.Tk):
         self.data: np.ndarray | None = None
         self.geometry_data: dict[str, float] | None = None
         self.toys: list[dict] = []
+        self.batch_toy_records: list[dict] = []
+        self.batch_delta: np.ndarray | None = None
+        self.batch_truth: np.ndarray | None = None
+        self.batch_truth_labels: np.ndarray | None = None
+        self.batch_toy_set_name: str | None = None
         self.toys_enabled = True
         self.last_results: dict[str, dict] = {}
+        self.last_baseline_results: dict[str, dict] = {}
 
         self.all_rows = display.read_manifest(self.manifest)
         self.rows = display.rows_with_images_for_pc(self.all_rows, self.pc)
@@ -301,6 +307,17 @@ class CombinedToyTester(tk.Tk):
                     self.twomass_cache[path.stem] = path
         self.catalogue_sources = {"2MASS": [], "Gaia": []}
         self.research_root = research_root
+        default_injection_manifest = (
+            research_root / CURRENT_OPTIMISATION_DIR / "MTObjects_multiseed_optimisation_pilot_v3"
+            / "paired_injections" / "paired_toy_injection_manifest.json"
+        )
+        self.injection_manifest_path = args.injection_manifest or default_injection_manifest
+        self.injection_manifest_data: dict = {}
+        if self.injection_manifest_path.exists():
+            try:
+                self.injection_manifest_data = json.loads(self.injection_manifest_path.read_text(encoding="utf-8"))
+            except Exception as exc:  # noqa: BLE001
+                messagebox.showwarning("Toy manifest unavailable", f"Could not read {self.injection_manifest_path}:\n{exc}")
         self.sep_best = args.sep_best or current_optimisation_winner(
             research_root, SEP_WINNER_RELATIVE, "sep_toy_cross_validation_best.json"
         )
@@ -460,6 +477,29 @@ class CombinedToyTester(tk.Tk):
         mto_source = self.mto_best.name if self.mto_best else "built-in defaults"
         self.source_var.set(f"Loaded parameters: SEP {sep_source}; MTObjects {mto_source}")
 
+        batch = ttk.LabelFrame(controls, text="Saved five-toy batch arrangement", padding=7)
+        batch.pack(fill=tk.X, pady=5)
+        batch_sets = list((self.injection_manifest_data.get("injection_sets") or {}).keys())
+        self.batch_set_labels = {
+            key: key.replace("training_seed_", "Training ").replace("validation_seed_", "Validation ")
+            for key in batch_sets
+        }
+        self.batch_set_keys = {label: key for key, label in self.batch_set_labels.items()}
+        self.batch_set_var = tk.StringVar(value="Manual toys only")
+        self.batch_set_combo = ttk.Combobox(
+            batch, textvariable=self.batch_set_var,
+            values=("Manual toys only", *(self.batch_set_labels[key] for key in batch_sets)),
+            state="readonly", width=24,
+        )
+        self.batch_set_combo.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.batch_set_combo.bind("<<ComboboxSelected>>", lambda _event: self.load_batch_toy_set())
+        self.batch_set_info = tk.StringVar(
+            value="Choose a training or validation arrangement; it loads automatically."
+        )
+        ttk.Label(batch, textvariable=self.batch_set_info, foreground="#555555", wraplength=570).pack(
+            side=tk.BOTTOM, fill=tk.X, pady=(5, 0)
+        )
+
         action = ttk.Frame(controls, padding=(0, 7, 0, 0))
         action.pack(fill=tk.X)
         ttk.Button(action, text="CALCULATE SEP + MTOBJECTS", command=self.calculate).pack(fill=tk.X, ipady=5)
@@ -472,6 +512,15 @@ class CombinedToyTester(tk.Tk):
         ttk.Button(action_row, text="Reload current optimum", command=self.reload_optimised_parameters).pack(side=tk.LEFT, fill=tk.X, expand=True)
         ttk.Button(action_row, text="Reset displayed values", command=self.reset_parameters).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 0))
         ttk.Button(action_row, text="Save PNG", command=self.save_png).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 0))
+        assessment = ttk.LabelFrame(action, text="Masking assessment — incremental toy response", padding=6)
+        assessment.pack(fill=tk.X, pady=(7, 0))
+        self.assessment_text = tk.StringVar(
+            value="Add/load toys and click Calculate. Metrics compare toys IN with the same image and parameters with toys OUT."
+        )
+        ttk.Label(
+            assessment, textvariable=self.assessment_text, justify=tk.LEFT,
+            font=("TkFixedFont", 9), wraplength=570,
+        ).pack(fill=tk.X)
         self.status = tk.StringVar(value="Select a galaxy, add toys on the Original panel, then Calculate.")
         ttk.Label(action, textvariable=self.status, foreground="#1f4d78", wraplength=570).pack(fill=tk.X, pady=(7, 0))
         ttk.Label(
@@ -577,8 +626,73 @@ class CombinedToyTester(tk.Tk):
                 f"with per-galaxy bg_variance={format_parameter(calibrated_variance)}"
             )
         self.catalogue_sources = self._catalogue_sources(name, header)
-        self.toys.clear(); self.last_results.clear(); self._update_toys_state()
+        self.toys.clear(); self._clear_batch_payload(); self.last_results.clear()
+        self.last_baseline_results.clear()
+        self.assessment_text.set("Add/load toys and click Calculate to assess this galaxy.")
+        if self.batch_set_var.get() != "Manual toys only":
+            self.load_batch_toy_set(redraw=False)
+        self._update_toys_state()
         self.draw_preview()
+
+    @staticmethod
+    def _platform_payload_path(value: str) -> Path:
+        """Translate immutable payload paths between WSL and Windows when needed."""
+        if os.name == "nt" and value.startswith("/mnt/") and len(value) > 6:
+            drive = value[5].upper()
+            return Path(f"{drive}:\\" + value[7:].replace("/", "\\"))
+        return Path(value)
+
+    def _clear_batch_payload(self) -> None:
+        self.batch_toy_records = []
+        self.batch_delta = None
+        self.batch_truth = None
+        self.batch_truth_labels = None
+        self.batch_toy_set_name = None
+        if hasattr(self, "batch_set_info"):
+            self.batch_set_info.set("Choose a training or validation arrangement; it loads automatically.")
+
+    def load_batch_toy_set(self, redraw: bool = True) -> None:
+        """Load the exact immutable delta and truth mask used by a batch seed set."""
+        selected_label = self.batch_set_var.get()
+        if selected_label == "Manual toys only":
+            self._clear_batch_payload(); self.last_results.clear(); self._update_toys_state()
+            if redraw and self.data is not None:
+                self.draw_preview()
+            return
+        set_name = self.batch_set_keys.get(selected_label, selected_label)
+        name = self.label_to_name.get(self.galaxy_var.get(), "")
+        try:
+            set_payload = self.injection_manifest_data["injection_sets"][set_name]
+            galaxy = set_payload["galaxies"][name]
+            payload_path = self._platform_payload_path(str(galaxy["payload_path"]))
+            with np.load(payload_path, allow_pickle=False) as payload:
+                delta = np.asarray(payload["delta"], dtype=float)
+                truth = np.asarray(payload["truth_mask"], dtype=bool)
+                truth_labels = np.asarray(payload["truth_labels"], dtype=np.int32)
+            if self.data is None or any(array.shape != self.data.shape for array in (delta, truth, truth_labels)):
+                raise ValueError(f"Payload shape {delta.shape} does not match science image {None if self.data is None else self.data.shape}")
+            self.toys.clear()
+            self.batch_delta = delta
+            self.batch_truth = truth
+            self.batch_truth_labels = truth_labels
+            self.batch_toy_records = list(galaxy.get("toys") or [])
+            self.batch_toy_set_name = set_name
+            self.toys_enabled = True
+            self.last_results.clear()
+            self.last_baseline_results.clear()
+            self.assessment_text.set("Exact toy truth loaded. Click Calculate to compare toy-in and no-toy masks.")
+            fallback = "yes" if galaxy.get("placement_fallback_used") else "no"
+            self.batch_set_info.set(
+                f"{name}: {len(self.batch_toy_records)} exact toys | global seed {galaxy.get('global_seed')} | "
+                f"galaxy seed {galaxy.get('per_galaxy_seed')} | fallback {fallback}"
+            )
+            self._update_toys_state()
+            self.status.set(f"Loaded exact batch payload: {name} / {set_name}. Click Calculate to reproduce its masks.")
+            if redraw:
+                self.draw_preview()
+        except Exception as exc:  # noqa: BLE001
+            self._clear_batch_payload(); self._update_toys_state()
+            messagebox.showerror("Batch toy set could not be loaded", f"{name} / {set_name}:\n{exc}")
 
     def _parameter_values(self, variables: dict[str, tk.Variable]) -> dict:
         values = {}
@@ -625,11 +739,18 @@ class CombinedToyTester(tk.Tk):
         self.source_var.set(f"Production parameters: SEP {sep_source}; MTObjects {mto_source}")
         self.status.set("Reloaded parameters through the same loaders used by the 182-galaxy batch.")
 
-    def _injected(self) -> tuple[np.ndarray, np.ndarray]:
+    def _injected(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         assert self.data is not None and self.geometry_data is not None
         sigma = core.robust_sigma(self.data)
         model = np.zeros_like(self.data, dtype=float)
         truth = np.zeros_like(self.data, dtype=bool)
+        truth_labels = np.zeros_like(self.data, dtype=np.int32)
+        if self.toys_enabled and self.batch_delta is not None and self.batch_truth is not None:
+            model += self.batch_delta
+            truth |= self.batch_truth
+            if self.batch_truth_labels is not None:
+                truth_labels[:] = self.batch_truth_labels
+        next_label = int(np.max(truth_labels)) + 1
         for spec in self.toys if self.toys_enabled else []:
             x_pix, y_pix = core.deprojected_to_observed_pixel(spec["x_arcsec"], spec["y_arcsec"], self.geometry_data)
             toy = core.toy_model(self.data.shape, spec["toy_type"], x_pix, y_pix,
@@ -638,9 +759,11 @@ class CombinedToyTester(tk.Tk):
             if spec["truth_dilation"]:
                 footprint = ndimage.binary_dilation(footprint, structure=core.circular_footprint(spec["truth_dilation"]))
             model += toy; truth |= footprint
+            truth_labels[footprint & (truth_labels == 0)] = next_label
+            next_label += 1
         injected = np.array(self.data, copy=True)
         injected[np.isfinite(injected)] += model[np.isfinite(injected)]
-        return injected, truth
+        return injected, truth, truth_labels
 
     @staticmethod
     def _clean_2mass_row(row) -> bool:
@@ -895,7 +1018,7 @@ class CombinedToyTester(tk.Tk):
         if self.data is None:
             return
         try:
-            injected, truth = self._injected()
+            injected, truth, _truth_labels = self._injected()
             residual_image = standardized_gaussian_residual(injected, self.geometry_data, float(self.blur_var.get()))
         except (ValueError, tk.TclError):
             return
@@ -952,12 +1075,14 @@ class CombinedToyTester(tk.Tk):
         self.last_results.clear(); self.draw_preview()
 
     def clear_toys(self) -> None:
-        self.toys.clear(); self._update_toys_state(); self.last_results.clear(); self.draw_preview()
+        self.toys.clear(); self._clear_batch_payload(); self.batch_set_var.set("Manual toys only")
+        self._update_toys_state(); self.last_results.clear(); self.draw_preview()
 
     def _update_toys_state(self) -> None:
-        count = len(self.toys)
+        count = len(self.toys) + len(self.batch_toy_records)
         state = "IN" if self.toys_enabled else "OUT"
-        self.toy_count.set(f"{count} toy{'s' if count != 1 else ''} stored — {state}")
+        source = f" | {self.batch_toy_set_name}" if self.batch_toy_set_name else ""
+        self.toy_count.set(f"{count} toy{'s' if count != 1 else ''} stored — {state}{source}")
         self.toys_button_text.set(
             "Toys IN — click to show results without toys"
             if self.toys_enabled else
@@ -971,20 +1096,144 @@ class CombinedToyTester(tk.Tk):
         if self.data is not None:
             self.calculate()
 
+    def _analysis_region(self) -> np.ndarray:
+        """Return the same galaxy-centred displayed-frame footprint used by optimisation."""
+        assert self.data is not None and self.geometry_data is not None
+        radius = display.profile_radius_pixels(self.data, self.geometry_data)
+        yy, xx = np.indices(self.data.shape, dtype=float)
+        offsets = np.vstack([
+            (xx - (self.geometry_data["xc"] - 1.0)).ravel(),
+            (yy - (self.geometry_data["yc"] - 1.0)).ravel(),
+        ])
+        transform = display.image_transform(
+            self.geometry_data["disk_pa"], self.geometry_data["inclination"], self.geometry_data["bar_pa"]
+        )
+        aligned = transform @ offsets
+        return (
+            np.isfinite(self.data)
+            & (np.abs(aligned[0].reshape(self.data.shape)) <= radius)
+            & (np.abs(aligned[1].reshape(self.data.shape)) <= radius)
+        )
+
+    @staticmethod
+    def _case_metrics(mask: np.ndarray, baseline_mask: np.ndarray, truth: np.ndarray,
+                      truth_labels: np.ndarray, region: np.ndarray) -> dict[str, float | int]:
+        """Calculate the paired-toy-v2 metrics used by both optimisation programs."""
+        final_mask = np.asarray(mask, dtype=bool) & region
+        incremental = final_mask & ~(np.asarray(baseline_mask, dtype=bool) & region)
+        truth = np.asarray(truth, dtype=bool) & region
+        labels = np.asarray(truth_labels, dtype=np.int32)
+        region_pixels = int(np.count_nonzero(region))
+        truth_pixels = int(np.count_nonzero(truth))
+        masked_pixels = int(np.count_nonzero(incremental))
+        overlap = int(np.count_nonzero(incremental & truth))
+        recall = overlap / truth_pixels if truth_pixels else 0.0
+        precision = overlap / masked_pixels if masked_pixels else 0.0
+        f_score = 2.0 * recall * precision / (recall + precision) if recall + precision else 0.0
+        false_positive = (masked_pixels - overlap) / max(1, region_pixels - truth_pixels)
+        toy_recalls = []
+        for toy_id in np.unique(labels[(labels > 0) & region]):
+            toy_truth = (labels == int(toy_id)) & region
+            pixels = int(np.count_nonzero(toy_truth))
+            toy_recalls.append(int(np.count_nonzero(incremental & toy_truth)) / pixels if pixels else 0.0)
+        return {
+            "incremental_pixels": masked_pixels,
+            "recall": recall,
+            "precision": precision,
+            "f_score": f_score,
+            "mean_toy_recall": float(np.mean(toy_recalls)) if toy_recalls else 0.0,
+            "recovered_toys": sum(value >= 0.5 for value in toy_recalls),
+            "toy_count": len(toy_recalls),
+            "toy_detection_rate": sum(value >= 0.5 for value in toy_recalls) / len(toy_recalls) if toy_recalls else 0.0,
+            "masked_fraction": masked_pixels / region_pixels if region_pixels else 0.0,
+            "false_positive_fraction": false_positive,
+        }
+
+    @staticmethod
+    def _objective_summary(method: str, metrics: dict[str, float | int]) -> dict[str, float | str]:
+        """Apply the current method-specific objective to this one diagnostic case."""
+        recall = float(metrics["recall"]); f_score = float(metrics["f_score"])
+        toy_recall = float(metrics["mean_toy_recall"]); detection = float(metrics["toy_detection_rate"])
+        masked = float(metrics["masked_fraction"]); fp = min(float(metrics["false_positive_fraction"]), 1.0)
+        if method == "SEP":
+            recovery = 0.45 * recall + 0.20 * f_score + 0.25 * toy_recall + 0.20 * detection
+            loss = 0.35 * masked + 0.05 * fp
+            score = recovery - loss
+            excess = max(0.0, masked - 0.15)
+            objective = 10.0 + 100.0 * excess + loss - recovery if excess else -score
+            regime = "feasible" if not excess else "over SEP 15% hard cap"
+        else:
+            recovery = 0.45 * f_score + 0.35 * toy_recall + 0.20 * detection
+            excess = max(0.0, masked - 0.15)
+            loss = 0.50 * masked + 0.10 * fp + excess
+            score = recovery - loss
+            detection_deficit = max(0.0, 0.25 - detection)
+            recall_deficit = max(0.0, 0.20 - toy_recall)
+            if int(metrics["incremental_pixels"]) == 0 or detection_deficit or recall_deficit:
+                objective = 50.0 + 20.0 * detection_deficit + 20.0 * recall_deficit
+                if int(metrics["incremental_pixels"]) == 0:
+                    objective += 50.0
+                regime = "recovery-infeasible"
+            elif masked > 0.30:
+                objective = 10.0 + 100.0 * (masked - 0.30) + loss - recovery
+                regime = "over 30% catastrophic cap"
+            else:
+                objective = -score
+                regime = "case feasible" if masked <= 0.15 else "uses one E15 allowance"
+        return {"score": score, "objective": objective, "regime": regime}
+
+    def _update_assessment(self, truth: np.ndarray, truth_labels: np.ndarray) -> None:
+        if not self.toys_enabled or not np.any(truth):
+            self.assessment_text.set("Toys are OUT (or no truth footprints exist); paired incremental metrics require toys IN.")
+            return
+        region = self._analysis_region()
+        lines = ["Metric                 SEP        MTObjects"]
+        summaries = {}
+        for method in ("SEP", "MTObjects"):
+            metrics = self._case_metrics(
+                self.last_results[method]["mask"], self.last_baseline_results[method]["mask"],
+                truth, truth_labels, region,
+            )
+            summaries[method] = (metrics, self._objective_summary(method, metrics))
+        for label, key in (
+            ("Toy detection", "toy_detection_rate"), ("Mean toy recall", "mean_toy_recall"),
+            ("Pixel recall", "recall"), ("Precision", "precision"), ("F-score", "f_score"),
+            ("Incremental mask", "masked_fraction"), ("False-positive frac.", "false_positive_fraction"),
+        ):
+            lines.append(f"{label:<21}{float(summaries['SEP'][0][key]):>8.1%}   {float(summaries['MTObjects'][0][key]):>8.1%}")
+        lines.append(
+            f"Score / objective     {summaries['SEP'][1]['score']:>6.3f}/{summaries['SEP'][1]['objective']:<7.3f}"
+            f" {summaries['MTObjects'][1]['score']:>6.3f}/{summaries['MTObjects'][1]['objective']:<7.3f}"
+        )
+        lines.append(f"SEP: {summaries['SEP'][1]['regime']} | MTO: {summaries['MTObjects'][1]['regime']}")
+        lines.append("Lower objective is better. MTO E15 batch rule passes when no more than 4 of 22 galaxies exceed 15%.")
+        self.assessment_text.set("\n".join(lines))
+
     def calculate(self) -> None:
         if self.data is None or self.geometry_data is None:
             return
         try:
-            injected, truth = self._injected()
-            sep = sep_processing.sep_products(injected, self._parameter_values(self.sep_vars), self.geometry_data)
+            injected, truth, truth_labels = self._injected()
+            sep_params = self._parameter_values(self.sep_vars)
+            mto_params = self._parameter_values(self.mto_vars)
+            sep = sep_processing.sep_products(injected, sep_params, self.geometry_data)
             root = mto_processing.find_mtobjects_root(self.mtobjects_root)
-            mto = mto_processing.mtobjects_products(injected, self._parameter_values(self.mto_vars), self.geometry_data, root)
+            mto = mto_processing.mtobjects_products(injected, mto_params, self.geometry_data, root)
             self.last_results = {"SEP": sep, "MTObjects": mto}
+            if self.toys_enabled and np.any(truth):
+                self.last_baseline_results = {
+                    "SEP": sep_processing.sep_products(self.data, sep_params, self.geometry_data),
+                    "MTObjects": mto_processing.mtobjects_products(self.data, mto_params, self.geometry_data, root),
+                }
+                self._update_assessment(truth, truth_labels)
+            else:
+                self.last_baseline_results.clear()
+                self._update_assessment(truth, truth_labels)
             shown_fractions = self.draw_results(injected=injected, truth=truth)
             sep_fraction, mto_fraction = shown_fractions
             self.status.set(
                 f"Calculated with toys {'IN' if self.toys_enabled else 'OUT'} "
-                f"({len(self.toys) if self.toys_enabled else 0} active) | displayed frame masked: "
+                f"({(len(self.toys) + len(self.batch_toy_records)) if self.toys_enabled else 0} active) | displayed frame masked: "
                 f"SEP {sep_fraction:.2%}, MTObjects {mto_fraction:.2%}"
             )
             self.canvas.draw_idle()
@@ -996,7 +1245,7 @@ class CombinedToyTester(tk.Tk):
             self.draw_preview()
             return 0.0, 0.0
         if injected is None or truth is None:
-            injected, truth = self._injected()
+            injected, truth, _truth_labels = self._injected()
         sep = self.last_results["SEP"]
         mto = self.last_results["MTObjects"]
         self._draw_image(
@@ -1029,6 +1278,8 @@ class CombinedToyTester(tk.Tk):
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, default=display.DEFAULT_MANIFEST)
+    parser.add_argument("--injection-manifest", type=Path, default=None,
+                        help="Immutable paired-toy manifest containing training/validation seed payloads.")
     parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=detect_pc(FOREGROUND_ROOT))
     parser.add_argument("--sep-best", type=Path)
     parser.add_argument("--mto-best", type=Path)

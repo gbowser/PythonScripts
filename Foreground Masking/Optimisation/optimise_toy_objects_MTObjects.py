@@ -411,6 +411,7 @@ def inject_toys(
 def build_cases(args: argparse.Namespace) -> list[ImageCase]:
     rng = np.random.default_rng(int(args.seed))
     cases = []
+    injection_sets = list(getattr(args, "injection_sets", None) or [args.injection_set])
     rows = select_rows(args.manifest, args.pc, args.names, int(args.max_images), int(args.seed))
     baseline_params = default_params(args.detect_on)
     mtobjects_root = mto.find_mtobjects_root(args.mtobjects_root)
@@ -425,11 +426,27 @@ def build_cases(args: argparse.Namespace) -> list[ImageCase]:
             warnings.simplefilter("ignore", RuntimeWarning)
             baseline_products = mto.mtobjects_products(data, baseline_params, geometry, mtobjects_root)
         if args.injection_manifest:
-            delta, truth_mask, truth_labels, toy_rows, _record = paired_toy_common.load_materialized_injection(
-                Path(args.injection_manifest), args.injection_set, name, Path(image_path)
-            )
-            injected = np.asarray(data, dtype=float) + delta
-            toys = [ToyObject(**{key: row[key] for key in ToyObject.__dataclass_fields__}) for row in toy_rows]
+            for injection_set in injection_sets:
+                delta, truth_mask, truth_labels, toy_rows, _record = paired_toy_common.load_materialized_injection(
+                    Path(args.injection_manifest), injection_set, name, Path(image_path)
+                )
+                injected = np.asarray(data, dtype=float) + delta
+                toys = [ToyObject(**{key: toy_row[key] for key in ToyObject.__dataclass_fields__}) for toy_row in toy_rows]
+                cases.append(
+                    ImageCase(
+                        name=f"{name} [{injection_set}]" if len(injection_sets) > 1 else name,
+                        data=data,
+                        geometry=geometry,
+                        injected=injected,
+                        truth_mask=truth_mask,
+                        truth_labels=truth_labels,
+                        toys=toys,
+                        baseline_mask=np.asarray(baseline_products["mask"], dtype=bool),
+                        analysis_region=investigated_region_mask(data, geometry),
+                    )
+                )
+                print(f"Prepared {name} [{injection_set}]: {len(toys)} injected toy objects.")
+            continue
         else:
             injected, truth_mask, truth_labels, toys = inject_toys(
                 name, data, geometry, toys_per_image=int(args.toys_per_image), rng=rng,
@@ -470,6 +487,9 @@ def aggregate_score(
     false_positive_penalty: float,
     min_toy_detection_rate: float = DEFAULT_MIN_TOY_DETECTION_RATE,
     min_mean_toy_recall: float = DEFAULT_MIN_MEAN_TOY_RECALL,
+    max_mask_exceedance_fraction: float = 0.20,
+    catastrophic_masked_fraction: float = 0.30,
+    excess_masking_penalty: float = 1.0,
 ) -> dict[str, float]:
     if not case_rows:
         return {"objective": 1.0, "score": 0.0}
@@ -479,14 +499,34 @@ def aggregate_score(
     mean_toy_recall = float(np.mean([float(row["mean_toy_recall"]) for row in case_rows]))
     mean_masked = float(np.mean([float(row["masked_fraction"]) for row in case_rows]))
     max_masked = float(np.max([float(row["masked_fraction"]) for row in case_rows]))
+    # Treat repeated toy-position seeds for the same galaxy as correlated.  The
+    # galaxy receives its worst masking result across seeds, then galaxies are
+    # counted equally for the 15% exceedance rule.
+    galaxy_masked: dict[str, float] = {}
+    for index, row in enumerate(case_rows):
+        case_name = str(row.get("image") or f"case_{index}")
+        # Multi-seed cases are named "NGCxxxx [training_seed_n]" or
+        # "NGCxxxx [validation_seed_n]".  Remove that suffix so all seeds for
+        # one physical galaxy contribute a single worst-seed value.
+        galaxy = case_name.rsplit(" [", 1)[0] if case_name.endswith("]") and " [" in case_name else case_name
+        galaxy_masked[galaxy] = max(galaxy_masked.get(galaxy, 0.0), float(row["masked_fraction"]))
+    galaxy_values = list(galaxy_masked.values())
+    galaxies_above_cap = sum(value > max_masked_fraction for value in galaxy_values)
+    mask_exceedance_fraction = galaxies_above_cap / len(galaxy_values)
+    mean_excess_above_cap = float(np.mean([max(0.0, value - max_masked_fraction) for value in galaxy_values]))
     false_positive = float(np.mean([float(row["false_positive_fraction"]) for row in case_rows]))
     recovered = sum(int(row["recovered_toys"]) for row in case_rows)
     toy_count = sum(int(row["toy_count"]) for row in case_rows)
     toy_detection_rate = recovered / toy_count if toy_count else 0.0
     recovery_score = 0.45 * mean_f + 0.35 * mean_toy_recall + 0.20 * toy_detection_rate
-    data_loss = data_loss_penalty * mean_masked + false_positive_penalty * min(false_positive, 1.0)
+    data_loss = (
+        data_loss_penalty * mean_masked
+        + false_positive_penalty * min(false_positive, 1.0)
+        + excess_masking_penalty * mean_excess_above_cap
+    )
     score = recovery_score - data_loss
-    cap_excess = max(0.0, max_masked - max_masked_fraction)
+    exceedance_rate_excess = max(0.0, mask_exceedance_fraction - max_mask_exceedance_fraction)
+    catastrophic_excess = max(0.0, max_masked - catastrophic_masked_fraction)
     incremental_pixels_total = sum(int(row["incremental_pixels"]) for row in case_rows)
     recovery_rate_deficit = max(0.0, min_toy_detection_rate - toy_detection_rate)
     recall_deficit = max(0.0, min_mean_toy_recall - mean_toy_recall)
@@ -495,8 +535,8 @@ def aggregate_score(
         objective = 50.0 + 20.0 * recovery_rate_deficit + 20.0 * recall_deficit
         if incremental_pixels_total == 0:
             objective += 50.0
-    elif cap_excess > 0.0:
-        objective = 10.0 + 100.0 * cap_excess + data_loss - recovery_score
+    elif exceedance_rate_excess > 0.0 or catastrophic_excess > 0.0:
+        objective = 10.0 + 100.0 * exceedance_rate_excess + 100.0 * catastrophic_excess + data_loss - recovery_score
     else:
         objective = -score
     return {
@@ -510,7 +550,15 @@ def aggregate_score(
         "mean_masked_fraction": mean_masked,
         "max_masked_fraction": max_masked,
         "max_masked_fraction_limit": max_masked_fraction,
-        "masked_fraction_cap_excess": cap_excess,
+        "masked_fraction_cap_excess": mean_excess_above_cap,
+        "galaxies_evaluated_for_masking": float(len(galaxy_values)),
+        "galaxies_above_masking_cap": float(galaxies_above_cap),
+        "mask_exceedance_fraction": mask_exceedance_fraction,
+        "max_mask_exceedance_fraction": max_mask_exceedance_fraction,
+        "mean_excess_above_masking_cap": mean_excess_above_cap,
+        "catastrophic_masked_fraction_limit": catastrophic_masked_fraction,
+        "catastrophic_mask_excess": catastrophic_excess,
+        "masking_feasible": float(exceedance_rate_excess == 0.0 and catastrophic_excess == 0.0),
         "false_positive_fraction": false_positive,
         "recovery_score": recovery_score,
         "recovery_infeasible": float(recovery_infeasible),
@@ -560,17 +608,27 @@ class OptimisationRun:
         self.result_metadata = {
             "algorithm": "MTObjects", **paired_toy_common.runtime_metadata(PROJECT_ROOT),
             "worker_count": worker_count, "injection_manifest": str(args.injection_manifest),
-            "injection_set": args.injection_set,
+            "injection_set": ",".join(getattr(args, "injection_sets", None) or [args.injection_set]),
         }
         if worker_count > 1:
             start_method = "fork" if os.name == "posix" else "spawn"
             context = mp.get_context(start_method)
+            worker_max_tasks = max(0, int(getattr(args, "worker_max_tasks", 32)))
             self.worker_pool = context.Pool(
                 processes=worker_count,
                 initializer=initialise_score_worker,
                 initargs=(cases, self.mtobjects_root),
+                maxtasksperchild=worker_max_tasks or None,
             )
-            print(f"Using {worker_count} MTObjects image workers ({start_method}).", flush=True)
+            recycle_text = (
+                f", recycling after {worker_max_tasks} cases"
+                if worker_max_tasks else ", recycling disabled"
+            )
+            print(
+                f"Using {worker_count} MTObjects image workers "
+                f"({start_method}{recycle_text}).",
+                flush=True,
+            )
 
     def close(self) -> None:
         if self.worker_pool is not None:
@@ -595,7 +653,12 @@ class OptimisationRun:
                     case_rows = [score_case(case, params, self.mtobjects_root) for case in self.cases]
                 else:
                     tasks = [(index, params) for index in range(len(self.cases))]
-                    case_rows = self.worker_pool.map(score_case_worker, tasks)
+                    # MTObjects runtimes vary substantially with image size and
+                    # parameter set.  The Pool default groups several adjacent
+                    # cases into each work item, which can leave most workers
+                    # idle behind one expensive chunk.  One case per chunk keeps
+                    # the pool balanced without changing case order or scores.
+                    case_rows = self.worker_pool.map(score_case_worker, tasks, chunksize=1)
             aggregate = aggregate_score(
                 case_rows,
                 max_masked_fraction=float(self.args.max_masked_fraction),
@@ -603,6 +666,9 @@ class OptimisationRun:
                 false_positive_penalty=float(self.args.false_positive_penalty),
                 min_toy_detection_rate=float(self.args.min_toy_detection_rate),
                 min_mean_toy_recall=float(self.args.min_mean_toy_recall),
+                max_mask_exceedance_fraction=float(self.args.max_mask_exceedance_fraction),
+                catastrophic_masked_fraction=float(self.args.catastrophic_masked_fraction),
+                excess_masking_penalty=float(self.args.excess_masking_penalty),
             )
             objective = float(aggregate["objective"])
             status = "ok"
@@ -633,6 +699,14 @@ class OptimisationRun:
             "max_masked_fraction": aggregate.get("max_masked_fraction", math.nan),
             "max_masked_fraction_limit": aggregate.get("max_masked_fraction_limit", math.nan),
             "masked_fraction_cap_excess": aggregate.get("masked_fraction_cap_excess", math.nan),
+            "galaxies_evaluated_for_masking": aggregate.get("galaxies_evaluated_for_masking", math.nan),
+            "galaxies_above_masking_cap": aggregate.get("galaxies_above_masking_cap", math.nan),
+            "mask_exceedance_fraction": aggregate.get("mask_exceedance_fraction", math.nan),
+            "max_mask_exceedance_fraction": aggregate.get("max_mask_exceedance_fraction", math.nan),
+            "mean_excess_above_masking_cap": aggregate.get("mean_excess_above_masking_cap", math.nan),
+            "catastrophic_masked_fraction_limit": aggregate.get("catastrophic_masked_fraction_limit", math.nan),
+            "catastrophic_mask_excess": aggregate.get("catastrophic_mask_excess", math.nan),
+            "masking_feasible": aggregate.get("masking_feasible", math.nan),
             "false_positive_fraction": aggregate.get("false_positive_fraction", math.nan),
             "recovery_score": aggregate.get("recovery_score", math.nan),
             "recovery_infeasible": aggregate.get("recovery_infeasible", math.nan),
@@ -661,6 +735,14 @@ class OptimisationRun:
                 "max_masked_fraction",
                 "max_masked_fraction_limit",
                 "masked_fraction_cap_excess",
+                "galaxies_evaluated_for_masking",
+                "galaxies_above_masking_cap",
+                "mask_exceedance_fraction",
+                "max_mask_exceedance_fraction",
+                "mean_excess_above_masking_cap",
+                "catastrophic_masked_fraction_limit",
+                "catastrophic_mask_excess",
+                "masking_feasible",
                 "false_positive_fraction",
                 "recovery_score",
                 "recovery_infeasible",
@@ -750,14 +832,30 @@ class OptimisationRun:
 def run_optuna(run: OptimisationRun) -> None:
     total_trials = int(run.args.initial_points) + int(run.args.max_iter)
     run.total_trials = total_trials
-    sampler = optuna.samplers.TPESampler(
-        seed=int(run.args.seed),
-        n_startup_trials=int(run.args.initial_points),
-    )
     storage_dir = run.args.study_storage_dir or run.output_dir
     storage_dir.mkdir(parents=True, exist_ok=True)
     storage_path = storage_dir / f"{run.args.study_name}.sqlite3"
     storage_url = f"sqlite:///{storage_path.as_posix()}"
+    # Optuna persists trials but not the sampler's random-number-generator
+    # state.  Recreating a seeded sampler unchanged after a crash can therefore
+    # repeat the original startup suggestions.  Offset the seed by the number
+    # of already recorded trials so a resumed run continues with fresh
+    # proposals while remaining deterministic for that study state.
+    resume_offset = 0
+    if storage_path.exists():
+        try:
+            existing_study = optuna.load_study(
+                study_name=run.args.study_name,
+                storage=storage_url,
+            )
+            resume_offset = len(existing_study.trials)
+        except KeyError:
+            pass
+    sampler_seed = int(run.args.seed) + resume_offset
+    sampler = optuna.samplers.TPESampler(
+        seed=sampler_seed,
+        n_startup_trials=int(run.args.initial_points),
+    )
     study = optuna.create_study(
         study_name=run.args.study_name,
         direction="minimize",
@@ -765,6 +863,11 @@ def run_optuna(run: OptimisationRun) -> None:
         storage=storage_url,
         load_if_exists=True,
     )
+    if resume_offset:
+        print(
+            f"Resumed sampler with seed {sampler_seed} "
+            f"({resume_offset} recorded prior trials)."
+        )
     interrupted = 0
     for trial in study.get_trials(deepcopy=False):
         if trial.state == optuna.trial.TrialState.RUNNING:
@@ -876,6 +979,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pc", choices=sorted(PC_RESEARCH_FOLDERS), default=default_pc)
     parser.add_argument("--mtobjects-root", type=Path, default=Path(mto.DEFAULT_MTOBJECTS_ROOT) if mto.DEFAULT_MTOBJECTS_ROOT else None)
     parser.add_argument("--output-dir", type=Path, default=None)
+    parser.add_argument(
+        "--fixed-output-dir",
+        action="store_true",
+        help="Use --output-dir directly instead of creating a timestamped child; intended for supervised resumable runs.",
+    )
     parser.add_argument("--names", nargs="*", help="Optional explicit galaxy names. Defaults to the first usable images.")
     parser.add_argument("--max-images", type=int, default=DEFAULT_MAX_IMAGES)
     parser.add_argument("--toys-per-image", type=int, default=DEFAULT_TOYS_PER_IMAGE)
@@ -884,6 +992,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--toy-peak-sigma-max", type=float, default=25.0)
     parser.add_argument("--injection-manifest", type=Path, default=None)
     parser.add_argument("--injection-set", default="cross_validation")
+    parser.add_argument(
+        "--injection-sets",
+        nargs="+",
+        default=None,
+        help=(
+            "Optional list of immutable injection sets to score together in every trial. "
+            "When omitted, --injection-set retains the original single-set behaviour."
+        ),
+    )
     parser.add_argument(
         "--mtobjects-detect-on",
         "--detect-on",
@@ -921,6 +1038,15 @@ def parse_args() -> argparse.Namespace:
             "Use 1 for the original serial behaviour; 4-8 is suitable for an Azure F-series Linux VM."
         ),
     )
+    parser.add_argument(
+        "--worker-max-tasks",
+        type=int,
+        default=32,
+        help=(
+            "Recycle each MTObjects worker after this many galaxy cases to release "
+            "native-library memory; use 0 to disable recycling."
+        ),
+    )
     parser.add_argument("--seed", type=int, default=DEFAULT_RANDOM_SEED)
     parser.add_argument("--study-name", default="mtobjects-toy-optimisation")
     parser.add_argument("--study-storage-dir", type=Path, default=None)
@@ -944,6 +1070,18 @@ def parse_args() -> argparse.Namespace:
         help="Penalty weight applied to the mean masked fraction in the toy-object objective.",
     )
     parser.add_argument(
+        "--max-mask-exceedance-fraction", type=float, default=0.20,
+        help="Maximum fraction of galaxies whose worst seed may exceed --max-masked-fraction.",
+    )
+    parser.add_argument(
+        "--catastrophic-masked-fraction", type=float, default=0.30,
+        help="Hard ceiling that no individual galaxy/seed masking result may exceed.",
+    )
+    parser.add_argument(
+        "--excess-masking-penalty", type=float, default=1.0,
+        help="Penalty weight for mean galaxy-level excess above --max-masked-fraction.",
+    )
+    parser.add_argument(
         "--false-positive-penalty",
         type=float,
         default=DEFAULT_FALSE_POSITIVE_PENALTY,
@@ -964,8 +1102,11 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     output_parent = args.output_dir or (remove_foreground_folder(args.pc) / "mtobjects toy optimisation")
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    args.output_dir = output_parent / timestamp
+    if args.fixed_output_dir:
+        args.output_dir = output_parent
+    else:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        args.output_dir = output_parent / timestamp
     args.output_dir.mkdir(parents=True, exist_ok=True)
     config = {key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()}
     (args.output_dir / "mtobjects_parameter_optimisation_config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")

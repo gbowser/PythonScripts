@@ -41,6 +41,7 @@ def build_evaluation_cases(args: argparse.Namespace, names: list[str]):
         toy_peak_sigma_max=args.toy_peak_sigma_max,
         injection_manifest=args.injection_manifest,
         injection_set=args.evaluation_injection_set,
+        injection_sets=args.evaluation_injection_sets,
     )
     return mto_opt.build_cases(case_args)
 
@@ -65,6 +66,9 @@ def score_cases(cases, params: dict[str, object], args: argparse.Namespace) -> t
         false_positive_penalty=args.false_positive_penalty,
         min_toy_detection_rate=args.min_toy_detection_rate,
         min_mean_toy_recall=args.min_mean_toy_recall,
+        max_mask_exceedance_fraction=args.max_mask_exceedance_fraction,
+        catastrophic_masked_fraction=args.catastrophic_masked_fraction,
+        excess_masking_penalty=args.excess_masking_penalty,
     )
     return aggregate, detail
 
@@ -110,7 +114,7 @@ def calibrate_bg_variance(cases, args: argparse.Namespace, root: Path) -> None:
         index for index, row in enumerate(rows)
         if float(row["toy_detection_rate"]) >= args.min_toy_detection_rate
         and float(row["mean_toy_recall"]) >= args.min_mean_toy_recall
-        and float(row["max_masked_fraction"]) <= args.max_masked_fraction
+        and bool(float(row["masking_feasible"]))
     ]
     if not viable_indices:
         detectable = [index for index, row in enumerate(rows) if float(row["toy_detection_rate"]) > 0.0]
@@ -183,11 +187,16 @@ def run_fold(args: argparse.Namespace, root: Path, fold_number: int, fold_count:
         "--bg-variance-step", str(args.bg_variance_step),
         "--bg-variance-log" if args.bg_variance_log else "--no-bg-variance-log",
         "--max-masked-fraction", str(args.max_masked_fraction),
+        "--max-mask-exceedance-fraction", str(args.max_mask_exceedance_fraction),
+        "--catastrophic-masked-fraction", str(args.catastrophic_masked_fraction),
+        "--excess-masking-penalty", str(args.excess_masking_penalty),
         "--data-loss-penalty", str(args.data_loss_penalty),
         "--false-positive-penalty", str(args.false_positive_penalty),
         "--min-toy-detection-rate", str(args.min_toy_detection_rate),
         "--min-mean-toy-recall", str(args.min_mean_toy_recall),
     ]
+    if args.cv_injection_sets:
+        command.extend(["--injection-sets", *args.cv_injection_sets])
     print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Starting MTObjects fold {fold_number}/{fold_count}: train={len(training)}, validate={len(held_out)}", flush=True)
     completed = subprocess.run(command, check=False)
     trials_after = cv_common.count_trial_rows(optimiser_parent, "*/mtobjects_parameter_optimisation_summary.csv")
@@ -245,6 +254,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--injection-manifest", type=Path, required=True)
     parser.add_argument("--cv-injection-set", default="cross_validation")
     parser.add_argument("--evaluation-injection-set", default="winner_selection")
+    parser.add_argument("--cv-injection-sets", nargs="+", default=None)
+    parser.add_argument("--evaluation-injection-sets", nargs="+", default=None)
     parser.add_argument("--detect-on", choices=["original", "residual"], default="original")
     parser.add_argument("--bg-variance-min", type=float, default=mto_opt.DEFAULT_BG_VARIANCE_MIN)
     parser.add_argument("--bg-variance-max", type=float, default=mto_opt.DEFAULT_BG_VARIANCE_MAX)
@@ -252,6 +263,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--bg-variance-log", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--calibrate-bg-variance", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--max-masked-fraction", type=float, default=mto_opt.DEFAULT_MAX_MASKED_FRACTION)
+    parser.add_argument("--max-mask-exceedance-fraction", type=float, default=0.20)
+    parser.add_argument("--catastrophic-masked-fraction", type=float, default=0.30)
+    parser.add_argument("--excess-masking-penalty", type=float, default=1.0)
     parser.add_argument("--data-loss-penalty", type=float, default=mto_opt.DEFAULT_DATA_LOSS_PENALTY)
     parser.add_argument("--false-positive-penalty", type=float, default=mto_opt.DEFAULT_FALSE_POSITIVE_PENALTY)
     parser.add_argument("--min-toy-detection-rate", type=float, default=mto_opt.DEFAULT_MIN_TOY_DETECTION_RATE)
@@ -281,7 +295,10 @@ def main() -> int:
     config["parameter_bounds"] = mto_opt.PARAMETER_BOUNDS
     config["folds"] = {f"fold_{i + 1}": fold for i, fold in enumerate(folds)}
     (root / "cross_validation_config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
-    cases_by_name = {case.name: case for case in evaluation_cases}
+    cases_by_name: dict[str, list] = {}
+    for case in evaluation_cases:
+        base_name = case.name.rsplit(" [", 1)[0] if case.name.endswith("]") and " [" in case.name else case.name
+        cases_by_name.setdefault(base_name, []).append(case)
     candidates: list[dict[str, object]] = []
     details: list[dict[str, object]] = []
     result_metadata = {"algorithm": "MTObjects", **mto_opt.paired_toy_common.runtime_metadata(PROJECT_ROOT), "worker_count": args.workers, "injection_manifest": str(args.injection_manifest)}
@@ -293,9 +310,14 @@ def main() -> int:
         best_path = run_fold(args, root, index, fold_count, training, held_out)
         best = json.loads(best_path.read_text(encoding="utf-8"))
         params = best["params"]
-        held_metrics, held_detail = score_cases([cases_by_name[name] for name in held_out], params, args)
+        held_metrics, held_detail = score_cases(
+            [case for name in held_out for case in cases_by_name[name]], params, args
+        )
         all_metrics, _ = score_cases(evaluation_cases, params, args)
-        fold_metrics = [score_cases([cases_by_name[name] for name in fold], params, args)[0] for fold in folds]
+        fold_metrics = [
+            score_cases([case for name in fold for case in cases_by_name[name]], params, args)[0]
+            for fold in folds
+        ]
         min_fold_detection = min(float(metrics["toy_detection_rate"]) for metrics in fold_metrics)
         min_fold_recall = min(float(metrics["mean_toy_recall"]) for metrics in fold_metrics)
         successful_detection_folds = sum(float(metrics["toy_detection_rate"]) > 0.0 for metrics in fold_metrics)
@@ -304,7 +326,7 @@ def main() -> int:
         feasible = (
             float(all_metrics["toy_detection_rate"]) >= args.final_min_toy_detection_rate
             and float(all_metrics["mean_toy_recall"]) >= args.final_min_mean_toy_recall
-            and float(all_metrics["max_masked_fraction"]) <= args.max_masked_fraction
+            and bool(float(all_metrics["masking_feasible"]))
             and successful_detection_folds >= args.min_successful_folds
             and successful_recall_folds >= args.min_successful_folds
         )
@@ -341,7 +363,9 @@ def main() -> int:
             "reason": f"No candidate met the final all-{len(names)} recovery thresholds and recovery-fold requirement.",
             "required_toy_detection_rate": args.final_min_toy_detection_rate,
             "required_mean_toy_recall": args.final_min_mean_toy_recall,
-            "required_max_masked_fraction": args.max_masked_fraction,
+            "galaxy_masking_threshold": args.max_masked_fraction,
+            "maximum_fraction_of_galaxies_above_threshold": args.max_mask_exceedance_fraction,
+            "catastrophic_individual_masked_fraction": args.catastrophic_masked_fraction,
             "required_successful_folds": args.min_successful_folds,
             "candidates": candidates,
         }

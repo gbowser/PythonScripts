@@ -115,6 +115,7 @@ def build_evaluation_cases(args: argparse.Namespace, names: list[str]):
         toy_peak_sigma_max=args.toy_peak_sigma_max,
         injection_manifest=args.injection_manifest,
         injection_set=args.evaluation_injection_set,
+        injection_sets=args.evaluation_injection_sets,
     )
     return sep_opt.build_cases(case_args)
 
@@ -185,6 +186,8 @@ def run_fold(args: argparse.Namespace, root: Path, fold_number: int, fold_count:
         "--data-loss-penalty", str(args.data_loss_penalty),
         "--false-positive-penalty", str(args.false_positive_penalty),
     ]
+    if args.cv_injection_sets:
+        command.extend(["--injection-sets", *args.cv_injection_sets])
     print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] Starting fold {fold_number}/{fold_count}: train={len(training)}, validate={len(held_out)}", flush=True)
     completed = subprocess.run(command, check=False)
     trials_after = count_trial_rows(optimiser_parent, "*/sep_toy_object_optimisation_summary.csv")
@@ -241,6 +244,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--injection-manifest", type=Path, required=True)
     parser.add_argument("--cv-injection-set", default="cross_validation")
     parser.add_argument("--evaluation-injection-set", default="winner_selection")
+    parser.add_argument("--cv-injection-sets", nargs="+", default=None)
+    parser.add_argument("--evaluation-injection-sets", nargs="+", default=None)
     parser.add_argument(
         "--detect-on",
         choices=["original"],
@@ -267,7 +272,10 @@ def main() -> int:
     print(f"Cross-validation output: {root}", flush=True)
 
     evaluation_cases = build_evaluation_cases(args, names)
-    cases_by_name = {case.name: case for case in evaluation_cases}
+    cases_by_name: dict[str, list] = {}
+    for case in evaluation_cases:
+        base_name = case.name.rsplit(" [", 1)[0] if case.name.endswith("]") and " [" in case.name else case.name
+        cases_by_name.setdefault(base_name, []).append(case)
     candidate_rows: list[dict[str, object]] = []
     detail_rows: list[dict[str, object]] = []
     result_metadata = {"algorithm": "SEP", **sep_opt.paired_toy_common.runtime_metadata(PROJECT_ROOT), "worker_count": args.workers, "injection_manifest": str(args.injection_manifest)}
@@ -279,7 +287,7 @@ def main() -> int:
         best_path = run_fold(args, root, index, fold_count, training, held_out)
         best = json.loads(best_path.read_text(encoding="utf-8"))
         params = best["params"]
-        held_cases = [cases_by_name[name] for name in held_out]
+        held_cases = [case for name in held_out for case in cases_by_name[name]]
         held_metrics, held_detail = score_cases(held_cases, params, args)
         all_metrics, _ = score_cases(evaluation_cases, params, args)
         row = {
@@ -292,7 +300,7 @@ def main() -> int:
             **{f"{sample_label}_{key}": value for key, value in all_metrics.items()},
         }
         candidate_rows.append(row)
-        detail_rows.extend({"fold": index, **result_metadata, "injection_set": args.evaluation_injection_set, "parameter_set_json": json.dumps(params, sort_keys=True), **detail} for detail in held_detail)
+        detail_rows.extend({"fold": index, **result_metadata, "injection_set": detail.get("image", args.evaluation_injection_set), "parameter_set_json": json.dumps(params, sort_keys=True), **detail} for detail in held_detail)
         elapsed = time.perf_counter() - started
         eta = elapsed / index * (fold_count - index)
         print(

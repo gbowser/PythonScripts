@@ -391,6 +391,7 @@ def inject_toys(
 def build_cases(args: argparse.Namespace) -> list[ImageCase]:
     rng = np.random.default_rng(int(args.seed))
     cases = []
+    injection_sets = list(getattr(args, "injection_sets", None) or [args.injection_set])
     rows = select_rows(args.manifest, args.pc, args.names, int(args.max_images), int(args.seed))
     baseline_params = default_params(args.detect_on)
     # The historic shared defaults were tuned on residual images and are far
@@ -422,11 +423,23 @@ def build_cases(args: argparse.Namespace) -> list[ImageCase]:
             warnings.simplefilter("ignore", RuntimeWarning)
             baseline_products = sep_tool.sep_products(data, baseline_params, geometry)
         if args.injection_manifest:
-            delta, truth_mask, truth_labels, toy_rows, _record = paired_toy_common.load_materialized_injection(
-                Path(args.injection_manifest), args.injection_set, name, Path(image_path)
-            )
-            injected = np.asarray(data, dtype=float) + delta
-            toys = [ToyObject(**{key: row[key] for key in ToyObject.__dataclass_fields__}) for row in toy_rows]
+            for injection_set in injection_sets:
+                delta, truth_mask, truth_labels, toy_rows, _record = paired_toy_common.load_materialized_injection(
+                    Path(args.injection_manifest), injection_set, name, Path(image_path)
+                )
+                injected = np.asarray(data, dtype=float) + delta
+                toys = [ToyObject(**{key: toy_row[key] for key in ToyObject.__dataclass_fields__}) for toy_row in toy_rows]
+                cases.append(
+                    ImageCase(
+                        name=f"{name} [{injection_set}]" if len(injection_sets) > 1 else name,
+                        data=data, geometry=geometry, injected=injected,
+                        truth_mask=truth_mask, truth_labels=truth_labels, toys=toys,
+                        baseline_mask=np.asarray(baseline_products["mask"], dtype=bool),
+                        analysis_region=investigated_region_mask(data, geometry),
+                    )
+                )
+                print(f"Prepared {name} [{injection_set}]: {len(toys)} injected toy objects.")
+            continue
         else:
             injected, truth_mask, truth_labels, toys = inject_toys(
                 name, data, geometry, toys_per_image=int(args.toys_per_image), rng=rng,
@@ -847,6 +860,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--toy-peak-sigma-max", type=float, default=25.0)
     parser.add_argument("--injection-manifest", type=Path, default=None)
     parser.add_argument("--injection-set", default="cross_validation")
+    parser.add_argument(
+        "--injection-sets", nargs="+", default=None,
+        help="Optional immutable injection sets scored together in every trial.",
+    )
     parser.add_argument(
         "--detect-on",
         dest="detect_on",

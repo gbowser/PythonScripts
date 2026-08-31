@@ -31,6 +31,11 @@ if [[ ! -f "$started_marker" ]]; then
 fi
 
 while [[ ! -f "$complete_marker" ]]; do
+    if [[ -f "$current_rejected" ]]; then
+        printf '[%s] MTObjects completed but failed the final acceptance gate; stopping automatic retries for scientific review.\n' \
+            "$(date '+%F %T')" >> "$log"
+        break
+    fi
     if pgrep -f '[r]un_clean22_full_cross_validation.py' >/dev/null; then
         latest_update=$(find "$output_root/SEP_cross_validation" "$output_root/MTObjects_cross_validation" \
             -type f \( -name '*optimisation_summary.csv' -o -name 'optuna_convergence.json' \) \
@@ -67,8 +72,16 @@ while [[ ! -f "$complete_marker" ]]; do
         touch "$complete_marker"
         break
     fi
+    if [[ -f "$current_rejected" ]]; then
+        printf '[%s] Rejection record detected; no identical optimisation retry will be started.\n' \
+            "$(date '+%F %T')" >> "$log"
+        break
+    fi
     sleep 30
 done
 
-printf '[%s] 80-trial convergence-controlled optimisation complete; no 182-galaxy batch was run.\n' \
-    "$(date '+%F %T')" >> "$log"
+if [[ -f "$complete_marker" ]]; then
+    printf '[%s] 80-trial convergence-controlled optimisation complete.\n' "$(date '+%F %T')" >> "$log"
+else
+    printf '[%s] Optimisation ended at the scientific acceptance gate; awaiting review.\n' "$(date '+%F %T')" >> "$log"
+fi
