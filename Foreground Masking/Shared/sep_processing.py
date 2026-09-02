@@ -274,6 +274,8 @@ def sep_products(data: np.ndarray, params: dict[str, float | int | str], geometr
     background = sep.Background(detection, mask=nonfinite_mask, bw=bw, bh=bh)
     subtracted = np.ascontiguousarray(detection - background.back(), dtype=np.float32)
     kernel = make_filter_kernel(int(params["filter_size"]))
+    clean_enabled = bool(params.get("clean", True))
+    clean_param = float(params.get("clean_param", 1.0))
     objects, segmentation = sep.extract(
         subtracted,
         float(params["detect_thresh"]),
@@ -283,8 +285,8 @@ def sep_products(data: np.ndarray, params: dict[str, float | int | str], geometr
         filter_kernel=kernel,
         deblend_nthresh=int(params["deblend_nthresh"]),
         deblend_cont=float(params["deblend_cont"]),
-        clean=True,
-        clean_param=1.0,
+        clean=clean_enabled,
+        clean_param=clean_param,
         segmentation_map=True,
     )
     rows = measure_objects(objects, residual, geometry)

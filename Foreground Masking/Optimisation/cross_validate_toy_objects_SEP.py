@@ -127,6 +127,12 @@ def score_cases(cases, params: dict[str, object], args: argparse.Namespace) -> t
         max_masked_fraction=args.max_masked_fraction,
         data_loss_penalty=args.data_loss_penalty,
         false_positive_penalty=args.false_positive_penalty,
+        min_toy_detection_rate=args.min_toy_detection_rate,
+        min_mean_toy_recall=args.min_mean_toy_recall,
+        pixel_recall_weight=args.pixel_recall_weight,
+        f_score_weight=args.f_score_weight,
+        toy_recall_weight=args.toy_recall_weight,
+        toy_detection_weight=args.toy_detection_weight,
     )
     return aggregate, detail
 
@@ -185,6 +191,12 @@ def run_fold(args: argparse.Namespace, root: Path, fold_number: int, fold_count:
         "--max-masked-fraction", str(args.max_masked_fraction),
         "--data-loss-penalty", str(args.data_loss_penalty),
         "--false-positive-penalty", str(args.false_positive_penalty),
+        "--min-toy-detection-rate", str(args.min_toy_detection_rate),
+        "--min-mean-toy-recall", str(args.min_mean_toy_recall),
+        "--pixel-recall-weight", str(args.pixel_recall_weight),
+        "--f-score-weight", str(args.f_score_weight),
+        "--toy-recall-weight", str(args.toy_recall_weight),
+        "--toy-detection-weight", str(args.toy_detection_weight),
     ]
     if args.cv_injection_sets:
         command.extend(["--injection-sets", *args.cv_injection_sets])
@@ -255,6 +267,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-masked-fraction", type=float, default=sep_opt.DEFAULT_MAX_MASKED_FRACTION)
     parser.add_argument("--data-loss-penalty", type=float, default=sep_opt.DEFAULT_DATA_LOSS_PENALTY)
     parser.add_argument("--false-positive-penalty", type=float, default=sep_opt.DEFAULT_FALSE_POSITIVE_PENALTY)
+    parser.add_argument("--min-toy-detection-rate", type=float, default=sep_opt.DEFAULT_MIN_TOY_DETECTION_RATE)
+    parser.add_argument("--min-mean-toy-recall", type=float, default=sep_opt.DEFAULT_MIN_MEAN_TOY_RECALL)
+    parser.add_argument("--pixel-recall-weight", type=float, default=sep_opt.DEFAULT_PIXEL_RECALL_WEIGHT)
+    parser.add_argument("--f-score-weight", type=float, default=sep_opt.DEFAULT_F_SCORE_WEIGHT)
+    parser.add_argument("--toy-recall-weight", type=float, default=sep_opt.DEFAULT_TOY_RECALL_WEIGHT)
+    parser.add_argument("--toy-detection-weight", type=float, default=sep_opt.DEFAULT_TOY_DETECTION_WEIGHT)
+    parser.add_argument(
+        "--require-final-feasible",
+        action="store_true",
+        help="Reject the cross-validation run if no candidate meets the configured recovery and masking constraints.",
+    )
     return parser.parse_args()
 
 
@@ -311,7 +334,31 @@ def main() -> int:
         write_csv(root / "cross_validation_candidates.csv", candidate_rows)
         write_csv(root / "held_out_details.csv", detail_rows)
 
-    winner = min(candidate_rows, key=lambda row: float(row[f"{sample_label}_objective"]))
+    winner_pool = candidate_rows
+    if args.require_final_feasible:
+        winner_pool = [
+            row for row in candidate_rows
+            if float(row.get(f"{sample_label}_recovery_infeasible", 1.0)) == 0.0
+            and float(row.get(f"{sample_label}_masked_fraction_cap_excess", 1.0)) == 0.0
+        ]
+        if not winner_pool:
+            diagnostic = min(candidate_rows, key=lambda row: float(row[f"{sample_label}_objective"]))
+            rejection = {
+                "status": "rejected",
+                "reason": (
+                    f"No SEP candidate met toy detection >= {args.min_toy_detection_rate:.1%}, "
+                    f"mean toy recall >= {args.min_mean_toy_recall:.1%}, and the masking cap."
+                ),
+                "required_toy_detection_rate": args.min_toy_detection_rate,
+                "required_mean_toy_recall": args.min_mean_toy_recall,
+                "maximum_masked_fraction": args.max_masked_fraction,
+                "best_diagnostic_candidate": diagnostic,
+                "candidates": candidate_rows,
+            }
+            rejection_path = root / "sep_toy_cross_validation_rejected.json"
+            rejection_path.write_text(json.dumps(rejection, indent=2), encoding="utf-8")
+            raise RuntimeError(f"{rejection['reason']} Details: {rejection_path}")
+    winner = min(winner_pool, key=lambda row: float(row[f"{sample_label}_objective"]))
     source = json.loads(Path(str(winner["best_json"])).read_text(encoding="utf-8"))
     final = {
         **source,

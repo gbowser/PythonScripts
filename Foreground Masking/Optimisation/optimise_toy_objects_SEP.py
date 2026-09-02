@@ -76,6 +76,12 @@ DEFAULT_RANDOM_SEED = 20260719
 DEFAULT_MAX_MASKED_FRACTION = 0.15
 DEFAULT_DATA_LOSS_PENALTY = 0.35
 DEFAULT_FALSE_POSITIVE_PENALTY = 0.05
+DEFAULT_MIN_TOY_DETECTION_RATE = 0.0
+DEFAULT_MIN_MEAN_TOY_RECALL = 0.0
+DEFAULT_PIXEL_RECALL_WEIGHT = 0.45
+DEFAULT_F_SCORE_WEIGHT = 0.20
+DEFAULT_TOY_RECALL_WEIGHT = 0.25
+DEFAULT_TOY_DETECTION_WEIGHT = 0.20
 OPTIMISED_PARAMETER_NAMES = [
     "detect_thresh",
     "minarea",
@@ -477,6 +483,12 @@ def aggregate_score(
     max_masked_fraction: float,
     data_loss_penalty: float,
     false_positive_penalty: float,
+    min_toy_detection_rate: float = DEFAULT_MIN_TOY_DETECTION_RATE,
+    min_mean_toy_recall: float = DEFAULT_MIN_MEAN_TOY_RECALL,
+    pixel_recall_weight: float = DEFAULT_PIXEL_RECALL_WEIGHT,
+    f_score_weight: float = DEFAULT_F_SCORE_WEIGHT,
+    toy_recall_weight: float = DEFAULT_TOY_RECALL_WEIGHT,
+    toy_detection_weight: float = DEFAULT_TOY_DETECTION_WEIGHT,
 ) -> dict[str, float]:
     if not case_rows:
         return {"objective": 1.0, "score": 0.0}
@@ -490,11 +502,24 @@ def aggregate_score(
     recovered = sum(int(row["recovered_toys"]) for row in case_rows)
     toy_count = sum(int(row["toy_count"]) for row in case_rows)
     toy_detection_rate = recovered / toy_count if toy_count else 0.0
-    recovery_score = 0.45 * mean_recall + 0.20 * mean_f + 0.25 * mean_toy_recall + 0.20 * toy_detection_rate
+    recovery_score = (
+        pixel_recall_weight * mean_recall
+        + f_score_weight * mean_f
+        + toy_recall_weight * mean_toy_recall
+        + toy_detection_weight * toy_detection_rate
+    )
     data_loss = data_loss_penalty * mean_masked + false_positive_penalty * min(false_positive, 1.0)
     score = recovery_score - data_loss
     cap_excess = max(0.0, max_masked - max_masked_fraction)
-    if cap_excess > 0.0:
+    incremental_pixels_total = sum(int(row["incremental_pixels"]) for row in case_rows)
+    detection_deficit = max(0.0, min_toy_detection_rate - toy_detection_rate)
+    recall_deficit = max(0.0, min_mean_toy_recall - mean_toy_recall)
+    recovery_infeasible = incremental_pixels_total == 0 or detection_deficit > 0.0 or recall_deficit > 0.0
+    if recovery_infeasible:
+        objective = 50.0 + 20.0 * detection_deficit + 20.0 * recall_deficit + data_loss - recovery_score
+        if incremental_pixels_total == 0:
+            objective += 50.0
+    elif cap_excess > 0.0:
         objective = 10.0 + 100.0 * cap_excess + data_loss - recovery_score
     else:
         objective = -score
@@ -511,6 +536,14 @@ def aggregate_score(
         "max_masked_fraction_limit": max_masked_fraction,
         "masked_fraction_cap_excess": cap_excess,
         "false_positive_fraction": false_positive,
+        "recovery_score": recovery_score,
+        "recovery_infeasible": float(recovery_infeasible),
+        "min_toy_detection_rate": min_toy_detection_rate,
+        "min_mean_toy_recall": min_mean_toy_recall,
+        "pixel_recall_weight": pixel_recall_weight,
+        "f_score_weight": f_score_weight,
+        "toy_recall_weight": toy_recall_weight,
+        "toy_detection_weight": toy_detection_weight,
     }
 
 
@@ -595,6 +628,12 @@ class OptimisationRun:
                 max_masked_fraction=float(self.args.max_masked_fraction),
                 data_loss_penalty=float(self.args.data_loss_penalty),
                 false_positive_penalty=float(self.args.false_positive_penalty),
+                min_toy_detection_rate=float(self.args.min_toy_detection_rate),
+                min_mean_toy_recall=float(self.args.min_mean_toy_recall),
+                pixel_recall_weight=float(self.args.pixel_recall_weight),
+                f_score_weight=float(self.args.f_score_weight),
+                toy_recall_weight=float(self.args.toy_recall_weight),
+                toy_detection_weight=float(self.args.toy_detection_weight),
             )
             objective = float(aggregate["objective"])
             status = "ok"
@@ -626,6 +665,10 @@ class OptimisationRun:
             "max_masked_fraction_limit": aggregate.get("max_masked_fraction_limit", math.nan),
             "masked_fraction_cap_excess": aggregate.get("masked_fraction_cap_excess", math.nan),
             "false_positive_fraction": aggregate.get("false_positive_fraction", math.nan),
+            "recovery_score": aggregate.get("recovery_score", math.nan),
+            "recovery_infeasible": aggregate.get("recovery_infeasible", math.nan),
+            "min_toy_detection_rate": aggregate.get("min_toy_detection_rate", math.nan),
+            "min_mean_toy_recall": aggregate.get("min_mean_toy_recall", math.nan),
             "elapsed_seconds": elapsed,
             "error": error,
             "trial_number": "" if trial_number is None else trial_number,
@@ -652,6 +695,8 @@ class OptimisationRun:
                 "max_masked_fraction_limit",
                 "masked_fraction_cap_excess",
                 "false_positive_fraction",
+                "recovery_score", "recovery_infeasible",
+                "min_toy_detection_rate", "min_mean_toy_recall",
                 "elapsed_seconds",
                 "error",
                 "trial_number",
@@ -907,6 +952,12 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_FALSE_POSITIVE_PENALTY,
         help="Penalty weight applied to foreground-mask pixels outside injected toy-object truth.",
     )
+    parser.add_argument("--min-toy-detection-rate", type=float, default=DEFAULT_MIN_TOY_DETECTION_RATE)
+    parser.add_argument("--min-mean-toy-recall", type=float, default=DEFAULT_MIN_MEAN_TOY_RECALL)
+    parser.add_argument("--pixel-recall-weight", type=float, default=DEFAULT_PIXEL_RECALL_WEIGHT)
+    parser.add_argument("--f-score-weight", type=float, default=DEFAULT_F_SCORE_WEIGHT)
+    parser.add_argument("--toy-recall-weight", type=float, default=DEFAULT_TOY_RECALL_WEIGHT)
+    parser.add_argument("--toy-detection-weight", type=float, default=DEFAULT_TOY_DETECTION_WEIGHT)
     parser.add_argument(
         "--results-workbook",
         type=Path,

@@ -62,7 +62,7 @@ MTO_KEYS = (
 )
 INTEGER_KEYS = {"minarea", "deblend_nthresh", "back_size", "filter_size", "dilation_radius", "max_area"}
 REQUIRED_METRIC_VERSION = "paired-toy-metrics-displayed-frame-v2"
-CURRENT_OPTIMISATION_DIR = "clean22_displayed_frame_5toy_optimisation"
+CURRENT_OPTIMISATION_DIR = "clean22_haigh_aligned_bright150_galaxy150_sep_sensitivity"
 SEP_WINNER_RELATIVE = Path("SEP_cross_validation/sep_toy_cross_validation_best.json")
 MTO_WINNER_RELATIVE = Path("MTObjects_cross_validation/mtobjects_toy_cross_validation_best.json")
 MASKING_DIRECTIONS = {
@@ -95,8 +95,54 @@ def newest_file(root: Path, name: str) -> Path | None:
     return max(candidates, key=lambda path: path.stat().st_mtime) if candidates else None
 
 
+def local_runtime_path(value: str | Path) -> Path:
+    """Translate a stored WSL/Windows path to the host running the GUI."""
+    text = str(value)
+    if os.name == "nt":
+        match = re.match(r"^/mnt/([a-zA-Z])/(.*)$", text)
+        if match:
+            return Path(f"{match.group(1).upper()}:/{match.group(2)}")
+    elif re.match(r"^[a-zA-Z]:[\\/]", text):
+        drive, tail = text[0].lower(), text[2:].replace("\\", "/").lstrip("/")
+        return Path(f"/mnt/{drive}/{tail}")
+    return Path(text)
+
+
+def provisional_candidate(root: Path, algorithm: str) -> Path | None:
+    """Return the best completed candidate while the current CV is unfinished."""
+    cv_root = root / CURRENT_OPTIMISATION_DIR / f"{algorithm}_cross_validation"
+    if algorithm == "SEP":
+        rejected = cv_root / "sep_toy_cross_validation_rejected.json"
+        if rejected.is_file():
+            try:
+                payload = json.loads(rejected.read_text(encoding="utf-8-sig"))
+                path = local_runtime_path(payload["best_diagnostic_candidate"]["best_json"])
+                if path.is_file():
+                    return path
+            except (OSError, KeyError, TypeError, json.JSONDecodeError):
+                pass
+        return None
+    candidates_csv = cv_root / "cross_validation_candidates.csv"
+    if not candidates_csv.is_file():
+        return None
+    try:
+        with candidates_csv.open("r", newline="", encoding="utf-8-sig") as handle:
+            rows = list(csv.DictReader(handle))
+        feasible = [
+            row for row in rows
+            if float(row.get("all22_masking_feasible", 0.0)) >= 0.5
+            and float(row.get("all22_recovery_infeasible", 1.0)) < 0.5
+        ]
+        pool = feasible or rows
+        winner = max(pool, key=lambda row: float(row.get("all22_score", "-inf")))
+        path = local_runtime_path(winner["best_json"])
+        return path if path.is_file() else None
+    except (OSError, KeyError, TypeError, ValueError):
+        return None
+
+
 def current_optimisation_winner(root: Path, relative_path: Path, fallback_name: str) -> Path | None:
-    """Prefer the declared clean-22 winner; only fall back for older installations."""
+    """Prefer the final winner, then the best completed current candidate."""
     candidate = root / CURRENT_OPTIMISATION_DIR / relative_path
     if candidate.is_file():
         try:
@@ -106,7 +152,24 @@ def current_optimisation_winner(root: Path, relative_path: Path, fallback_name: 
             payload = {}
         if payload.get("metric_version") == REQUIRED_METRIC_VERSION:
             return candidate
+    algorithm = "MTObjects" if fallback_name.startswith("mtobjects") else "SEP"
+    provisional = provisional_candidate(root, algorithm)
+    if provisional is not None:
+        return provisional
     return newest_file(root, fallback_name)
+
+
+def parameter_source_label(root: Path, path: Path | None, algorithm: str) -> str:
+    if path is None:
+        return f"{algorithm} built-in defaults"
+    cv_root = root / CURRENT_OPTIMISATION_DIR / f"{algorithm}_cross_validation"
+    final_name = "mtobjects_toy_cross_validation_best.json" if algorithm == "MTObjects" else "sep_toy_cross_validation_best.json"
+    if (cv_root / final_name).is_file() and path == cv_root / final_name:
+        return f"{algorithm} FINAL winner"
+    fold = next((part for part in path.parts if re.fullmatch(r"fold_\d+", part)), "completed candidate")
+    if algorithm == "SEP":
+        return f"SEP DIAGNOSTIC {fold} (optimisation rejected)"
+    return f"MTObjects PROVISIONAL {fold} (CV still running)"
 
 
 def research_output_root(pc_name: str) -> Path:
@@ -308,7 +371,7 @@ class CombinedToyTester(tk.Tk):
         self.catalogue_sources = {"2MASS": [], "Gaia": []}
         self.research_root = research_root
         default_injection_manifest = (
-            research_root / CURRENT_OPTIMISATION_DIR / "MTObjects_multiseed_optimisation_pilot_v3"
+            research_root / CURRENT_OPTIMISATION_DIR
             / "paired_injections" / "paired_toy_injection_manifest.json"
         )
         self.injection_manifest_path = args.injection_manifest or default_injection_manifest
@@ -473,8 +536,8 @@ class CombinedToyTester(tk.Tk):
 
         self.sep_vars = self._parameter_box(controls, "SEP parameters", SEP_KEYS, self.sep_defaults)
         self.mto_vars = self._parameter_box(controls, "MTObjects parameters", MTO_KEYS, self.mto_defaults)
-        sep_source = self.sep_best.name if self.sep_best else "built-in defaults"
-        mto_source = self.mto_best.name if self.mto_best else "built-in defaults"
+        sep_source = parameter_source_label(self.research_root, self.sep_best, "SEP")
+        mto_source = parameter_source_label(self.research_root, self.mto_best, "MTObjects")
         self.source_var.set(f"Loaded parameters: SEP {sep_source}; MTObjects {mto_source}")
 
         batch = ttk.LabelFrame(controls, text="Saved five-toy batch arrangement", padding=7)
@@ -734,8 +797,8 @@ class CombinedToyTester(tk.Tk):
         self.sep_best, self.mto_best = sep_path, mto_path
         self.sep_defaults, self.mto_defaults = sep_defaults, mto_defaults
         self.reset_parameters()
-        sep_source = str(sep_path) if sep_path else "built-in defaults (current winner not yet available)"
-        mto_source = str(mto_path) if mto_path else "built-in defaults (current winner not yet available)"
+        sep_source = parameter_source_label(self.research_root, sep_path, "SEP")
+        mto_source = parameter_source_label(self.research_root, mto_path, "MTObjects")
         self.source_var.set(f"Production parameters: SEP {sep_source}; MTObjects {mto_source}")
         self.status.set("Reloaded parameters through the same loaders used by the 182-galaxy batch.")
 
@@ -1149,19 +1212,37 @@ class CombinedToyTester(tk.Tk):
             "false_positive_fraction": false_positive,
         }
 
-    @staticmethod
-    def _objective_summary(method: str, metrics: dict[str, float | int]) -> dict[str, float | str]:
+    def _objective_summary(self, method: str, metrics: dict[str, float | int]) -> dict[str, float | str]:
         """Apply the current method-specific objective to this one diagnostic case."""
         recall = float(metrics["recall"]); f_score = float(metrics["f_score"])
         toy_recall = float(metrics["mean_toy_recall"]); detection = float(metrics["toy_detection_rate"])
         masked = float(metrics["masked_fraction"]); fp = min(float(metrics["false_positive_fraction"]), 1.0)
         if method == "SEP":
-            recovery = 0.45 * recall + 0.20 * f_score + 0.25 * toy_recall + 0.20 * detection
-            loss = 0.35 * masked + 0.05 * fp
+            recovery50 = self.sep_best is not None and (
+                "SEP_recovery50_cross_validation" in str(self.sep_best)
+                or "haigh_aligned_bright150" in str(self.sep_best)
+            )
+            if recovery50:
+                recovery = 0.25 * recall + 0.30 * f_score + 0.25 * toy_recall + 0.20 * detection
+                loss = 0.50 * masked + 0.25 * fp
+            else:
+                recovery = 0.45 * recall + 0.20 * f_score + 0.25 * toy_recall + 0.20 * detection
+                loss = 0.35 * masked + 0.05 * fp
             score = recovery - loss
             excess = max(0.0, masked - 0.15)
-            objective = 10.0 + 100.0 * excess + loss - recovery if excess else -score
-            regime = "feasible" if not excess else "over SEP 15% hard cap"
+            detection_deficit = max(0.0, 0.50 - detection) if recovery50 else 0.0
+            recall_deficit = max(0.0, 0.30 - toy_recall) if recovery50 else 0.0
+            if recovery50 and (int(metrics["incremental_pixels"]) == 0 or detection_deficit or recall_deficit):
+                objective = 50.0 + 20.0 * detection_deficit + 20.0 * recall_deficit + loss - recovery
+                if int(metrics["incremental_pixels"]) == 0:
+                    objective += 50.0
+                regime = "recovery-infeasible (target 50% detection / 30% recall)"
+            elif excess:
+                objective = 10.0 + 100.0 * excess + loss - recovery
+                regime = "over SEP 15% hard cap"
+            else:
+                objective = -score
+                regime = "feasible"
         else:
             recovery = 0.45 * f_score + 0.35 * toy_recall + 0.20 * detection
             excess = max(0.0, masked - 0.15)
@@ -1284,11 +1365,30 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sep-best", type=Path)
     parser.add_argument("--mto-best", type=Path)
     parser.add_argument("--mtobjects-root", type=Path)
+    parser.add_argument("--print-parameter-sources", action="store_true",
+                        help="Print the resolved SEP/MTO parameter sources and values, then exit.")
     return parser.parse_args()
 
 
 def main() -> int:
-    CombinedToyTester(parse_args()).mainloop()
+    args = parse_args()
+    if args.print_parameter_sources:
+        root = research_output_root(args.pc)
+        sep_path = args.sep_best or current_optimisation_winner(root, SEP_WINNER_RELATIVE, "sep_toy_cross_validation_best.json")
+        mto_path = args.mto_best or current_optimisation_winner(root, MTO_WINNER_RELATIVE, "mtobjects_toy_cross_validation_best.json")
+        payload = {
+            "SEP": {
+                "label": parameter_source_label(root, sep_path, "SEP"), "path": str(sep_path) if sep_path else None,
+                "params": production_params(sep_path, core.AZURE_MEAN_PARAMS["SEP"], sep_batch.load_best_params),
+            },
+            "MTObjects": {
+                "label": parameter_source_label(root, mto_path, "MTObjects"), "path": str(mto_path) if mto_path else None,
+                "params": production_params(mto_path, core.AZURE_MEAN_PARAMS["MTObjects"], mto_batch.load_best_params),
+            },
+        }
+        print(json.dumps(payload, indent=2, default=str))
+        return 0
+    CombinedToyTester(args).mainloop()
     return 0
 
 
