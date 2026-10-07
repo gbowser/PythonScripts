@@ -133,21 +133,84 @@ def save_sheet(results: list[dict], output: Path) -> None:
     plt.close(fig)
 
 
+def midtones_transfer(midtones: float, samples: np.ndarray | float):
+    """PixInsight/XISF rational midtones transfer used by the toy laboratory."""
+    epsilon = np.finfo(float).eps
+    m = float(np.clip(midtones, epsilon, 1.0 - epsilon))
+    x = np.clip(samples, 0.0, 1.0)
+    denominator = (2.0 * m - 1.0) * x - m
+    with np.errstate(divide="ignore", invalid="ignore"):
+        result = ((m - 1.0) * x) / denominator
+    return np.where(x <= 0.0, 0.0, np.where(x >= 1.0, 1.0, result))
+
+
+def autostretched_view(view: np.ndarray, shadows: float = -2.8, target: float = 0.25) -> np.ndarray:
+    """Apply the toy laboratory's default display-only AutoStretch."""
+    array = np.asarray(view, dtype=float)
+    finite = array[np.isfinite(array)]
+    if finite.size == 0:
+        return np.zeros_like(array)
+    data_min, data_max = float(np.min(finite)), float(np.max(finite))
+    span = data_max - data_min
+    if not math.isfinite(span) or span <= np.finfo(float).eps:
+        return np.zeros_like(array)
+    normalised = (array - data_min) / span
+    finite_normalised = (finite - data_min) / span
+    median = float(np.median(finite_normalised))
+    robust_sigma = 1.4826 * float(np.median(np.abs(finite_normalised - median)))
+    black = float(np.clip(median + shadows * robust_sigma, 0.0, 1.0))
+    denominator = max(1.0 - black, np.finfo(float).eps)
+    scaled = np.clip((normalised - black) / denominator, 0.0, 1.0)
+    median_after_black = float(np.clip((median - black) / denominator, 0.0, 1.0))
+    midtones = float(midtones_transfer(target, median_after_black))
+    stretched = midtones_transfer(midtones, scaled)
+    return np.where(np.isfinite(array), stretched, np.nan)
+
+
+def log_stretched_view(
+    view: np.ndarray,
+    black_percentile: float = 1.0,
+    white_percentile: float = 99.5,
+    strength: float = 10.0,
+) -> np.ndarray:
+    """Apply the toy laboratory's default percentile-clipped logarithmic view."""
+    array = np.asarray(view, dtype=float)
+    finite = array[np.isfinite(array)]
+    if finite.size == 0:
+        return np.zeros_like(array)
+    black, white = np.percentile(finite, [black_percentile, white_percentile])
+    if not math.isfinite(black) or not math.isfinite(white) or white <= black:
+        black, white = float(np.min(finite)), float(np.max(finite))
+    scaled = np.clip(
+        (array - black) / max(white - black, np.finfo(float).eps),
+        0.0,
+        1.0,
+    )
+    stretched = np.log1p(strength * scaled) / math.log1p(strength)
+    return np.where(np.isfinite(array), stretched, np.nan)
+
+
 def save_review_panel(result: dict, output: Path) -> None:
-    """Write a wide, galaxy-centred panel matching the masking diagnostics."""
+    """Write five galaxy-centred views matching the interactive toy laboratory."""
     image, z, geometry = result["image"], result["z_image"], result["geometry"]
     radius_arcsec = display.profile_radius_pixels(image, geometry) * geometry["pixel_scale"]
     view, x_axis, y_axis = display.deproject_bar_aligned_cutout(image, geometry, radius_arcsec)
     zview, _, _ = display.deproject_bar_aligned_cutout(z, geometry, radius_arcsec)
     extent = [x_axis[0], x_axis[-1], y_axis[0], y_axis[-1]]
     lo, hi = display.robust_limits(view, low=1.0, high=99.5)
-    fig, axes = plt.subplots(1, 3, figsize=(13.5, 4.6))
+    auto_view = autostretched_view(view)
+    log_view = log_stretched_view(view)
+    fig, axes = plt.subplots(1, 5, figsize=(22.5, 4.6))
     axes[0].imshow(view, origin="lower", cmap="gist_gray_r", vmin=lo, vmax=hi, extent=extent)
     axes[0].set_title("Galaxy-centred original (negative)")
-    axes[1].imshow(zview, origin="lower", cmap="coolwarm", vmin=-5, vmax=10, extent=extent)
-    axes[1].set_title("Centred Gaussian residual (σ)")
-    axes[2].imshow(view, origin="lower", cmap="gist_gray_r", vmin=lo, vmax=hi, extent=extent)
-    axes[2].set_title("Centred original + catalogue candidates")
+    axes[1].imshow(auto_view, origin="lower", cmap="gist_gray_r", vmin=0, vmax=1, extent=extent)
+    axes[1].set_title("Galaxy-centred AutoStretch")
+    axes[2].imshow(log_view, origin="lower", cmap="gist_gray_r", vmin=0, vmax=1, extent=extent)
+    axes[2].set_title("Galaxy-centred Log view")
+    axes[3].imshow(zview, origin="lower", cmap="coolwarm", vmin=-5, vmax=10, extent=extent)
+    axes[3].set_title("Centred Gaussian residual (σ)")
+    axes[4].imshow(view, origin="lower", cmap="gist_gray_r", vmin=lo, vmax=hi, extent=extent)
+    axes[4].set_title("Centred original + catalogue candidates")
     transform = display.image_transform(geometry["disk_pa"], geometry["inclination"], geometry["bar_pa"])
     x0, y0 = result["x0"], result["y0"]
 
@@ -156,9 +219,9 @@ def save_review_panel(result: dict, output: Path) -> None:
         return float(offset[0] * geometry["pixel_scale"]), float(offset[1] * geometry["pixel_scale"])
 
     for source in result["two_mass"][:5]:
-        axes[2].add_patch(plt.Circle(centred_position(source), 2.0, fill=False, color="#ff3b30", lw=1.5))
+        axes[4].add_patch(plt.Circle(centred_position(source), 2.0, fill=False, color="#ff3b30", lw=1.5))
     for source in result["weak_gaia"][:5]:
-        axes[2].add_patch(plt.Circle(centred_position(source), 1.5, fill=False, color="#ffcc00", lw=1.2))
+        axes[4].add_patch(plt.Circle(centred_position(source), 1.5, fill=False, color="#ffcc00", lw=1.2))
     for axis in axes:
         axis.axvline(0, color="#e53935", linestyle="--", linewidth=0.7, alpha=0.75)
         axis.axhline(0, color="#1976d2", linestyle="--", linewidth=0.7, alpha=0.75)
@@ -174,12 +237,55 @@ def save_review_panel(result: dict, output: Path) -> None:
     plt.close(fig)
 
 
+def refresh_existing_review_panels(manifest_path: Path, image_dir: Path, output_dir: Path) -> None:
+    """Rebuild panels from saved rankings/candidates without querying catalogues."""
+    ranking_path = output_dir / "gaia_zero_hybrid_ranking.csv"
+    candidates_path = output_dir / "hybrid_candidates.csv"
+    with ranking_path.open(newline="", encoding="utf-8") as handle:
+        ranking_rows = list(csv.DictReader(handle))
+    candidates: dict[str, dict[str, list[dict]]] = {}
+    if candidates_path.exists():
+        with candidates_path.open(newline="", encoding="utf-8") as handle:
+            for row in csv.DictReader(handle):
+                catalogue = "two_mass" if row["catalogue"].lower() == "2mass" else "weak_gaia"
+                candidates.setdefault(row["name"], {"two_mass": [], "weak_gaia": []})[catalogue].append(
+                    {
+                        "x": float(row["x"]), "y": float(row["y"]),
+                        "score": float(row["score"]), "peak": float(row["peak"]),
+                    }
+                )
+    manifest = {row["name"]: row for row in display.read_manifest(manifest_path)}
+    for index, ranking_row in enumerate(ranking_rows, start=1):
+        name = ranking_row["name"]
+        geometry = display.required_geometry(manifest[name])
+        if geometry is None:
+            print(f"[{index}/{len(ranking_rows)}] {name}: skipped (incomplete geometry)", flush=True)
+            continue
+        image, _header = load_fits(image_dir / f"{name}.phot.1.fits")
+        z, _underlying, aperture, _center = local_residual_products(image, geometry)
+        source_groups = candidates.get(name, {"two_mass": [], "weak_gaia": []})
+        result = {
+            "name": name,
+            "hybrid_score": float(ranking_row["hybrid_score"]),
+            "image": image,
+            "z_image": z,
+            "two_mass": source_groups["two_mass"],
+            "weak_gaia": source_groups["weak_gaia"],
+            "aperture": aperture,
+            "x0": geometry["xc"] - 1.0,
+            "y0": geometry["yc"] - 1.0,
+            "geometry": geometry,
+        }
+        save_review_panel(result, output_dir / "review_panels" / f"{name}.png")
+        print(f"[{index}/{len(ranking_rows)}] {name}: five-view panel refreshed", flush=True)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--gaia-ranking", type=Path, required=True)
+    parser.add_argument("--gaia-ranking", type=Path)
     parser.add_argument("--manifest", type=Path, default=display.DEFAULT_MANIFEST)
     parser.add_argument("--image-dir", type=Path, required=True)
-    parser.add_argument("--gaia-cache", type=Path, required=True)
+    parser.add_argument("--gaia-cache", type=Path)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument(
         "--include-nonzero", action="store_true",
@@ -194,8 +300,17 @@ def main() -> int:
         "--names-file", type=Path,
         help="Optional CSV with a name column. This overrides Gaia zero/nonzero selection and preserves its order.",
     )
+    parser.add_argument(
+        "--refresh-panels", action="store_true",
+        help="Rebuild five-view PNGs from the existing ranking/candidate CSVs; no catalogue query is made.",
+    )
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
+    if args.refresh_panels:
+        refresh_existing_review_panels(args.manifest, args.image_dir, args.output_dir)
+        return 0
+    if args.gaia_ranking is None or args.gaia_cache is None:
+        parser.error("--gaia-ranking and --gaia-cache are required unless --refresh-panels is used")
     with args.gaia_ranking.open(newline="", encoding="utf-8") as handle:
         ranking_rows = list(csv.DictReader(handle))
     if args.names_file:

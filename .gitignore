@@ -60,3 +60,11 @@ Thumbs.db
 # VS Code local settings, optional
 .vscode/
 
+
+# Local scratch folders and document render previews
+/tmp_*/
+/.tmp_*/
+/.codex_tmp/
+/.docx-render-*/
+Foreground Masking/tmp_*/
+.uv-cache-codex/

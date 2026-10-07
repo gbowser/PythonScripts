@@ -23,16 +23,19 @@ PHASE2_ROOT = REVIEW_ROOT / "catalogue_review_phase2_next30"
 PHASE3_ROOT = REVIEW_ROOT / "catalogue_review_phase3_clean_similarity"
 CLEANEST30_ROOT = REVIEW_ROOT / "cleanest30_catalogue_rereview"
 CANDIDATE_UNION_ROOT = REVIEW_ROOT / "clean_candidate_union_rereview"
+ALL_GALAXIES_ROOT = REVIEW_ROOT / "all182_catalogue_cleanliness_review"
 CLASSIFICATIONS = ("Clean", "Ambiguous", "Polluted")
 INSTRUCTIONS = """Purpose
 
 Classify whether each galaxy field is suitable for foreground-sensitive science measurements. You are judging unrelated compact sources that could contaminate the galaxy measurement—not the galaxy's own bars, arms, rings, or star-forming structure.
 
-How to inspect the three panels
+How to inspect the five panels
 
-1. Original 3.6 μm: decide whether obvious compact objects are superimposed on or close to the galaxy.
-2. Gaussian residual: compact positive peaks are easier to see, but arms and star-forming knots also appear here. A residual peak alone is not proof of a foreground object.
-3. Catalogue candidates: red circles are reliable 2MASS point sources; yellow circles are weaker Gaia evidence. Circles are supporting evidence, not an automatic classification.
+1. Original negative: the familiar percentile-stretched, galaxy-centred 3.6 μm image.
+2. AutoStretch: the same centred image using the default PixInsight-style stretch from the SEP/MTObjects toy laboratory. Use it to reveal faint compact sources and low-contrast structure.
+3. Log view: the same centred image with the toy laboratory's logarithmic stretch. This gives a second check across the wide FITS intensity range.
+4. Gaussian residual: compact positive peaks are easier to see, but arms and star-forming knots also appear here. A residual peak alone is not proof of a foreground object.
+5. Catalogue candidates: red circles are reliable 2MASS point sources; yellow circles are weaker Gaia evidence. Circles are supporting evidence, not an automatic classification.
 
 Classification rubric
 
@@ -358,6 +361,10 @@ def main() -> int:
         "--candidate-union", action="store_true",
         help="Review the union of the original 40 and latest all-galaxy top 50.",
     )
+    parser.add_argument(
+        "--all-galaxies", action="store_true",
+        help="Review the complete 182-galaxy population using the five-view panels.",
+    )
     args = parser.parse_args()
     if args.phase2:
         args.ranking = PHASE2_ROOT / "gaia_zero_hybrid_ranking.csv"
@@ -375,6 +382,10 @@ def main() -> int:
         args.ranking = CANDIDATE_UNION_ROOT / "gaia_zero_hybrid_ranking.csv"
         args.panels = CANDIDATE_UNION_ROOT / "review_panels"
         args.decisions = CANDIDATE_UNION_ROOT / "candidate_union_rereview_decisions.csv"
+    if args.all_galaxies:
+        args.ranking = ALL_GALAXIES_ROOT / "gaia_zero_hybrid_ranking.csv"
+        args.panels = ALL_GALAXIES_ROOT / "review_panels"
+        args.decisions = ALL_GALAXIES_ROOT / "all182_cleanliness_decisions.csv"
     app = CatalogueReviewer(args.ranking, args.panels, args.decisions)
     app.mainloop()
     return 0
