@@ -44,3 +44,11 @@ already has deprojection applied and must not be deprojected again. The existing
 interactive GUI prefers S4G paths over manifest paths and assumes north-up pixel
 geometry, so this manifest is for this standalone extraction workflow; using it
 in that GUI needs changes to its image resolver and WCS handling.
+
+## Manual individual-frame archive queries
+
+Use `build_euclid_frame_query.py` to generate a combined ADQL cone search capped
+at five calibrated frame rows. See [MANUAL_FRAME_DOWNLOAD.md](MANUAL_FRAME_DOWNLOAD.md)
+for commands, editable target CSV input, and the manual download workflow.
+
+To check all 182 library galaxies, use `build_euclid_frame_query.py --library --check-availability`; see the full-library command in MANUAL_FRAME_DOWNLOAD.md.
