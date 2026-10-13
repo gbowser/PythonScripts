@@ -52,3 +52,7 @@ at five calibrated frame rows. See [MANUAL_FRAME_DOWNLOAD.md](MANUAL_FRAME_DOWNL
 for commands, editable target CSV input, and the manual download workflow.
 
 To check all 182 library galaxies, use `build_euclid_frame_query.py --library --check-availability`; see the full-library command in MANUAL_FRAME_DOWNLOAD.md.
+
+## Image-based geometry fitting
+
+See [PHOTUTILS_GEOMETRY.md](PHOTUTILS_GEOMETRY.md) for Photutils ellipse fitting, review diagnostics and provisional deprojection.
