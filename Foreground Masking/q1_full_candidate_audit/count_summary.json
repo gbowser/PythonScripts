@@ -1,0 +1,7 @@
+{
+  "catalogue_rows": 380111,
+  "qualifying_candidates": 2777,
+  "tap_matched_candidates": 2777,
+  "missing": 0,
+  "criteria": "VIS DpdVisCalibratedQuadFrame Q1_R1; cone intersects footprint and centre inside footprint"
+}
