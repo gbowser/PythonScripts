@@ -1,7 +1,7 @@
 """Synthetic check of ellipse recovery and WCS angle conversion."""
 import numpy as np
 from photutils.isophote import Ellipse, EllipseGeometry
-from fit_euclid_geometry import sky_pa, axial_mean, axial_scatter
+from fit_euclid_VIS_geometry import sky_pa, axial_mean, axial_scatter
 
 def main():
     yy,xx=np.indices((201,201))

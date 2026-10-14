@@ -30,7 +30,7 @@ def main():
     parser.add_argument("--geometry-csv", type=Path, default=HERE / "q1_barred_spirals" / "deprojection_geometry.csv")
     args = parser.parse_args()
     if args.deproject_existing:
-        from deproject_calibrated_galaxies import process_existing
+        from deproject_calibrated_VIS_galaxies import process_existing
         process_existing(args.output_dir, args.geometry_csv, args.overwrite)
         return
     with args.targets_csv.open(newline="", encoding="utf-8-sig") as handle:

@@ -11,7 +11,7 @@ import requests
 from astropy.io import fits
 from astropy.wcs import FITSFixedWarning
 
-from build_euclid_frame_query import build_query, number
+from build_euclid_VIS_NISP_frame_query import build_query, number
 
 TAP_URL = "https://eas.esac.esa.int/tap-server/tap/sync"
 FIELDS = ["name", "ra_deg", "dec_deg", "radius_arcmin", "instrument", "match_mode",
@@ -20,7 +20,7 @@ FIELDS = ["name", "ra_deg", "dec_deg", "radius_arcmin", "instrument", "match_mod
 
 
 def library_targets(path, names=None, exclude=(), radius_override=None):
-    from extract_euclid_bars import celestial_wcs
+    from extract_euclid_VIS_bars import celestial_wcs
     with path.open(newline="", encoding="utf-8-sig") as handle:
         rows = list(csv.DictReader(handle))
     wanted = {name.casefold() for name in names} if names else None

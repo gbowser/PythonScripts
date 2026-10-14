@@ -1,0 +1,12 @@
+{
+  "object_id": "-520196615291310590",
+  "http_status": 200,
+  "response_bytes": 3536640,
+  "fits_shape": [
+    940,
+    939
+  ],
+  "centre_x_0based": 469.1933128763758,
+  "centre_y_0based": 469.81292217084956,
+  "centre_in_cutout": true
+}

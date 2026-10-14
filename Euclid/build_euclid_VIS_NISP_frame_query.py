@@ -118,7 +118,7 @@ def main():
         if args.timeout <= 0 or not math.isfinite(args.timeout):
             raise ValueError("--timeout must be positive and finite")
         if args.library:
-            from euclid_frame_availability import library_targets
+            from euclid_VIS_NISP_frame_availability import library_targets
             targets = library_targets(path, args.galaxies, args.exclude, args.radius_arcmin)
         else:
             targets = read_targets(path, manifest=args.targets_csv is None,
@@ -130,7 +130,7 @@ def main():
         if not args.overwrite and any(f.exists() for f in files):
             raise ValueError("Query outputs already exist; use --overwrite or a new --output-dir")
         if args.check_availability:
-            from euclid_frame_availability import check_availability
+            from euclid_VIS_NISP_frame_availability import check_availability
             report_path = args.output_dir / "frame_availability.csv"
             if report_path.exists() and not args.overwrite:
                 raise ValueError("Availability report exists; use --overwrite or a new --output-dir")

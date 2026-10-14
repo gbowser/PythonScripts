@@ -16,9 +16,9 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse as PlotEllipse
-from extract_calibrated_galaxies import DEFAULT_OUTPUT
-from extract_euclid_bars import local_pixel_matrix
-from deproject_calibrated_galaxies import transform_cutout
+from extract_calibrated_VIS_galaxies import DEFAULT_OUTPUT
+from extract_euclid_VIS_bars import local_pixel_matrix
+from deproject_calibrated_VIS_galaxies import transform_cutout
 
 
 def axial_mean(angles):

@@ -7,7 +7,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
 
-from extract_euclid_bars import display, local_pixel_matrix
+from extract_euclid_VIS_bars import display, local_pixel_matrix
 
 
 def transform_cutout(path, geometry, overwrite=False):

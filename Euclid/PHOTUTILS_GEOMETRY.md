@@ -3,8 +3,8 @@
 From the PythonScripts folder:
 
 ```powershell
-& '.\.venv\Scripts\python.exe' '.\Euclid\extract_calibrated_galaxies.py' --overwrite
-& '.\.venv\Scripts\python.exe' '.\Euclid\fit_euclid_geometry.py' --previews
+& '.\.venv\Scripts\python.exe' '.\Euclid\extract_calibrated_VIS_galaxies.py' --overwrite
+& '.\.venv\Scripts\python.exe' '.\Euclid\fit_euclid_VIS_geometry.py' --previews
 ```
 
 Both commands default to the existing Dropbox download/single-galaxy folders.
@@ -57,7 +57,7 @@ To select reviewed radial ranges, create a CSV with columns
 `object_id,bar_min_arcsec,bar_max_arcsec,disc_min_arcsec,disc_max_arcsec`, then:
 
 ```powershell
-& '.\.venv\Scripts\python.exe' '.\Euclid\fit_euclid_geometry.py' --ranges-csv '.\Euclid\my_ranges.csv'
+& '.\.venv\Scripts\python.exe' '.\Euclid\fit_euclid_VIS_geometry.py' --ranges-csv '.\Euclid\my_ranges.csv'
 ```
 
 Require 0 < bar_min < bar_max < disc_min < disc_max. This recomputes estimates;

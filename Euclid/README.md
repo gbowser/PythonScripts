@@ -4,7 +4,7 @@ Run from the PythonScripts directory using Python with numpy, scipy and
 astropy installed (the existing project environment supplies these):
 
 ```powershell
-& '.\.venv\Scripts\python.exe' '.\Euclid\extract_euclid_bars.py' --overwrite
+& '.\.venv\Scripts\python.exe' '.\Euclid\extract_euclid_VIS_bars.py' --overwrite
 ```
 
 Defaults read the three FITS images in
@@ -47,11 +47,11 @@ in that GUI needs changes to its image resolver and WCS handling.
 
 ## Manual individual-frame archive queries
 
-Use `build_euclid_frame_query.py` to generate a combined ADQL cone search capped
+Use `build_euclid_VIS_NISP_frame_query.py` to generate a combined ADQL cone search capped
 at five calibrated frame rows. See [MANUAL_FRAME_DOWNLOAD.md](MANUAL_FRAME_DOWNLOAD.md)
 for commands, editable target CSV input, and the manual download workflow.
 
-To check all 182 library galaxies, use `build_euclid_frame_query.py --library --check-availability`; see the full-library command in MANUAL_FRAME_DOWNLOAD.md.
+To check all 182 library galaxies, use `build_euclid_VIS_NISP_frame_query.py --library --check-availability`; see the full-library command in MANUAL_FRAME_DOWNLOAD.md.
 
 ## Image-based geometry fitting
 

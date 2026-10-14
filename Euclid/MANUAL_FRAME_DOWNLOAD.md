@@ -3,7 +3,7 @@
 From `C:\Users\gordo\Documents\Github\PythonScripts`:
 
 ```powershell
-& '.\.venv\Scripts\python.exe' '.\Euclid\build_euclid_frame_query.py'
+& '.\.venv\Scripts\python.exe' '.\Euclid\build_euclid_VIS_NISP_frame_query.py'
 ```
 
 This writes `Euclid/queries/individual_calibrated_frames.sql` and
@@ -14,7 +14,7 @@ no images. The default input is the existing extraction geometry manifest in
 Choose galaxies and an explicit search radius in arcminutes:
 
 ```powershell
-& '.\.venv\Scripts\python.exe' '.\Euclid\build_euclid_frame_query.py' --galaxies NGC1255 NGC1436 --radius-arcmin 2 --overwrite
+& '.\.venv\Scripts\python.exe' '.\Euclid\build_euclid_VIS_NISP_frame_query.py' --galaxies NGC1255 NGC1436 --radius-arcmin 2 --overwrite
 ```
 
 Alternatively prepare a CSV containing exactly these required fields:
@@ -25,7 +25,7 @@ NGC1255,48.383317699421475,-25.725106667731183,1.25
 ```
 
 ```powershell
-& '.\.venv\Scripts\python.exe' '.\Euclid\build_euclid_frame_query.py' --targets-csv '.\Euclid\my_galaxies.csv' --overwrite
+& '.\.venv\Scripts\python.exe' '.\Euclid\build_euclid_VIS_NISP_frame_query.py' --targets-csv '.\Euclid\my_galaxies.csv' --overwrite
 ```
 
 Use `--max-images 1` through `5` to lower the total cap. Values above five are
@@ -73,7 +73,7 @@ galaxy radius it may miss useful frames centred elsewhere.
    the number of optional files bundled by the manual downloader or their sizes.
 
 Individual calibrated frames use detector/quadrant FITS extensions. The current
-`extract_euclid_bars.py` expects a 2D primary HDU and **cannot yet process these
+`extract_euclid_VIS_bars.py` expects a 2D primary HDU and **cannot yet process these
 multi-extension exposures directly**. Detector selection and extension-specific
 WCS handling are a separate next step.
 
@@ -99,7 +99,7 @@ the product distinction and FITS format are also documented in the VIS paper.
 From PythonScripts, run:
 
 ```powershell
-& '.\.venv\Scripts\python.exe' '.\Euclid\build_euclid_frame_query.py' --library --check-availability --output-dir '.\Euclid\library_queries' --overwrite
+& '.\.venv\Scripts\python.exe' '.\Euclid\build_euclid_VIS_NISP_frame_query.py' --library --check-availability --output-dir '.\Euclid\library_queries' --overwrite
 ```
 
 The local library currently contains **182 galaxies**. This command transfers
@@ -119,7 +119,7 @@ Outputs in `library_queries`:
 - `individual_calibrated_frames.sql`: manual-download query for confirmed
   available targets, with a single TOP 5 cap. If none match, it uses WHERE 1=0.
 
-Library radii use max(3 × observed bar semi-major axis, 45 arcsec)/60, without
+Library radii use max(3 Ã— observed bar semi-major axis, 45 arcsec)/60, without
 clipping to the original S4G image boundaries. This is a bar-region search, not
 an optical-galaxy radius. Override with `--radius-arcmin`, select names using
 `--galaxies`, or exclude names with `--exclude`. `--library-manifest` overrides

@@ -12,7 +12,7 @@ from pathlib import Path
 
 import requests
 
-from build_euclid_frame_query import build_query
+from build_euclid_VIS_NISP_frame_query import build_query
 
 RECORD = 15106473
 CATALOGUE_URL = f"https://zenodo.org/api/records/{RECORD}/files/morphology_catalogue.csv/content"
@@ -141,7 +141,7 @@ not be interpreted as unconditional probabilities of a galaxy being barred.
 
 Files: verified_barred_spirals.csv holds the available list and one example
 calibrated exposure per object; availability_checks.csv includes all checks.
-galaxy_cones.csv can be passed to build_euclid_frame_query.py --targets-csv.
+galaxy_cones.csv can be passed to build_euclid_VIS_NISP_frame_query.py --targets-csv.
 manual_download_top5.sql returns at most five exposure rows across all targets.
 No FITS images have been downloaded; example frame files may be shared by many
 galaxies. Footprint coverage includes the galaxy centre but does not prove the
