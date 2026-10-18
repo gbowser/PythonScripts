@@ -1,0 +1,321 @@
+{
+  "total": 2777,
+  "statuses": {
+    "provisional_fit": 2207,
+    "fit_failed": 570
+  },
+  "fits": 2207,
+  "clean": 546,
+  "flagged": 1661,
+  "errors": {
+    "ValueError: Insufficient bar/disc isophotes in selected radial ranges": 431,
+    "ValueError: Only 8 reliable isophotes; inspect profile": 13,
+    "ValueError: Only 0 reliable isophotes; inspect profile": 64,
+    "ValueError: Only 5 reliable isophotes; inspect profile": 8,
+    "ValueError: Only 7 reliable isophotes; inspect profile": 13,
+    "ValueError: Only 9 reliable isophotes; inspect profile": 15,
+    "ValueError: Only 1 reliable isophotes; inspect profile": 9,
+    "ValueError: Only 6 reliable isophotes; inspect profile": 6,
+    "ValueError: Only 2 reliable isophotes; inspect profile": 6,
+    "ValueError: Only 4 reliable isophotes; inspect profile": 2,
+    "ValueError: Catalogue centre is not on a detected galaxy": 1,
+    "ValueError: Only 3 reliable isophotes; inspect profile": 2
+  },
+  "flags": {
+    "small_bar_sensitive_to_resolution": 1210,
+    "disc_PA_unstable": 791,
+    "disc_axis_ratio_unstable": 573,
+    "nearly_face_on_PA_uncertain": 200,
+    "bar_PA_unstable": 28,
+    "weak_ellipse_bar_signature": 7
+  },
+  "source": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\Euclid_MER_VIS_geometry\\MER_VIS_local_geometry_manifest.csv",
+  "source_sha256": "4470902f2b1cb493a7a0531842eec471e37ef8ebb942acb7ee6515f0406e77d7",
+  "partial_all": 62,
+  "partial_fit": 51,
+  "partial_clean": 19,
+  "main_matches": 2777,
+  "morphology_matches": 2777,
+  "disk_q_available": 0,
+  "sersic_q_available": 2777,
+  "euclid_bars_available": 2767,
+  "timing": {
+    "n": 2777,
+    "median": 3.744,
+    "p10": 1.7112,
+    "p90": 7.701400000000001,
+    "minimum": 0.14,
+    "maximum": 55.988
+  },
+  "first_calculated": "2026-10-18T08:19:44.601765+00:00",
+  "last_calculated": "2026-10-18T10:06:07.937034+00:00",
+  "unique_q0": [
+    "0"
+  ],
+  "distributions": {
+    "all_fit": {
+      "codex_bar_pa_sky_deg": {
+        "n": 2207,
+        "median": 86.20994478883362,
+        "p10": 18.335699377368904,
+        "p90": 157.90800952725084,
+        "minimum": 0.13520896294846932,
+        "maximum": 179.79806600505987
+      },
+      "codex_disc_pa_sky_deg": {
+        "n": 2207,
+        "median": 85.55636481697259,
+        "p10": 18.489297975191057,
+        "p90": 162.64009301212118,
+        "minimum": 0.0016925859664425045,
+        "maximum": 179.97355407796613
+      },
+      "codex_inclination_deg": {
+        "n": 2207,
+        "median": 43.796537459840366,
+        "p10": 26.436618156232342,
+        "p90": 62.12844499018133,
+        "minimum": 9.69087060442891,
+        "maximum": 78.04921787058093
+      },
+      "codex_disc_axis_ratio": {
+        "n": 2207,
+        "median": 0.7218020548793261,
+        "p10": 0.46749099854358284,
+        "p90": 0.8954273992007931,
+        "minimum": 0.20707137183367164,
+        "maximum": 0.9857303033386109
+      },
+      "codex_bar_pa_scatter_deg": {
+        "n": 2207,
+        "median": 0.9027466855695746,
+        "p10": 0.2610542584741185,
+        "p90": 3.47281791108774,
+        "minimum": 0.0,
+        "maximum": 35.80260991522507
+      },
+      "codex_disc_pa_scatter_deg": {
+        "n": 2207,
+        "median": 6.400582738536907,
+        "p10": 1.4738145052369798,
+        "p90": 28.117363445075867,
+        "minimum": 0.04813749546308468,
+        "maximum": 53.42319069233764
+      }
+    },
+    "unflagged": {
+      "codex_bar_pa_sky_deg": {
+        "n": 546,
+        "median": 83.51071392173188,
+        "p10": 17.942719889533677,
+        "p90": 157.8627816110319,
+        "minimum": 0.1649238458114024,
+        "maximum": 179.09424109064133
+      },
+      "codex_disc_pa_sky_deg": {
+        "n": 546,
+        "median": 84.67645317570836,
+        "p10": 17.933822788063537,
+        "p90": 157.4600401856278,
+        "minimum": 0.3921522009159508,
+        "maximum": 179.97355407796613
+      },
+      "codex_inclination_deg": {
+        "n": 546,
+        "median": 53.200625435756976,
+        "p10": 36.27162162494716,
+        "p90": 66.16168364271147,
+        "minimum": 26.327050669327747,
+        "maximum": 78.04921787058093
+      },
+      "codex_disc_axis_ratio": {
+        "n": 546,
+        "median": 0.5990147983647217,
+        "p10": 0.40415649873115156,
+        "p90": 0.8062213717666123,
+        "minimum": 0.20707137183367164,
+        "maximum": 0.8962771462694231
+      },
+      "codex_bar_pa_scatter_deg": {
+        "n": 546,
+        "median": 1.0538330061107897,
+        "p10": 0.2748936204296821,
+        "p90": 3.915463078280311,
+        "minimum": 0.0,
+        "maximum": 9.130986279827093
+      },
+      "codex_disc_pa_scatter_deg": {
+        "n": 546,
+        "median": 2.8695751286016975,
+        "p10": 0.8734502338002219,
+        "p90": 7.19371161939617,
+        "minimum": 0.04813749546308468,
+        "maximum": 9.942173036729857
+      }
+    }
+  },
+  "comparisons": {
+    "all_fit": {
+      "pa": {
+        "n": 2207,
+        "median_signed": -0.07149297404032495,
+        "median_absolute": 82.93113121970063,
+        "p90_absolute": 89.15644137340345,
+        "within10": 37,
+        "within20": 73
+      },
+      "incl_detection": {
+        "n": 2207,
+        "median_signed": 1.4567783404305175,
+        "median_absolute": 4.27792168779037,
+        "p90_absolute": 15.368641553041149,
+        "within10": 1745,
+        "within20": 2084
+      },
+      "incl_sersic": {
+        "n": 2207,
+        "median_signed": -5.044043470320183,
+        "median_absolute": 8.413712672092565,
+        "p90_absolute": 23.685127630276906,
+        "within10": 1258,
+        "within20": 1855
+      }
+    },
+    "unflagged": {
+      "pa": {
+        "n": 546,
+        "median_signed": -37.71419923624501,
+        "median_absolute": 86.27948194580188,
+        "p90_absolute": 89.5185185860011,
+        "within10": 2,
+        "within20": 3
+      },
+      "incl_detection": {
+        "n": 546,
+        "median_signed": 0.2637413483209414,
+        "median_absolute": 2.7140615295941224,
+        "p90_absolute": 10.182429416913521,
+        "within10": 487,
+        "within20": 532
+      },
+      "incl_sersic": {
+        "n": 546,
+        "median_signed": -3.766712573586805,
+        "median_absolute": 6.755149267466081,
+        "p90_absolute": 17.711209810028464,
+        "within10": 372,
+        "within20": 511
+      }
+    }
+  },
+  "zoobot": {
+    "strong": {
+      "n": 2767,
+      "median_signed": 0.05724405731749993,
+      "median_absolute": 0.08527128383847904,
+      "p90_absolute": 0.18720793894213472,
+      "within_0_05": 836,
+      "within_0_10": 1576
+    },
+    "weak": {
+      "n": 2767,
+      "median_signed": -0.059912792815341176,
+      "median_absolute": 0.061963627016411504,
+      "p90_absolute": 0.14262967771235288,
+      "within_0_05": 1128,
+      "within_0_10": 2027
+    },
+    "any": {
+      "n": 2767,
+      "median_signed": 0.00370230287697626,
+      "median_absolute": 0.036736372853724,
+      "p90_absolute": 0.11243044304524949,
+      "within_0_05": 1717,
+      "within_0_10": 2412
+    }
+  },
+  "euclid_bars_below_selection_threshold": 535,
+  "examples": [
+    {
+      "kind": "unflagged_legacy_PA_example",
+      "object_id": "2720196962660463953",
+      "bar_pa": "22.01421958612619",
+      "disc_pa": "36.53821270503703",
+      "inclination": "59.58716548316996",
+      "euclid_pa": "134.76121447285774",
+      "pa_difference": "81.7769982321793",
+      "flags": "",
+      "plot": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\Euclid_MER_VIS_geometry\\profiles\\Euclid_2720196962660463953_MER_VIS_geometry_review.png"
+    },
+    {
+      "kind": "unflagged_legacy_PA_extreme",
+      "object_id": "2731221676651025355",
+      "bar_pa": "141.8547572937993",
+      "disc_pa": "131.68737544722666",
+      "inclination": "65.36803761440922",
+      "euclid_pa": "41.68567451344629",
+      "pa_difference": "-89.99829906621963",
+      "flags": "",
+      "plot": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\Euclid_MER_VIS_geometry\\profiles\\Euclid_2731221676651025355_MER_VIS_geometry_review.png"
+    },
+    {
+      "kind": "flagged_legacy_PA_extreme",
+      "object_id": "-515488559271594427",
+      "bar_pa": "78.20527395751286",
+      "disc_pa": "151.14676488970684",
+      "inclination": "27.246876925485545",
+      "euclid_pa": "61.15084782072583",
+      "pa_difference": "89.99591706898102",
+      "flags": "disc_PA_unstable;small_bar_sensitive_to_resolution",
+      "plot": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\Euclid_MER_VIS_geometry\\profiles\\Euclid_-515488559271594427_MER_VIS_geometry_review.png"
+    }
+  ],
+  "pa_convention_audit": {
+    "all_fit": {
+      "legacy_difference_deg": {
+        "n": 2207,
+        "median_absolute": 82.93113121970063,
+        "p90_absolute": 89.15644137340345,
+        "within10": 37,
+        "within20": 73
+      },
+      "raw_as_sky_hypothesis_difference_deg": {
+        "n": 2207,
+        "median_absolute": 7.010904729673484,
+        "p90_absolute": 41.50023874838689,
+        "within10": 1304,
+        "within20": 1699
+      },
+      "converted_plus90_hypothesis_difference_deg": {
+        "n": 2207,
+        "median_absolute": 7.068868780299368,
+        "p90_absolute": 41.49981398952265,
+        "within10": 1312,
+        "within20": 1696
+      }
+    },
+    "unflagged": {
+      "legacy_difference_deg": {
+        "n": 546,
+        "median_absolute": 86.27948194580188,
+        "p90_absolute": 89.5185185860011,
+        "within10": 2,
+        "within20": 3
+      },
+      "raw_as_sky_hypothesis_difference_deg": {
+        "n": 546,
+        "median_absolute": 3.784909193491309,
+        "p90_absolute": 15.438131994267358,
+        "within10": 432,
+        "within20": 504
+      },
+      "converted_plus90_hypothesis_difference_deg": {
+        "n": 546,
+        "median_absolute": 3.720518054198095,
+        "p90_absolute": 15.251994782472266,
+        "within10": 433,
+        "within20": 504
+      }
+    }
+  }
+}
