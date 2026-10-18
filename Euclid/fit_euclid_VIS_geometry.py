@@ -44,6 +44,21 @@ def write_csv(path, rows):
         writer.writerows(rows)
 
 
+def fit_image_compatible(ellipse, **kwargs):
+    """Photutils 2 uses nclip; Photutils 3 uses n_clip."""
+    import inspect
+    parameters = inspect.signature(ellipse.fit_image).parameters
+    clip_name = 'n_clip' if 'n_clip' in parameters else 'nclip'
+    return ellipse.fit_image(**kwargs, **{clip_name: 3})
+
+
+def sample_fraction(iso):
+    """Accept both Photutils 2 and 3 isophote attribute names."""
+    ndata = iso.n_data if hasattr(iso, 'n_data') else iso.ndata
+    nflag = iso.n_flag if hasattr(iso, 'n_flag') else iso.nflag
+    return ndata / max(1, ndata + nflag)
+
+
 def fit_one(path, out, q0=0., ranges=None, previews=False):
     ranges = ranges or {}
     with fits.open(path) as hdul:
@@ -96,8 +111,8 @@ def fit_one(path, out, q0=0., ranges=None, previews=False):
            (4,.3,pa),(6,.3,(pa+np.pi/4)%np.pi),(6,.3,(pa+np.pi/2)%np.pi)]
     for start,seed_eps,seed_pa in seeds:
         ellipse=Ellipse(np.ma.array(data,mask=mask), geometry=EllipseGeometry(x,y,start,seed_eps,seed_pa))
-        trial=ellipse.fit_image(minsma=3,maxsma=maxsma,step=.08,
-                               fix_center=True,n_clip=3,sclip=3,maxit=80,maxgerr=1.)
+        trial=fit_image_compatible(ellipse, minsma=3,maxsma=maxsma,step=.08,
+                               fix_center=True,sclip=3,maxit=80,maxgerr=1.)
         if len(trial)>len(isophotes): isophotes=trial
         if len(trial)>20: break
     wcs=WCS(header).celestial
@@ -110,7 +125,7 @@ def fit_one(path, out, q0=0., ranges=None, previews=False):
                             ellipticity_error=iso.ellip_err,pa_error_deg=np.degrees(iso.pa_err),
                             intensity=iso.intens,intensity_error=iso.int_err,
                             stop_code=iso.stop_code,valid=iso.valid,
-                            sampled_fraction=iso.n_data/max(1,iso.n_data+iso.n_flag)))
+                            sampled_fraction=sample_fraction(iso)))
     stem=path.stem.removesuffix('_cutout')
     write_csv(out/(stem+'_ellipse_profile.csv'),profile)
     # Always save a diagnostic, including failed/short profiles.

@@ -1,0 +1,18 @@
+{
+  "input_files": [
+    {
+      "filename": "Euclid_2_MER_VIS_cutout.fits",
+      "size_bytes": 1000,
+      "mtime_ns": 1792172379193359400
+    }
+  ],
+  "files": [
+    {
+      "filename": "Euclid_2_MER_VIS_cutout.fits",
+      "size_bytes": 1000,
+      "sha256": "62923de3afb82e5f258f64af6e47a62706a63680e3fd398e2806e1a4d576809c"
+    }
+  ],
+  "sha256": "120ba8dd7f7065e19cf3e5de838a5dd9753f8b8239b7c3313051e3c63e6ab0b8",
+  "created_utc": "2026-10-16T17:39:39.205790+00:00"
+}
