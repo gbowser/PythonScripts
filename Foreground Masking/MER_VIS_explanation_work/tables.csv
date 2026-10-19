@@ -1,0 +1,41 @@
+table_name,description
+catalogue.phz_galaxy_sed,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/phzdpd/dpcards/phz_phzpfoutputcatalog.html#detailed-description-of-the-data-product"" target=""_blank"">Click here for more information</a>"
+catalogue.phz_nir_physical_parameters,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/phzdpd/dpcards/phz_phzpfoutputforl3.html#detailed-description-of-the-data-product"" target=""_blank"">Click here for more information</a>"
+catalogue.phz_photo_z,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/phzdpd/dpcards/phz_phzpfoutputcatalog.html#detailed-description-of-the-data-product"" target=""_blank"">Click here for more information</a>"
+catalogue.phz_physical_parameters,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/phzdpd/dpcards/phz_phzpfoutputforl3.html#detailed-description-of-the-data-product"" target=""_blank"">Click here for more information</a>"
+catalogue.phz_qso_physical_parameters,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/phzdpd/dpcards/phz_phzpfoutputforl3.html#detailed-description-of-the-data-product"" target=""_blank"">Click here for more information</a>"
+catalogue.phz_star_sed,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/phzdpd/dpcards/phz_phzpfoutputcatalog.html#detailed-description-of-the-data-product"" target=""_blank"">Click here for more information</a>"
+catalogue.phz_star_template,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/phzdpd/dpcards/phz_phzpfoutputforl3.html#detailed-description-of-the-data-product"" target=""_blank"">Click here for more information</a>"
+catalogue.spectro_line_features_catalog_spe_atomic_indices,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/spedpd/dpcards/spe_spepfoutputcatalog.html#lines-catalog"" target=""_blank"">Click here for more information</a>"
+catalogue.spectro_line_features_catalog_spe_continuum_features,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/spedpd/dpcards/spe_spepfoutputcatalog.html#lines-catalog"" target=""_blank"">Click here for more information</a>"
+catalogue.spectro_line_features_catalog_spe_line_features_cat,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/spedpd/dpcards/spe_spepfoutputcatalog.html#lines-catalog"" target=""_blank"">Click here for more information</a>"
+catalogue.spectro_line_features_catalog_spe_molecular_indices,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/spedpd/dpcards/spe_spepfoutputcatalog.html#lines-catalog"" target=""_blank"">Click here for more information</a>"
+catalogue.spectro_model_catalog_spe_galaxy_models,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/spedpd/dpcards/spe_spepfoutputcatalog.html#models-catalog"" target=""_blank"">Click here for more information</a>"
+catalogue.spectro_model_catalog_spe_lines_catalog,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/spedpd/dpcards/spe_spepfoutputcatalog.html#models-catalog"" target=""_blank"">Click here for more information</a>"
+catalogue.spectro_model_catalog_spe_qso_models,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/spedpd/dpcards/spe_spepfoutputcatalog.html#models-catalog"" target=""_blank"">Click here for more information</a>"
+catalogue.spectro_model_catalog_spe_star_models,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/spedpd/dpcards/spe_spepfoutputcatalog.html#models-catalog"" target=""_blank"">Click here for more information</a>"
+catalogue.spectro_zcatalog_spe_classification,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/spedpd/dpcards/spe_spepfoutputcatalog.html#redshift-catalog"" target=""_blank"">Click here for more information</a>"
+catalogue.mer_catalogue,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/merdpd/dpcards/mer_finalcatalog.html#detailed-description-of-the-data-product"" target=""_blank"">Click here for more information</a>"
+catalogue.mer_cutouts,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/merdpd/dpcards/mer_finalcatalog.html#detailed-description-of-the-data-product"" target=""_blank"">Click here for more information</a>"
+catalogue.mer_morphology,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/merdpd/dpcards/mer_finalcatalog.html#detailed-description-of-the-data-product"" target=""_blank"">Click here for more information</a>"
+catalogue.phz_classification,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/phzdpd/dpcards/phz_phzpfoutputforl3.html#detailed-description-of-the-data-product"" target=""_blank"">Click here for more information</a>"
+sedm.calibrated_detectors,
+sedm.frame_catalog,
+sedm.mer_final_catalogue,
+sedm.phz_catalogue,
+sedm.phz_catalogue_l3,
+sedm.raw_detector,
+sedm.sir_frame_detectors,
+sedm.spe_catalogue,
+catalogue.spectro_zcatalog_spe_galaxy_candidates,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/spedpd/dpcards/spe_spepfoutputcatalog.html#redshift-catalog"" target=""_blank"">Click here for more information</a>"
+catalogue.spectro_zcatalog_spe_qso_candidates,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/spedpd/dpcards/spe_spepfoutputcatalog.html#redshift-catalog"" target=""_blank"">Click here for more information</a>"
+catalogue.spectro_zcatalog_spe_quality,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/spedpd/dpcards/spe_spepfoutputcatalog.html#redshift-catalog"" target=""_blank"">Click here for more information</a>"
+catalogue.spectro_zcatalog_spe_star_candidates,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/spedpd/dpcards/spe_spepfoutputcatalog.html#redshift-catalog"" target=""_blank"">Click here for more information</a>"
+q1.calibrated_detectors,
+q1.frame_catalog,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/nirdpd/dpcards/nir_calibratedframe.html#detailed-description-of-the-data-product"" target=""_blank"">Click here for more information on NIR Calibrated Frame</a><br/><a href=""https://euclid.esac.esa.int/dr/q1/dpdd/visdpd/dpcards/vis_calibratedquadframe.html#detailed-description-of-the-data-product"" target=""_blank"">Click here for more information on Vis Calibrated Quad Frame</a>"
+q1.mer_final_catalogue,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/merdpd/dpcards/mer_finalcatalog.html#detailed-description-of-the-data-product"" target=""_blank"">Click here for more information</a>"
+q1.phz_catalogue,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/phzdpd/dpcards/phz_phzpfoutputcatalog.html#detailed-description-of-the-data-product"" target=""_blank"">Click here for more information</a>"
+q1.phz_catalogue_l3,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/phzdpd/dpcards/phz_phzpfoutputforl3.html#detailed-description-of-the-data-product"" target=""_blank"">Click here for more information</a>"
+q1.raw_detector,
+q1.sir_frame_detectors,
+q1.spe_catalogue,"<a href=""https://euclid.esac.esa.int/dr/q1/dpdd/spedpd/dpcards/spe_spepfoutputcatalog.html#detailed-description-of-the-data-product"" target=""_blank"">Click here for more information</a>"

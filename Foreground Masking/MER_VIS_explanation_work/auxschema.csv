@@ -1,0 +1,15 @@
+table_name,column_name
+sedm.aux_mosaic,tile_index
+sedm.aux_mosaic,mosaic_product_oid
+sedm.aux_mosaic,aux_mosaic_oid
+sedm.aux_mosaic,to_be_published
+sedm.aux_mosaic,datalabs_path
+sedm.aux_mosaic,stype
+sedm.aux_mosaic,product_type_sas
+sedm.aux_mosaic,file_path
+sedm.aux_mosaic,file_name
+sedm.aux_mosaic,checksum
+sedm.files_table,product_id
+sedm.files_table,file_path
+sedm.files_table,file_name
+sedm.files_table,datalabs_path
