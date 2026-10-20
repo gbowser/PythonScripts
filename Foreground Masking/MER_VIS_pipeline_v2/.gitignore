@@ -1,0 +1,9 @@
+# Task-specific binary dependencies and generated working artifacts
+/dependencies/
+/node_modules/
+/pilot*/
+/recovery*/
+/synthetic_check/
+/current_report/
+*.log
+__pycache__/

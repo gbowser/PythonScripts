@@ -1,3 +1,5 @@
+> Current local pipeline: use [adaptive MER VIS](../adaptive_MER_VIS/README_MER_VIS_adaptive.md). This page documents the earlier Datalabs workflow. Current reports are in `Euclid/reports/MER_VIS_current`.
+
 # MER VIS geometry comparison
 
 ## What is ready
@@ -120,3 +122,4 @@ is made for failed or quality-flagged fits.
 Local verification: synthetic barred-galaxy ellipse fitting, WCS angle conversion,
 bar-to-x transform, 2777 exact ID joins, normalized bar fractions and notebook
 syntax/imports passed. The full Datalabs batch has not yet been executed.
+

@@ -10,7 +10,7 @@ const p=Presentation.create({slideSize:{width:1280,height:720}});
 const ink='#142633',blue='#205f7a',muted='#526673';
 const source='Sources: MER_VIS_local_geometry_manifest.csv; MER_VIS_report_summary.json and MER_VIS_report_verification.json in D:/Dropbox/Public Documents/UCLAN/MSc Research/Euclid/MER_VIS_galaxy_reports/all_2777; completed PA and inclination comparison statistics from the revised fitting report. Run completed October 2026.';
 function text(s,t,x,y,w,h,size=26,color=ink,bold=false){let z=s.shapes.add({geometry:'textbox',position:{left:x,top:y,width:w,height:h},fill:'none',line:{fill:'none',width:0}});z.text=t;z.text.style={typeface:'Arial',fontSize:size,color,bold};return z;}
-function slide(title,n){let s=p.slides.add();s.background.fill='#ffffff';text(s,title,64,42,1152,90,44,ink,true);text(s,`${n} / 6`,1140,680,76,22,16,muted);s.speakerNotes.text=source;return s;}
+function slide(title,n){let s=p.slides.add();s.background.fill='#ffffff';text(s,title,64,42,1152,90,44,ink,true);text(s,`${n} / 13`,1140,680,76,22,16,muted);s.speakerNotes.text=source;return s;}
 function table(s,values,x,y,w,h,widths,size=24){let t=s.tables.add({rows:values.length,columns:values[0].length,left:x,top:y,width:w,height:h,columnWidths:widths,values});t.borders.assign({fill:'#d6e0e5',width:.7,style:'solid'});for(let r=0;r<values.length;r++)for(let c=0;c<values[0].length;c++){let cell=t.getCell(r,c);cell.fill=r===0?'#e8f0f4':'#ffffff';cell.text.style={typeface:'Arial',fontSize:size,color:ink,bold:r===0};}return t;}
 let s=slide('Euclid MER VIS geometry outcomes',1);
 text(s,'2,777 galaxy cutouts',64,208,1100,100,60,blue,true);
@@ -59,9 +59,34 @@ text(s,'The galaxy index gives the PNG path, PDF batch, page and position.',64,6
 s.speakerNotes.text=source+' Output root: D:/Dropbox/Public Documents/UCLAN/MSc Research/Euclid/MER_VIS_galaxy_reports/all_2777. QI = 1661 flagged fits + 570 failures + 19 otherwise unflagged partial cases. NoQI = 527. Each PDF contains at most 60 galaxies. Index: MER_VIS_report_review_index.csv. The source FITS files and fitting manifest remain unchanged. All fitted geometry remains provisional until physical review.';
 await fs.mkdir(path.resolve(cwd,'renders'),{recursive:true});
 for(let i=0;i<p.slides.items.length;i++){const blob=await p.export({slide:p.slides.items[i],format:'png',scale:1});await fs.writeFile(path.resolve(cwd,'renders',`slide-${i+1}.png`),new Uint8Array(await blob.arrayBuffer()));}
-const staging=path.resolve(cwd,'.codex-finalizer-faceon-final');await fs.mkdir(staging,{recursive:true});const candidate=path.join(staging,'candidate.pptx');await(await PresentationFile.exportPptx(p)).save(candidate);
-await finalizePresentation({workspaceDir:cwd,candidatePath:candidate,finalPath:path.resolve(cwd,'output/Euclid_MER_VIS_outcomes_summary_faceon_final.pptx'),pythonExecutable:PY,integrityValidatorPath:SKILL+'/container_tools/inspect_presentation_package_integrity.py',layoutValidatorPath:SKILL+'/container_tools/inspect_presentation_layout_geometry.py',layoutArgs:['--expected-slide-size-emu','12192000,6858000','--validate-bullet-geometry','--validate-heading-fit','--require-native-table-slide','4','--require-native-table-slide','6'],explicitTotalSlideCount:6,requiredNativeChartOwnerSlides:[2,3],requiredNativeTableOwnerSlides:[4,6],materializeLiteralChartWorkbooks:true,fontPolicy:{basis:'design',families:['Arial']},verifyArtifactToolImport:true,receiptPath:path.join(staging,'validation.json')});
-console.log('Six-slide deck saved');
+const exampleGroups=JSON.parse(await fs.readFile(path.resolve(cwd,'example_selection.json'),'utf8'));
+const titles=['Small bar interval','Unstable disc PA','Changing disc ellipticity','Unstable bar PA','Weak ellipse bar signature','Failed fit: selected interval','Failed fit: short reliable profile'];
+const interpretations=[
+ 'The selected bar interval ends below 1.5 arcsec. This warns about resolution and range selection, not a measured physical bar length.',
+ 'The sky PA changes across the green disc interval. The outer contours do not give one stable disc direction.',
+ 'Ellipticity changes across the green disc interval. Inclination depends on which outer contours are used.',
+ 'The PA changes across the orange bar interval. A single adopted bar direction is uncertain.',
+ 'Ellipses in the orange interval are relatively round. This weakens the ellipse-based bar signature, rather than proving there is no bar.',
+ 'There are at least ten reliable ellipses overall, but fewer than three in at least one selected bar/disc interval. Candidate ranges are not accepted geometry.',
+ 'Fewer than ten ellipses pass the reliability checks overall. The fit stops before adopting bar/disc geometry. Grey samples were rejected.'
+];
+for(let k=0;k<exampleGroups.length;k++){
+ const group=exampleGroups[k];s=slide(titles[k],k+7);
+ text(s,k<5?'Each galaxy has exactly this ONE original geometry flag; neither cutout is partial.':'Two examples of this recorded failure type; neither cutout is partial.',64,134,1150,50,23,blue,true);
+ for(let j=0;j<2;j++){
+  const e=group.examples[j];const x=64+j*584;
+  text(s,`Galaxy ${e.id}`,x,195,560,40,22,ink,true);
+  s.images.add({blob:new Uint8Array(await fs.readFile(path.resolve(cwd,e.image))),contentType:'image/png',alt:`Galaxy ${e.id}: native image, fitted ellipses, ellipticity and sky PA profiles`,fit:'contain',position:{left:x,top:235,width:560,height:260}});
+  text(s,e.detail,x,510,550,90,23,ink,true);
+ }
+ text(s,interpretations[k],64,615,1150,54,23,muted);
+ s.speakerNotes.text=source+' Two examples selected from the original fitting manifest with exactly one nonempty original geometry flag, no partial coverage, and no secondary informational flag. Failed cases selected by recorded error and have no adopted geometry. Orange=bar interval; green=disc interval; blue=reliable samples; grey=rejected samples. Image and profiles are crops from the existing full-resolution report cards; no refitting or image rotation. Interpretation concerns the numerical trigger, not a confirmed physical cause. '+group.examples.map(e=>`Galaxy ${e.id}: ${e.detail} Original flag: ${e.original_flags||'none; failed fit'}. Source: ${e.source}`).join(' ');
+}
+const staging=path.resolve(cwd,'.codex-finalizer-examples-delivery');await fs.mkdir(staging,{recursive:true});const candidate=path.join(staging,'candidate.pptx');await(await PresentationFile.exportPptx(p)).save(candidate);
+await finalizePresentation({workspaceDir:cwd,candidatePath:candidate,finalPath:path.resolve(cwd,'output/Euclid_MER_VIS_outcomes_summary_examples_delivery.pptx'),pythonExecutable:PY,integrityValidatorPath:SKILL+'/container_tools/inspect_presentation_package_integrity.py',layoutValidatorPath:SKILL+'/container_tools/inspect_presentation_layout_geometry.py',layoutArgs:['--expected-slide-size-emu','12192000,6858000','--validate-bullet-geometry','--validate-heading-fit','--require-native-table-slide','4','--require-native-table-slide','6'],explicitTotalSlideCount:13,requiredNativeChartOwnerSlides:[2,3],requiredNativeTableOwnerSlides:[4,6],materializeLiteralChartWorkbooks:true,fontPolicy:{basis:'design',families:['Arial']},verifyArtifactToolImport:true,receiptPath:path.join(staging,'validation.json')});
+console.log('Thirteen-slide deck saved');
+
+
 
 
 

@@ -1,0 +1,15 @@
+{
+  "overrides_sha256": "080a69281c80ebb4947f8183ca898a00c8dd0e090370b2c45af87b042ecf78c0",
+  "decisions": [
+    {
+      "object_id": "-524824554283124036",
+      "candidate_status": "provisional_fit",
+      "reason": "Visual review: broader peak search switched to a saturated foreground star with diffraction spikes; no valid target-disc geometry adopted."
+    },
+    {
+      "object_id": "2697242050653408730",
+      "candidate_status": "provisional_fit",
+      "reason": "Visual review: accepted contours cover only the unresolved central region below 0.5 arcsec; no resolved disc geometry adopted."
+    }
+  ]
+}

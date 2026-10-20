@@ -1,0 +1,3 @@
+from pathlib import Path
+p=Path('MER_VIS_pipeline_v2/prepare_current_MER_VIS_report_data.py');s=p.read_text(encoding='utf8').replace('im.crop((50,230,1950,1080))','im.crop((50,210,1950,1080))');p.write_text(s,encoding='utf8')
+p=Path('MER_VIS_pipeline_v2/build_current_MER_VIS_presentation.mjs');s=p.read_text(encoding='utf8').replace('current_report/finalizer-sampling','current_report/finalizer-reviewed-sampling').replace("'Actual failures or exclusions. No geometry is invented to fill missing values.'","'No adopted geometry. Fallback centres and rejected ellipses are omitted.'");p.write_text(s,encoding='utf8')

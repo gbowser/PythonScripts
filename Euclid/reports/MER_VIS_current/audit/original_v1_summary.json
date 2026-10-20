@@ -1,0 +1,10 @@
+{
+  "total_galaxies": 2777,
+  "statuses": {
+    "provisional_fit": 2207,
+    "fit_failed": 570
+  },
+  "fitted_without_quality_flags": 546,
+  "elapsed_this_run_seconds": 6229.39,
+  "manifest": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\Euclid_MER_VIS_geometry\\MER_VIS_local_geometry_manifest.csv"
+}

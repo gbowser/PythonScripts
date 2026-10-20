@@ -1,0 +1,41 @@
+{
+  "retry_script_sha256": "bc847867cc171a69007a3c6993d050744bd5c2d50b309795ff0c8ed765d01fcc",
+  "targets": [
+    {
+      "object_id": "-586374330510251740",
+      "before": "ValueError: Only 0 accepted isophotes after recovery; need at least 3",
+      "after_status": "fit_failed",
+      "after_error": "ValueError: Only 0 accepted isophotes after recovery; need at least 3"
+    },
+    {
+      "object_id": "-584896980492699093",
+      "before": "ValueError: Only 0 accepted isophotes after recovery; need at least 3",
+      "after_status": "provisional_fit",
+      "after_error": ""
+    },
+    {
+      "object_id": "-524824554283124036",
+      "before": "ValueError: Only 0 accepted isophotes after recovery; need at least 3",
+      "after_status": "provisional_fit",
+      "after_error": ""
+    },
+    {
+      "object_id": "2645436353651870062",
+      "before": "ValueError: Only 0 accepted isophotes after recovery; need at least 3",
+      "after_status": "fit_failed",
+      "after_error": "ValueError: Only 0 accepted isophotes after recovery; need at least 3"
+    },
+    {
+      "object_id": "2697242050653408730",
+      "before": "ValueError: Only 0 accepted isophotes after recovery; need at least 3",
+      "after_status": "provisional_fit",
+      "after_error": ""
+    },
+    {
+      "object_id": "2690276161666121755",
+      "before": "ValueError: Only 0 accepted isophotes after recovery; need at least 3",
+      "after_status": "provisional_fit",
+      "after_error": ""
+    }
+  ]
+}

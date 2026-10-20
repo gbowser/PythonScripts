@@ -1,0 +1,40 @@
+{
+  "order": 6,
+  "object_id": "2690276161666121755",
+  "png": "0006_Euclid_2690276161666121755_MER_VIS_geometry_report_QI.png",
+  "quality_issue": true,
+  "fits_filename": "Euclid_2690276161666121755_MER_VIS_cutout.fits",
+  "status": "provisional_fit",
+  "quality_flags": [
+    "disc_axis_ratio_unstable",
+    "neighbour_mask_removed"
+  ],
+  "partial": false,
+  "centre_offset_arcsec": 0.0442638931530417,
+  "method": "extended_light_centre_recovery",
+  "bar_status": "detected_A",
+  "photutils_disc_pa_deg": 131.35086703048194,
+  "photutils_bar_pa_deg": 124.64106830034147,
+  "photutils_inclination_deg": 72.06339144185515,
+  "euclid_adjusted_detection_pa_deg": null,
+  "euclid_detection_inclination_proxy_deg": 57.76814517874566,
+  "euclid_sersic_inclination_proxy_deg": 70.47580548626726,
+  "euclid_bar_pa_deg": null,
+  "delta_disc_pa_deg": "\u2014",
+  "delta_inclination_detection_deg": "+14.3",
+  "delta_inclination_sersic_deg": "+1.6",
+  "bar_range": [
+    1.282884875874039,
+    1.609250788296395
+  ],
+  "disc_range": [
+    2.018644188838998,
+    2.532187270479639
+  ],
+  "candidate_ranges_only": false,
+  "reliable_samples": 29,
+  "bar_samples": 3,
+  "disc_samples": 3,
+  "relative_png": "png_QI\\0006_Euclid_2690276161666121755_MER_VIS_geometry_report_QI.png",
+  "report_version": "QI_adaptive_v2"
+}

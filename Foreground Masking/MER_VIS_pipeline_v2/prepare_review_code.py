@@ -1,0 +1,20 @@
+from pathlib import Path
+root=Path(__file__).parent
+src=Path(r'C:\Users\gordo\Documents\Github\PythonScripts\Euclid\adaptive_MER_VIS')
+work=root/'review_code';work.mkdir(exist_ok=True)
+import shutil
+for p in src.glob('*.py'):shutil.copyfile(p,work/p.name)
+p=work/'fit_adaptive_MER_VIS_geometry.py';s=p.read_text();s=s.replace("elif dscatter>10:flags.append('disc_PA_unstable')", "else:\n   radii=np.sort([z['sma_arcsec'] for z in disc]);span=float(np.ptp(radii));gap=float(np.max(np.diff(radii))) if len(radii)>1 else float('inf')\n   sparse=len(disc)<6 or span<=0 or gap>0.5*span\n   if sparse:flags.append('disc_PA_sparse_sampling')\n   elif dscatter>10:flags.append('disc_PA_unstable')")
+p.write_text(s)
+p=work/'make_MER_VIS_galaxy_report_cards.py';s=p.read_text();s=s.replace("'disc_PA_unstable':'Disc PA unstable'", "'disc_PA_sparse_sampling':'Disc PA uncertain: sparse sampling','disc_PA_unstable':'Disc PA varies across radius'")
+s=s.replace("'small_bar_sensitive_to_resolution':'Small bar: resolution sensitive'", "'small_bar_sensitive_to_resolution':'Bar uncertain: small selected interval'")
+s=s.replace("'weak_ellipse_bar_signature':'Accepted class-B bar signature'", "'weak_ellipse_bar_signature':'Class B: weaker bar-profile evidence'")
+s=s.replace("overlay=g if len(g) else pr", "overlay=pr.iloc[:0] if failed else g if len(g) else pr")
+s=s.replace("im.plot(h['CENX']-1-xa,h['CENY']-1-ya,'x',color='white',ms=4,mew=.8);im.plot(xc,yc,'+',color='#f34848',ms=6,mew=1.1);im.set_xticks([]);im.set_yticks([]);im.set_title('Native pixels and fitted ellipses',fontsize=12,pad=5)","if not failed:\n  im.plot(h['CENX']-1-xa,h['CENY']-1-ya,'x',color='white',ms=4,mew=.8);im.plot(xc,yc,'+',color='#f34848',ms=6,mew=1.1)\n im.set_xticks([]);im.set_yticks([]);im.set_title('Native image: no adopted geometry' if failed else 'Native pixels and fitted ellipses',fontsize=12,pad=5)")
+s=s.replace("else:ax.plot(rad,values,'-',color='#2c6c9a',lw=.9)","else:\n    # Avoid implying measured continuity across rejected radial samples.\n    rr=[];vv=[];allrad=pr.sma_arcsec.to_numpy()\n    for j,(a,v) in enumerate(zip(rad,values)):\n     if j and np.any((allrad>rad[j-1])&(allrad<a)&(~reliable(pr).to_numpy())):rr.append(np.nan);vv.append(np.nan)\n     rr.append(a);vv.append(v)\n    ax.plot(rr,vv,'-',color='#2c6c9a',lw=.9)")
+s=s.replace("if j and abs(v-values[j-1])>90:","if j and (abs(v-values[j-1])>90 or np.any((pr.sma_arcsec.to_numpy()>rad[j-1])&(pr.sma_arcsec.to_numpy()<a)&(~reliable(pr).to_numpy()))):")
+s=s.replace("legend='Orange: bar   Green: disc   Blue points: reliable   Grey: rejected'", "legend='Orange: candidate bar   Green: disc   Blue: accepted   Grey: excluded'\n if failed:legend='No adopted centre or ellipses. Grey samples, if present, are rejected.'")
+s=s.replace("f'Reliable ellipses: {len(g)} total; {nb} bar; {nd} disc.  Centre checked from image.  Native orientation.'", "f'Accepted ellipses: {len(g)} total; {nb} bar; {nd} disc.  Native orientation.'")
+s=s.replace("if np.isfinite(centreoffset):issues.append", "if not failed and np.isfinite(centreoffset):issues.append")
+p.write_text(s)
+print('Updated fitter and renderer in',work)

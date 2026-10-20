@@ -1,0 +1,8 @@
+{
+  "source": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_pipeline_v2\\broader_centre_pilot\\MER_VIS_local_geometry_manifest.csv",
+  "sha256": "54dd1fbb66742805f5c917c96c3a46c8d1ea22317900d8fa436ebb890c2af840",
+  "targets": 6,
+  "workers": 3,
+  "QI_rule": "Any geometry flag, fit status other than provisional_fit, or partial requested coverage. NoQI is not scientific approval.",
+  "report_version": "QI_adaptive_v2"
+}

@@ -1,0 +1,3 @@
+object_id,action,reason
+-524824554283124036,reject_geometry,"Visual review: broader peak search switched to a saturated foreground star with diffraction spikes; no valid target-disc geometry adopted."
+2697242050653408730,reject_geometry,"Visual review: accepted contours cover only the unresolved central region below 0.5 arcsec; no resolved disc geometry adopted."

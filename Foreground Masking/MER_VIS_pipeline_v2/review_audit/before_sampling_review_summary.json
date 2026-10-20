@@ -1,0 +1,99 @@
+{
+  "version": "MER_VIS_adaptive_v2_2026-10-20",
+  "total": 2777,
+  "fits": 2773,
+  "failures": 4,
+  "flags": {
+    "disc_PA_unstable": 1273,
+    "no_bar_detected": 453,
+    "disc_axis_ratio_unstable": 1355,
+    "small_bar_sensitive_to_resolution": 1447,
+    "disc_range_fallback": 269,
+    "bar_disc_ranges_close": 211,
+    "small_disc": 298,
+    "weak_ellipse_bar_signature": 231,
+    "centre_offset_large": 44,
+    "relaxed_fit": 13,
+    "iteration_limited_samples": 10,
+    "star_mask_removed": 18,
+    "neighbour_mask_removed": 2,
+    "centre_unstable": 6,
+    "short_accepted_profile": 2,
+    "high_inclination": 1
+  },
+  "flag_multiplicity": {
+    "0": 300,
+    "1": 683,
+    "2": 844,
+    "3": 660,
+    "4": 191,
+    "5": 59,
+    "6": 30,
+    "7": 5,
+    "8": 1
+  },
+  "methods": {
+    "standard": 2741,
+    "smoothed_relaxed": 13,
+    "alternate_centre": 4,
+    "recentred_relaxed": 1,
+    "extended_light_centre_recovery": 4,
+    "recentred": 13,
+    "relaxed": 1
+  },
+  "bar_status": {
+    "no_bar_detected": 453,
+    "detected_A": 2089,
+    "detected_B": 231,
+    "not_measured": 4
+  },
+  "informational_face_on": 59,
+  "recovered_original_failures": 567,
+  "new_failures_from_original_fits": 1,
+  "failures_detail": [
+    {
+      "object_id": "-586374330510251740",
+      "error": "ValueError: Only 0 accepted isophotes after recovery; need at least 3"
+    },
+    {
+      "object_id": "-524824554283124036",
+      "error": "Visual review: broader peak search switched to a saturated foreground star with diffraction spikes; no valid target-disc geometry adopted."
+    },
+    {
+      "object_id": "2645436353651870062",
+      "error": "ValueError: Only 0 accepted isophotes after recovery; need at least 3"
+    },
+    {
+      "object_id": "2697242050653408730",
+      "error": "Visual review: accepted contours cover only the unresolved central region below 0.5 arcsec; no resolved disc geometry adopted."
+    }
+  ],
+  "comparisons": {
+    "disc_vs_detection_pa_difference_deg": {
+      "n": 2773,
+      "median_abs": 8.052385481372099,
+      "median_signed": 0.2320866630829812,
+      "within10": 1544
+    },
+    "inclination_vs_detection_proxy_difference_deg": {
+      "n": 2773,
+      "median_abs": 6.5177046704339325,
+      "median_signed": 4.557962081030318,
+      "within10": 1769
+    },
+    "inclination_vs_sersic_proxy_difference_deg": {
+      "n": 2773,
+      "median_abs": 5.500575535465636,
+      "median_signed": -0.5310761009273364,
+      "within10": 1989
+    }
+  },
+  "centre_offset_arcsec": {
+    "n": 2773,
+    "median_abs": 0.08327189963201129,
+    "median_signed": 0.08327189963201129,
+    "within10": 2772
+  },
+  "centre_flag_threshold": "offset > max(0.3 arcsec,0.15*r_seg); scatter > max(0.3 arcsec,0.1*r_seg)",
+  "source_manifest_sha256": "a70a88c24273f5dee5b9de040efc5fb945d00ea053e1c781a1ee4d11180b3417"
+}

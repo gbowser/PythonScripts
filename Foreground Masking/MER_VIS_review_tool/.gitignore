@@ -1,0 +1,6 @@
+__pycache__/
+saved_reviews/
+qa_state/
+test_state/
+test_galaxies.json
+*.log

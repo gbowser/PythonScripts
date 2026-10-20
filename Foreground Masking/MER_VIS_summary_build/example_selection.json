@@ -1,0 +1,149 @@
+[
+  {
+    "key": "small_bar_sensitive_to_resolution",
+    "examples": [
+      {
+        "id": "-520196615291310590",
+        "image": "examples/-520196615291310590.png",
+        "detail": "Bar interval upper bound: 1.15 arcsec (threshold <1.5).",
+        "original_flags": "small_bar_sensitive_to_resolution",
+        "source": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\MER_VIS_galaxy_reports\\all_2777\\png_QI\\0001_Euclid_-520196615291310590_MER_VIS_geometry_report_QI.png",
+        "partial": "False"
+      },
+      {
+        "id": "-519465826287599179",
+        "image": "examples/-519465826287599179.png",
+        "detail": "Bar interval upper bound: 1.48 arcsec (threshold <1.5).",
+        "original_flags": "small_bar_sensitive_to_resolution",
+        "source": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\MER_VIS_galaxy_reports\\all_2777\\png_QI\\0002_Euclid_-519465826287599179_MER_VIS_geometry_report_QI.png",
+        "partial": "False"
+      }
+    ]
+  },
+  {
+    "key": "disc_PA_unstable",
+    "examples": [
+      {
+        "id": "-591287408514481131",
+        "image": "examples/-591287408514481131.png",
+        "detail": "Disc PA radial scatter: 11.2\u00b0 (threshold >10\u00b0).",
+        "original_flags": "disc_PA_unstable",
+        "source": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\MER_VIS_galaxy_reports\\all_2777\\png_QI\\0034_Euclid_-591287408514481131_MER_VIS_geometry_report_QI.png",
+        "partial": "False"
+      },
+      {
+        "id": "-591265046503894332",
+        "image": "examples/-591265046503894332.png",
+        "detail": "Disc PA radial scatter: 12.4\u00b0 (threshold >10\u00b0).",
+        "original_flags": "disc_PA_unstable",
+        "source": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\MER_VIS_galaxy_reports\\all_2777\\png_QI\\0109_Euclid_-591265046503894332_MER_VIS_geometry_report_QI.png",
+        "partial": "False"
+      }
+    ]
+  },
+  {
+    "key": "disc_axis_ratio_unstable",
+    "examples": [
+      {
+        "id": "-548398753282885623",
+        "image": "examples/-548398753282885623.png",
+        "detail": "Disc ellipticity span: 0.168 (threshold >0.15).",
+        "original_flags": "disc_axis_ratio_unstable",
+        "source": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\MER_VIS_galaxy_reports\\all_2777\\png_QI\\0020_Euclid_-548398753282885623_MER_VIS_geometry_report_QI.png",
+        "partial": "False"
+      },
+      {
+        "id": "2694485455649440299",
+        "image": "examples/2694485455649440299.png",
+        "detail": "Disc ellipticity span: 0.196 (threshold >0.15).",
+        "original_flags": "disc_axis_ratio_unstable",
+        "source": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\MER_VIS_galaxy_reports\\all_2777\\png_QI\\0031_Euclid_2694485455649440299_MER_VIS_geometry_report_QI.png",
+        "partial": "False"
+      }
+    ]
+  },
+  {
+    "key": "bar_PA_unstable",
+    "examples": [
+      {
+        "id": "-560500769490472523",
+        "image": "examples/-560500769490472523.png",
+        "detail": "Bar PA radial scatter: 10.8\u00b0 (threshold >10\u00b0).",
+        "original_flags": "bar_PA_unstable",
+        "source": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\MER_VIS_galaxy_reports\\all_2777\\png_QI\\0401_Euclid_-560500769490472523_MER_VIS_geometry_report_QI.png",
+        "partial": "False"
+      },
+      {
+        "id": "-630490045487791289",
+        "image": "examples/-630490045487791289.png",
+        "detail": "Bar PA radial scatter: 11.6\u00b0 (threshold >10\u00b0).",
+        "original_flags": "bar_PA_unstable",
+        "source": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\MER_VIS_galaxy_reports\\all_2777\\png_QI\\0514_Euclid_-630490045487791289_MER_VIS_geometry_report_QI.png",
+        "partial": "False"
+      }
+    ]
+  },
+  {
+    "key": "weak_ellipse_bar_signature",
+    "examples": [
+      {
+        "id": "2654979879662853093",
+        "image": "examples/2654979879662853093.png",
+        "detail": "Median bar ellipticity: 0.180 (threshold <0.25).",
+        "original_flags": "weak_ellipse_bar_signature",
+        "source": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\MER_VIS_galaxy_reports\\all_2777\\png_QI\\2423_Euclid_2654979879662853093_MER_VIS_geometry_report_QI.png",
+        "partial": "False"
+      },
+      {
+        "id": "2719973573665957979",
+        "image": "examples/2719973573665957979.png",
+        "detail": "Median bar ellipticity: 0.222 (threshold <0.25).",
+        "original_flags": "weak_ellipse_bar_signature",
+        "source": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\MER_VIS_galaxy_reports\\all_2777\\png_QI\\2469_Euclid_2719973573665957979_MER_VIS_geometry_report_QI.png",
+        "partial": "False"
+      }
+    ]
+  },
+  {
+    "key": "failed_interval",
+    "examples": [
+      {
+        "id": "-519246610291156594",
+        "image": "examples/-519246610291156594.png",
+        "detail": "Insufficient bar/disc isophotes in selected radial ranges. Reliable ellipses overall: 20.",
+        "original_flags": "",
+        "source": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\MER_VIS_galaxy_reports\\all_2777\\png_QI\\0003_Euclid_-519246610291156594_MER_VIS_geometry_report_QI.png",
+        "partial": "False"
+      },
+      {
+        "id": "-517222724292083077",
+        "image": "examples/-517222724292083077.png",
+        "detail": "Insufficient bar/disc isophotes in selected radial ranges. Reliable ellipses overall: 16.",
+        "original_flags": "",
+        "source": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\MER_VIS_galaxy_reports\\all_2777\\png_QI\\0008_Euclid_-517222724292083077_MER_VIS_geometry_report_QI.png",
+        "partial": "False"
+      }
+    ]
+  },
+  {
+    "key": "failed_short",
+    "examples": [
+      {
+        "id": "-550147948285020121",
+        "image": "examples/-550147948285020121.png",
+        "detail": "Only 8 reliable isophotes; inspect profile. Reliable ellipses overall: 8.",
+        "original_flags": "",
+        "source": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\MER_VIS_galaxy_reports\\all_2777\\png_QI\\0016_Euclid_-550147948285020121_MER_VIS_geometry_report_QI.png",
+        "partial": "False"
+      },
+      {
+        "id": "-560894756493198556",
+        "image": "examples/-560894756493198556.png",
+        "detail": "Only 9 reliable isophotes; inspect profile. Reliable ellipses overall: 9.",
+        "original_flags": "",
+        "source": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\MER_VIS_galaxy_reports\\all_2777\\png_QI\\0281_Euclid_-560894756493198556_MER_VIS_geometry_report_QI.png",
+        "partial": "False"
+      }
+    ]
+  }
+]

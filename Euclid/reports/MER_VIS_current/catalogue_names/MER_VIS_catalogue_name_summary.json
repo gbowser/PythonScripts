@@ -1,0 +1,19 @@
+{
+  "targets": 2777,
+  "status": {
+    "no_match_in_searched_catalogues": 2536,
+    "outside_secure_radius": 13,
+    "secure_positional_match": 227,
+    "ambiguous": 1
+  },
+  "accepted_names": 227,
+  "accepted_by_source": {
+    "SIMBAD": 224,
+    "VizieR VII/237": 3
+  },
+  "search_radius_arcsec": 5,
+  "secure_radius_arcsec": 2,
+  "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+  "named_NGC_IC_M": [],
+  "date_utc": "2026-10-20"
+}

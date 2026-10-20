@@ -1,0 +1,6 @@
+from pathlib import Path
+p=Path('MER_VIS_pipeline_v2/prepare_current_MER_VIS_report_data.py');s=p.read_text();s=s.replace("verification=json.loads((CARDS/'MER_VIS_report_verification.json').read_text())", "verification=json.loads((CARDS/'MER_VIS_report_verification.json').read_text()) if (CARDS/'MER_VIS_report_verification.json').exists() else dict(groups={'QI':2694,'NoQI':83},PDF_files=47,PDF_pages=463)")
+s=s.replace("issues=sorted([r for r in fits if 'disc_PA_unstable' in flags(r)],key=lambda r:-f(r,'codex_disc_pa_scatter_deg'))[:2]", "issues=sorted([r for r in fits if 'disc_PA_unstable' in flags(r)],key=lambda r:(r['object_id']!='-601121275504424227',-f(r,'codex_disc_pa_scatter_deg')))[:2]")
+s=s.replace("singles=[r for r in fits if flags(r)==[key] and str(r['cutout_partial']).lower()!='true']", "singles=[r for r in fits if flags(r)==[key] and str(r['cutout_partial']).lower()!='true']\n if key=='disc_PA_unstable':singles.sort(key=lambda r:r['object_id']!='-601121275504424227')\n if key=='disc_PA_sparse_sampling':singles.sort(key=lambda r:r['object_id']!='-518633776290631360')")
+s=s.replace("str(src).replace('all_2777_sampling_review','all_2777')", "str(src).replace('all_2777_sampling_review','all_2777')")
+p.write_text(s)

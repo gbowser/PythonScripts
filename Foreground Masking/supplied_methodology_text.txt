@@ -1,0 +1,147 @@
+Euclid VIS disc PA, bar PA and inclination methodology
+Oct 20, 2026 · @Gordon
+Overview
+All 2,777 galaxies in MER_VIS_datalabs_manifest.csv were processed with a single automated isophote pipeline; 2,776 have measurements and 1 failed. Results are in Euclid_VIS_disc_bar_PA_manifest.csv, one row per galaxy in input-manifest order.
+Data. Euclid Q1 MER background-subtracted VIS mosaic cutouts, 0.1″ per pixel, north up and east left. Every cutout is centred on the target galaxy. The catalogue segmentation area gives a size scale, r_seg = √(area/π).
+Output conventions.
+Software. Python with astropy (FITS I/O, sigma-clipped statistics), scipy.ndimage (smoothing, mask dilation) and photutils (segmentation for detection and masking, isophote for ellipse fitting). The main script is isopa.py; the fallback variants are described in the section on fallback fitting methods below.
+Pre-processing
+Each cutout is cropped, binned for large galaxies, sky-subtracted and masked before ellipse fitting.
+Crop. A square around the cutout centre with half-width min(N/2 − 1, 4 r_seg + 40) pixels, so every galaxy is covered to about 4 r_seg plus some sky.
+Bin. Large galaxies are block-averaged by b = ceil(r_seg / 80 px) so the fit runs on a manageable grid; b = 1 for most of the sample. All radii are converted back to arcsec using 0.1″ × b.
+Sky. The median and σ of the crop are measured with astropy.stats.sigma_clipped_stats (3σ, 5 iterations). The median is subtracted; σ is kept as the noise level used in later thresholds.
+Centre. The image is smoothed with a Gaussian (σ = 1.5 px), and the brightest pixel within max(4, 0.15 r_seg) pixels of the cutout centre is taken as the starting centre.
+Neighbour mask. photutils.segmentation.detect_sources is run on the smoothed image (threshold 1.5σ, ≥ 10 connected pixels). Every segment other than the one containing the galaxy centre is masked.
+Star mask. Foreground stars on top of the galaxy are found in a high-pass image (data minus an 8 px Gaussian-smoothed copy), using detect_sources at 8σ and SourceCatalog. A source is masked only if it is bright (peak > 40σ), outside the galaxy core and compact (FWHM < 4/b + 1.5 px). This keeps resolved star-forming knots and spiral-arm clumps in the fit. Each star gets a circular mask whose radius grows with its brightness (4–25 px).
+Dilation. The combined mask is grown by 2 pixels (scipy.ndimage.binary_dilation); NaN pixels are also masked.
+An initial ellipticity and orientation are estimated from the flux-weighted second moments of the galaxy's own segment. These seed the ellipse fit.
+The 30 largest galaxies (segmentation area > 40,000 px) were too large for the local machine's memory. For these, a pre-binned crop was cut on the local machine with crop.py, and the same fitting was run on that crop in the cloud.
+How photutils was used
+The isophotes come from photutils.isophote.Ellipse.fit_image, the Python implementation of the Jedrzejewski (1987) method used by IRAF ellipse. It returns, for each semi-major axis (sma), the best-fitting centre, ellipticity ε = 1 − b/a, position angle and intensity, with errors and a stop code.
+Fit settings. The masked image is passed as a numpy.ma.MaskedArray, so masked pixels are ignored when sampling each ellipse.
+The starting EllipseGeometry uses the centre, ε and orientation from pre-processing.
+Starting-geometry ladder. The fit can fail or stop early depending on where it starts. The pipeline therefore tries starting sizes of 0.5, 0.7, 0.35, 1.0 and 0.25 r_seg, each with the moment-based ε and with ε = 0.2, and finally two attempts with the centre held fixed. It accepts the first attempt that returns at least 8 isophotes. If none succeeds with the full mask, the whole ladder is repeated with the neighbour-only mask (no star masking).
+Outward second pass. When grown outwards from a small starting ellipse, photutils often freezes the geometry in the faint outer disc (stop codes 4 and 5). A second, outward-only fit is therefore started at max(1.3 r_seg, 1.2 × the outermost good sma), using the outermost good ellipse's shape. Its isophotes replace the first pass beyond that radius when at least 2 of them are good.
+Good-isophote criteria. Only isophotes passing all of these are used:
+Stop code 0 (converged) or 2 (converged with some samples flagged); 4 and 5 (geometry frozen) are rejected
+Ellipticity error < 0.1 and PA error < 10°
+Centre within max(3 px, 0.15 × sma) of the reference centre
+The n_good column counts these.
+Angle conversion. photutils returns an angle measured anticlockwise from the image +x axis. It is converted to the sky using the FITS CD matrix: for a unit vector (cos θ, sin θ) in pixel space, east = CD1_1 cos θ + CD1_2 sin θ and north = CD2_1 cos θ + CD2_2 sin θ, then PA = atan2(east, north) modulo 180°. Because the conversion uses the header, it stays correct even if a cutout were rotated or flipped.
+Disc PA and inclination
+The disc PA and inclination come from the outer good isophotes, beyond the bar, averaged over radius.
+Selecting the disc ellipses.
+"Bright" isophotes are good isophotes with mean intensity above 1σ of the sky (relaxed to 0.5σ if fewer than 5 qualify). The outermost bright sma defines r_out (disc_sma_max_arcsec).
+The disc region runs from max(0.5 r_out, 1.25 × the bar's outer end) to r_out. If no bar is found, it starts at 0.5 r_out. If fewer than 3 isophotes qualify, the outermost 3 bright isophotes are used. The start radius is reported as disc_sma_min_arcsec and the count as n_disc_ellipses.
+Disc PA. Position angles repeat every 180°, so they are averaged as axial data. Each angle is doubled, averaged as a vector and halved, weighting each isophote by 1/σ_PA² (σ_PA floored at 0.3°):
+\bar{\theta} = \tfrac{1}{2}\,\mathrm{atan2}\!\left(\sum_k w_k \sin 2\theta_k,\; \sum_k w_k \cos 2\theta_k\right), \qquad w_k = \frac{1}{\max(\sigma_{\mathrm{PA},k},\,0.3^\circ)^2}
+This avoids the wrap-around problem: 178° and 2° average to 0°, not 90°. disc_PA_err is the larger of the circular standard deviation across the disc isophotes and their median photutils PA error. It therefore measures how much the PA changes with radius (spiral arms, warps, lopsidedness), not only the fit noise.
+Disc ellipticity. disc_eps is the median ε of the disc isophotes, and disc_eps_err their standard deviation.
+Inclination. The axis ratio q = 1 − ε is converted with the Hubble (1926) formula for an oblate disc of intrinsic thickness q0 = 0.2:
+\cos^2 i = \frac{q^2 - q_0^2}{1 - q_0^2}, \qquad q = 1 - \varepsilon_{\mathrm{disc}}, \quad q_0 = 0.2
+When q ≤ q0, i = 90°. inclination_err is half the spread between the inclinations at ε − σ_ε and ε + σ_ε.
+The outer isophotes are used because a bar, bulge or inner ring makes the inner isophotes elongated or round in ways unrelated to the disc's projection. Spiral arms and faint outer discs still add scatter, which is why the flags and errors should be checked before deprojecting.
+Bar detection and bar PA
+A bar is identified from the radial profiles of ε and PA using the standard ellipse-fit signature (Wozniak et al. 1995; Jogee et al. 2004; Menéndez-Delmestre et al. 2007; Aguerri et al. 2009): ε rises to a maximum over a range of roughly constant PA, then falls and/or the PA changes as the isophotes enter the disc. The bar PA is the PA of that plateau, measured on the sky with no deprojection.
+Steps.
+Search region. Good isophotes with 0.5″ ≤ sma ≤ 0.7 r_out. The inner limit is about 3 × the VIS PSF FWHM, so PSF-rounded isophotes are excluded. The outer limit keeps the search inside the disc. At least 4 isophotes are required.
+Smoothing. ε is smoothed with a 3-point running median to suppress single-isophote spikes.
+Candidate peaks. Every isophote whose smoothed ε is ≥ 0.2 and is a local maximum within ±2 neighbouring isophotes.
+Bar-end test. For each candidate at sma_k, the good isophotes just outside it, from sma_k to max(2.5 sma_k, sma_k + 1″), are examined:
+drop = ε_peak − minimum ε outside
+ΔPA_out = largest PA change outside, relative to the peak
+offset = |plateau PA − preliminary disc PA|, where the preliminary disc PA comes from the outer 40% of the profile
+Plateau. The contiguous run of isophotes around the peak (up to ±12) with ε ≥ ε_peak − 0.05. The bar PA is the weighted axial mean of the PAs over this run (same method as the disc PA). bar_PA_err is the larger of their circular standard deviation and the median photutils PA error.
+Acceptance. A candidate is a bar if the PA scatter over the plateau is ≤ 10° and at least one of these holds:
+drop ≥ 0.08
+ΔPA_out ≥ 10° and drop ≥ 0.04
+offset ≥ 10° and drop ≥ 0.04
+Choice. If several candidates pass, the one with the highest quality class is kept, then the highest ε, then the largest sma.
+The second and third tests allow bars that are nearly aligned with the line of nodes or seen in a fairly inclined disc. In those, ε may not fall much beyond the bar end, but the PA twists or the bar is misaligned with the disc.
+Bar outputs.
+Bar quality classes
+bar_quality grades how clearly the ellipse profiles show a bar: 2,577 galaxies are A, 132 are B and 67 have no bar detected.
+What the classes mean. A is a clean ε peak with a stable PA and a clear fall outside it, the textbook ellipse-fit bar. B is a plausible bar whose signature is weaker or partly blended with a bulge, ring or spiral arms; its PA is less certain. No bar detected means no inner ε peak passed the tests. It does not prove the galaxy is unbarred: the bar may be too small for the 0.5″ inner limit, too end-on, or hidden in a strongly inclined disc.
+Caution: the classes are lenient. The sample was selected from Galaxy Zoo as strongly barred (median vote fraction 0.88), so a high detection rate is expected. However, the classes test only the profile shape, and a bulge, an inner ring, a nuclear bar or the start of the spiral arms can produce the same peak and drop. Two numbers show where to be careful:
+964 class-A bars have bar_sma_arcsec < 1″, only a few resolution elements across
+443 class-A bars are in discs with i > 60°, where projection can create or hide a bar signature
+For a cleaner bar sample, a reasonable starting cut is: class A, bar_eps_drop ≥ 0.2, bar_eps_max ≥ 0.4 (2,187 galaxies), with i < 60° and bar_sma_arcsec ≥ 1″. Spot-checking overlays from each class is recommended.
+Fallback fitting methods
+57 galaxies (2.1%) are measured with a fallback method rather than the standard fit; the method column says which. They fall into two groups: 18 galaxies where the standard fit failed outright, and 78 where it ran but fewer than half of its isophotes passed the quality cuts.
+Why fits failed or were weak.
+Wrong reference centre (the main cause). The good-isophote test requires each ellipse's centre to lie close to the starting centre. That centre is the brightest smoothed pixel near the middle of the cutout. When this pixel is a bright clump, a star-forming knot, an off-centre nucleus, or when the galaxy is lopsided, the fitted ellipses settle on the true isophotal centre a few pixels away. Every isophote then fails the centre test, even though the fit is sound.
+Low signal-to-noise or faint outer discs. PA and ε errors exceed the 10° and 0.1 cuts, especially for small or low-surface-brightness galaxies.
+Heavy masking or clumpy light. Bright neighbours or overlapping stars remove a large share of each ellipse; patchy star formation makes the profiles noisy.
+The fallback methods. Each changes only what is listed; everything else is identical to the standard pipeline.
+How they were applied.
+The 18 failed galaxies were run through relaxed, then smoothed, then recentred_relaxed. Each galaxy kept the first method that succeeded: 6, 2 and 9 were rescued in turn.
+The 78 weak fits (n_good / n_isophotes < 0.5) were re-run with the strict recentred method. A result replaced the standard one only if it succeeded and had more good isophotes. That was true for 40; the other 38 keep their standard fit. For the 40 replaced, the median n_good rose from 15 to 28. Overlays of the 8 whose disc PA changed most were checked by eye and follow the galaxy light.
+Results from the relaxed methods use looser criteria, so their errors are less reliable; those galaxies should be inspected before use. The recentred method keeps the strict criteria.
+Galaxies rescued from outright failure (17).
+The recentred_relaxed rescues all have 39–51 good isophotes once recentred, confirming that the centre reference, not the data, was the problem. Three relaxed rescues have only 3–6 good isophotes (Euclid_-617805848472606333, Euclid_2678942806654772880, Euclid_2700376345666189458) and should be treated as low-confidence.
+Weak fits replaced by the recentred method (40). Euclid_-516202041290750678, Euclid_-587267746506353711, Euclid_-617014987504219079, Euclid_-565923072496882332, Euclid_-607600867492566130, Euclid_-634547660495523587, Euclid_-607914249490267839, Euclid_-621071234491918968, Euclid_-631361758487483851, Euclid_-596656145486761610, Euclid_-566666678479468191, Euclid_-651431755479766417, Euclid_-611797963476928377, Euclid_-606374854467806586, Euclid_-614258294466392906, Euclid_-636317137463253182, Euclid_-634991535465705136, Euclid_2661681730672330435, Euclid_2753153222670260072, Euclid_2715656395675124071, Euclid_2701854168662738586, Euclid_2703760706663228092, Euclid_2720287267665901891, Euclid_2733031308679321427, Euclid_2727344879649237797, Euclid_2730625672650256281, Euclid_2718905950655997845, Euclid_-664249547467079209, Euclid_-629093206457788238, Euclid_-526868174285579177, Euclid_-513718237277895952, Euclid_-533521346263850025, Euclid_2675883999645507310, Euclid_2669515494660641027, Euclid_-525030323287067265, Euclid_2688289183646857890, Euclid_2690070926643224042, Euclid_2665767972658181078, Euclid_2752550873659477045, Euclid_2721478026685640117.
+Unmeasured (1). Euclid_-524824554283124036 failed every method. It is the largest, brightest object in the sample (r_seg = 21″, segmentation magnitude 14.5, in a 20′ cutout). No starting geometry produced the minimum 8 isophotes, even on the binned crop. Its row has status = failed and blank measurements; it is best measured by hand, for example in AstroImageJ or with a custom photutils run.
+Flags and limitations
+The flags column lists, separated by semicolons, every condition that makes a measurement less reliable. The disc PA is the measurement most often affected.
+Limitations.
+Errors are scatter across radius, not just fit noise. They are deliberately conservative. A large disc_PA_err often reflects genuine structure, such as spiral arms or a warp, rather than a bad fit.
+Thin, oblate disc with q0 = 0.2. The inclination assumes this intrinsic thickness. Using q0 = 0.13 or 0.25 changes i by a few degrees at high inclination and negligibly below about 60°.
+No PSF correction. Isophotes inside about 0.5″ are rounded by the PSF, which is why the bar search starts there. Bars shorter than about 1″ are near the resolution limit.
+Observed bar PA only. Deprojected bar angles and lengths must be computed separately from bar_PA_deg, disc_PA_deg and inclination_deg (tan φ_d = tan φ / cos i).
+The profile-based bar test is lenient (see Bar quality classes). It responds to any inner elongated structure, so visual confirmation is advised for a final sample.
+Large galaxies were binned. For r_seg > 8″, binning by b = 2 or more lowers the inner resolution, so short bars in these galaxies may be missed.
+Recommended cuts for deprojection work: status = ok, disc_PA_err < 10°, 25° ≤ i ≤ 60°, no small_disc_lt2arcsec or heavily_masked flag. Below 25° the deprojection is under 10% and the disc PA matters little.
+References.
+Jedrzejewski R. I. 1987, MNRAS, 226, 747 — isophote fitting method behind photutils.isophote
+Hubble E. P. 1926, ApJ, 64, 321 — inclination from axis ratio with intrinsic thickness
+Wozniak H. et al. 1995, A&AS, 111, 115; Jogee S. et al. 2004, ApJ, 615, L105; Menéndez-Delmestre K. et al. 2007, ApJ, 657, 790; Aguerri J. A. L. et al. 2009, A&A, 495, 491 — ellipse-fit bar identification
+photutils isophote documentation
+TABLE
+Quantity | Convention | Column
+Inclination i | Degrees; 0° face-on, 90° edge-on | inclination_deg, inclination_err
+Disc PA | Degrees east of north, modulo 180°; north 0°, east 90° | disc_PA_deg, disc_PA_err
+Bar PA | Same sky convention, from selected inner ellipses; observed, not deprojected | bar_PA_deg, bar_PA_err
+TABLE
+Parameter | Value | Meaning
+minsma, maxsma | 1 px; min(N/2 − 3, 3.2 r_seg) | Radial range fitted
+step | 0.1 | Geometric growth: each sma is 10% larger than the last
+maxit | 40 | Iterations per isophote
+nclip, sclip | 3, 2.5 | Sigma-clipping of pixels along each ellipse, which suppresses HII regions and residual stars
+fflag | 0.5 | Up to half of an ellipse's samples may be masked or clipped
+maxgerr | 1.0 | Relative gradient error above which the geometry is frozen; looser than the default 0.5 so faint outer discs are still fitted
+TABLE
+Column | Meaning
+bar_PA_deg, bar_PA_err | Observed bar PA (east of north, mod 180°) and its error
+bar_eps_max | Peak smoothed ε of the bar
+bar_sma_arcsec | sma of the ε peak, the usual l_εmax estimate of bar length (a lower limit to the true length)
+bar_sma_range_arcsec | sma range of the plateau isophotes used for the PA
+n_bar_ellipses | Number of plateau isophotes
+bar_eps_drop | Fall in ε outside the peak
+bar_disc_dPA_deg | Signed bar PA − final disc PA, from −90° to +90°
+TABLE
+Class | Rule | Count | Median ε_peak | Median ε drop | Median bar PA error
+A | Passes acceptance, and drop ≥ 0.10, plateau PA scatter ≤ 5°, ε_peak ≥ 0.30 | 2,577 | 0.60 | 0.37 | 1.3°
+B | Passes acceptance but fails at least one A condition: a weak drop, a twisting plateau or a rounder peak | 132 | 0.54 | 0.10 | 5.0°
+no_bar_detected | No candidate passes; bar columns are blank | 67 | – | – | –
+(blank) | Isophote fit failed | 1 | – | – | –
+TABLE
+Method (method) | Script | Change from standard | Flag added | Galaxies
+relaxed | isopa_relaxed.py | Good-isophote cuts loosened: ε error < 0.2, PA error < 20°, centre within max(4 px, 0.25 sma). Disc isophotes may be as faint as 0.2σ, and 3 suffice | relaxed_fit | 6
+smoothed | isopa_smooth.py | As relaxed, and the image is first smoothed with a Gaussian of σ = 2 px, to steady the fit in noisy or clumpy galaxies | relaxed_fit_smoothed | 2
+recentred_relaxed | isopa_recentre.py | As relaxed, but the centre test uses the median centre of the inner converged isophotes (sma < max(10 px, 0.5 r_seg)), not the starting pixel | relaxed_fit_recentred | 9
+recentred | isopa_rc.py | Standard (strict) cuts, but with the recentred reference centre | recentred | 40
+TABLE
+Method | Galaxies
+relaxed | Euclid_-617805848472606333, Euclid_2719527070667544740, Euclid_2750996677664023406, Euclid_2678942806654772880, Euclid_-518957482269846974, Euclid_2700376345666189458
+smoothed | Euclid_-572572608494995762, Euclid_2716850382685990688
+recentred_relaxed | Euclid_-586374330510251740, Euclid_-584896980492699093, Euclid_-663407782479006908, Euclid_2690740133686419202, Euclid_2675777780650314087, Euclid_2715759238647690013, Euclid_2690098302643252213, Euclid_2660437748657769986, Euclid_2660409611657762437
+TABLE
+Flag | Condition | Galaxies
+disc_PA_scatter_gt10 | disc_PA_err > 10°: PA varies across the disc isophotes (spiral arms, warps, faint outskirts) | 1,072
+small_disc_lt2arcsec | r_out < 2″: few resolution elements across the disc | 131
+near_face_on_PA_uncertain | Disc ε < 0.1 (i ≲ 26°): the disc PA is poorly defined, but deprojection is small | 92
+heavily_masked | > 20% of the galaxy's segment masked | 87
+bar_disc_ranges_close | Disc region starts within 1.2 × the bar's outer sma: the disc PA may be pulled by the bar or the bar PA by the disc | 50
+recentred, relaxed_fit, relaxed_fit_smoothed, relaxed_fit_recentred | Fallback method used (previous section) | 40, 6, 2, 9
+near_edge_on | i > 80° | 1
+cutout_has_NaN | Cutout contains blank pixels | 0

@@ -1,0 +1,11 @@
+# Scientific fitting and report generation. Install in a fresh Python 3.12+ environment.
+astropy==8.0.2
+photutils==3.1.1
+numpy>=2.3
+scipy>=1.15
+matplotlib>=3.10
+pandas>=2.2
+Pillow>=11
+reportlab>=4
+pypdf>=5
+python-docx>=1.1

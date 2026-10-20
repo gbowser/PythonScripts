@@ -1,0 +1,2 @@
+from pathlib import Path
+p=Path('MER_VIS_summary_build/build_summary.mjs');s=p.read_text(encoding='utf-8-sig');prefix=s.split('const staging=')[0];prefix+="\nfor(let i=6;i<p.slides.items.length;i++){const blob=await p.export({slide:p.slides.items[i],format:'png',scale:1});await fs.writeFile(path.resolve(cwd,'renders',`slide-${i+1}.png`),new Uint8Array(await blob.arrayBuffer()));}\n";Path('MER_VIS_summary_build/render_examples.mjs').write_text(prefix,encoding='utf-8')

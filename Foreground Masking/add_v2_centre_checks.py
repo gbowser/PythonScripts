@@ -1,0 +1,5 @@
+from pathlib import Path
+p=Path('MER_VIS_pipeline_v2/fit_adaptive_MER_VIS_geometry.py');s=p.read_text(encoding='utf-8-sig')
+s=s.replace("dpa=axial_mean([z['pa_sky_deg'] for z in disc]", "centre_x=float(np.median([z['x_original_pix'] for z in disc]));centre_y=float(np.median([z['y_original_pix'] for z in disc]));centre_offset=float(np.hypot(centre_x-x0,centre_y-y0)*scale);centre_scatter=float(np.sqrt(np.mean([(z['x_original_pix']-centre_x)**2+(z['y_original_pix']-centre_y)**2 for z in disc]))*scale)\n  r.update(codex_catalogue_centre_x_pix=x0,codex_catalogue_centre_y_pix=y0,codex_fit_centre_x_pix=centre_x,codex_fit_centre_y_pix=centre_y,codex_centre_offset_arcsec=centre_offset,codex_centre_scatter_arcsec=centre_scatter)\n  dpa=axial_mean([z['pa_sky_deg'] for z in disc]")
+s=s.replace("if q>.9:info.append", "if centre_offset>max(.3,.15*rseg*scale):flags.append('centre_offset_large')\n  if centre_scatter>max(.3,.1*rseg*scale):flags.append('centre_unstable')\n  if q>.9:info.append")
+p.write_text(s,encoding='utf-8')

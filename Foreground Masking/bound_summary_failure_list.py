@@ -1,0 +1,2 @@
+from pathlib import Path
+p=Path('MER_VIS_pipeline_v2/build_current_MER_VIS_documents.py');s=p.read_text(encoding='utf-8-sig');s=s.replace("for e in s['failures_detail']:p", "for e in s['failures_detail'][:4]:p");s=s.replace("if not s['failures_detail']:p", "if len(s['failures_detail'])>4:p('The manifest and per-galaxy reports retain all remaining failure reasons; four are shown here.')\nif not s['failures_detail']:p");p.write_text(s,encoding='utf8')
