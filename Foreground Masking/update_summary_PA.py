@@ -1,0 +1,23 @@
+from pathlib import Path
+p=Path('build_MER_VIS_outcomes_summary.py')
+s=p.read_text()
+s=s.replace('19 October 2026','Updated 20 October 2026')
+pos="page('Comparison with Euclid geometry')"
+addition="""page('How Codex calculates position angle')
+p('Codex fits ellipses to contours of constant brightness using Photutils. Photutils initially measures the ellipse major axis from the positive image x-axis towards the positive image y-axis, counterclockwise in a plot where x increases rightwards and y upwards. This intermediate pixel angle depends on the FITS orientation.')
+p('The code then uses the FITS World Coordinate System (WCS) at the galaxy centre to convert that pixel direction into local celestial East and North components. In sky_pa(), the calculation is PA = degrees(atan2(East, North)) modulo 180°. The local matrix stores West and North, so the code passes minus West as the East component. This accounts for image rotation and reflection.')
+h('The reported sky convention')
+p('Both fitted disc PA and fitted bar PA are measured FROM CELESTIAL NORTH TOWARDS EAST. North–South is 0°, northeast–southwest is 45°, East–West is 90°, and southeast–northwest is 135°. The range is 0° inclusive to 180° exclusive. An ellipse axis has no arrow, so 0° and 180° describe the same direction.')
+p('On a North-up, East-left astronomical display this direction is COUNTERCLOCKWISE. On a North-up, East-right display it is CLOCKWISE. Thus North towards East is the unambiguous definition; clockwise or counterclockwise alone depends on the displayed image orientation. A mirrored display does not change the WCS-based catalogue PA.')
+p('The code calculates an axial mean over reliable isophotes in the selected outer disc interval for disc PA and the selected inner bar interval for bar PA. It doubles angles before averaging and halves the result, so axes near 179° and 1° average near 0°, rather than 90°. These are observed sky angles before deprojection. Inclination is a separate quantity calculated from the disc axis ratio.')
+h('How to interpret the 90 degree adjustment')
+p('A constant 90° offset can represent perpendicular reference axes with the same measurement sense, or a major-axis versus minor-axis choice. It does not by itself establish which explanation applies. In particular, changing from counterclockwise from East to the astronomical North-towards-East convention on a North-up, East-left display also involves a change of measurement sense; one cannot assume that it always means simply adding 90°.')
+p('Euclid documents raw POSITION_ANGLE as counterclockwise from the image x-axis, SExtractor THETA_IMAGE, in the range −90° to +90°. The image x-axis is not necessarily celestial East. Our project first converts that pixel direction through WCS, then applies the adopted +90° adjustment once. We use this as the adopted perpendicular-axis correction for this Q1 comparison, without claiming that Euclid officially measures its raw angle from celestial East or North.')
+p('Code references: fit_MER_VIS_geometry_portable.py, sky_pa() and axial_mean(); MER_VIS_geometry_transforms.py, local_pixel_matrix(). Euclid definition: https://euclid.esac.esa.int/dr/q1/dpdd/merdpd/dpcards/mer_finalcatalog.html#mer-main-catalog-fits')
+"""
+s=s.replace(pos,addition+'\n'+pos)
+p.write_text(s)
+p=Path('MER_VIS_summary_build/build_summary.mjs');s=p.read_text();s=s.replace('19 October 2026','Updated 20 October 2026')
+s=s.replace("text(s,'Euclid shapes describe whole-object light. No independent Euclid bar PA is available.',64,613,1135,54,23,muted);", "text(s,'Codex PA: North towards East. N = 0°, NE = 45°, E = 90° (mod 180°).\\nCounterclockwise on a North-up, East-left image. Pixel angles first pass through WCS.',64,606,1150,66,22,muted);")
+s=s.replace("The +90-degree adjustment is the adopted project rule for the current Q1 sample.","Codex fits Photutils isophotes, converts their pixel major-axis vectors using the local FITS WCS, and calculates degrees(atan2(East, North)) modulo 180. It uses axial means in selected disc and bar radial ranges. These are observed sky PAs before deprojection. North towards East is counterclockwise on a North-up East-left display, clockwise if East is right. Euclid documents raw POSITION_ANGLE as CCW from image x (SExtractor THETA_IMAGE), not necessarily celestial East. Our +90 adjustment follows the WCS conversion. A constant 90 offset is consistent with perpendicular reference axes or major/minor axes but does not uniquely prove the cause. We adopt the correction without asserting an official Euclid North/East reference change. Euclid source: https://euclid.esac.esa.int/dr/q1/dpdd/merdpd/dpcards/mer_finalcatalog.html#mer-main-catalog-fits.")
+p.write_text(s)

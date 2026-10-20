@@ -44,6 +44,7 @@ def make_card(r,profiles,out,ordinal):
  if len(g):maxa=float(g.sma_arcsec.max())
  elif len(pr):maxa=float(pr.sma_arcsec.max())
  else:maxa=min(raw.shape)*scale*.25
+ if not np.isfinite(maxa) or maxa<=0:maxa=min(raw.shape)*scale*.25
  radius=max(3,maxa*1.22)/scale
  xa=max(0,int(x-radius));xb=min(raw.shape[1],int(x+radius)+1);ya=max(0,int(y-radius));yb=min(raw.shape[0],int(y+radius)+1);patch=raw[ya:yb,xa:xb];xc,yc=x-xa,y-ya
  finite=patch[np.isfinite(patch)];sample=finite[::max(1,len(finite)//100000)];med,_,noise=sigma_clipped_stats(sample);noise=max(float(noise),1e-12);display=np.arcsinh((patch-med)/noise);vmax=max(float(np.nanpercentile(display,99.6)),2)
@@ -95,8 +96,10 @@ def make_card(r,profiles,out,ordinal):
  for issue in issues:wrapped.extend(textwrap.wrap(issue,width=88,break_long_words=False))
  fig.add_artist(Rectangle((.04,.013),.92,.104,transform=fig.transFigure,color=bg,zorder=0))
  for j,line in enumerate(wrapped):fig.text(.052,.100-j*.021,line,fontsize=9.6,color=color,va='top',weight='bold' if j==0 else 'normal')
- name=f'{ordinal:02d}_Euclid_{oid}_MER_VIS_geometry_report.png';fig.savefig(out/name,dpi=250);plt.close(fig)
- return dict(order=ordinal,object_id=oid,png=name,fits_filename=path.name,status=r['codex_fit_status'],quality_flags=flaglist,partial=partial,photutils_disc_pa_deg=disc if np.isfinite(disc) else None,photutils_bar_pa_deg=bar if np.isfinite(bar) else None,photutils_inclination_deg=inc if np.isfinite(inc) else None,euclid_adjusted_detection_pa_deg=eu,euclid_detection_inclination_proxy_deg=ei,euclid_sersic_inclination_proxy_deg=si,euclid_bar_pa_deg=None,delta_disc_pa_deg=delta(disc,eu,True),delta_inclination_detection_deg=delta(inc,ei),delta_inclination_sersic_deg=delta(inc,si),bar_range=[b0,b1] if np.isfinite(b0) else None,disc_range=[d0,d1] if np.isfinite(d0) else None,candidate_ranges_only=candidate,reliable_samples=len(g),bar_samples=nb,disc_samples=nd)
+ quality_issue=bool(failed or flaglist or partial)
+ suffix='_QI' if quality_issue else ''
+ name=f'{ordinal:04d}_Euclid_{oid}_MER_VIS_geometry_report{suffix}.png';fig.savefig(out/name,dpi=250);plt.close(fig)
+ return dict(order=ordinal,object_id=oid,png=name,quality_issue=quality_issue,fits_filename=path.name,status=r['codex_fit_status'],quality_flags=flaglist,partial=partial,photutils_disc_pa_deg=disc if np.isfinite(disc) else None,photutils_bar_pa_deg=bar if np.isfinite(bar) else None,photutils_inclination_deg=inc if np.isfinite(inc) else None,euclid_adjusted_detection_pa_deg=eu,euclid_detection_inclination_proxy_deg=ei,euclid_sersic_inclination_proxy_deg=si,euclid_bar_pa_deg=None,delta_disc_pa_deg=delta(disc,eu,True),delta_inclination_detection_deg=delta(inc,ei),delta_inclination_sersic_deg=delta(inc,si),bar_range=[b0,b1] if np.isfinite(b0) else None,disc_range=[d0,d1] if np.isfinite(d0) else None,candidate_ranges_only=candidate,reliable_samples=len(g),bar_samples=nb,disc_samples=nd)
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--data-root',type=Path,default=Path(r'D:\Dropbox\Public Documents\UCLAN\MSc Research\Euclid'));p.add_argument('--output-dir',type=Path);p.add_argument('--ids',nargs='+',default=DEFAULT_IDS);args=p.parse_args();base=args.data_root;out=args.output_dir or base/'MER_VIS_galaxy_reports'/'pilot_10';out.mkdir(parents=True,exist_ok=True)
  d=pd.read_csv(base/'Euclid_MER_VIS_geometry'/'MER_VIS_local_geometry_manifest.csv',dtype={'object_id':str}).set_index('object_id',drop=False);results=[]

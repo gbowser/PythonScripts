@@ -1,0 +1,20 @@
+{
+  "multiplicity": {
+    "0": 601,
+    "1": 963,
+    "2": 466,
+    "3": 176,
+    "4": 1
+  },
+  "flags": {
+    "small_bar_sensitive_to_resolution": 1210,
+    "disc_PA_unstable": 609,
+    "disc_axis_ratio_unstable": 573,
+    "bar_PA_unstable": 28,
+    "weak_ellipse_bar_signature": 7
+  },
+  "face_on": 200,
+  "suppressed_disc_pa": 182,
+  "denominator": 2777,
+  "fits": 2207
+}
