@@ -1,0 +1,12 @@
+from pathlib import Path
+source=Path('MER_VIS_pipeline_v2/review_code/fit_adaptive_MER_VIS_geometry.py').read_text(encoding='utf8')
+source=source.replace("VERSION='MER_VIS_adaptive_v2_2026-10-20'", "VERSION='MER_VIS_manual_centre_review_v1_2026-10-21'\nMANUAL_LOCK=True")
+source=source.replace('fix_center=fixed','fix_center=(fixed or MANUAL_LOCK)')
+source=source.replace("h=hd[0].header.copy();ny,nx=hd[0].shape;x0=float(h['CENX'])-1;y0=float(h['CENY'])-1", "h=hd[0].header.copy();ny,nx=hd[0].shape;catalogue_x=float(h['CENX'])-1;catalogue_y=float(h['CENY'])-1;x0=float(r['manual_centre_x_pix']);y0=float(r['manual_centre_y_pix'])")
+source=source.replace('peak=np.argmax(np.where(near&~mask,smooth,-np.inf));yc,xc=np.unravel_index(peak,data.shape)', 'xc=float(x);yc=float(y) # Explicit user centre; never snap to a different peak.')
+source=source.replace('target=segments[yc,xc]', 'target=segments[int(round(yc)),int(round(xc))]')
+source=source.replace('if inner:\n', 'if inner and not MANUAL_LOCK:\n')
+source=source.replace('centre_x-x0,centre_y-y0','centre_x-catalogue_x,centre_y-catalogue_y')
+source=source.replace('codex_catalogue_centre_x_pix=x0,codex_catalogue_centre_y_pix=y0','codex_catalogue_centre_x_pix=catalogue_x,codex_catalogue_centre_y_pix=catalogue_y')
+source=source.replace('codex_radius_arcsec=max(3*barend,45)', 'codex_radius_arcsec=rout')
+Path('MER_VIS_review_tool/fit_manual_centre_MER_VIS.py').write_text(source,encoding='utf8')

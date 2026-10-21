@@ -16,6 +16,7 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 import webbrowser
+from refit_MER_VIS import ReviewRefits
 
 import numpy as np
 from astropy.io import fits
@@ -30,7 +31,8 @@ CATEGORIES = {
     "bar": "Small candidate bar and boundary cases",
     "ellipticity": "Changing disc ellipticity and boundary cases",
     "variation": "Well-sampled disc PA variation",
-    "control": "No counted geometry flags",
+    "control": "No Quality Issues",
+    "failed": "Failed galaxies",
 }
 DEFAULT_RULES = dict(min_disc=6, max_gap=.5, pa_rms=10., eps_span=.15, small_bar=1.5)
 
@@ -68,8 +70,50 @@ def atomic_json(path, value):
             time.sleep(.15 * (attempt + 1))
 
 
+def expand_reference_group(sample, rows):
+    """Preserve all existing IDs and add clean face-on/inclined comparisons."""
+    byid = {r["object_id"]: r for r in rows}
+    used = {s["object_id"] for s in sample}
+    def face_on(r):
+        return "nearly_face_on" in r.get("codex_information", "")
+    eligible = [r for r in rows if r["codex_fit_status"] == "provisional_fit"
+                and not r["codex_quality_flags"]
+                and str(r.get("cutout_partial")).lower() != "true"]
+    for s in sample:
+        s["category_label"] = CATEGORIES[s["category"]]
+        if s["category"] == "control":
+            s["selection_reason"] = ("No quality issues; nearly face-on (informational)" if face_on(byid[s["object_id"]])
+                                     else "No quality issues; comparison at other disc inclinations")
+    for want_face_on in [True, False]:
+        current = sum(s["category"] == "control" and face_on(byid[s["object_id"]]) == want_face_on for s in sample)
+        candidates = [r for r in eligible if r["object_id"] not in used and face_on(r) == want_face_on]
+        candidates.sort(key=lambda r: hashlib.sha256(r["object_id"].encode()).hexdigest())
+        for r in candidates[:max(0,6-current)]:
+            used.add(r["object_id"])
+            sample.append(dict(object_id=r["object_id"], category="control", category_label=CATEGORIES["control"],
+                               selection_reason="No quality issues; nearly face-on (informational)" if want_face_on
+                               else "No quality issues; comparison at other disc inclinations"))
+    return sample
+
+
+def add_failed_galaxies(sample, rows):
+    """Include every failed fit, preserving the existing review sample."""
+    byid = {r['object_id']: r for r in rows}
+    used = {s['object_id'] for s in sample}
+    for r in rows:
+        if r['codex_fit_status'] != 'fit_failed':
+            continue
+        item = next((s for s in sample if s['object_id'] == r['object_id']), None)
+        if item is None:
+            item = dict(object_id=r['object_id'])
+            sample.append(item)
+        item.update(category='failed', category_label=CATEGORIES['failed'],
+                    selection_reason=r.get('codex_error') or 'No adopted geometry')
+    return sample
+
+
 def select_sample(rows):
-    """48 unique, reproducible examples, including comparisons around thresholds."""
+    """54 unique examples, including 12 clean reference galaxies."""
     fitted = [r for r in rows if r["codex_fit_status"] == "provisional_fit"]
     chosen, used = [], set()
 
@@ -111,11 +155,12 @@ def select_sample(rows):
         "Adequate sampling and disc PA scatter above 10 degrees", "-601121275504424227")
     add("control", [r for r in fitted if not flags(r) and str(r.get("cutout_partial")).lower() != "true"], 6,
         "No counted geometry flags; physical interpretation still needs checking")
-    assert len(chosen) == len(used) == 48, f"Expected 48 unique examples, got {len(chosen)}"
-    return chosen
+    chosen = expand_reference_group(chosen, rows)
+    assert len(chosen) == len({r["object_id"] for r in chosen}) == 54, f"Expected 54 unique examples, got {len(chosen)}"
+    return add_failed_galaxies(chosen, rows)
 
 
-class Store:
+class Store(ReviewRefits):
     def __init__(self, data_root, output):
         self.data_root, self.output = data_root, output
         output.mkdir(parents=True, exist_ok=True)
@@ -130,15 +175,22 @@ class Store:
             self.sample = self.sample_document["sample"]
             if any(r["object_id"] not in self.byid for r in self.sample):
                 raise ValueError("The saved sample references missing galaxies")
+            before = json.dumps(self.sample, sort_keys=True)
+            self.sample = add_failed_galaxies(expand_reference_group(self.sample, self.rows), self.rows)
+            if json.dumps(self.sample, sort_keys=True) != before:
+                self.sample_document.update(sample=self.sample, sample_revision=3,
+                    selection="Stratified review examples, 12 No Quality Issues references and all failed galaxies; not a prevalence sample")
+                atomic_json(sample_path, self.sample_document)
         else:
             self.sample = select_sample(self.rows)
             self.sample_document = dict(app=APP_ID, source_sha256=self.digest, sample=self.sample,
-                                        selection="48 purposively stratified examples; not a population prevalence sample")
+                                        sample_revision=3,
+                                        selection="Stratified review examples, 12 No Quality Issues references and all failed galaxies; not a prevalence sample")
             atomic_json(sample_path, self.sample_document)
-            with (output / "MER_VIS_review_sample.csv").open("w", newline="", encoding="utf-8-sig") as f:
-                writer = csv.DictWriter(f, fieldnames=list(self.sample[0]))
-                writer.writeheader()
-                writer.writerows(self.sample)
+        with (output / "MER_VIS_review_sample.csv").open("w", newline="", encoding="utf-8-sig") as f:
+            writer = csv.DictWriter(f, fieldnames=list(self.sample[0]))
+            writer.writeheader()
+            writer.writerows(self.sample)
         self.review_path = output / "MER_VIS_saved_reviews.json"
         self.reviews = json.loads(self.review_path.read_text(encoding="utf-8")) if self.review_path.exists() else {}
         self.lock = threading.RLock()
@@ -148,12 +200,25 @@ class Store:
         return [dict(object_id=r["object_id"], name=r.get("catalogue_name", ""),
                      flags=r["codex_quality_flags"], status=r["codex_fit_status"]) for r in self.rows]
 
-    def galaxy(self, oid):
+    def galaxy(self, oid, refit_id=None):
         if oid not in self.byid:
             raise KeyError("Galaxy ID not in manifest")
         row = self.byid[oid]
+        refit = None
+        if refit_id:
+            # Validate the opaque identifier before resolving any filesystem path.
+            if len(refit_id)!=32 or any(c not in '0123456789abcdef' for c in refit_id):
+                raise ValueError('Invalid refit identifier')
+            folder=self.output/'refits'/refit_id
+            request=json.loads((folder/'request.json').read_text(encoding='utf8'))
+            if request['object_id']!=oid: raise ValueError('Refit belongs to a different galaxy')
+            row=json.loads((folder/'result.json').read_text(encoding='utf8'))
+            refit=dict(job_id=refit_id, x=request['row']['manual_centre_x_pix'], y=request['row']['manual_centre_y_pix'],
+                       lock_centre=request['lock_centre'], requested_utc=request['requested_utc'], folder=str(folder))
+        cache_key=(oid,refit_id)
         path = self.data_root / "Euclid_MER_VIS_geometry/profiles" / f"Euclid_{oid}_MER_VIS_ellipse_profile.csv"
-        if oid not in self.profile_cache:
+        if refit_id: path=self.output/'refits'/refit_id/'profiles'/path.name
+        if cache_key not in self.profile_cache:
             profile = []
             if path.exists():
                 with path.open(encoding="utf-8-sig") as stream:
@@ -172,7 +237,7 @@ class Store:
                     and p.get("centre_offset_fit_pix") is not None
                     and p["centre_offset_fit_pix"] <= max(4, .25 * (p.get("sma_fit_pix") or 0)))
                 converted.append(p)
-            self.profile_cache[oid] = converted
+            self.profile_cache[cache_key] = converted
         with fits.open(row["fits_path"], memmap=True) as hd:
             hdu = next(h for h in hd if h.header.get("NAXIS") == 2)
             header = hdu.header
@@ -182,6 +247,8 @@ class Store:
             cat = [number(row.get("codex_catalogue_centre_x_pix"), number(header.get("CENX"), shape[1]/2+1)-1),
                    number(row.get("codex_catalogue_centre_y_pix"), number(header.get("CENY"), shape[0]/2+1)-1)]
             centre = [number(row.get("codex_fit_centre_x_pix")), number(row.get("codex_fit_centre_y_pix"))]
+            if row["codex_fit_status"] == "fit_failed":
+                centre = [None, None]  # Failed trial centres are not adopted geometry.
             display_centre = centre if all(v is not None for v in centre) else cat
             sky = w.pixel_to_world(*display_centre)
             compass = {}
@@ -189,13 +256,15 @@ class Store:
                 px, py = w.world_to_pixel(sky.directional_offset_by(angle*u.deg, 1*u.arcsec))
                 vec = np.array([px-display_centre[0], py-display_centre[1]])
                 compass[label] = (vec/np.linalg.norm(vec)).tolist()
-        profile = self.profile_cache[oid]
+        profile = self.profile_cache[cache_key]
         outer = max([number(row.get("codex_disc_max_arcsec"), 0),
                      number(row.get("codex_bar_max_arcsec"), 0), 3])
         radius = max(outer * 1.45, 4) / scale
         x, y = display_centre
         window = [max(-.5, x-radius), min(shape[1]-.5, x+radius),
                   max(-.5, y-radius), min(shape[0]-.5, y+radius)]
+        if row["codex_fit_status"] == "fit_failed":
+            window = [-.5, shape[1]-.5, -.5, shape[0]-.5]
         original = dict(disc_pa=number(row.get("codex_disc_pa_sky_deg")),
                         bar_pa=number(row.get("codex_bar_pa_sky_deg")),
                         inclination=number(row.get("codex_inclination_deg")),
@@ -203,9 +272,18 @@ class Store:
                         pa_scatter=number(row.get("codex_disc_pa_scatter_deg")),
                         eps_span=number(row.get("codex_disc_eps_span")),
                         flags=list(filter(None, row["codex_quality_flags"].split(";"))),
+                        n_good=number(row.get('codex_n_good')), n_isophotes=number(row.get('codex_n_isophotes')),
+                        centre_offset=number(row.get('codex_centre_offset_arcsec')), centre_scatter=number(row.get('codex_centre_scatter_arcsec')),
+                        disc_pa_error=number(row.get('codex_disc_pa_error_deg')), bar_eps_drop=number(row.get('codex_bar_eps_drop')),
+                        radius=number(row.get('codex_radius_arcsec')), method=row.get('codex_method',''),
+                        n_bar=number(row.get('codex_n_bar')), binning=number(row.get('codex_binning')),
+                        masked_fraction=number(row.get('codex_masked_fraction')), calculation_seconds=number(row.get('calculation_seconds')),
                         information=row.get("codex_information", ""),
                         bar_status=row.get("codex_bar_status", ""), status=row["codex_fit_status"])
-        return clean(dict(object_id=oid, name=row.get("catalogue_name", ""), filename=Path(row["fits_path"]).name,
+        baseline=self.galaxy(oid)["original"] if refit_id else None
+        index_path=self.output/"MER_VIS_latest_refits.json"
+        latest=json.loads(index_path.read_text(encoding="utf8")).get(oid) if index_path.exists() else None
+        return clean(dict(latest_refit_id=latest, refit=refit, pipeline_original=baseline, object_id=oid, name=row.get("catalogue_name", ""), filename=Path(row["fits_path"]).name,
                           profile=profile, shape=shape, pixel_scale_arcsec=scale,
                           units=header.get("BUNIT", "FITS data units"), centre=centre, catalogue_centre=cat,
                           compass=compass, default_window=window, original=original,
@@ -242,9 +320,12 @@ class Store:
             if not len(finite):
                 raise ValueError("No finite pixels in this window")
             sample = finite[::max(1,len(finite)//100000)]
-            median = float(np.median(sample)); mad = float(np.median(np.abs(sample-median)))
+            # AutoSTF statistics use all finite pixels in the displayed preview.
+            stf_pixels = finite.astype(np.float64)
+            median = float(np.median(stf_pixels)); mad = float(np.median(np.abs(stf_pixels-median)))
             noise = max(mad*1.4826, float(np.std(sample))*.001, 1e-15)
-            stats = dict(median=median, noise=noise, percentiles=dict(zip(
+            stats = dict(median=median, noise=noise, robust_sigma=mad*1.4826,
+                         minimum=float(np.min(finite)), maximum=float(np.max(finite)), percentiles=dict(zip(
                 ["p1","p50","p95","p995","p999"], map(float,np.percentile(sample,[1,50,95,99.5,99.9])))))
             meta = dict(width=data.shape[1], height=data.shape[0], bounds=[x0-.5,x1-.5,y0-.5,y1-.5],
                         factor=factor, method=method, stats=stats)
@@ -342,7 +423,16 @@ class Handler(BaseHTTPRequestHandler):
                     source_sha256=self.server.store.digest,
                     sample_source_changed=self.server.store.sample_document["source_sha256"] != self.server.store.digest))
             if route == "/api/galaxy":
-                return self.send(self.server.store.galaxy(params.get("id",[""])[0]))
+                return self.send(self.server.store.galaxy(params.get("id",[""])[0],params.get("refit",[None])[0]))
+            if route == "/api/refit":
+                return self.send(self.server.store.refit_status(params.get("job",[""])[0]))
+            if route == "/api/refit/export":
+                job=params.get("job",[""])[0]
+                status=self.server.store.refit_status(job)
+                if status['status']!='complete': raise ValueError('The refit is not complete')
+                path=self.server.store.output/'refits'/job/'MER_VIS_manual_refit_manifest.csv'
+                return self.send(path.read_bytes(), 'text/csv; charset=utf-8', extra={
+                    'Content-Disposition':f'attachment; filename="MER_VIS_refit_{status["object_id"]}.csv"'})
             if route == "/api/image":
                 meta, data = self.server.store.image(params.get("id",[""])[0],params)
                 return self.send(gzip.compress(data,compresslevel=1), "application/octet-stream", extra={
@@ -375,6 +465,7 @@ class Handler(BaseHTTPRequestHandler):
             if length <= 0 or length > 100_000:
                 return self.send(dict(error="Invalid request size"),status=400)
             payload=json.loads(self.rfile.read(length))
+            if self.path == "/api/refit": return self.send(self.server.store.start_refit(payload))
             if self.path == "/api/review": return self.send(self.server.store.save(payload))
             if self.path == "/api/stop":
                 self.send(dict(stopped=True)); threading.Thread(target=self.server.shutdown,daemon=True).start(); return

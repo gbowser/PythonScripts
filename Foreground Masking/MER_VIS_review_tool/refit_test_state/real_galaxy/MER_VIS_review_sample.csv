@@ -1,0 +1,59 @@
+﻿object_id,category,category_label,selection_reason
+-518633776290631360,sparse,Sparse disc sampling,Three or fewer accepted disc ellipses
+2660707245679117478,sparse,Sparse disc sampling,Three or fewer accepted disc ellipses
+-618729512496482781,sparse,Sparse disc sampling,Three or fewer accepted disc ellipses
+2756030807655229287,sparse,Sparse disc sampling,Three or fewer accepted disc ellipses
+2666058208664417677,sparse,Sparse disc sampling,Four or five accepted disc ellipses
+2655917711678775055,sparse,Sparse disc sampling,Four or five accepted disc ellipses
+-658329695471315827,sparse,Sparse disc sampling,Four or five accepted disc ellipses
+-612313665481634505,sparse,Sparse disc sampling,Four or five accepted disc ellipses
+-524092835298509353,sparse,Sparse disc sampling,Additional sparse sampling example
+2651207279644403314,sparse,Sparse disc sampling,Additional sparse sampling example
+2765074250666048832,sparse,Sparse disc sampling,Additional sparse sampling example
+-617564098494950932,sparse,Sparse disc sampling,Additional sparse sampling example
+-602137290485223988,bar,Small candidate bar and boundary cases,Candidate bar end below 1 arcsec
+2697991504642661432,bar,Small candidate bar and boundary cases,Candidate bar end below 1 arcsec
+-573624059497939037,bar,Small candidate bar and boundary cases,Candidate bar end below 1 arcsec
+-653194755487198508,bar,Small candidate bar and boundary cases,Candidate bar end below 1 arcsec
+2673380029639652690,bar,Small candidate bar and boundary cases,Candidate bar end between 1 and 1.5 arcsec
+-508597523276742555,bar,Small candidate bar and boundary cases,Candidate bar end between 1 and 1.5 arcsec
+2680633579682384481,bar,Small candidate bar and boundary cases,Candidate bar end between 1 and 1.5 arcsec
+-652961675464811762,bar,Small candidate bar and boundary cases,Candidate bar end between 1 and 1.5 arcsec
+-532037676283720801,bar,Small candidate bar and boundary cases,Comparison just above the 1.5 arcsec warning
+2726422448641952391,bar,Small candidate bar and boundary cases,Comparison just above the 1.5 arcsec warning
+-521458338301461235,bar,Small candidate bar and boundary cases,Comparison just above the 1.5 arcsec warning
+-507659156277990678,bar,Small candidate bar and boundary cases,Comparison just above the 1.5 arcsec warning
+-652726207459340404,ellipticity,Changing disc ellipticity and boundary cases,Ellipticity range just below the 0.15 threshold
+-634620306474397690,ellipticity,Changing disc ellipticity and boundary cases,Ellipticity range just below the 0.15 threshold
+2689878327667932426,ellipticity,Changing disc ellipticity and boundary cases,Ellipticity range just below the 0.15 threshold
+-530741698289927285,ellipticity,Changing disc ellipticity and boundary cases,Ellipticity range just below the 0.15 threshold
+-531944064294413462,ellipticity,Changing disc ellipticity and boundary cases,Moderate ellipticity change above threshold
+2681494150647395085,ellipticity,Changing disc ellipticity and boundary cases,Moderate ellipticity change above threshold
+-585380040490691424,ellipticity,Changing disc ellipticity and boundary cases,Moderate ellipticity change above threshold
+-612780225497926799,ellipticity,Changing disc ellipticity and boundary cases,Moderate ellipticity change above threshold
+-595029565493921205,ellipticity,Changing disc ellipticity and boundary cases,Pronounced ellipticity change
+2654474268655808169,ellipticity,Changing disc ellipticity and boundary cases,Pronounced ellipticity change
+2725181809642499741,ellipticity,Changing disc ellipticity and boundary cases,Pronounced ellipticity change
+-657516691464572923,ellipticity,Changing disc ellipticity and boundary cases,Pronounced ellipticity change
+-601121275504424227,variation,Well-sampled disc PA variation,Adequate sampling and disc PA scatter above 10 degrees
+-610695895481546016,variation,Well-sampled disc PA variation,Adequate sampling and disc PA scatter above 10 degrees
+-639551465483219839,variation,Well-sampled disc PA variation,Adequate sampling and disc PA scatter above 10 degrees
+-531839818276617665,variation,Well-sampled disc PA variation,Adequate sampling and disc PA scatter above 10 degrees
+-523703623274519067,variation,Well-sampled disc PA variation,Adequate sampling and disc PA scatter above 10 degrees
+-537890362287224823,variation,Well-sampled disc PA variation,Adequate sampling and disc PA scatter above 10 degrees
+-524724591298089738,control,No Quality Issues,No quality issues; comparison at other disc inclinations
+2724315227685324582,control,No Quality Issues,No quality issues; comparison at other disc inclinations
+2666052054638783232,control,No Quality Issues,No quality issues; comparison at other disc inclinations
+2731221676651025355,control,No Quality Issues,No quality issues; comparison at other disc inclinations
+-657523792484909836,control,No Quality Issues,No quality issues; comparison at other disc inclinations
+-529398365297549606,control,No Quality Issues,No quality issues; comparison at other disc inclinations
+-603528383471076765,control,No Quality Issues,No quality issues; nearly face-on (informational)
+2675773156650292056,control,No Quality Issues,No quality issues; nearly face-on (informational)
+-530848125285468911,control,No Quality Issues,No quality issues; nearly face-on (informational)
+-663928688473758026,control,No Quality Issues,No quality issues; nearly face-on (informational)
+-597167084495151319,control,No Quality Issues,No quality issues; nearly face-on (informational)
+-529443041264453957,control,No Quality Issues,No quality issues; nearly face-on (informational)
+-586374330510251740,failed,Failed galaxies,ValueError: Only 0 accepted isophotes after recovery; need at least 3
+-524824554283124036,failed,Failed galaxies,Visual review: broader peak search switched to a saturated foreground star with diffraction spikes; no valid target-disc geometry adopted.
+2645436353651870062,failed,Failed galaxies,ValueError: Only 0 accepted isophotes after recovery; need at least 3
+2697242050653408730,failed,Failed galaxies,Visual review: accepted contours cover only the unresolved central region below 0.5 arcsec; no resolved disc geometry adopted.

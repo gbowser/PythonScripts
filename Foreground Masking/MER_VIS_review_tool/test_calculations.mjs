@@ -25,4 +25,19 @@ tool.state.settings.rules.pa_enabled=false;c=tool.calculate();assert.ok(!c.issue
 tool.state.settings.noBar=true;c=tool.calculate();assert.equal(c.bar_pa,null);assert.ok(c.disc_pa!==null);
 tool.state.settings.disc=[2, g.intervals.disc[1]];tool.state.settings.editedDisc=true;c=tool.calculate();assert.equal(c.n_disc,4);
 assert.ok(Math.abs(tool.axialDifference(tool.axialMean([179,1]),0))<1e-8);
+if(process.argv[3]){
+ const vectors=JSON.parse(fs.readFileSync(process.argv[3],'utf8'));let samples=0;
+ for(const c of vectors){const p=tool.autoSTFParameters(c.stats,c.shadows,c.target);assert.ok(Number.isFinite(p.midtones));
+  c.probes.forEach((x,i)=>{const value=tool.autoSTFValue(x,p);assert.ok(Math.abs(value-c.expected[i])<1e-9,`AutoSTF mismatch: ${value} vs ${c.expected[i]}`);samples++;});
+ }
+ assert.equal(tool.midtonesTransfer(.5,0),0);assert.equal(tool.midtonesTransfer(.5,1),1);
+ console.log(`PASS: AutoSTF matches the earlier Python viewer on ${vectors.length} frames/settings and ${samples} sample values.`);
+}
 console.log(`PASS: ${tested} baseline galaxies reproduce stored PA, inclination and selected-disc counts; threshold, no-bar and axial-wrap checks passed.`);
+
+const transform={rect:{left:100,top:50},left:20,top:10,w:400,h:200,view:[700,900,800,900]};
+assert.deepEqual(Array.from(tool.imagePixel(transform,320,160)),[800,850]);
+assert.deepEqual(Array.from(tool.imagePixel(transform,120,60)),[700,900]);
+assert.deepEqual(Array.from(tool.imagePixel(transform,520,260)),[900,800]);
+assert.equal(context.defaultSettings(g).display.stretch,'autostf');
+console.log('PASS: screen-to-native-pixel centre mapping at zoomed view boundaries and centre.');

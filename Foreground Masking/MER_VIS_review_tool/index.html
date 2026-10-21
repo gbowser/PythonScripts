@@ -5,11 +5,11 @@
 <div id="error" role="alert" hidden></div>
 <div class="layout">
 <aside>
- <label for="category">Review group</label><select id="category"><option value="all">All 48 examples</option></select>
+ <label for="category">Review group</label><select id="category"><option value="all">All examples</option></select>
  <label class="check"><input id="unreviewed" type="checkbox"> Show only unreviewed</label>
  <div id="queue" aria-label="Galaxy sample"></div>
  <details><summary>Find another galaxy</summary><label for="search">ID or catalogue name</label><input id="search" placeholder="e.g. PGC 461891"><div id="searchResults"></div></details>
- <details><summary>What this tool does</summary><p>Uses the existing FITS pixels and ellipse fits. Interval and threshold changes are exploratory. It does not refit ellipses or overwrite the pipeline manifest, images or reports.</p><p>The 48 examples span different severities and threshold boundaries. They are not a random sample for estimating population percentages.</p><p>Grey measurements are excluded from the pipeline geometry. Neighbouring ellipses are correlated; sample count is not independent statistical evidence.</p></details>
+ <details><summary>What this tool does</summary><p>Uses the existing FITS pixels and ellipse fits. Interval and threshold changes are exploratory. The centre retry refits ellipses into a separate review folder. It does not overwrite the pipeline manifest, images or reports.</p><p>The examples span different severities and threshold boundaries. They are not a random sample for estimating population percentages.</p><p>Grey measurements are excluded from the pipeline geometry. Neighbouring ellipses are correlated; sample count is not independent statistical evidence.</p></details>
  <p class="small" id="outputPath"></p><button id="stop" class="quiet">Stop local server</button>
 </aside>
 <main>
@@ -20,12 +20,22 @@
    <div class="panel-heading"><h2>FITS light distribution</h2><span id="imageInfo"></span></div>
    <div class="image-wrap"><canvas id="image" aria-label="Interactive galaxy FITS image"></canvas><span id="imageLoading" hidden>Loading FITS preview…</span></div>
    <div class="row compact"><button id="zoomIn">Zoom +</button><button id="zoomOut">Zoom −</button><button id="galaxyView">Galaxy view</button><button id="fullView">Full cutout</button><span id="pixelValue">Wheel to zoom · drag to pan</span></div>
+   <details id="centrePanel"><summary>Update centre and recompute</summary>
+    <p>Click <b>Pick centre</b>, then click the galaxy nucleus. Yellow + is your proposed centre. The new fit uses the native FITS pixels and recomputes ellipses, disc/bar selection, angles, inclination and quality flags.</p>
+    <div class="row compact"><button id="pickCentre">Pick centre on image</button><button id="catalogueCentre" class="secondary">Use catalogue position</button></div>
+    <div class="interval-grid"><label>Centre X native pixel<input id="centreX" type="number" min="0" step="0.1"></label><label>Centre Y native pixel<input id="centreY" type="number" min="0" step="0.1"></label></div>
+    <p class="small">Coordinates are zero-based in the original FITS array; X increases right, Y increases upwards in this viewer.</p>
+    <label class="check"><input id="lockCentre" type="checkbox" checked> Keep this centre fixed during fitting</label><p class="small">When fixed, zero centre scatter is imposed by the constraint; it is not evidence that the centre has been independently validated.</p>
+    <div class="row compact"><button id="runRefit" class="primary">Recompute from this centre</button><button id="showOriginal" class="secondary">Show original fit</button><button id="showRefit" class="secondary" hidden>Show last refit</button></div>
+    <a id="exportRefit" class="button secondary" hidden>Download refit metrics CSV</a><p id="refitStatus" role="status">A retry is stored separately. Original results and FITS files are preserved. It may take several minutes.</p>
+   </details>
    <div class="stretch-grid">
-    <label>Stretch<select id="stretch"><option value="asinh">Asinh</option><option value="log">Log</option><option value="linear">Linear</option></select></label>
+    <label>Stretch<select id="stretch"><option value="autostf" selected>PixInsight AutoSTF</option><option value="asinh">Asinh</option><option value="log">Log</option><option value="linear">Linear</option></select></label>
     <label>Minimum<input id="minimum" type="number" step="any"></label><label>Maximum<input id="maximum" type="number" step="any"></label>
     <label>Gamma <output id="gammaValue">1.00</output><input id="gamma" type="range" min="0.2" max="3" step="0.05" value="1"></label>
    </div>
-   <div class="row compact"><span class="small">Brightness presets</span><button data-preset="faint">Faint disc</button><button data-preset="balanced">Balanced</button><button data-preset="core">Bright core</button><label class="check"><input id="invert" type="checkbox"> Invert</label></div>
+   <div class="row compact"><span class="small">Brightness presets</span><button data-preset="pixinsight">PixInsight AutoSTF</button><button data-preset="faint">Faint disc</button><button data-preset="balanced">Balanced</button><button data-preset="core">Bright core</button><label class="check"><input id="invert" type="checkbox"> Invert</label></div>
+   <div id="stfControls" hidden><div class="interval-grid"><label>Auto shadows (sigma)<input id="stfShadows" type="number" min="-20" max="0" step="0.1" value="-2.8"></label><label>Target background<input id="stfTarget" type="number" min="0.01" max="0.99" step="0.01" value="0.25"></label></div><p class="small" id="stfInfo"></p><p class="small">Same monochrome AutoSTF-style method as the earlier toy-object tool. Statistics are recalculated for the current view. Gamma = 1 gives the base AutoSTF; other gamma values add an extra adjustment. Min/max are calculated automatically.</p></div>
    <div class="row compact"><label class="check"><input id="ellipses" type="checkbox" checked> Ellipses</label><select id="overlayMode" aria-label="Ellipse overlays"><option value="selected">Selected disc and bar</option><option value="accepted">All accepted</option></select><label class="check"><input id="centres" type="checkbox" checked> Centre markers</label></div>
    <p class="small">Green: selected disc. Orange: selected candidate bar. Red +: adopted fitted centre; white ×: catalogue position. Display stretch and zoom do not change geometry.</p>
   </section>
@@ -36,11 +46,11 @@
    <p class="small">Drag a shaded edge in either graph, or enter bounds below. Lines break across excluded samples and the 0°/180° PA boundary.</p>
    <div class="interval-grid"><label>Disc inner (arcsec)<input id="discMin" type="number" min="0" step="0.05"></label><label>Disc outer (arcsec)<input id="discMax" type="number" min="0" step="0.05"></label><label>Bar inner (arcsec)<input id="barMin" type="number" min="0" step="0.05"></label><label>Bar outer (arcsec)<input id="barMax" type="number" min="0" step="0.05"></label></div>
    <div class="row"><label class="check"><input id="noBar" type="checkbox"> Treat as no convincing bar</label></div>
-   <label>Ellipse sample pool<select id="pool"><option value="pipeline">Pipeline accepted only</option><option value="marginal">Accepted + marginal candidates (exploratory)</option></select></label>
+   <label>Ellipse sample pool<select id="pool"><option value="pipeline">Accepted fit samples only</option><option value="marginal">Accepted + marginal candidates (exploratory)</option></select></label>
    <p id="poolNote" class="small">Original values use the pipeline’s stored disc/bar selections. Editing an interval uses accepted ellipses inside that interval.</p>
   </section>
  </div>
- <section class="panel results"><div><h2>Geometry for this selection</h2><p class="small">Observed sky PA: North towards East, modulo 180°. Inclination assumes a thin circular disc (q₀ = 0). Euclid PA includes the project’s adopted +90° correction.</p><table><thead><tr><th>Quantity</th><th>Pipeline</th><th>This selection</th><th>Euclid</th><th>Selection − Euclid</th></tr></thead><tbody id="geometryTable"></tbody></table></div><div><h2>Selected disc evidence</h2><div id="evidence"></div><div id="trialFlags" aria-live="polite"></div><p class="small">These are review screens, not calibrated confidence tests. Disabling a warning does not establish that a measurement is reliable.</p></div></section>
+ <section class="panel results"><div><h2>Geometry for this selection</h2><p class="small">Observed sky PA: North towards East, modulo 180°. Inclination assumes a thin circular disc (q₀ = 0). Euclid PA includes the project’s adopted +90° correction.</p><table><thead><tr><th>Quantity</th><th>Original pipeline</th><th>Current selection</th><th>Euclid</th><th>Selection − Euclid</th></tr></thead><tbody id="geometryTable"></tbody></table></div><div><h2>Selected disc evidence</h2><div id="evidence"></div><div id="trialFlags" aria-live="polite"></div><p class="small">These are review screens, not calibrated confidence tests. Disabling a warning does not establish that a measurement is reliable.</p></div></section>
  <details class="panel criteria"><summary>Explore the review thresholds</summary><div class="criteria-grid">
   <div><label class="check"><input id="sparseEnabled" type="checkbox" checked> Sampling screen</label><label>Minimum disc ellipses<input id="minDisc" type="number" min="3" max="30" value="6"></label><label>Largest allowed gap / span<input id="maxGap" type="number" min="0.05" max="1" step="0.05" value="0.5"></label></div>
   <div><label class="check"><input id="paEnabled" type="checkbox" checked> Disc PA variation screen</label><label>RMS threshold (degrees)<input id="paThreshold" type="number" min="1" max="90" step="1" value="10"></label></div>
