@@ -1,0 +1,2 @@
+from pathlib import Path
+p=Path('MER_VIS_review_tool/index.html');s=p.read_text(encoding='utf8');s=s.replace('Display stretch and zoom do not change geometry.','The image automatically expands when interval bounds change to cover the profile-axis radius in all directions (a 6 arcsec radius needs at least 12 arcsec across). Galaxy view restores this coverage after manual zooming. Coverage is limited by the original FITS cutout. Display stretch and zoom do not change geometry.');p.write_text(s,encoding='utf8')

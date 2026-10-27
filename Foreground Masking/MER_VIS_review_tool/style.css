@@ -2,3 +2,5 @@
 @media(max-width:760px){.results{overflow-x:auto}.check{white-space:normal}.panel-heading{flex-wrap:wrap}}
 
 #centrePanel{margin:10px 0 16px;padding:12px 0;border-top:1px solid #d6e0e7;border-bottom:1px solid #d6e0e7}#centrePanel>summary{font-weight:600;cursor:pointer;color:#265a72}#centrePanel>p{margin-top:10px}#centrePanel .row{flex-wrap:wrap}#centrePanel .interval-grid{margin:10px 0}#centrePanel #exportRefit{display:inline-block;margin-top:8px}
+
+.queue-row{display:flex;align-items:center;border-left:3px solid transparent}.queue-row.active{border-left-color:var(--blue);background:white}.queue-row .queue-item{flex:1;min-width:0;width:auto;border-left:0;overflow-wrap:anywhere}.review-tick{flex:0 0 auto;width:16px;height:16px;margin:0 8px 0 3px;cursor:pointer}.queue-row:hover{background:#f6fafc}

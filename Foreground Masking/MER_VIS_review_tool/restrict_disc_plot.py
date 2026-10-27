@@ -1,0 +1,12 @@
+from pathlib import Path
+p=Path('MER_VIS_review_tool/app.js');s=p.read_text(encoding='utf8')
+s=s.replace("const isPA=field==='pa_sky_deg',isInc=field==='inclination',reference=", "const discBounds=S.settings.disc,discVisible=S.g.original.status!=='fit_failed'&&discBounds?.length===2&&discBounds.every(finite)&&discBounds[1]>discBounds[0],inDisc=p=>discVisible&&p.sma_arcsec>=discBounds[0]&&p.sma_arcsec<=discBounds[1];\n const isPA=field==='pa_sky_deg',isInc=field==='inclination',reference=")
+s=s.replace("if(isPA&&finite(reference)){", "if(isPA&&discVisible&&finite(reference)){")
+s=s.replace("isInc?ellipseInclination(p):p[field]", "isInc?(inDisc(p)?ellipseInclination(p):null):p[field]")
+s=s.replace("const levels=isPA?paReferenceLevels(reference,lo,hi):finite(reference)&&reference>=0&&reference<=90?[reference]:[];", "const referenceLeft=discVisible?x(clamp(discBounds[0],0,xmax)):left,referenceRight=discVisible?x(clamp(discBounds[1],0,xmax)):left;\n  const levels=!discVisible||referenceRight<=referenceLeft?[]:isPA?paReferenceLevels(reference,lo,hi):finite(reference)&&reference>=0&&reference<=90?[reference]:[];")
+s=s.replace('class="euclid-reference" x1="${left}" x2="${w-right}"', 'class="euclid-reference" x1="${referenceLeft}" x2="${referenceRight}"')
+s=s.replace('</title></line><text class="euclid-reference-label" x="${w-right-4}"', '</title></line>${referenceRight-referenceLeft>=130?`<text class="euclid-reference-label" x="${referenceRight-4}"')
+s=s.replace('${label}: ${fmt(canonical)}°</text>`;', 'Euclid: ${fmt(canonical)}°</text>`:\'\'}`;')
+s=s.replace('>Euclid: unavailable</text>', '>${discVisible?\'Euclid: unavailable\':\'No selected disc interval\'}</text>')
+p.write_text(s,encoding='utf8')
+p=Path('MER_VIS_review_tool/index.html');s=p.read_text(encoding='utf8');s=s.replace('Purple dotted lines show the saved Euclid catalogue comparison:', 'The inclination profile is shown only within the green selected disc interval. Purple dotted lines are also confined to that interval and show the saved Euclid catalogue comparison:');s=s.replace('values in the bar region are shape proxies, not disc-tilt measurements.', 'no inclination is plotted outside the selected disc interval.');p.write_text(s,encoding='utf8')

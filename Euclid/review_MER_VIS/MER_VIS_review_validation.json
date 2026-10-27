@@ -37,9 +37,11 @@
     "review_MER_VIS.py": "faf4288648240b67b63f9cf9195c6078a1bb836115891fcd1096227df63f4c82",
     "refit_MER_VIS.py": "96dd26b774a7eadc688af9c046a0727b5447bfcf7bf40a8229bae0663c6783a7",
     "fit_manual_centre_MER_VIS.py": "6dc8d779d8c342023d01d2518a2224c652b1607911c092d0d5bb1aa1c37a31bf",
-    "app.js": "4024e2ac361b8f9fe26acc8b346e983e2e16c551230cfc700b0eaab94a4f77df",
-    "index.html": "f199fbace216da354b55d6e04bbf4dfff783fe10ad29964237741000c9912a37",
+    "app.js": "2124bab470783e8af16bd1b69e4254cc50140cf9ebf0e81a07c8886bb40843fd",
+    "index.html": "4d8af21b7c3e213d5bda188998cbd9b59e67e392423ed7eb20c2641f75eaa8c1",
     "style.css": "237d5fb44cf1be6efbbbfc9f54e9dba94b91b9244a25de8620ce4c76ef69b237",
     "README_MER_VIS_REVIEW.md": "9012f078a4f4fa00e8cac32e2210e4f737df10e72820681bfb4ee091104d99fb"
-  }
+  },
+  "centre_marker_visibility_test": "passed: hidden yellow/red/white; centre picking reenables visibility",
+  "continuous_pa_axis_test": "passed: forward/reverse wraps, repeated crossings, raw axis toggle, rejected gaps, non-mutating angles"
 }

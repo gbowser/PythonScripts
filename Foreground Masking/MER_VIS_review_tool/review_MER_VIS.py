@@ -252,9 +252,11 @@ class Store(ReviewRefits):
             display_centre = centre if all(v is not None for v in centre) else cat
             sky = w.pixel_to_world(*display_centre)
             compass = {}
+            compass_pixel_basis = {}
             for angle, label in [(0, "N"), (90, "E")]:
                 px, py = w.world_to_pixel(sky.directional_offset_by(angle*u.deg, 1*u.arcsec))
                 vec = np.array([px-display_centre[0], py-display_centre[1]])
+                compass_pixel_basis[label] = vec.tolist()
                 compass[label] = (vec/np.linalg.norm(vec)).tolist()
         profile = self.profile_cache[cache_key]
         outer = max([number(row.get("codex_disc_max_arcsec"), 0),
@@ -286,7 +288,7 @@ class Store(ReviewRefits):
         return clean(dict(latest_refit_id=latest, refit=refit, pipeline_original=baseline, object_id=oid, name=row.get("catalogue_name", ""), filename=Path(row["fits_path"]).name,
                           profile=profile, shape=shape, pixel_scale_arcsec=scale,
                           units=header.get("BUNIT", "FITS data units"), centre=centre, catalogue_centre=cat,
-                          compass=compass, default_window=window, original=original,
+                          compass=compass, compass_pixel_basis=compass_pixel_basis, default_window=window, original=original,
                           intervals=dict(disc=[number(row.get("codex_disc_min_arcsec")), number(row.get("codex_disc_max_arcsec"))],
                                          bar=[number(row.get("codex_bar_min_arcsec")), number(row.get("codex_bar_max_arcsec"))]),
                           euclid=dict(disc_pa=number(row.get("euclid_adjusted_detection_pa_sky_deg")),
@@ -352,7 +354,7 @@ class Store(ReviewRefits):
         if not isinstance(settings, dict) or len(json.dumps(settings)) > 30000:
             raise ValueError("Invalid settings")
         record = {k: payload[k] for k in enums}
-        record.update(object_id=oid, catalogue_name=self.byid[oid].get("catalogue_name", ""),
+        record.update(reviewed=True, object_id=oid, catalogue_name=self.byid[oid].get("catalogue_name", ""),
                       category=next((s["category"] for s in self.sample if s["object_id"] == oid), "extra"),
                       notes=notes, settings=settings, calculation=payload.get("calculation", {}),
                       reviewed_utc=time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime()),
@@ -372,8 +374,28 @@ class Store(ReviewRefits):
                 warning = "Review saved in JSON. Close the CSV in Excel to refresh the CSV copy."
         return dict(saved=True, review=record, reviewed=len(self.reviews), warning=warning)
 
+    def set_reviewed(self, payload):
+        oid = str(payload.get("object_id", ""))
+        if oid not in self.byid or type(payload.get("reviewed")) is not bool:
+            raise ValueError("A known galaxy and boolean reviewed status are required")
+        now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        with self.lock:
+            record = dict(self.reviews.get(oid) or dict(
+                object_id=oid, catalogue_name=self.byid[oid].get("catalogue_name", ""),
+                category=next((r["category"] for r in self.sample if r["object_id"]==oid), "extra"),
+                disc_decision="not_assessed", bar_decision="not_assessed", centre_decision="not_assessed",
+                rule_action="unsure", notes="", settings={}, calculation={}, source_manifest_sha256=self.digest))
+            record.update(reviewed=payload["reviewed"], review_status_changed_utc=now)
+            if payload["reviewed"]: record["reviewed_utc"] = now
+            updated = dict(self.reviews); updated[oid] = record
+            atomic_json(self.review_path, updated); self.reviews = updated
+            warning = None
+            try: (self.output / "MER_VIS_saved_reviews.csv").write_bytes(self.export_csv())
+            except PermissionError: warning = "Status saved in JSON. Close the CSV in Excel to refresh the CSV copy."
+        return dict(saved=True, review=record, warning=warning)
+
     def export_csv(self):
-        fields = ["object_id","catalogue_name","category","disc_decision","bar_decision","centre_decision",
+        fields = ["object_id","reviewed","catalogue_name","category","disc_decision","bar_decision","centre_decision",
                   "rule_action","notes","reviewed_utc","original_disc_pa","original_bar_pa","original_inclination",
                   "trial_disc_pa","trial_bar_pa","trial_inclination","trial_disc_samples","trial_disc_scatter",
                   "trial_disc_eps_span","settings_json","source_manifest_sha256"]
@@ -381,6 +403,7 @@ class Store(ReviewRefits):
         with self.lock:
             for r in self.reviews.values():
                 result = {k:r.get(k,"") for k in fields}
+                result["reviewed"] = r.get("reviewed", True)
                 calc = r.get("calculation", {})
                 for k, src in [("trial_disc_pa","disc_pa"),("trial_bar_pa","bar_pa"),("trial_inclination","inclination"),
                                ("trial_disc_samples","n_disc"),("trial_disc_scatter","pa_scatter"),("trial_disc_eps_span","eps_span")]:
@@ -466,6 +489,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(dict(error="Invalid request size"),status=400)
             payload=json.loads(self.rfile.read(length))
             if self.path == "/api/refit": return self.send(self.server.store.start_refit(payload))
+            if self.path == "/api/review-status": return self.send(self.server.store.set_reviewed(payload))
             if self.path == "/api/review": return self.send(self.server.store.save(payload))
             if self.path == "/api/stop":
                 self.send(dict(stopped=True)); threading.Thread(target=self.server.shutdown,daemon=True).start(); return

@@ -1,0 +1,12 @@
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const strokes=[];const ctx={setTransform(){},fillRect(){},drawImage(){},save(){},beginPath(){},rect(){},clip(){},moveTo(){},lineTo(){},stroke(){strokes.push(this.strokeStyle)},fillText(){},restore(){}};
+const element=()=>({value:'disc',checked:true,dataset:{},style:{},getContext:()=>ctx,getBoundingClientRect:()=>({width:400,height:400,left:0,top:0}),addEventListener(){}});
+const nodes=new Map();const document={getElementById:id=>{if(!nodes.has(id))nodes.set(id,element());return nodes.get(id)},createElement:()=>element(),querySelectorAll:()=>[],querySelector:()=>element(),addEventListener(){},activeElement:{tagName:'BODY'}};
+const window={devicePixelRatio:1,addEventListener(){}};const localStorage={getItem:()=>null,setItem(){}};
+const c={document,window,localStorage,console,URLSearchParams,setTimeout,clearTimeout,requestAnimationFrame(){},Option:function(){}};vm.createContext(c);
+vm.runInContext(fs.readFileSync(new URL('./app.js',import.meta.url),'utf8').replace(/start\(\);\s*$/,''),c);
+const S=window.MER_VIS_REVIEW.state;S.settings={display:{ellipses:false,centres:false}};S.pixels=new Float32Array(1);S.imageMeta={bounds:[0,100,0,100]};S.g={catalogue_centre:[40,40],centre:[50,50],compass:{N:[0,1],E:[1,0]},pixel_scale_arcsec:1};S.proposedCentre=[55,55];
+c.drawImage();assert.ok(!strokes.includes('#ffe347'));assert.ok(!strokes.includes('#ff5d5d'));const hiddenWhite=strokes.filter(x=>x==='white').length;
+strokes.length=0;S.settings.display.centres=true;c.drawImage();assert.ok(strokes.includes('#ffe347'));assert.ok(strokes.includes('#ff5d5d'));assert.equal(strokes.filter(x=>x==='white').length,hiddenWhite+1);
+S.settings.display.centres=false;nodes.get('pickCentre').onclick();assert.equal(S.settings.display.centres,true);assert.equal(nodes.get('centres').checked,true);
+console.log('PASS: Centre markers hides yellow, red and white centre crosses; picking a centre makes markers visible.');

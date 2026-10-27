@@ -1,0 +1,55 @@
+{
+  "output": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Euclid\\reports\\MER_VIS_current\\Euclid_MER_VIS_disc_PA_and_inclination_explained_clarified.docx",
+  "original_was_locked": false,
+  "rendered_pages": 17,
+  "illustrated_pages": [
+    3,
+    4,
+    5
+  ],
+  "original_images_preserved": 7,
+  "new_figures": 2,
+  "example": {
+    "object_id": "-639567775462084647",
+    "r_out": 3.8115497790989834,
+    "r_bar": 1.7241515517929342,
+    "disc_lower_bound": 2.155189439741168,
+    "selected_disc_inner": 2.162775706569057,
+    "peak_radius": 1.7241515517929342,
+    "smoothed_peak": 0.6619822365763652,
+    "outward_low_radius": 2.422308791357344,
+    "outward_low_eps": 0.40157226566075166,
+    "drop": 0.2604099709156136,
+    "bar_rms": 1.5463633271888362,
+    "bar_pa": 46.337905561257436,
+    "disc_pa": 38.595125374476055,
+    "bar_points": [
+      {
+        "sma_arcsec": 0.978329893816208,
+        "ellipticity": 0.6219590288617873,
+        "pa_sky_deg": 43.62305666724186
+      },
+      {
+        "sma_arcsec": 1.0957294810741531,
+        "ellipticity": 0.641460501924585,
+        "pa_sky_deg": 44.47590738338997
+      },
+      {
+        "sma_arcsec": 1.2272170188030516,
+        "ellipticity": 0.632826772627823,
+        "pa_sky_deg": 45.08717177725582
+      },
+      {
+        "sma_arcsec": 1.3744830610594179,
+        "ellipticity": 0.6619822365763652,
+        "pa_sky_deg": 46.12719439659797
+      },
+      {
+        "sma_arcsec": 1.7241515517929342,
+        "ellipticity": 0.6719179138139793,
+        "pa_sky_deg": 48.111864083481436
+      }
+    ]
+  },
+  "sha256": "0fddd946ba324279a5b3b026fed5b5c93a8e25dcf6edc230c48cebccb1c1f737"
+}
