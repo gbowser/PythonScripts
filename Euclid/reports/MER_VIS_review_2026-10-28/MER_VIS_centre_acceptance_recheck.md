@@ -1,0 +1,64 @@
+# Updated assessments and ellipse-centre acceptance
+
+28 October 2026
+
+**Conclusion:** a centre-consistency acceptance check is appropriate, but the existing reference-centre definition should be made consistent first. Centre proximity alone does not establish reliable disc PA. No production rules or saved reviews were changed by this analysis.
+
+## Updated review findings
+
+Updated saved assessments were found for -663928688473758026, 2756030807655229287. The other two item-4 examples retain their earlier saved entries. The current full review has 54 usable and 4 uncertain disc judgements.
+
+| Galaxy | Earlier PA RMS | Current PA RMS | Selected disc ellipses | Current disc assessment | Max offset from adopted centre |
+|---|---:|---:|---:|---|---:|
+| -663928688473758026 | 51.92° | 34.40° | 3 | uncertain | 0.213″ |
+| 2756030807655229287 | 26.12° | 25.37° | 3 | usable | 0.212″ |
+| -595029565493921205 | 10.90° | 10.90° | 5 | usable | 0.098″ |
+| -537890362287224823 | 15.91° | 15.91° | 5 | usable | 0.283″ |
+
+**−663928688473758026:** the updated uncertain-disc assessment is appropriate. The selected three PAs are 33.80°, 89.66° and 114.52°. The median shape is nearly face-on; orientation is intrinsically sensitive in a round image. No single robust disc PA has been demonstrated.
+
+**2756030807655229287:** the three selected ellipses have PA 28.43°, 61.66° and 90.53°, with centre offsets 0.093″, 0.129″ and 0.212″. Their axis ratios are close to round in part of the interval, especially ε≈0.062. A candidate 3-native-pixel / 5%-of-radius centre gate retains all three, so it does not reduce the 25.37° RMS. The visual usable-disc judgement can be retained, but the numerical single Disc PA should remain qualified pending further inspection.
+
+**−595029565493921205:** offsets are only 0.025–0.098″, below one native pixel in this cutout. Its PA nevertheless runs from about 43° to 71°. Tighter centring does not resolve that radial trend; a twist, asymmetry or interval identification must be considered.
+
+**−537890362287224823:** the largest offset is 0.283″. The candidate gate removes one selected disc ellipse, leaving four; PA RMS changes from 15.91° to 14.63°, still above the nominal 10° screen. This is a useful test case for centred refitting rather than declaring the geometry fixed by removing one sample.
+
+## Existing centre checks
+
+Normal isophote acceptance already requires an offset no larger than max(3 fitting pixels, 0.15 × semi-major axis). Relaxed recovery uses max(4 fitting pixels, 0.25 × semi-major axis). The larger allowance wins: at a 10″ semi-major axis, the fractional terms alone permit 1.5″ normally or 2.5″ in relaxed recovery. Binning can also make a fitting pixel larger than a native pixel.
+
+There is a reference inconsistency: per-isophote centre offsets are recorded relative to the starting or re-referenced fitting centre. Later, the automatic pipeline replaces the manifest’s displayed fitted-centre coordinates with the median centres of its selected disc ellipses. The saved offsets are not then recomputed against that final displayed centre. The interactive sample pool uses the stored offsets and does not add a fresh per-ellipse centre check against the viewer centre when intervals change.
+
+A criterion described as distance from the galaxy centre should therefore use a clearly recorded, fixed reference. A visually confirmed manual/nuclear centre is preferable where available. The catalogue position and the mean of the same drifting outer ellipses are not independent confirmations of that reference.
+
+## Candidate-rule sensitivity — diagnostic only
+
+Offsets were recomputed from native pixel coordinates relative to the viewer’s adopted fitted centre, using the currently saved profile and exact selected refit for each of the 58 galaxies. The following uncalibrated trial rule was tested without fitting new ellipses or altering source files:
+
+`allowed offset = min(absolute cap, max(one native pixel, 5% of ellipse semi-major axis))`
+
+| Absolute cap | Selected disc ellipses removed | Galaxies with selected disc ellipses removed | Visually usable discs left with fewer than 3 ellipses |
+|---|---:|---:|---:|
+| 2 native pixels | 64 / 274 | 31 / 58 | 19 |
+| 3 native pixels | 54 / 274 | 30 / 58 | 13 |
+| 5 native pixels | 50 / 274 | 29 / 58 | 13 |
+
+The 3-native-pixel version is approximately a 0.3″ absolute cap in these 0.1″/pixel cutouts. The combined rule removes 54 of 274 selected disc ellipses and affects 49 galaxies’ selected bar samples. A 0.3″ absolute cap alone would remove 17 of the 274 disc ellipses. The much larger effect of the combined rule shows that the 5% fractional condition needs calibration, particularly for small bar ellipses. These results do not establish which removed samples were scientifically invalid.
+
+A rule that leaves one ellipse can produce PA RMS=0 by construction; that is not evidence of a stable disc. For −663928688473758026 the trial retains only one ellipse. Such a result must remain a one-sample provisional measurement, with no inferred improvement in confidence.
+
+## Recommended acceptance design
+
+1. Record an explicit centre reference and its provenance: verified manual centre, independently estimated nuclear centre, or provisional automatic reference. Preserve catalogue position and fit-seed position separately.
+2. Recompute every ellipse’s offset from that reference in native pixels and arcseconds, plus offset divided by semi-major axis. Use the same reference in automatic fitting, relaxed recovery, the interactive accepted/marginal pools and exports.
+3. Use a resolution-aware absolute cap together with a relative cap and a small-radius floor. Validate the numerical limits on the reviewed images; the 3-pixel/5% trial is a sensitivity example, not a proposed final calibrated threshold.
+4. For visibly displaced contours, try fitting again with the verified centre fixed. Compare fit quality, coverage and residual structure. A fixed-centre contour has zero centre drift by constraint, which does not independently prove that its shape or supplied centre is correct.
+5. Retain rejected contours for inspection with an explicit rejection reason. Show which samples were excluded for centre displacement, rather than merely making them disappear. Recalculate PA, counts, inclination and diagnostic ranges from the remaining eligible selection.
+6. Continue checking PA stability, radial coverage and disc identity independently. Near-circular ellipses can have poorly constrained PA even when their centres agree; physical asymmetry and a radial PA twist can remain after centring improves.
+7. Pilot candidate settings on the reviewed set and a small new validation sample before changing the whole library. Preserve current accepted and provisional geometries alongside trial results.
+
+## Audit
+
+Updated review source SHA-256: `53992fbbb9f67991c03e65842595d2644295324a185f4a2475a478b5f121b69d`.
+
+The JSON audit contains each selected ellipse’s native centre, offset, radius, PA, stored offset and current acceptance limits, plus the trial-policy outcomes. The updated source review was snapshotted. No reviewed decisions, production thresholds, source profiles, images or published products were altered.

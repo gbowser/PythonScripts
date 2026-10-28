@@ -1,0 +1,121 @@
+{
+  "examples": 19,
+  "pending_reviews": 19,
+  "checks": "reference consistency, fixed-centre offsets, residual availability, previous-review preservation",
+  "galaxies": [
+    {
+      "id": "-663928688473758026",
+      "trial": "provisional_fit",
+      "n_profile": 43,
+      "diagnostic": true
+    },
+    {
+      "id": "2756030807655229287",
+      "trial": "provisional_fit",
+      "n_profile": 45,
+      "diagnostic": true
+    },
+    {
+      "id": "-595029565493921205",
+      "trial": "provisional_fit",
+      "n_profile": 47,
+      "diagnostic": true
+    },
+    {
+      "id": "-537890362287224823",
+      "trial": "provisional_fit",
+      "n_profile": 46,
+      "diagnostic": true
+    },
+    {
+      "id": "-518633776290631360",
+      "trial": "provisional_fit",
+      "n_profile": 43,
+      "diagnostic": true
+    },
+    {
+      "id": "2681494150647395085",
+      "trial": "provisional_fit",
+      "n_profile": 45,
+      "diagnostic": true
+    },
+    {
+      "id": "2654474268655808169",
+      "trial": "provisional_fit",
+      "n_profile": 41,
+      "diagnostic": true
+    },
+    {
+      "id": "-586374330510251740",
+      "trial": "provisional_fit",
+      "n_profile": 43,
+      "diagnostic": true
+    },
+    {
+      "id": "-524824554283124036",
+      "trial": "provisional_fit",
+      "n_profile": 48,
+      "diagnostic": true
+    },
+    {
+      "id": "2645436353651870062",
+      "trial": "provisional_fit",
+      "n_profile": 40,
+      "diagnostic": true
+    },
+    {
+      "id": "2697242050653408730",
+      "trial": "provisional_fit",
+      "n_profile": 37,
+      "diagnostic": false
+    },
+    {
+      "id": "-524724591298089738",
+      "trial": "provisional_fit",
+      "n_profile": 46,
+      "diagnostic": true
+    },
+    {
+      "id": "2724315227685324582",
+      "trial": "provisional_fit",
+      "n_profile": 48,
+      "diagnostic": true
+    },
+    {
+      "id": "-615088650482896879",
+      "trial": "provisional_fit",
+      "n_profile": 42,
+      "diagnostic": true
+    },
+    {
+      "id": "2654162178650796134",
+      "trial": "provisional_fit",
+      "n_profile": 46,
+      "diagnostic": true
+    },
+    {
+      "id": "-646641404494431826",
+      "trial": "provisional_fit",
+      "n_profile": 42,
+      "diagnostic": true
+    },
+    {
+      "id": "2690070926643224042",
+      "trial": "provisional_fit",
+      "n_profile": 45,
+      "diagnostic": true
+    },
+    {
+      "id": "-599118107493216367",
+      "trial": "provisional_fit",
+      "n_profile": 40,
+      "diagnostic": true
+    },
+    {
+      "id": "2634901320657220727",
+      "trial": "provisional_fit",
+      "n_profile": 41,
+      "diagnostic": true
+    }
+  ]
+}

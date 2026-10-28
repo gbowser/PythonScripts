@@ -1,0 +1,1249 @@
+{
+  "-663928688473758026": {
+    "object_id": "-663928688473758026",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "disc": [
+        2.1127767851858428,
+        3.082178289240056
+      ],
+      "bar": [
+        0.693008638417468,
+        1.128346699584931
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "noBar": false,
+      "pool": "pipeline",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "sparse_enabled": true,
+        "pa_enabled": true,
+        "eps_enabled": true,
+        "small_bar_enabled": true,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "defaultVersion": 2,
+        "stretch": "autostf",
+        "minimum": -0.009574587835883138,
+        "maximum": 0.14887294173240662,
+        "gamma": 1,
+        "invert": false,
+        "ellipses": false,
+        "centres": true,
+        "excludedEllipses": false,
+        "overlayMode": "selected",
+        "showRejected": true,
+        "unwrapPA": true,
+        "stfShadows": -2.8,
+        "stfTarget": 0.25,
+        "paComparison": false,
+        "showWarnings": false
+      },
+      "refit_id": "5057f994114d48ecb3dc8abfd705d4dd",
+      "view": [
+        532.5,
+        659.5,
+        530.5,
+        660.5
+      ],
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "proposed_centre": [
+        595.7545638741553,
+        593.80470417281
+      ]
+    },
+    "calculation": {},
+    "previous_review_retained": true,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "2756030807655229287": {
+    "object_id": "2756030807655229287",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "disc": [
+        3.064514954655358,
+        4.864038670923618
+      ],
+      "bar": [
+        0.6641773242978994,
+        1.3880122914838584
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "noBar": false,
+      "pool": "pipeline",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "sparse_enabled": true,
+        "pa_enabled": true,
+        "eps_enabled": true,
+        "small_bar_enabled": true,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "defaultVersion": 2,
+        "stretch": "autostf",
+        "minimum": -0.005628817714750767,
+        "maximum": 2.1918599605560303,
+        "gamma": 1,
+        "invert": false,
+        "ellipses": false,
+        "centres": true,
+        "overlayMode": "selected",
+        "showRejected": true,
+        "unwrapPA": true,
+        "stfShadows": -2.8,
+        "stfTarget": 0.25,
+        "excludedEllipses": false,
+        "euclidPAOverlay": false,
+        "discPAOverlay": false,
+        "paComparison": false,
+        "showWarnings": false
+      },
+      "refit_id": "234aa5a48d0444db9c9e0692749f9876",
+      "view": [
+        620.5,
+        790.5,
+        619.5,
+        788.5
+      ],
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "proposed_centre": [
+        705.327687145997,
+        704.1977542422726
+      ]
+    },
+    "calculation": {},
+    "previous_review_retained": true,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "-595029565493921205": {
+    "object_id": "-595029565493921205",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "disc": [
+        2.6139830650868126,
+        4.166092936368354
+      ],
+      "bar": [
+        1.3243251710034614,
+        2.083851295509257
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "noBar": false,
+      "pool": "pipeline",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "sparse_enabled": true,
+        "pa_enabled": true,
+        "eps_enabled": true,
+        "small_bar_enabled": true,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "defaultVersion": 2,
+        "stretch": "autostf",
+        "minimum": -0.012137533724796954,
+        "maximum": 2.4505562782287598,
+        "gamma": 1,
+        "invert": false,
+        "ellipses": false,
+        "centres": true,
+        "excludedEllipses": false,
+        "euclidPAOverlay": false,
+        "discPAOverlay": false,
+        "overlayMode": "selected",
+        "showRejected": true,
+        "unwrapPA": true,
+        "stfShadows": -2.8,
+        "stfTarget": 0.25,
+        "showWarnings": false,
+        "paComparison": false
+      },
+      "refit_id": "8b3fa1ffefd64f36bfbfa2335b5620aa",
+      "view": [
+        1026.5,
+        1280.5,
+        1026.5,
+        1280.5
+      ],
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "proposed_centre": [
+        1153.3587073585647,
+        1153.7192229201319
+      ]
+    },
+    "calculation": {},
+    "previous_review_retained": true,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "-537890362287224823": {
+    "object_id": "-537890362287224823",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "disc": [
+        3.291625291070291,
+        5.736868682742425
+      ],
+      "bar": [
+        1.4904641396267493,
+        2.3452741790884337
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "noBar": false,
+      "pool": "pipeline",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "sparse_enabled": true,
+        "pa_enabled": true,
+        "eps_enabled": true,
+        "small_bar_enabled": true,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "defaultVersion": 2,
+        "stretch": "autostf",
+        "minimum": -0.010755591094493866,
+        "maximum": 1.3231847286224365,
+        "gamma": 1,
+        "invert": false,
+        "ellipses": false,
+        "centres": true,
+        "excludedEllipses": false,
+        "euclidPAOverlay": false,
+        "discPAOverlay": false,
+        "overlayMode": "selected",
+        "showRejected": true,
+        "unwrapPA": true,
+        "stfShadows": -2.8,
+        "stfTarget": 0.25,
+        "paComparison": false,
+        "showWarnings": false
+      },
+      "refit_id": "7b7b9a0f2e0e49b09b8f9518985c3b01",
+      "view": [
+        859.5,
+        1028.5,
+        859.5,
+        1029.5
+      ],
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "proposed_centre": [
+        944.08838360548,
+        944.5838062308258
+      ]
+    },
+    "calculation": {},
+    "previous_review_retained": true,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "-518633776290631360": {
+    "object_id": "-518633776290631360",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "disc": [
+        2.409027326888297,
+        4.444371286350193
+      ],
+      "bar": [
+        0.5160216253622324,
+        1.7110768999421586
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "noBar": false,
+      "pool": "pipeline",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "sparse_enabled": true,
+        "pa_enabled": true,
+        "eps_enabled": true,
+        "small_bar_enabled": true,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "stretch": "autostf",
+        "minimum": -0.01195870326116681,
+        "maximum": 0.15643225610256195,
+        "gamma": 1,
+        "invert": false,
+        "ellipses": false,
+        "centres": true,
+        "overlayMode": "selected",
+        "showRejected": true,
+        "defaultVersion": 2,
+        "excludedEllipses": false,
+        "paComparison": false,
+        "showWarnings": false
+      },
+      "refit_id": "4075c4fd2b3647d98df3477ec98a31c2",
+      "view": [
+        652.5,
+        779.5,
+        652.5,
+        779.5
+      ],
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "proposed_centre": [
+        715.9720771053154,
+        716.1397361340572
+      ]
+    },
+    "calculation": {},
+    "previous_review_retained": true,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "2681494150647395085": {
+    "object_id": "2681494150647395085",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "disc": [
+        4.427728590333983,
+        5.056207275738521
+      ],
+      "bar": [
+        1.158752207545836,
+        1.6279634214429566
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "noBar": false,
+      "pool": "pipeline",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "sparse_enabled": true,
+        "pa_enabled": true,
+        "eps_enabled": true,
+        "small_bar_enabled": true,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "defaultVersion": 2,
+        "stretch": "autostf",
+        "minimum": -0.007592495379997417,
+        "maximum": 1.393892526626587,
+        "gamma": 1,
+        "invert": false,
+        "ellipses": false,
+        "centres": true,
+        "excludedEllipses": false,
+        "euclidPAOverlay": true,
+        "discPAOverlay": true,
+        "overlayMode": "selected",
+        "showRejected": true,
+        "unwrapPA": true,
+        "stfShadows": -2.8,
+        "stfTarget": 0.25,
+        "showWarnings": false,
+        "paComparison": false
+      },
+      "refit_id": "3d7d2b837ada4e31b7ce6bce78618bfc",
+      "view": [
+        636.5,
+        833.5,
+        688.5,
+        885.5
+      ],
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "proposed_centre": [
+        765.5385729221249,
+        764.5961839060756
+      ]
+    },
+    "calculation": {},
+    "previous_review_retained": true,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "2654474268655808169": {
+    "object_id": "2654474268655808169",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "disc": [
+        2.0420133187330856,
+        2.8197506912280406
+      ],
+      "bar": [
+        0.5151579089845045,
+        1.0824274317230993
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "noBar": false,
+      "pool": "pipeline",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "sparse_enabled": true,
+        "pa_enabled": true,
+        "eps_enabled": true,
+        "small_bar_enabled": true,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "defaultVersion": 2,
+        "stretch": "autostf",
+        "minimum": -0.009159876964986324,
+        "maximum": 0.2272908091545105,
+        "gamma": 1,
+        "invert": false,
+        "ellipses": false,
+        "centres": true,
+        "excludedEllipses": false,
+        "euclidPAOverlay": false,
+        "discPAOverlay": true,
+        "overlayMode": "selected",
+        "showRejected": true,
+        "unwrapPA": true,
+        "stfShadows": -2.8,
+        "stfTarget": 0.25,
+        "showWarnings": false,
+        "paComparison": false
+      },
+      "refit_id": "5d0a0304b2004f1ca7c07ad7ad348fae",
+      "view": [
+        400.5,
+        487.5,
+        400.5,
+        487.5
+      ],
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "proposed_centre": [
+        444.06078608568987,
+        444.4853507930642
+      ]
+    },
+    "calculation": {},
+    "previous_review_retained": true,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "-586374330510251740": {
+    "object_id": "-586374330510251740",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "disc": [
+        5.5969295040124765,
+        7.863282974213243
+      ],
+      "bar": [
+        2.0183088882620783,
+        3.5569498833573134
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "noBar": false,
+      "pool": "pipeline",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "sparse_enabled": true,
+        "pa_enabled": true,
+        "eps_enabled": true,
+        "small_bar_enabled": true,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "stretch": "autostf",
+        "minimum": -0.008320113577507435,
+        "maximum": 0.6615177989006042,
+        "gamma": 1,
+        "invert": false,
+        "ellipses": false,
+        "centres": true,
+        "overlayMode": "selected",
+        "showRejected": false,
+        "stfShadows": -2.8,
+        "stfTarget": 0.25,
+        "defaultVersion": 2,
+        "excludedEllipses": false,
+        "paComparison": false,
+        "showWarnings": false
+      },
+      "refit_id": "363d1c23819b4f78a37a20bd9dc5fc53",
+      "proposed_centre": [
+        846.0833255870381,
+        868.6979282087486
+      ],
+      "view": [
+        672.5,
+        961.5,
+        725.5,
+        1016.5
+      ],
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    },
+    "calculation": {},
+    "previous_review_retained": true,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "-524824554283124036": {
+    "object_id": "-524824554283124036",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "disc": [
+        9.52029941976866,
+        13.239189430519385
+      ],
+      "bar": [
+        2.443623738437054,
+        3.4331154115948928
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "noBar": false,
+      "pool": "pipeline",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "sparse_enabled": true,
+        "pa_enabled": true,
+        "eps_enabled": true,
+        "small_bar_enabled": true,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "stretch": "autostf",
+        "minimum": -0.008457244433639568,
+        "maximum": 6.293806076049805,
+        "gamma": 1,
+        "invert": false,
+        "ellipses": false,
+        "centres": true,
+        "overlayMode": "selected",
+        "showRejected": true,
+        "stfShadows": -2.8,
+        "stfTarget": 0.25,
+        "defaultVersion": 2,
+        "excludedEllipses": false,
+        "euclidPAOverlay": true,
+        "paComparison": false,
+        "showWarnings": false
+      },
+      "refit_id": "005fb69cf81b43529e857becc596bae9",
+      "proposed_centre": [
+        5844.43,
+        6056.16
+      ],
+      "view": [
+        5136.5,
+        6109.5,
+        5703.5,
+        6668.5
+      ],
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    },
+    "calculation": {},
+    "previous_review_retained": true,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "2645436353651870062": {
+    "object_id": "2645436353651870062",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "disc": [
+        2.5128666700571407,
+        3.2011000104998546
+      ],
+      "bar": [
+        1.5969721974422613,
+        2.0032419244715727
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "noBar": false,
+      "pool": "pipeline",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "sparse_enabled": true,
+        "pa_enabled": true,
+        "eps_enabled": true,
+        "small_bar_enabled": true,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "stretch": "autostf",
+        "minimum": -0.008632547125406564,
+        "maximum": 0.4647738039493561,
+        "gamma": 1,
+        "invert": false,
+        "ellipses": false,
+        "centres": true,
+        "overlayMode": "selected",
+        "showRejected": true,
+        "stfShadows": -2.8,
+        "stfTarget": 0.25,
+        "defaultVersion": 2,
+        "excludedEllipses": false,
+        "paComparison": false,
+        "showWarnings": false
+      },
+      "refit_id": "27eb0e27d9f5488498094a788b4f9386",
+      "proposed_centre": [
+        457.6242598554462,
+        457.40209712778994
+      ],
+      "view": [
+        401.5,
+        512.5,
+        394.5,
+        505.5
+      ],
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    },
+    "calculation": {},
+    "previous_review_retained": true,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "2697242050653408730": {
+    "object_id": "2697242050653408730",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "disc": [
+        1.7562748167275186,
+        2.46743966571536
+      ],
+      "bar": [
+        0.996557497033455,
+        1.4000915311922182
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "noBar": false,
+      "pool": "pipeline",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "sparse_enabled": true,
+        "pa_enabled": true,
+        "eps_enabled": true,
+        "small_bar_enabled": true,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "defaultVersion": 2,
+        "stretch": "autostf",
+        "minimum": -0.0073605404855310915,
+        "maximum": 0.22564221918582916,
+        "gamma": 1,
+        "invert": false,
+        "ellipses": false,
+        "centres": true,
+        "overlayMode": "selected",
+        "showRejected": true,
+        "stfShadows": -2.8,
+        "stfTarget": 0.25,
+        "excludedEllipses": false,
+        "paComparison": false,
+        "showWarnings": false
+      },
+      "refit_id": "e41c21258e664e4392fba5a081c5fcef",
+      "proposed_centre": [
+        295.75,
+        296.52
+      ],
+      "view": [
+        253.5,
+        346.5,
+        247.5,
+        339.5
+      ],
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    },
+    "calculation": {},
+    "previous_review_retained": true,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "-524724591298089738": {
+    "object_id": "-524724591298089738",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "disc": [
+        2.7019321308327484,
+        4.761727619343951
+      ],
+      "bar": [
+        1.717126715767099,
+        2.1539637522582495
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "noBar": false,
+      "pool": "pipeline",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "sparse_enabled": true,
+        "pa_enabled": true,
+        "eps_enabled": true,
+        "small_bar_enabled": true,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "stretch": "autostf",
+        "minimum": -0.007793962933565489,
+        "maximum": 1.2216780185699463,
+        "gamma": 1,
+        "invert": false,
+        "ellipses": false,
+        "centres": true,
+        "overlayMode": "selected",
+        "showRejected": true,
+        "defaultVersion": 2,
+        "excludedEllipses": false,
+        "paComparison": false,
+        "showWarnings": false
+      },
+      "refit_id": "2020d9fa1f73444692afcf551022add6",
+      "view": [
+        813.5,
+        1055.5,
+        815.5,
+        1055.5
+      ],
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "proposed_centre": [
+        936.1970574745351,
+        936.9067208224008
+      ]
+    },
+    "calculation": {},
+    "previous_review_retained": true,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "2724315227685324582": {
+    "object_id": "2724315227685324582",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "disc": [
+        3.0775629798493664,
+        6.074563624709152
+      ],
+      "bar": [
+        1.242976070611368,
+        1.5591891829749003
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "noBar": false,
+      "pool": "marginal",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "sparse_enabled": true,
+        "pa_enabled": true,
+        "eps_enabled": true,
+        "small_bar_enabled": true,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "stretch": "autostf",
+        "minimum": -0.008770521994672018,
+        "maximum": 2.5744872093200684,
+        "gamma": 1,
+        "invert": false,
+        "ellipses": false,
+        "centres": true,
+        "overlayMode": "selected",
+        "showRejected": true,
+        "stfShadows": -2.8,
+        "stfTarget": 0.25,
+        "defaultVersion": 2,
+        "excludedEllipses": false,
+        "paComparison": false,
+        "showWarnings": false
+      },
+      "refit_id": "78e6ae3b57c64b09a35b5facc59ba6aa",
+      "view": [
+        1067.5,
+        1321.5,
+        1067.5,
+        1321.5
+      ],
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "proposed_centre": [
+        1194.5188118196693,
+        1194.583592920559
+      ]
+    },
+    "calculation": {},
+    "previous_review_retained": true,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "-615088650482896879": {
+    "object_id": "-615088650482896879",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "refit_id": "9d5065d7dd354b859ebbf1db26f48e1b",
+      "disc": [
+        2.4971486133408103,
+        4.400829090435592
+      ],
+      "bar": [
+        0.9004968238395462,
+        1.9907115858903142
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "pool": "pipeline",
+      "noBar": false,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10.0,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "defaultVersion": 2,
+        "stretch": "autostf",
+        "gamma": 1,
+        "ellipses": false,
+        "excludedEllipses": false,
+        "paComparison": false,
+        "centres": true,
+        "overlayMode": "selected",
+        "showWarnings": false
+      },
+      "proposed_centre": [
+        654.7653750930893,
+        654.8984154315102
+      ]
+    },
+    "calculation": {},
+    "previous_review_retained": false,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "2654162178650796134": {
+    "object_id": "2654162178650796134",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "refit_id": "26aa0e83deb24a5bb150aa64545203bf",
+      "disc": [
+        2.788889038470724,
+        5.504772450594514
+      ],
+      "bar": [
+        0.8017389555435113,
+        2.223285266638013
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "pool": "pipeline",
+      "noBar": false,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10.0,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "defaultVersion": 2,
+        "stretch": "autostf",
+        "gamma": 1,
+        "ellipses": false,
+        "excludedEllipses": false,
+        "paComparison": false,
+        "centres": true,
+        "overlayMode": "selected",
+        "showWarnings": false
+      },
+      "proposed_centre": [
+        957.0376272335898,
+        957.0910191725102
+      ]
+    },
+    "calculation": {},
+    "previous_review_retained": false,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "-646641404494431826": {
+    "object_id": "-646641404494431826",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "refit_id": "af5d9473456445faa12755e0a341c012",
+      "disc": [
+        1.1304364828848072,
+        3.932279820016475
+      ],
+      "bar": [
+        0.51135205602114,
+        0.8046223599250687
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "pool": "pipeline",
+      "noBar": false,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10.0,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "defaultVersion": 2,
+        "stretch": "autostf",
+        "gamma": 1,
+        "ellipses": false,
+        "excludedEllipses": false,
+        "paComparison": false,
+        "centres": true,
+        "overlayMode": "selected",
+        "showWarnings": false
+      },
+      "proposed_centre": [
+        642.4539759870993,
+        640.6062809077232
+      ]
+    },
+    "calculation": {},
+    "previous_review_retained": false,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "2690070926643224042": {
+    "object_id": "2690070926643224042",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "refit_id": "0bfa57415a0f4c9a82db9159ae40b6c6",
+      "disc": [
+        10.037174501747355,
+        19.811602726699356
+      ],
+      "bar": [
+        2.0538047657406646,
+        3.6195057478195864
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "pool": "pipeline",
+      "noBar": false,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10.0,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "defaultVersion": 2,
+        "stretch": "autostf",
+        "gamma": 1,
+        "ellipses": false,
+        "excludedEllipses": false,
+        "paComparison": false,
+        "centres": true,
+        "overlayMode": "selected",
+        "showWarnings": false
+      },
+      "proposed_centre": [
+        2079.8051116344727,
+        2101.2738450474462
+      ]
+    },
+    "calculation": {},
+    "previous_review_retained": false,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "-599118107493216367": {
+    "object_id": "-599118107493216367",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "refit_id": "f5d0eda0d62e45fda15e1768803a5a7e",
+      "disc": [
+        0.442992351557255,
+        0.8743883528667161
+      ],
+      "bar": [
+        0.5,
+        2
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "pool": "pipeline",
+      "noBar": false,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10.0,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "defaultVersion": 2,
+        "stretch": "autostf",
+        "gamma": 1,
+        "ellipses": false,
+        "excludedEllipses": false,
+        "paComparison": false,
+        "centres": true,
+        "overlayMode": "selected",
+        "showWarnings": false
+      },
+      "proposed_centre": [
+        546.2715018156777,
+        546.3888236933926
+      ]
+    },
+    "calculation": {},
+    "previous_review_retained": false,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  },
+  "2634901320657220727": {
+    "object_id": "2634901320657220727",
+    "reviewed": false,
+    "disc_decision": "not_assessed",
+    "bar_decision": "not_assessed",
+    "centre_decision": "not_assessed",
+    "rule_action": "unsure",
+    "notes": "",
+    "settings": {
+      "refit_id": "5b7117def8614389849d76fb304a97b8",
+      "disc": [
+        2.1310755932029,
+        3.75568334795164
+      ],
+      "bar": [
+        0.860705689650836,
+        1.0796692170980091
+      ],
+      "editedDisc": true,
+      "editedBar": true,
+      "pool": "pipeline",
+      "noBar": false,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "rules": {
+        "min_disc": 6,
+        "max_gap": 0.5,
+        "pa_rms": 10.0,
+        "eps_span": 0.15,
+        "small_bar": 1.5,
+        "centre_enabled": true,
+        "centre_cap_native": 3,
+        "centre_fraction": 0.05,
+        "centre_floor_native": 1
+      },
+      "display": {
+        "defaultVersion": 2,
+        "stretch": "autostf",
+        "gamma": 1,
+        "ellipses": false,
+        "excludedEllipses": false,
+        "paComparison": false,
+        "centres": true,
+        "overlayMode": "selected",
+        "showWarnings": false
+      },
+      "proposed_centre": [
+        522.1349580820624,
+        524.1559952886287
+      ]
+    },
+    "calculation": {},
+    "previous_review_retained": false,
+    "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28"
+  }
+}

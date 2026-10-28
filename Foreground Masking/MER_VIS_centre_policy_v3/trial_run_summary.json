@@ -1,0 +1,185 @@
+{
+  "seconds": 59.0779999999977,
+  "results": [
+    {
+      "id": "-663928688473758026",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 5,
+      "n_bar": 5,
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    },
+    {
+      "id": "2756030807655229287",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 5,
+      "n_bar": 3,
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    },
+    {
+      "id": "-595029565493921205",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 5,
+      "n_bar": 5,
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    },
+    {
+      "id": "-537890362287224823",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 6,
+      "n_bar": "",
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    },
+    {
+      "id": "-518633776290631360",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 3,
+      "n_bar": 3,
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    },
+    {
+      "id": "2681494150647395085",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 7,
+      "n_bar": "",
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    },
+    {
+      "id": "2654474268655808169",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 3,
+      "n_bar": 11,
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    },
+    {
+      "id": "-586374330510251740",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 7,
+      "n_bar": 7,
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    },
+    {
+      "id": "-524824554283124036",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 7,
+      "n_bar": 4,
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    },
+    {
+      "id": "2645436353651870062",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 3,
+      "n_bar": 4,
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    },
+    {
+      "id": "-524724591298089738",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 6,
+      "n_bar": 4,
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    },
+    {
+      "id": "2724315227685324582",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 7,
+      "n_bar": 4,
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    },
+    {
+      "id": "-615088650482896879",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 7,
+      "n_bar": 5,
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    },
+    {
+      "id": "2654162178650796134",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 7,
+      "n_bar": 10,
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    },
+    {
+      "id": "-646641404494431826",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 3,
+      "n_bar": 5,
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    },
+    {
+      "id": "2690070926643224042",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 7,
+      "n_bar": 11,
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    },
+    {
+      "id": "-599118107493216367",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 4,
+      "n_bar": 6,
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    },
+    {
+      "id": "2634901320657220727",
+      "status": "provisional_fit",
+      "method": "standard",
+      "n_disc": 7,
+      "n_bar": 4,
+      "error": "",
+      "diagnostic": true,
+      "diagnostic_error": null
+    }
+  ]
+}

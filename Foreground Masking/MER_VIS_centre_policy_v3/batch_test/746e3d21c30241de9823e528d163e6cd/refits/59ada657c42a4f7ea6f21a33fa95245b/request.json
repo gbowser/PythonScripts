@@ -1,0 +1,23 @@
+{
+  "object_id": "test",
+  "row": {
+    "object_id": "test",
+    "fits_filename": "synthetic.fits",
+    "fits_path": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_review_tool\\refit_test_state\\synthetic\\synthetic.fits",
+    "_source_manifest_sha256": "1a89de606929e2a95e8bb4f8652f56270bf270e3cbfe175b71a01418ae44283d",
+    "manual_centre_x_pix": 120.0,
+    "manual_centre_y_pix": 120.0
+  },
+  "segmentation_area": "5000",
+  "lock_centre": false,
+  "centre_policy": {
+    "cap_native_pixels": 3.0,
+    "fraction_radius": 0.05,
+    "floor_native_pixels": 1.0
+  },
+  "reference_provenance": "synthetic_known_centre",
+  "source_manifest_sha256": "1a89de606929e2a95e8bb4f8652f56270bf270e3cbfe175b71a01418ae44283d",
+  "engine_sha256": "3c220a7a18aad0899c3ded4c4d29fafeac7e3e8eceece6a993fdddd2349e5fd9",
+  "worker_sha256": "cfed638525bb1fb0e8a7c660fd1d09e5c0e4029af1f3bc4a1681305790ab842d",
+  "requested_utc": "2026-10-28T13:56:19Z"
+}

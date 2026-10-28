@@ -1,0 +1,253 @@
+[
+  {
+    "id": "-663928688473758026",
+    "previous_PA": 42.68410913303933,
+    "PA": 61.38117242026033,
+    "inc": 27.122263835659016,
+    "n_disc": 3,
+    "n_bar": 5,
+    "RMS": 20.550924885204623,
+    "flags": [
+      "Sparse disc sampling",
+      "Disc PA varies across radius",
+      "Small candidate feature: bar identification uncertain"
+    ]
+  },
+  {
+    "id": "2756030807655229287",
+    "previous_PA": 59.615223731458826,
+    "PA": 47.740134869253836,
+    "inc": 32.26884131790305,
+    "n_disc": 3,
+    "n_bar": 4,
+    "RMS": 25.842649281664038,
+    "flags": [
+      "Sparse disc sampling",
+      "Disc PA varies across radius",
+      "Small candidate feature: bar identification uncertain"
+    ]
+  },
+  {
+    "id": "-595029565493921205",
+    "previous_PA": 55.310643027465034,
+    "PA": 55.69252352821786,
+    "inc": 53.001133795295914,
+    "n_disc": 5,
+    "n_bar": 5,
+    "RMS": 11.219470706190359,
+    "flags": [
+      "Sparse disc sampling",
+      "Disc PA varies across radius",
+      "Changing disc ellipticity"
+    ]
+  },
+  {
+    "id": "-537890362287224823",
+    "previous_PA": 63.69316082965173,
+    "PA": 62.64143696328259,
+    "inc": 32.102422028419525,
+    "n_disc": 5,
+    "n_bar": 2,
+    "RMS": 15.360799736864564,
+    "flags": [
+      "Sparse disc sampling",
+      "Disc PA varies across radius",
+      "Selected bar interval does not pass the signature screen"
+    ]
+  },
+  {
+    "id": "-518633776290631360",
+    "previous_PA": 110.06084358620616,
+    "PA": 155.12196841374248,
+    "inc": null,
+    "n_disc": 1,
+    "n_bar": 11,
+    "RMS": 0,
+    "flags": [
+      "Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses"
+    ]
+  },
+  {
+    "id": "2681494150647395085",
+    "previous_PA": 126.0235795749839,
+    "PA": 128.95982312883456,
+    "inc": null,
+    "n_disc": 2,
+    "n_bar": 4,
+    "RMS": 14.972933107528718,
+    "flags": [
+      "Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses",
+      "Nearly face-on: PA ambiguity is informational"
+    ]
+  },
+  {
+    "id": "2654474268655808169",
+    "previous_PA": 134.57114956882924,
+    "PA": 113.71190452614236,
+    "inc": null,
+    "n_disc": 1,
+    "n_bar": 7,
+    "RMS": 0,
+    "flags": [
+      "Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses",
+      "Nearly face-on: PA ambiguity is informational",
+      "Small candidate feature: bar identification uncertain",
+      "Weaker B-style bar-profile evidence"
+    ]
+  },
+  {
+    "id": "-586374330510251740",
+    "previous_PA": 173.94547831796993,
+    "PA": 175.2067837398473,
+    "inc": 35.439127237365085,
+    "n_disc": 4,
+    "n_bar": 6,
+    "RMS": 4.532235210772925,
+    "flags": [
+      "Sparse disc sampling"
+    ]
+  },
+  {
+    "id": "-524824554283124036",
+    "previous_PA": 145.91742608578585,
+    "PA": 145.91742608578585,
+    "inc": 57.54927851869868,
+    "n_disc": 3,
+    "n_bar": 4,
+    "RMS": 4.512399971062961,
+    "flags": [
+      "Sparse disc sampling"
+    ]
+  },
+  {
+    "id": "2645436353651870062",
+    "previous_PA": 66.81528258162302,
+    "PA": 66.92873004188723,
+    "inc": null,
+    "n_disc": 2,
+    "n_bar": 2,
+    "RMS": 23.30109883858981,
+    "flags": [
+      "Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses",
+      "Changing disc ellipticity",
+      "Selected bar interval does not pass the signature screen"
+    ]
+  },
+  {
+    "id": "2697242050653408730",
+    "previous_PA": 129.7200529513338,
+    "PA": 129.7200529513338,
+    "inc": 41.8154093210239,
+    "n_disc": 3,
+    "n_bar": 4,
+    "RMS": 27.46188901806143,
+    "flags": [
+      "Sparse disc sampling",
+      "Disc PA varies across radius",
+      "Centre reference unverified: visual confirmation required",
+      "Small candidate feature: bar identification uncertain"
+    ]
+  },
+  {
+    "id": "-524724591298089738",
+    "previous_PA": 15.781073420491083,
+    "PA": 16.20452734816405,
+    "inc": 52.93648908424177,
+    "n_disc": 6,
+    "n_bar": 3,
+    "RMS": 5.987815106710015,
+    "flags": []
+  },
+  {
+    "id": "2724315227685324582",
+    "previous_PA": 60.7151802282948,
+    "PA": 61.63419560011562,
+    "inc": 37.815495446598675,
+    "n_disc": 7,
+    "n_bar": 3,
+    "RMS": 8.622984790030486,
+    "flags": [
+      "Changing disc ellipticity"
+    ]
+  },
+  {
+    "id": "-615088650482896879",
+    "previous_PA": null,
+    "PA": 90.22589248637173,
+    "inc": 60.039360545872206,
+    "n_disc": 6,
+    "n_bar": 8,
+    "RMS": 2.316589030212727,
+    "flags": [
+      "Centre reference unverified: visual confirmation required"
+    ]
+  },
+  {
+    "id": "2654162178650796134",
+    "previous_PA": null,
+    "PA": 65.47866369149506,
+    "inc": 46.80008451737832,
+    "n_disc": 7,
+    "n_bar": 10,
+    "RMS": 8.552995884212391,
+    "flags": [
+      "Centre reference unverified: visual confirmation required"
+    ]
+  },
+  {
+    "id": "-646641404494431826",
+    "previous_PA": null,
+    "PA": 155.1047586666076,
+    "inc": 67.13755192973103,
+    "n_disc": 6,
+    "n_bar": 2,
+    "RMS": 9.136150870469406,
+    "flags": [
+      "Centre reference unverified: visual confirmation required",
+      "Small candidate feature: bar identification uncertain",
+      "Selected bar interval does not pass the signature screen"
+    ]
+  },
+  {
+    "id": "2690070926643224042",
+    "previous_PA": null,
+    "PA": 20.87970242450166,
+    "inc": 67.55989861116508,
+    "n_disc": 7,
+    "n_bar": 6,
+    "RMS": 4.1682696949858045,
+    "flags": [
+      "Centre reference unverified: visual confirmation required"
+    ]
+  },
+  {
+    "id": "-599118107493216367",
+    "previous_PA": null,
+    "PA": 91.20920722253845,
+    "inc": 63.95340419096871,
+    "n_disc": 5,
+    "n_bar": 12,
+    "RMS": 0.1832050822695437,
+    "flags": [
+      "Sparse disc sampling",
+      "Centre reference unverified: visual confirmation required",
+      "Weaker B-style bar-profile evidence"
+    ]
+  },
+  {
+    "id": "2634901320657220727",
+    "previous_PA": null,
+    "PA": 11.277757478088262,
+    "inc": 49.257953983189196,
+    "n_disc": 6,
+    "n_bar": 2,
+    "RMS": 22.492979865627888,
+    "flags": [
+      "Disc PA varies across radius",
+      "Centre reference unverified: visual confirmation required",
+      "Changing disc ellipticity",
+      "Small candidate feature: bar identification uncertain",
+      "Selected bar interval does not pass the signature screen"
+    ]
+  }
+]

@@ -1,0 +1,103 @@
+# Review of MER VIS galaxy assessments
+
+28 October 2026
+
+**Recommendation:** preserve the completed manual selections; improve automatic interval selection and warning interpretation before relaxing numerical ellipse acceptance. This report analyses the saved assessments and numerical profiles. It does not independently validate all 58 images or change any review or pipeline result.
+
+## Evidence and completeness
+
+All 58 of 58 sample galaxies are marked reviewed. All saved PA, inclination, counts and scatter values reproduce from the saved settings and exact selected refit; no discrepancies were found. There are 42 non-empty notes. No saved numerical threshold or screen-enable changes were found.
+
+The review contains 55 usable and 3 uncertain disc judgements; 57 convincing and one uncertain bar judgements; 57 correct and one uncertain centre judgements. Rule actions are 36 Relax, 20 Keep, one Remove and one Unsure.
+
+These 58 purposively selected cases include controls, warning examples and boundary comparisons. They do not estimate warning accuracy or galaxy-quality percentages in the full 2,777-object library. A visual judgement of usable structure is not an external measurement of PA or inclination.
+
+## Findings by group
+
+| Review group | Reviewed | Rule recommendations | Disc judgements | Disc intervals changed |
+|---|---:|---|---|---:|
+| Sparse disc sampling | 12 | 8 relax, 4 keep | 12 usable | 9 |
+| Small bar / bar boundary | 12 | 11 relax, 1 keep | 12 usable | 6 |
+| Disc ellipticity / boundary | 12 | 12 relax | 12 usable | 7 |
+| Disc PA variation | 6 | 5 relax, 1 keep | 5 usable, 1 uncertain | 4 |
+| No-quality-issue references | 12 | 12 keep | 12 usable | 2 |
+| Original fit failures | 4 | 2 keep, 1 unsure, 1 remove | 2 usable, 2 uncertain | 4 |
+
+## What the edits establish
+
+**Interval selection is the main correction mechanism.** Disc bounds changed for 32 galaxies, bar bounds for 18, and at least one interval for 38 of the 58. Four centre refits were selected. Only one review used the accepted-plus-marginal pool; the other 57 retained the accepted pool. This supports improving the choice of physically appropriate fitted ellipses, rather than globally loosening individual-isophote convergence, coverage and error requirements.
+
+**The ellipticity votes need interpretation.** All 12 ellipticity-group cases received Relax, but four started below Δε=0.15 and had no ellipticity warning. Several notes instead concern bar-signature drop or bar extent. Of the eight originally above Δε=0.15, three remain above it after editing; several others were improved by changing the disc interval. The evidence does not establish an optimal replacement threshold.
+
+**Small bars should not be rejected on angular radius alone.** All 12 bar-group objects were judged convincing, including sub-arcsecond examples. Eight began below the small-bar screen and four were comparison cases above it. Retain angular size as descriptive/resolution information; use pixel/PSF resolution, contamination and geometric consistency to assess measurable bar PA.
+
+**Sample count is useful context, not a complete quality decision.** All 12 sparse-group discs were judged usable. Notes often favour three coherent disc ellipses over a larger set containing inner-bar or inappropriate outer measurements. Three reviewed usable discs now have only two selected ellipses: their displayed PA is provisional and inclination is unavailable under the current rule.
+
+**Keep the distinction between finding a bar and obtaining reliable disc geometry.** A convincing bar can coexist with an uncertain disc or centre. Some changes can make selected angles more consistent, but genuine twists, lopsidedness and low signal can also explain changing PA. Selection should use image structure, masking, centres and surface-brightness evidence rather than agreement with a desired PA or threshold.
+
+## Warning logic issue identified
+
+The current calculation evaluates sparse sampling before PA variation using an else-if chain. Therefore a PA RMS above 10° can be hidden when the same selection is sparse. This affects four reviewed-usable, non-nearly-face-on galaxies. Sample count and PA variation should be reported separately, with a small-sample qualification rather than a hidden PA diagnostic. No code changes were made in this analysis.
+
+| Galaxy | Selected disc ellipses | PA RMS | Current judgement | PA warning currently shown? |
+|---|---:|---:|---|---|
+| 2756030807655229287 | 5 | 26.12° | Usable | No — sparse warning takes precedence |
+| -595029565493921205 | 5 | 10.90° | Usable | No — sparse warning takes precedence |
+| -610695895481546016 | 7 | 17.15° | Usable | Yes |
+| -537890362287224823 | 5 | 15.91° | Usable | No — sparse warning takes precedence |
+| -663928688473758026 | 4 | 51.92° | Usable | No — sparse warning takes precedence |
+
+**Priority checks:** −663928688473758026 has RMS 51.92° and its reviewed PA differs from the automatic value by 33.99°. 2756030807655229287 still has RMS 26.12° despite the note that added ellipses have similar PA. The reviewed intervals may be useful, but those mean disc angles should remain uncertain pending a targeted inspection. Nearly-face-on discs remain informational cases, not generic quality failures.
+
+## Previously failed galaxies
+
+All four selected manual-centre refits now return numerical geometry. Two were visually judged usable and two remained uncertain. Convergence alone therefore does not decide whether disc geometry is scientifically appropriate.
+
+| Galaxy | Review outcome | Recommended disposition |
+|---|---|---|
+| −586374330510251740 | Disc usable; centre corrected; bar convincing | Preserve the selected centre refit and reviewed intervals; retain sparse-sampling information. |
+| −524824554283124036 | Disc usable; centre corrected; bar convincing | Preserve the selected centre refit and reviewed intervals; retain sparse-sampling information. |
+| 2645436353651870062 | Disc uncertain; note explicitly says exclude | Exclude from the adopted disc-deprojection subset; preserve the galaxy, image, visual bar judgement and numerical trial. |
+| 2697242050653408730 | Disc and centre uncertain; bar convincing | Hold out from adopted disc geometry until a suitable model/manual constraint exists; retain the bar candidate. |
+
+The Remove action for the last galaxy should not be interpreted as a recommendation to remove all quality checks. Similarly, Keep for 2645436353651870062 does not override the explicit note to exclude its geometry. These are recommendations; no saved labels were changed.
+
+## Provisional two-ellipse PAs
+
+| Galaxy | Current PA | PA samples | Inclination |
+|---|---:|---:|---|
+| -518633776290631360 | 110.06° | 2 | Not available |
+| 2681494150647395085 | 126.02° | 2 | Not available |
+| 2654474268655808169 | 134.57° | 2 | Not available |
+
+These PAs may remain visible for exploration, but should retain their provisional label in exports. They are not a complete deprojection solution. The 55 visually usable discs include 55 numerical PAs and 52 numerical inclinations; inclusion in a final science subset requires a separate acceptance decision. All 57 visually convincing bars have a numerical bar PA in the saved selection, which does not independently verify its uncertainty.
+
+## Recommended next steps, in order
+
+1. **Freeze this review as a calibration set.** Preserve the original manifest and each saved review/refit. Create a separate adopted-geometry layer with accepted PA, accepted inclination, accepted bar PA, review disposition and provenance. Keep three uncertain discs and the uncertain bar separately rather than assigning one all-purpose usable label.
+2. **Correct warning precedence and wording first.** Sampling, PA variation and ellipticity should be separately visible. Retain low-count and nearly-face-on qualifications. A size warning and Class B evidence should not imply that a visible bar is absent.
+3. **Improve disc and bar interval selection.** Test contiguous, physically appropriate outer-disc ranges; use photometric extent, contamination, centre consistency, radial coverage and stability. Check sensitivity to shifting either boundary by one isophote. Preserve real radial PA twists as uncertainty or structure.
+4. **Make sampling quality graded.** One or two usable ellipses can supply a descriptive provisional PA. Three to five coherent, adequately separated ellipses can be a usable provisional disc estimate rather than an automatic rejection solely for not reaching six. Six ellipses do not guarantee a reliable disc. Keep inclination acceptance separate.
+5. **Revise ellipticity and bar evidence without discarding useful information.** Retain Δε as a measurement and assess the resulting inclination sensitivity. Do not choose a replacement Δε threshold solely from these reviewed cases. Evaluate bar-drop evidence across the physically relevant bar-end transition; the current local post-peak window can stop inside the bar. Label A/B as evidence strength, and keep ambiguous cases explicit.
+6. **Promote successful centre corrections carefully.** Retain the two visually accepted manual refits. Test model/residual diagnostics for ambiguous centres; the residual-map feature is not implemented by this assessment analysis. Preserve the two questionable objects as non-adopted disc geometry even though a numerical fit is now possible.
+7. **Validate on a small new sample.** After applying candidate logic, compare before/after metrics on these 58 and review roughly 30–50 additional examples spanning the changed rules, clean controls and boundary cases. Accept changes based on image fidelity, parameter stability and transparent reasons; do not optimise only for fewer warnings. Only then rerun the full library and replace published PNG/PDF/report products.
+
+## Specific follow-up cases
+
+| Galaxy | Reason for follow-up |
+|---|---|
+| −639551465483219839 | Disc explicitly uncertain because PA changes continuously; retain that uncertainty. |
+| −523703623274519067 | Bar explicitly uncertain; removing an outer disc sample does not resolve bar identification. |
+| −663928688473758026 | Originally a clean reference, but edited selection has very large radial PA scatter. |
+| 2756030807655229287 | Reviewed as usable, but selected PA RMS remains 26.12°. |
+| 2654474268655808169 | Two-ellipse PA changes by 72.60°; keep provisional and keep inclination unavailable. |
+| 2681494150647395085 | Two-ellipse PA changes by 31.77°; keep provisional and keep inclination unavailable. |
+| −603528383471076765 | Note identifies outer ellipses beyond the galaxy; useful for testing photometric extent. |
+
+## Audit and preservation
+
+Source review JSON SHA-256: `125e98ea68c18bb10c02797893a6c97cd26a3155144e07f1bc426eed8244566c`.
+
+`review_audit.json` contains per-galaxy baseline and final geometry, saved decisions, exact intervals, selected refit IDs, issue lists, comparison deltas and notes. `source_reviews.json` and `source_sample.json` preserve the assessment inputs. The original review JSON, FITS files, fitting profiles and pipeline results were not modified.
+
+All recommendations are proposed next steps. No warning thresholds, adopted measurements, review decisions or published report products were changed by this analysis.

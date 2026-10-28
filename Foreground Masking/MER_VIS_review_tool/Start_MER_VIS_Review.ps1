@@ -1,7 +1,9 @@
-param([switch]$NoBrowser)
+param([switch]$NoBrowser,[switch]$Original)
 $ErrorActionPreference = 'Stop'
 $reviewRoot = $PSScriptRoot
-$saved = Join-Path $reviewRoot 'saved_reviews'
+$campaignPath = Join-Path $reviewRoot 'centre_policy_MER_VIS_campaign.json'
+$useCampaign = (-not $Original) -and (Test-Path -LiteralPath $campaignPath)
+$saved = if ($useCampaign) { Join-Path $reviewRoot 'saved_reviews_centre_v3' } else { Join-Path $reviewRoot 'saved_reviews' }
 New-Item -ItemType Directory -Path $saved -Force | Out-Null
 $statePath = Join-Path $saved 'server.json'
 if (Test-Path -LiteralPath $statePath) {
@@ -35,6 +37,7 @@ $script = Join-Path $reviewRoot 'review_MER_VIS.py'
 $log = Join-Path $saved 'server.log'
 $errorLog = Join-Path $saved 'server_error.log'
 $arguments = @('-u', ('"' + $script + '"'), '--output', ('"' + $saved + '"'), '--no-browser')
+if ($useCampaign) { $arguments += @('--campaign', ('"' + $campaignPath + '"')) }
 $process = Start-Process -FilePath $python -ArgumentList $arguments -WindowStyle Hidden -PassThru -RedirectStandardOutput $log -RedirectStandardError $errorLog
 for ($attempt = 0; $attempt -lt 80; $attempt++) {
     Start-Sleep -Milliseconds 250

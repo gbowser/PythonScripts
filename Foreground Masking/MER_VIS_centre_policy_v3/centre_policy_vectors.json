@@ -1,0 +1,842 @@
+[
+  {
+    "point": {
+      "x_original_pix": 100,
+      "y_original_pix": 200,
+      "sma_arcsec": 0.2
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 0.0,
+      "centre_offset_arcsec": 0.0,
+      "centre_offset_fraction_radius": 0.0,
+      "centre_limit_native_pix": 1.0,
+      "centre_limit_arcsec": 0.1,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 100.5,
+      "y_original_pix": 200,
+      "sma_arcsec": 0.2
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 0.5,
+      "centre_offset_arcsec": 0.05,
+      "centre_offset_fraction_radius": 0.25,
+      "centre_limit_native_pix": 1.0,
+      "centre_limit_arcsec": 0.1,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 101,
+      "y_original_pix": 200,
+      "sma_arcsec": 0.2
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 1.0,
+      "centre_offset_arcsec": 0.1,
+      "centre_offset_fraction_radius": 0.5,
+      "centre_limit_native_pix": 1.0,
+      "centre_limit_arcsec": 0.1,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 101.5,
+      "y_original_pix": 200,
+      "sma_arcsec": 0.2
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 1.5,
+      "centre_offset_arcsec": 0.15000000000000002,
+      "centre_offset_fraction_radius": 0.7500000000000001,
+      "centre_limit_native_pix": 1.0,
+      "centre_limit_arcsec": 0.1,
+      "centre_accepted": false,
+      "centre_rejection_reason": "Centre displacement 1.500 native px (0.150 arcsec) exceeds 1.000 native px (0.100 arcsec)",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 102.5,
+      "y_original_pix": 200,
+      "sma_arcsec": 0.2
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 2.5,
+      "centre_offset_arcsec": 0.25,
+      "centre_offset_fraction_radius": 1.25,
+      "centre_limit_native_pix": 1.0,
+      "centre_limit_arcsec": 0.1,
+      "centre_accepted": false,
+      "centre_rejection_reason": "Centre displacement 2.500 native px (0.250 arcsec) exceeds 1.000 native px (0.100 arcsec)",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 103,
+      "y_original_pix": 200,
+      "sma_arcsec": 0.2
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 3.0,
+      "centre_offset_arcsec": 0.30000000000000004,
+      "centre_offset_fraction_radius": 1.5000000000000002,
+      "centre_limit_native_pix": 1.0,
+      "centre_limit_arcsec": 0.1,
+      "centre_accepted": false,
+      "centre_rejection_reason": "Centre displacement 3.000 native px (0.300 arcsec) exceeds 1.000 native px (0.100 arcsec)",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 103.1,
+      "y_original_pix": 200,
+      "sma_arcsec": 0.2
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 3.0999999999999943,
+      "centre_offset_arcsec": 0.30999999999999944,
+      "centre_offset_fraction_radius": 1.5499999999999972,
+      "centre_limit_native_pix": 1.0,
+      "centre_limit_arcsec": 0.1,
+      "centre_accepted": false,
+      "centre_rejection_reason": "Centre displacement 3.100 native px (0.310 arcsec) exceeds 1.000 native px (0.100 arcsec)",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 100,
+      "y_original_pix": 200,
+      "sma_arcsec": 1
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 0.0,
+      "centre_offset_arcsec": 0.0,
+      "centre_offset_fraction_radius": 0.0,
+      "centre_limit_native_pix": 1.0,
+      "centre_limit_arcsec": 0.1,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 100.5,
+      "y_original_pix": 200,
+      "sma_arcsec": 1
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 0.5,
+      "centre_offset_arcsec": 0.05,
+      "centre_offset_fraction_radius": 0.05,
+      "centre_limit_native_pix": 1.0,
+      "centre_limit_arcsec": 0.1,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 101,
+      "y_original_pix": 200,
+      "sma_arcsec": 1
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 1.0,
+      "centre_offset_arcsec": 0.1,
+      "centre_offset_fraction_radius": 0.1,
+      "centre_limit_native_pix": 1.0,
+      "centre_limit_arcsec": 0.1,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 101.5,
+      "y_original_pix": 200,
+      "sma_arcsec": 1
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 1.5,
+      "centre_offset_arcsec": 0.15000000000000002,
+      "centre_offset_fraction_radius": 0.15000000000000002,
+      "centre_limit_native_pix": 1.0,
+      "centre_limit_arcsec": 0.1,
+      "centre_accepted": false,
+      "centre_rejection_reason": "Centre displacement 1.500 native px (0.150 arcsec) exceeds 1.000 native px (0.100 arcsec)",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 102.5,
+      "y_original_pix": 200,
+      "sma_arcsec": 1
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 2.5,
+      "centre_offset_arcsec": 0.25,
+      "centre_offset_fraction_radius": 0.25,
+      "centre_limit_native_pix": 1.0,
+      "centre_limit_arcsec": 0.1,
+      "centre_accepted": false,
+      "centre_rejection_reason": "Centre displacement 2.500 native px (0.250 arcsec) exceeds 1.000 native px (0.100 arcsec)",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 103,
+      "y_original_pix": 200,
+      "sma_arcsec": 1
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 3.0,
+      "centre_offset_arcsec": 0.30000000000000004,
+      "centre_offset_fraction_radius": 0.30000000000000004,
+      "centre_limit_native_pix": 1.0,
+      "centre_limit_arcsec": 0.1,
+      "centre_accepted": false,
+      "centre_rejection_reason": "Centre displacement 3.000 native px (0.300 arcsec) exceeds 1.000 native px (0.100 arcsec)",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 103.1,
+      "y_original_pix": 200,
+      "sma_arcsec": 1
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 3.0999999999999943,
+      "centre_offset_arcsec": 0.30999999999999944,
+      "centre_offset_fraction_radius": 0.30999999999999944,
+      "centre_limit_native_pix": 1.0,
+      "centre_limit_arcsec": 0.1,
+      "centre_accepted": false,
+      "centre_rejection_reason": "Centre displacement 3.100 native px (0.310 arcsec) exceeds 1.000 native px (0.100 arcsec)",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 100,
+      "y_original_pix": 200,
+      "sma_arcsec": 3
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 0.0,
+      "centre_offset_arcsec": 0.0,
+      "centre_offset_fraction_radius": 0.0,
+      "centre_limit_native_pix": 1.5000000000000002,
+      "centre_limit_arcsec": 0.15000000000000002,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 100.5,
+      "y_original_pix": 200,
+      "sma_arcsec": 3
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 0.5,
+      "centre_offset_arcsec": 0.05,
+      "centre_offset_fraction_radius": 0.016666666666666666,
+      "centre_limit_native_pix": 1.5000000000000002,
+      "centre_limit_arcsec": 0.15000000000000002,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 101,
+      "y_original_pix": 200,
+      "sma_arcsec": 3
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 1.0,
+      "centre_offset_arcsec": 0.1,
+      "centre_offset_fraction_radius": 0.03333333333333333,
+      "centre_limit_native_pix": 1.5000000000000002,
+      "centre_limit_arcsec": 0.15000000000000002,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 101.5,
+      "y_original_pix": 200,
+      "sma_arcsec": 3
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 1.5,
+      "centre_offset_arcsec": 0.15000000000000002,
+      "centre_offset_fraction_radius": 0.05000000000000001,
+      "centre_limit_native_pix": 1.5000000000000002,
+      "centre_limit_arcsec": 0.15000000000000002,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 102.5,
+      "y_original_pix": 200,
+      "sma_arcsec": 3
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 2.5,
+      "centre_offset_arcsec": 0.25,
+      "centre_offset_fraction_radius": 0.08333333333333333,
+      "centre_limit_native_pix": 1.5000000000000002,
+      "centre_limit_arcsec": 0.15000000000000002,
+      "centre_accepted": false,
+      "centre_rejection_reason": "Centre displacement 2.500 native px (0.250 arcsec) exceeds 1.500 native px (0.150 arcsec)",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 103,
+      "y_original_pix": 200,
+      "sma_arcsec": 3
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 3.0,
+      "centre_offset_arcsec": 0.30000000000000004,
+      "centre_offset_fraction_radius": 0.10000000000000002,
+      "centre_limit_native_pix": 1.5000000000000002,
+      "centre_limit_arcsec": 0.15000000000000002,
+      "centre_accepted": false,
+      "centre_rejection_reason": "Centre displacement 3.000 native px (0.300 arcsec) exceeds 1.500 native px (0.150 arcsec)",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 103.1,
+      "y_original_pix": 200,
+      "sma_arcsec": 3
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 3.0999999999999943,
+      "centre_offset_arcsec": 0.30999999999999944,
+      "centre_offset_fraction_radius": 0.10333333333333315,
+      "centre_limit_native_pix": 1.5000000000000002,
+      "centre_limit_arcsec": 0.15000000000000002,
+      "centre_accepted": false,
+      "centre_rejection_reason": "Centre displacement 3.100 native px (0.310 arcsec) exceeds 1.500 native px (0.150 arcsec)",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 100,
+      "y_original_pix": 200,
+      "sma_arcsec": 6
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 0.0,
+      "centre_offset_arcsec": 0.0,
+      "centre_offset_fraction_radius": 0.0,
+      "centre_limit_native_pix": 3.0,
+      "centre_limit_arcsec": 0.30000000000000004,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 100.5,
+      "y_original_pix": 200,
+      "sma_arcsec": 6
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 0.5,
+      "centre_offset_arcsec": 0.05,
+      "centre_offset_fraction_radius": 0.008333333333333333,
+      "centre_limit_native_pix": 3.0,
+      "centre_limit_arcsec": 0.30000000000000004,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 101,
+      "y_original_pix": 200,
+      "sma_arcsec": 6
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 1.0,
+      "centre_offset_arcsec": 0.1,
+      "centre_offset_fraction_radius": 0.016666666666666666,
+      "centre_limit_native_pix": 3.0,
+      "centre_limit_arcsec": 0.30000000000000004,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 101.5,
+      "y_original_pix": 200,
+      "sma_arcsec": 6
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 1.5,
+      "centre_offset_arcsec": 0.15000000000000002,
+      "centre_offset_fraction_radius": 0.025000000000000005,
+      "centre_limit_native_pix": 3.0,
+      "centre_limit_arcsec": 0.30000000000000004,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 102.5,
+      "y_original_pix": 200,
+      "sma_arcsec": 6
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 2.5,
+      "centre_offset_arcsec": 0.25,
+      "centre_offset_fraction_radius": 0.041666666666666664,
+      "centre_limit_native_pix": 3.0,
+      "centre_limit_arcsec": 0.30000000000000004,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 103,
+      "y_original_pix": 200,
+      "sma_arcsec": 6
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 3.0,
+      "centre_offset_arcsec": 0.30000000000000004,
+      "centre_offset_fraction_radius": 0.05000000000000001,
+      "centre_limit_native_pix": 3.0,
+      "centre_limit_arcsec": 0.30000000000000004,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 103.1,
+      "y_original_pix": 200,
+      "sma_arcsec": 6
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 3.0999999999999943,
+      "centre_offset_arcsec": 0.30999999999999944,
+      "centre_offset_fraction_radius": 0.051666666666666576,
+      "centre_limit_native_pix": 3.0,
+      "centre_limit_arcsec": 0.30000000000000004,
+      "centre_accepted": false,
+      "centre_rejection_reason": "Centre displacement 3.100 native px (0.310 arcsec) exceeds 3.000 native px (0.300 arcsec)",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 100,
+      "y_original_pix": 200,
+      "sma_arcsec": 12
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 0.0,
+      "centre_offset_arcsec": 0.0,
+      "centre_offset_fraction_radius": 0.0,
+      "centre_limit_native_pix": 3.0,
+      "centre_limit_arcsec": 0.30000000000000004,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 100.5,
+      "y_original_pix": 200,
+      "sma_arcsec": 12
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 0.5,
+      "centre_offset_arcsec": 0.05,
+      "centre_offset_fraction_radius": 0.004166666666666667,
+      "centre_limit_native_pix": 3.0,
+      "centre_limit_arcsec": 0.30000000000000004,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 101,
+      "y_original_pix": 200,
+      "sma_arcsec": 12
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 1.0,
+      "centre_offset_arcsec": 0.1,
+      "centre_offset_fraction_radius": 0.008333333333333333,
+      "centre_limit_native_pix": 3.0,
+      "centre_limit_arcsec": 0.30000000000000004,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 101.5,
+      "y_original_pix": 200,
+      "sma_arcsec": 12
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 1.5,
+      "centre_offset_arcsec": 0.15000000000000002,
+      "centre_offset_fraction_radius": 0.012500000000000002,
+      "centre_limit_native_pix": 3.0,
+      "centre_limit_arcsec": 0.30000000000000004,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 102.5,
+      "y_original_pix": 200,
+      "sma_arcsec": 12
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 2.5,
+      "centre_offset_arcsec": 0.25,
+      "centre_offset_fraction_radius": 0.020833333333333332,
+      "centre_limit_native_pix": 3.0,
+      "centre_limit_arcsec": 0.30000000000000004,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 103,
+      "y_original_pix": 200,
+      "sma_arcsec": 12
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 3.0,
+      "centre_offset_arcsec": 0.30000000000000004,
+      "centre_offset_fraction_radius": 0.025000000000000005,
+      "centre_limit_native_pix": 3.0,
+      "centre_limit_arcsec": 0.30000000000000004,
+      "centre_accepted": true,
+      "centre_rejection_reason": "",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  },
+  {
+    "point": {
+      "x_original_pix": 103.1,
+      "y_original_pix": 200,
+      "sma_arcsec": 12
+    },
+    "reference": {
+      "x": 100,
+      "y": 200
+    },
+    "scale": 0.1,
+    "expected": {
+      "centre_offset_native_pix": 3.0999999999999943,
+      "centre_offset_arcsec": 0.30999999999999944,
+      "centre_offset_fraction_radius": 0.025833333333333288,
+      "centre_limit_native_pix": 3.0,
+      "centre_limit_arcsec": 0.30000000000000004,
+      "centre_accepted": false,
+      "centre_rejection_reason": "Centre displacement 3.100 native px (0.310 arcsec) exceeds 3.000 native px (0.300 arcsec)",
+      "centre_reference_x_pix": 100.0,
+      "centre_reference_y_pix": 200.0,
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+    }
+  }
+]
