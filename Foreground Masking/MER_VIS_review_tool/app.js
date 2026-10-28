@@ -32,7 +32,7 @@ const flagsLabel = {
 const S={boot:null,g:null,id:null,settings:null,pixels:null,imageMeta:null,calc:null,filtered:[],token:null,
  imageRequest:0,galaxyRequest:0,dirty:false,drag:null,imageAbort:null,view:null};
 const fieldIds=['discMin','discMax','barMin','barMax','noBar','pool','minDisc','maxGap','paThreshold','epsThreshold','barThreshold','sparseEnabled','paEnabled','epsEnabled','smallBarEnabled'];
-const displayIds=['stretch','minimum','maximum','gamma','invert','ellipses','centres','overlayMode','excludedEllipses','euclidPAOverlay','discPAOverlay','showRejected','unwrapPA','stfShadows','stfTarget'];
+const displayIds=['stretch','minimum','maximum','gamma','invert','ellipses','centres','overlayMode','excludedEllipses','paComparison','showRejected','showWarnings','unwrapPA','stfShadows','stfTarget'];
 const reviewIds=['discDecision','barDecision','centreDecision','ruleAction','notes'];
 const clone = obj => JSON.parse(JSON.stringify(obj));
 
@@ -47,11 +47,12 @@ function markDirty(){S.dirty=true;$('saveStatus').textContent='Unsaved assessmen
 function getForm(){return {disc_decision:$('discDecision').value,bar_decision:$('barDecision').value,centre_decision:$('centreDecision').value,rule_action:$('ruleAction').value,notes:$('notes').value};}
 function setForm(form={}){form=form??{};$('discDecision').value=form.disc_decision??'not_assessed';$('barDecision').value=form.bar_decision??'not_assessed';$('centreDecision').value=form.centre_decision??'not_assessed';$('ruleAction').value=form.rule_action??'unsure';$('notes').value=form.notes??'';}
 
+function resetGalaxyOverlays(settings){Object.assign(settings.display,{ellipses:false,excludedEllipses:false,paComparison:false,overlayMode:'selected',centres:true,showWarnings:false});}
 function defaultSettings(g){const b=g.intervals.bar;return {
  disc:[...(g.intervals.disc.every(finite)?g.intervals.disc:[.5,Math.max(1,...g.profile.map(p=>p.sma_arcsec??0))])],
  bar:[...(b.every(finite)?b:[.5,1.5])],editedDisc:false,editedBar:false,noBar:!b.every(finite),pool:'pipeline',
  rules:{...S.boot.rules,sparse_enabled:true,pa_enabled:true,eps_enabled:true,small_bar_enabled:true},
- display:{defaultVersion:2,stretch:'autostf',minimum:null,maximum:null,gamma:1,invert:false,ellipses:true,centres:true,excludedEllipses:true,euclidPAOverlay:true,discPAOverlay:true,overlayMode:'selected',showRejected:true,unwrapPA:true,stfShadows:-2.8,stfTarget:.25}};}
+ display:{defaultVersion:2,stretch:'autostf',minimum:null,maximum:null,gamma:1,invert:false,ellipses:false,centres:true,excludedEllipses:false,paComparison:false,overlayMode:'selected',showRejected:true,showWarnings:false,unwrapPA:true,stfShadows:-2.8,stfTarget:.25}};}
 
 const isReviewed = review => !!review && review.reviewed!==false;
 function queue(){let list=S.boot.sample;const category=$('category').value;if(category!=='all')list=list.filter(r=>r.category===category);if($('unreviewed').checked)list=list.filter(r=>!isReviewed(S.boot.reviews[r.object_id]));S.filtered=list;
@@ -73,6 +74,7 @@ async function loadGalaxy(id,requestedRefit=undefined){saveDraft();clearError();
  const priorRefit=S.settings.refit_id??null;if(priorRefit!==(g.refit?.job_id??null)){const defaults=defaultSettings(g);for(const key of ['disc','bar','editedDisc','editedBar','noBar','pool'])S.settings[key]=defaults[key];}S.settings.refit_id=g.refit?.job_id??null;
  if(S.settings.display.defaultVersion!==2){S.settings.display={...S.settings.display,defaultVersion:2,stretch:'autostf',gamma:1};}
  S.view=draft?.view??saved?.settings?.view??[...g.default_window];
+ resetGalaxyOverlays(S.settings);
  setForm(draft?.form??saved);writeControls();
  $('galaxyTitle').textContent=`Galaxy ${id}`;$('galaxyName').textContent=g.name||'';
  const item=S.boot.sample.find(r=>r.object_id===id);$('reason').textContent=item?`${item.category_label} · ${item.selection_reason}`:'Additional galaxy outside the review sample';
@@ -109,9 +111,9 @@ function calculate(){const points=pool(),disc=selected(points,'disc'),bar=select
  const gap=radii.length>1?Math.max(...radii.slice(1).map((r,i)=>r-radii[i])):0,maxGap=span>0?gap/span:1;
  const q=disc.length?1-median(disc.map(p=>p.ellipticity)):null;
  const epsSpan=disc.length?Math.max(...disc.map(p=>p.ellipticity))-Math.min(...disc.map(p=>p.ellipticity)):null;
- const pa=weightedPA(disc),paScatter=scatter(disc.map(p=>p.pa_sky_deg));
+ const paPoints=disc.filter(p=>finite(p.pa_sky_deg)),pa=weightedPA(paPoints),paScatter=scatter(disc.map(p=>p.pa_sky_deg));
  const faceOn=q!==null&&q>.9,r=S.settings.rules,sparse=disc.length<r.min_disc||span<=0||maxGap>r.max_gap;
- let issues=[];if(disc.length<3)issues.push('Fewer than three disc ellipses: no trial disc geometry');
+ let issues=[];if(paPoints.length<3)issues.push(paPoints.length?'Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses':'Fewer than three disc ellipses: no usable Disc PA');
  else if(faceOn)issues.push('Nearly face-on: PA ambiguity is informational');
  else if(r.sparse_enabled!==false&&sparse)issues.push('Sparse disc sampling');
  else if(r.pa_enabled!==false&&paScatter>r.pa_rms)issues.push('Disc PA varies across radius');
@@ -126,7 +128,7 @@ function calculate(){const points=pool(),disc=selected(points,'disc'),bar=select
  if(!S.settings.noBar){if(r.small_bar_enabled!==false&&S.settings.bar[1]<r.small_bar)issues.push('Small candidate feature: bar identification uncertain');if(!grade)issues.push('Selected bar interval does not pass the signature screen');else if(grade.startsWith('B'))issues.push('Weaker B-style bar-profile evidence');}
  // Leave-one-out spread describes sensitivity; it is not a confidence interval.
  const leaveOut=disc.length>=4?disc.map((p,i)=>weightedPA(disc.filter((_,j)=>j!==i))).map(x=>Math.abs(axialDifference(x,pa))):[];
- return {disc_pa:disc.length>=3?pa:null,bar_pa:!S.settings.noBar&&bar.length>=3?bpa:null,
+ return {disc_pa:paPoints.length?pa:null,n_disc_pa:paPoints.length,disc_pa_provisional:paPoints.length>0&&paPoints.length<3,bar_pa:!S.settings.noBar&&bar.length>=3?bpa:null,
   inclination:disc.length>=3?Math.acos(clamp(q,0,1))*180/Math.PI:null,n_disc:disc.length,n_bar:bar.length,
   pa_scatter:paScatter,eps_span:epsSpan,max_gap_fraction:maxGap,span_arcsec:span,axis_ratio:q,face_on:faceOn,
   sparse,issues:S.g.original.status==='fit_failed'?['Fit failed: no adopted geometry; inspect the FITS image and failure reason']:issues,bar_grade:grade,bar_drop:drop,bar_peak:peak,bar_scatter:bscatter,
@@ -134,8 +136,8 @@ function calculate(){const points=pool(),disc=selected(points,'disc'),bar=select
 
 function recalculate(){if(!S.g)return;S.calc=calculate();const c=S.calc,g=S.g;
  const base=g.pipeline_original??g.original;const rows=[['Disc PA',base.disc_pa,c.disc_pa,g.euclid.disc_pa,true],['Inclination',base.inclination,c.inclination,g.euclid.inclination,false],['Bar PA',base.bar_pa,c.bar_pa,null,true]];
- $('geometryTable').innerHTML=rows.map(([name,a,b,e,axial])=>`<tr><td>${name}</td><td>${deg(a)}</td><td>${deg(b)}</td><td>${name==='Bar PA'?'Not provided':deg(e)}</td><td>${finite(b)&&finite(e)?deg(axial?axialDifference(b,e):b-e):'—'}</td></tr>`).join('');
- const evidence=[['Accepted disc ellipses',c.n_disc],['PA RMS scatter',deg(c.pa_scatter)],['Ellipticity range',fmt(c.eps_span,3)],['Largest gap / span',`${fmt(c.max_gap_fraction*100,1)}%`],['Disc radial span',`${fmt(c.span_arcsec)}″`],['b/a',fmt(c.axis_ratio,3)],['Leave-one-out PA change',deg(c.leave_one_out_pa_change)],['Selected bar evidence',c.bar_grade??(S.settings.noBar?'No bar selected':'Not passed')],['Accepted bar ellipses',S.settings.noBar?'—':c.n_bar],['Bar PA scatter',S.settings.noBar?'—':deg(c.bar_scatter)],['Bar outer radius',S.settings.noBar?'—':`${fmt(S.settings.bar[1])}″ / ${fmt(S.settings.bar[1]/S.g.pixel_scale_arcsec,1)} native pixels`]];
+ $('geometryTable').innerHTML=rows.map(([name,a,b,e,axial])=>`<tr><td>${name}</td><td>${deg(a)}</td><td>${deg(b)}${name==='Disc PA'&&c.disc_pa_provisional?` <span class="issue info" title="Based on ${c.n_disc_pa} usable selected ellipse(s)">Provisional: n=${c.n_disc_pa}</span>`:''}</td><td>${name==='Bar PA'?'Not provided':deg(e)}</td><td>${finite(b)&&finite(e)?deg(axial?axialDifference(b,e):b-e):'—'}</td></tr>`).join('');
+ const evidence=[['Accepted disc ellipses',c.n_disc],['PA RMS scatter',c.n_disc_pa>=3?deg(c.pa_scatter):'Not assessed (<3 PA samples)'],['Ellipticity range',fmt(c.eps_span,3)],['Largest gap / span',`${fmt(c.max_gap_fraction*100,1)}%`],['Disc radial span',`${fmt(c.span_arcsec)}″`],['b/a',fmt(c.axis_ratio,3)],['Leave-one-out PA change',deg(c.leave_one_out_pa_change)],['Selected bar evidence',c.bar_grade??(S.settings.noBar?'No bar selected':'Not passed')],['Accepted bar ellipses',S.settings.noBar?'—':c.n_bar],['Bar PA scatter',S.settings.noBar?'—':deg(c.bar_scatter)],['Bar outer radius',S.settings.noBar?'—':`${fmt(S.settings.bar[1])}″ / ${fmt(S.settings.bar[1]/S.g.pixel_scale_arcsec,1)} native pixels`]];
  evidence.push(['Adopted centre X / Y',g.centre.every(finite)?g.centre.map(v=>fmt(v)).join(' / ')+' native pixels':'Not adopted'],['Centre offset from catalogue',fmt(g.original.centre_offset)+'″'],['Centre scatter',fmt(g.original.centre_scatter)+'″'+(g.refit?.lock_centre?' (centre fixed)':'')],['Accepted / measured isophotes',`${g.original.n_good??'—'} / ${g.original.n_isophotes??'—'}`],['Disc PA error estimate',deg(g.original.disc_pa_error)],['Bar ellipticity drop',fmt(g.original.bar_eps_drop,3)],['Masked fitting pixels',finite(g.original.masked_fraction)?fmt(g.original.masked_fraction*100,1)+'%':'—'],['Fit binning',finite(g.original.binning)?g.original.binning+' native pixels per fit pixel':'—'],['Fit method',g.original.method||'—'],['Fit time',finite(g.original.calculation_seconds)?fmt(g.original.calculation_seconds,1)+' s':'—']);
  $('evidence').innerHTML=evidence.map(([k,v])=>`<div>${esc(k)}</div><strong>${esc(v)}</strong>`).join('');
  $('trialFlags').innerHTML=c.issues.length?c.issues.map(t=>`<span class="issue ${t.startsWith('Nearly')?'info':''}">${esc(t)}</span>`).join(''):'<span class="issue ok">None of these trial screens triggered</span>';
@@ -176,21 +178,92 @@ function profilePAView(profile,accepted,xmax,enabled=true,showRejected=true){
 }
 function ellipseInclination(p){return finite(p.ellipticity)&&p.ellipticity>=0&&p.ellipticity<=1?Math.acos(1-p.ellipticity)*180/Math.PI:null;}
 function paReferenceLevels(reference,min,max){if(!finite(reference))return [];const levels=[];for(let k=Math.ceil((min-reference)/180);k<=Math.floor((max-reference)/180);k++)levels.push(reference+180*k);return levels;}
+function thresholdDescription(value,limit,unit='',digits=3){if(!finite(value)||!finite(limit))return 'Comparison unavailable';const gap=value-limit;return `${fmt(value,digits)}${unit} ${gap>0?'>':gap<0?'<':'='} ${fmt(limit,digits)}${unit}; ${fmt(Math.abs(gap),digits)}${unit} ${gap>0?'above':gap<0?'below':'at'} the threshold${limit>0?`; ${fmt(value/limit*100,1)}% of the limit`:''}`;}
+function profileWarningEvidence(g,settings,c){
+ if(!c||!Array.isArray(c.disc)||!Array.isArray(c.bar))return [];
+ const issues=c.issues??[],has=text=>issues.some(v=>v.startsWith(text)),warnings=[],disc=c.disc,bar=c.bar,r=settings.rules;
+ const add=(code,label,detail,points=[],active=false,status=null)=>warnings.push({code,label,detail,points,active,status:status??(active?'Active warning':'Comparison — no active warning')});
+ if(has('Fit failed')){add('failed','No adopted fit',g.fit_error||'No reliable geometry was adopted. Empty profiles do not establish that the galaxy has no bar.',[],true);return warnings;}
+ const valid=disc.filter(p=>finite(p.ellipticity));if(valid.length){const low=valid.reduce((a,b)=>a.ellipticity<b.ellipticity?a:b),high=valid.reduce((a,b)=>a.ellipticity>b.ellipticity?a:b);add('ellipticity','Disc ellipticity range',`Selected ε low ${fmt(low.ellipticity,3)}, high ${fmt(high.ellipticity,3)}. Δε = ${thresholdDescription(c.eps_span,r.eps_span)}. The double-headed arrow joins the selected high and low values; excluded samples do not set these extremes.`,[low,high],has('Changing disc ellipticity'),r.eps_enabled===false?'Screen disabled':null);}
+ {const ordered=disc.slice().sort((a,b)=>a.sma_arcsec-b.sma_arcsec);let gap=[];for(let i=1;i<ordered.length;i++)if(!gap.length||ordered[i].sma_arcsec-ordered[i-1].sma_arcsec>gap[1].sma_arcsec-gap[0].sma_arcsec)gap=[ordered[i-1],ordered[i]];
+ const active=has('Sparse disc sampling')||has('Fewer than three disc ellipses');
+ add('sampling','Disc sampling',`${c.n_disc} selected ellipses versus a minimum of ${r.min_disc}: ${Math.abs(c.n_disc-r.min_disc)} ${c.n_disc<r.min_disc?'fewer than':c.n_disc>r.min_disc?'more than':'from'} the minimum. ${c.n_disc<3?'Fewer than 3: a provisional Disc PA is shown when a usable ellipse exists; inclination still requires three selected ellipses. ':''}Largest gap / selected span = ${thresholdDescription(c.max_gap_fraction*100,r.max_gap*100,'%',1)}. Largest internal gap ${gap.length?fmt(gap[1].sma_arcsec-gap[0].sma_arcsec)+'″':'not measurable'}; selected radial span ${fmt(c.span_arcsec)}″. The horizontal double-headed arrow spans the largest gap.`,disc,active,c.face_on?'Informational — nearly face-on exemption':r.sparse_enabled===false?'Screen disabled':null);warnings.at(-1).gap=gap;}
+ if(finite(c.pa_scatter)&&disc.length>=3){add('pa','Disc PA variation',`Axial RMS = ${thresholdDescription(c.pa_scatter,r.pa_rms,'°',2)}, from ${disc.length} selected ellipses. The high–low arrow shows the plotted PA range; the RMS test uses all selected samples around their unweighted axial mean. Range and RMS are different quantities.`,disc,has('Disc PA varies across radius'),c.face_on?'Informational — nearly face-on exemption':r.pa_enabled===false?'Screen disabled':null);warnings.at(-1).mean=axialMean(disc.map(p=>p.pa_sky_deg));}
+ if(!settings.noBar&&settings.bar.every(finite)){
+  const radius=settings.bar[1],delta=radius-r.small_bar;add('smallbar','Bar size',`Bar outer radius ${fmt(radius)}″; screen ${fmt(r.small_bar)}″; ${fmt(Math.abs(delta))}″ ${delta<0?'below':delta>0?'above':'at'} the minimum. This tests outer radius, not interval width; the horizontal arrow shows the outer radius from zero.`,bar,has('Small candidate feature'),r.small_bar_enabled===false?'Screen disabled':null);
+  add('bar','Bar signature evidence',`Grade ${c.bar_grade??'not accepted'}; ${bar.length} selected bar ellipses (minimum 3); PA RMS ${fmt(c.bar_scatter)}° (common limit 10°); smoothed peak ε ${fmt(c.bar_peak,3)} (minimum 0.20); outward drop ${fmt(c.bar_drop,3)}. The common screen needs drop ≥0.08, or ≥0.04 plus a ≥10° outer PA change. Class A additionally needs peak ≥0.30, drop ≥0.10 and RMS ≤5°. Stored grades refer to the original fit; these selected-interval metrics do not independently rerun the original bar search.`,bar,has('Selected bar interval does not pass')||has('Weaker B-style'));
+ }
+ for(const w of warnings){
+  if(w.code==='ellipticity')w.comparison=`Δε = ${thresholdDescription(c.eps_span,r.eps_span)}`;
+  if(w.code==='sampling')w.comparison=`n = ${c.n_disc} (minimum ${r.min_disc}); gap = ${fmt(c.max_gap_fraction*100,1)}% (limit ${fmt(r.max_gap*100,1)}%)`;
+  if(w.code==='pa')w.comparison=`RMS = ${thresholdDescription(c.pa_scatter,r.pa_rms,'°',2)}`;
+  if(w.code==='smallbar')w.comparison=`Outer radius ${fmt(settings.bar[1])}″; minimum ${fmt(r.small_bar)}″`;
+  if(w.code==='bar'){w.comparison=`Grade ${c.bar_grade??'not accepted'}; peak ε ${fmt(c.bar_peak,3)}; drop ${fmt(c.bar_drop,3)}; PA RMS ${fmt(c.bar_scatter)}°`;
+   const ordered=bar.slice().sort((a,b)=>a.sma_arcsec-b.sma_arcsec),smooth=ordered.map((p,i)=>median(ordered.slice(Math.max(0,i-1),Math.min(ordered.length,i+2)).map(z=>z.ellipticity)));
+   if(ordered.length){const peak=ordered[smooth.indexOf(Math.max(...smooth))],beyond=g.profile.filter(p=>(p.used_for_geometry||(settings.pool==='marginal'&&p.marginal))&&p.sma_arcsec>peak.sma_arcsec&&p.sma_arcsec<=Math.max(2.5*peak.sma_arcsec,peak.sma_arcsec+1));if(beyond.length){w.peak={p:peak,eps:Math.max(...smooth)};w.low={p:beyond.reduce((a,b)=>a.ellipticity<b.ellipticity?a:b)};}}
+  }
+ }
+ return warnings;
+}
+function relevantProfileDiagnostics(g,diagnostics,sample=[]){
+ const example=sample.find(row=>row.object_id===g.object_id),code={ellipticity:'ellipticity',sparse:'sampling',variation:'pa',bar:'smallbar',failed:'failed'}[example?.category];
+ return diagnostics.filter(d=>d.active||d.code===code);
+}
+function storedWarningNotes(g){const messages={
+ centre_offset_large:`Recorded centre offset from the catalogue: ${fmt(g.original.centre_offset)}″. Inspect the centre markers on the FITS image; an offset alone does not prove the fitted centre is wrong.`,
+ centre_unstable:`Recorded radial centre scatter: ${fmt(g.original.centre_scatter)}″. Inspect the ellipse centres on the image; ellipticity and PA curves alone cannot establish centre stability.`,
+ relaxed_fit:'The stored fit used relaxed acceptance. This is fitting provenance, not a radial jump. Point tooltips show fit validity, coverage and errors.',
+ iteration_limited_samples:'The stored fit includes iteration-limited samples. These did not meet normal convergence; point tooltips identify stop code 2.',
+ star_mask_removed:'A recovery fit removed the star mask. Inspect the FITS image for stellar contamination; a smooth profile does not exclude it.',
+ neighbour_mask_removed:'A recovery fit removed the neighbour mask. Inspect the FITS image for neighbouring-source contamination.',
+ disc_range_fallback:'The stored fit used a fallback disc interval. The green region shows the current interval; its physical identification needs visual review.',
+ small_disc:'The stored disc was small. Inspect the angular radii and resolution before interpreting the geometry.',
+ bar_disc_ranges_close:'The stored disc and bar intervals were close. Compare the orange and green boundaries and inspect where the bar ends.',
+ short_accepted_profile:'The stored fit had a short accepted profile. Inspect the selected sample counts and radial coverage.',
+ high_inclination:'The stored inclination was high. The inclination profile shows the current disc-shape proxy; projection effects need review.',
+ no_bar_detected:'The stored pipeline did not adopt a bar. This is not proof that a bar is absent; inspect the orange interval and image.'};
+ return (g.original.flags??[]).filter(flag=>messages[flag]).map(flag=>({label:flagsLabel[flag]??flag,detail:messages[flag]}));
+}
+function drawWarningGraphics(warnings,{id,x,y,value,top,ph,left,right,xmax,paView}){
+ let out='';const ring=(p,color)=>{const v=value(p);if(!finite(v)||!finite(p.sma_arcsec)||p.sma_arcsec>xmax)return '';return `<circle class="warning-point" cx="${x(p.sma_arcsec)}" cy="${y(v)}" r="5.5" fill="none" stroke="${color}" stroke-width="1.8"/>`;};
+ const arrow=(x1,y1,x2,y2,color,cls)=>{const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy);if(len<1)return '';const ux=dx/len,uy=dy/len,size=Math.min(5,len/3),head=(px,py,d)=>`M ${px+ux*size*d-uy*3} ${py+uy*size*d+ux*3} L ${px} ${py} L ${px+ux*size*d+uy*3} ${py+uy*size*d-ux*3}`;return `<path class="${cls}" d="M ${x1} ${y1} L ${x2} ${y2} ${head(x1,y1,1)} ${head(x2,y2,-1)}" fill="none" stroke="${color}" stroke-width="1.8"/>`;};
+ const note=(px,py,text,color)=>`<text x="${clamp(px,left+3,right-120)}" y="${clamp(py,top+45,top+ph-5)}" style="fill:${color};stroke:white;stroke-width:3px;paint-order:stroke;font-size:12px">${esc(text)}</text>`;
+ for(const w of warnings){let mark='';const color=w.active?(w.code==='ellipticity'?'#b13b79':'#ad5b00'):'#376b7f';
+  if(w.code==='ellipticity'&&(id==='epsPlot'||id==='incPlot')){const [low,high]=w.points,a=value(low),b=value(high);if(finite(a)&&finite(b)){const bx=clamp(Math.max(x(low.sma_arcsec),x(high.sma_arcsec))+12,left+8,right-10);mark+=w.points.map(p=>ring(p,color)+`<line x1="${x(p.sma_arcsec)}" x2="${bx}" y1="${y(value(p))}" y2="${y(value(p))}" stroke="${color}" stroke-dasharray="2 3"/>`).join('');mark+=arrow(bx,y(a),bx,y(b),color,'warning-range');mark+=note(bx+8,(y(a)+y(b))/2,id==='epsPlot'?`Δε = ${fmt(Math.abs(b-a),3)}`:`Δi = ${fmt(Math.abs(b-a))}°`,color);}}
+  if(w.code==='sampling'){mark+=w.points.map(p=>ring(p,color)).join('');if(w.gap?.length){const [a,b]=w.gap;mark+=`<rect class="warning-gap" x="${x(a.sma_arcsec)}" y="${top+ph-10}" width="${Math.max(0,x(b.sma_arcsec)-x(a.sma_arcsec))}" height="9" fill="${color}" opacity="${w.active?.35:.12}"/>`;mark+=arrow(x(a.sma_arcsec),top+ph-5,x(b.sma_arcsec),top+ph-5,color,'sampling-gap-arrow');}mark+=note(left+8,top+ph-16,`Disc n=${w.points.length}; gap ${fmt(S.calc.max_gap_fraction*100,0)}%`,color);}
+  if(w.code==='pa'&&id==='paPlot'){const measured=w.points.map(p=>({p,v:value(p)})).filter(z=>finite(z.v));if(measured.length){const low=measured.reduce((a,b)=>a.v<b.v?a:b),high=measured.reduce((a,b)=>a.v>b.v?a:b),bx=clamp(Math.max(x(low.p.sma_arcsec),x(high.p.sma_arcsec))+12,left+8,right-10);mark+=arrow(bx,y(low.v),bx,y(high.v),color,'pa-range-arrow')+note(bx+8,(y(low.v)+y(high.v))/2,`ΔPA = ${fmt(high.v-low.v)}°`,color);}for(const p of w.points){const v=value(p);if(!finite(v))continue;const mean=w.mean+180*Math.round((v-w.mean)/180);mark+=ring(p,color)+`<line class="warning-pa-residual" x1="${x(p.sma_arcsec)}" x2="${x(p.sma_arcsec)}" y1="${y(v)}" y2="${y(clamp(mean,paView.min,paView.max))}" stroke="${color}" stroke-width="1.7"/>`;}mark+=note(left+8,top+ph-16,`Disc PA RMS ${fmt(S.calc.pa_scatter)}°`,color);}
+  if((w.code==='smallbar'||w.code==='bar')&&(id==='epsPlot'||id==='paPlot')){const bounds=S.settings.bar,start=x(clamp(bounds[0],0,xmax)),end=x(clamp(bounds[1],0,xmax));mark+=`<rect class="warning-bar-range" x="${start}" y="${top+1}" width="${Math.max(0,end-start)}" height="${ph-2}" fill="none" stroke="${color}" stroke-width="1.6" stroke-dasharray="3 3"/>`;if(w.code==='smallbar'){mark+=arrow(x(0),top+ph-35,end,top+ph-35,color,'bar-radius-arrow');}if(id==='epsPlot')mark+=note(start,top+ph-(w.code==='smallbar'?32:48),w.code==='smallbar'?`Bar end ${fmt(bounds[1])}″ ${bounds[1]<S.settings.rules.small_bar?'<':'≥'} ${fmt(S.settings.rules.small_bar)}″`:w.label,color);}
+  if(w.code==='bar'&&id==='epsPlot'&&w.peak&&w.low){const a=w.peak.eps,b=w.low.p.ellipticity,bx=clamp(x(w.low.p.sma_arcsec)+9,left+8,right-10);mark+=arrow(bx,y(a),bx,y(b),color,'bar-drop-arrow')+note(bx+7,(y(a)+y(b))/2,`Bar drop = ${fmt(a-b,3)}`,color);}
+  if(mark)out+=`<g class="profile-warning" data-warning="${w.code}" data-active="${!!w.active}" style="pointer-events:none"><title>${esc(w.detail)}</title>${mark}</g>`;
+ }
+ return out;
+}
+function paComparisonDescription(g,c){
+ const count=c?.n_disc_pa??c?.n_disc??0,parts=[];
+ parts.push(finite(c?.disc_pa)?`Calculated Disc PA ${fmt(c.disc_pa)}° (green dashed; ${count} ellipse${count===1?'':'s'}${count<3?'; provisional':''}).`:'Calculated Disc PA unavailable: no usable selected ellipse.');
+ parts.push(finite(g.euclid?.disc_pa)?`Euclid comparison ${fmt(g.euclid.disc_pa)}° (blue dotted on image; purple dotted on profile).`:'Euclid PA unavailable in the catalogue comparison.');
+ if(!g.centre?.every(finite))parts.push('Image lines require an adopted fitted centre.');
+ return parts.join(' ');
+}
 function drawProfiles(){
+ $('paComparisonStatus').hidden=S.settings.display.paComparison!==true;$('paComparisonStatus').textContent=S.settings.display.paComparison===true?paComparisonDescription(S.g,S.calc):'';
+ const warnings=relevantProfileDiagnostics(S.g,profileWarningEvidence(S.g,S.settings,S.calc),S.boot?.sample??[]),highlight=S.settings.display.showWarnings!==false;
+ const stored=storedWarningNotes(S.g);
+ $('profileWarnings').innerHTML=highlight?warnings.map(w=>`<details class="profile-warning-note ${w.active?'active':'comparison'}" ${w.active?'open':''}><summary><strong>${esc(w.label)}</strong> — ${esc(w.status)}${w.comparison?`<span class="diagnostic-comparison">${esc(w.comparison)}</span>`:''}</summary><p>${esc(w.detail)}</p></details>`).join('')+(!warnings.length&&!stored.length?'<p class="small">No active warnings or relevant boundary-case diagnostics for this selection.</p>':'')+(stored.length?`<details class="stored-warning-notes"><summary>Stored fit warnings (${stored.length}) — separate from current-selection annotations</summary>${stored.map(w=>`<p class="small"><strong>${esc(w.label)}:</strong> ${esc(w.detail)}</p>`).join('')}</details>`:''):'';
  const accepted=pool(),acceptedSet=new Set(accepted),xmax=plotMax(),paView=profilePAView(S.g.profile,accepted,xmax,S.settings.display.unwrapPA!==false,$('showRejected').checked);
  for(const [id,field,maxY,title] of [['epsPlot','ellipticity',1,'Ellipticity ε = 1 − b/a'],['incPlot','inclination',90,'Inclination proxy (degrees; circular-disc assumption)'],['paPlot','pa_sky_deg',180,paView.unwrapped?'Disc / bar PA (degrees; continuous axis, labels wrap at 360°)':'Disc / bar PA (degrees)']]){
  const w=660,h=215,left=48,right=18,top=22,bottom=36,pw=w-left-right,ph=h-top-bottom;
  const discBounds=S.settings.disc,discVisible=S.g.original.status!=='fit_failed'&&discBounds?.length===2&&discBounds.every(finite)&&discBounds[1]>discBounds[0],inDisc=p=>discVisible&&p.sma_arcsec>=discBounds[0]&&p.sma_arcsec<=discBounds[1];
- const isPA=field==='pa_sky_deg',isInc=field==='inclination',reference=isPA?S.g.euclid?.disc_pa:isInc?S.g.euclid?.inclination:null;
+ const isPA=field==='pa_sky_deg',isInc=field==='inclination',reference=isPA?(S.settings.display.paComparison===true?S.g.euclid?.disc_pa:null):isInc?S.g.euclid?.inclination:null;
  let lo=isPA?paView.min:0,hi=isPA?paView.max:maxY,ticks=isPA?[...paView.ticks]:isInc?[0,15,30,45,60,75,90]:[0,.25,.5,.75,1];
- if(isPA&&discVisible)for(const pa of [reference,...(S.settings.display.discPAOverlay!==false?[S.calc?.disc_pa]:[])].filter(finite)){const nearest=pa+180*Math.round(((lo+hi)/2-pa)/180),step=ticks[1]-ticks[0];while(nearest<lo){lo-=step;ticks.unshift(lo);}while(nearest>hi){hi+=step;ticks.push(hi);}}
+ if(isPA&&discVisible)for(const pa of [reference,...(S.settings.display.paComparison===true?[S.calc?.disc_pa]:[])].filter(finite)){const nearest=pa+180*Math.round(((lo+hi)/2-pa)/180),step=ticks[1]-ticks[0];while(nearest<lo){lo-=step;ticks.unshift(lo);}while(nearest>hi){hi+=step;ticks.push(hi);}}
  const value=p=>isPA?paView.values.get(p):isInc?(inDisc(p)?ellipseInclination(p):null):p[field];
  const x=v=>left+v/xmax*pw,y=v=>top+(hi-v)/(hi-lo)*ph;let html='';
- for(const [kind,color] of [['bar','#f3bc62'],['disc','#86bf96']]){if(S.g.original.status==='fit_failed'||(kind==='bar'&&S.settings.noBar))continue;const r=S.settings[kind];if(!r.every(finite))continue;html+=`<rect x="${x(r[0])}" y="${top}" width="${Math.max(0,x(r[1])-x(r[0]))}" height="${ph}" fill="${color}" opacity=".28"/>`;for(const edge of [0,1])html+=`<line x1="${x(r[edge])}" x2="${x(r[edge])}" y1="${top}" y2="${top+ph}" stroke="${kind==='disc'?'#348458':'#c17b19'}" stroke-width="${document.querySelector('input[name=editMode]:checked').value===kind?2:1}" opacity=".7"/>`;}
+ for(const [kind,color] of [['bar','#f3bc62'],['disc','#86bf96']]){if(S.g.original.status==='fit_failed'||(kind==='bar'&&S.settings.noBar))continue;const r=S.settings[kind];if(!r.every(finite))continue;html+=`<rect x="${x(r[0])}" y="${top}" width="${Math.max(0,x(r[1])-x(r[0]))}" height="${ph}" fill="${color}" opacity=".28"/>`;for(const edge of [0,1])html+=`<line x1="${x(r[edge])}" x2="${x(r[edge])}" y1="${top}" y2="${top+ph}" stroke="${kind==='disc'?'#348458':'#c17b19'}" stroke-width="${S.drag?.kind===kind?2:1}" opacity=".7"/>`;}
  for(const vy of ticks)html+=`<line x1="${left}" x2="${w-right}" y1="${y(vy)}" y2="${y(vy)}" stroke="#dce5eb"/><text x="${left-8}" y="${y(vy)+4}" text-anchor="end">${isPA?((Math.round(vy)%360)+360)%360:isInc?Math.round(vy):vy.toFixed(2)}</text>`;
  const radiusTicks=radiusAxis(xmax),visibleRadiusTicks=radiusTicks.ticks.filter(v=>v<=xmax+1e-9);if(xmax-visibleRadiusTicks.at(-1)>radiusTicks.step*.45)visibleRadiusTicks.push(xmax);for(const vx of visibleRadiusTicks){html+=`<line x1="${x(vx)}" x2="${x(vx)}" y1="${top}" y2="${top+ph}" stroke="#e6edf1"/><text x="${x(vx)}" y="${top+ph+18}" text-anchor="middle">${vx.toFixed(radiusTicks.decimals)}</text>`;}
  html+=`<text class="axis-title" x="${left}" y="14">${title}</text><text class="axis-title" x="${left+pw/2}" y="${h-2}" text-anchor="middle">Semi-major axis (arcsec)</text>`;
- if(isPA||isInc){
+ if((isPA&&S.settings.display.paComparison===true)||isInc){
   const referenceLeft=discVisible?x(clamp(discBounds[0],0,xmax)):left,referenceRight=discVisible?x(clamp(discBounds[1],0,xmax)):left;
   const levels=!discVisible||referenceRight<=referenceLeft?[]:isPA?paReferenceLevels(reference,lo,hi):finite(reference)&&reference>=0&&reference<=90?[reference]:[];
   for(const level of levels){const label=isPA?'Euclid source PA':'Euclid inclination proxy',canonical=isPA?((reference%180)+180)%180:reference;
@@ -198,7 +271,7 @@ function drawProfiles(){
   }
   if(!levels.length)html+=`<text x="${w-right-4}" y="${top+12}" text-anchor="end" style="fill:#8a3996">${discVisible?'Euclid: unavailable':'No selected disc interval'}</text>`;
  }
- if(isPA&&discVisible&&S.settings.display.discPAOverlay!==false&&finite(S.calc?.disc_pa)){
+ if(isPA&&discVisible&&S.settings.display.paComparison===true&&finite(S.calc?.disc_pa)){
   const start=x(clamp(discBounds[0],0,xmax)),end=x(clamp(discBounds[1],0,xmax));
   for(const level of paReferenceLevels(S.calc.disc_pa,lo,hi))html+=`<line class="disc-pa-reference" x1="${start}" x2="${end}" y1="${y(level)}" y2="${y(level)}" stroke="#3ddc84" stroke-width="1.8" stroke-dasharray="7 4"><title>Current-selection disc PA: ${fmt(S.calc.disc_pa)}°; equivalent axes repeat every 180°</title></line>${end-start>=130?`<text x="${end-4}" y="${clamp(y(level)+14,top+12,top+ph-4)}" text-anchor="end" style="fill:#19794c">Disc: ${fmt(S.calc.disc_pa)}°</text>`:''}`;
  }
@@ -213,23 +286,23 @@ function drawProfiles(){
  }}
  html+=segments.map(path=>`<polyline points="${path.join(' ')}" fill="none" stroke="#246f98" stroke-width="1.4"/>`).join('');
  for(const p of S.g.profile){const ok=acceptedSet.has(p);if((!ok&&!$('showRejected').checked)||!finite(value(p))||!finite(p.sma_arcsec)||p.sma_arcsec>xmax)continue;const color=ok?(p.used_for_geometry?'#246f98':'#b5598b'):'#a5adb2',shown=isPA&&paView.unwrapped?`; plotted as ${fmt(value(p),3)}° (equivalent modulo 180°)`:'';html+=`<circle cx="${x(p.sma_arcsec)}" cy="${y(value(p))}" r="${ok?3.2:2.1}" fill="${color}"><title>${ok?'Accepted in this pool':'Excluded'}; radius ${fmt(p.sma_arcsec,3)} arcsec; ${field} ${fmt(isInc?value(p):p[field],3)}${shown}; PA error ${fmt(p.pa_error_deg)}°; ellipticity error ${fmt(p.ellipticity_error,3)}; usable coverage ${fmt(p.sampled_fraction*100,1)}%; valid ${p.valid}; centre offset ${fmt(p.centre_offset_fit_pix)} fit pixels; stop ${p.stop_code}${!ok?(p.marginal?'; eligible for exploratory marginal pool':'; not eligible for exploratory marginal pool'):''}</title></circle>`;}
+ if(highlight)html+=drawWarningGraphics(warnings,{id,x,y,value,top,ph,left,right:w-right,xmax,paView});
  html+=`<rect x="${left}" y="${top}" width="${pw}" height="${ph}" fill="none" stroke="#7e929f"/>`;
  if(S.g.original.status!=='fit_failed')for(const kind of ['bar','disc']){if(kind==='bar'&&S.settings.noBar)continue;const bounds=S.settings[kind];if(!bounds?.every(finite))continue;for(const edge of [0,1]){const handleY=top+(kind==='bar'?2:16);html+=`<rect class="interval-handle" data-interval-kind="${kind}" data-interval-edge="${edge}" x="${x(bounds[edge])-5}" y="${handleY}" width="10" height="10" rx="2" fill="${kind==='bar'?'#dc971f':'#348458'}" stroke="white" stroke-width="1" style="cursor:ew-resize"><title>${kind==='bar'?'Bar':'Disc'} ${edge===0?'inner':'outer'} boundary — drag horizontally</title></rect>`;}}
 
  $(id).innerHTML=html;$(id).dataset.xmax=xmax;}
 }
 
-function chooseProfileBoundary(settings,radius,axisMax,preferred,explicit=null){
+function chooseProfileBoundary(settings,radius,axisMax,explicit=null){
  const available=['bar','disc'].filter(kind=>!(kind==='bar'&&settings.noBar)&&settings[kind]?.every(finite));
  if(explicit&&available.includes(explicit.kind)&&[0,1].includes(explicit.edge))return {...explicit,snap:true};
- const candidates=available.flatMap(kind=>[0,1].map(edge=>({kind,edge,distance:Math.abs(settings[kind][edge]-radius)}))).sort((a,b)=>a.distance-b.distance||(a.kind===preferred?-1:1));
+ const candidates=available.flatMap(kind=>[0,1].map(edge=>({kind,edge,distance:Math.abs(settings[kind][edge]-radius)}))).sort((a,b)=>a.distance-b.distance);
  if(candidates[0]?.distance<=axisMax*10/594)return {kind:candidates[0].kind,edge:candidates[0].edge,snap:true};
- if(!available.includes(preferred))return null;
- return {kind:preferred,edge:Math.abs(radius-settings[preferred][0])<Math.abs(radius-settings[preferred][1])?0:1,snap:false};
+ return null;
 }
 function graphPointer(svg,event){const point=svg.createSVGPoint();point.x=event.clientX;point.y=event.clientY;const x=point.matrixTransform(svg.getScreenCTM().inverse()).x;return clamp((x-48)/(660-48-18)*(S.drag?.axisMax??Number(svg.dataset.xmax)),0,(S.drag?.axisMax??Number(svg.dataset.xmax)));}
-for(const id of ['epsPlot','incPlot','paPlot']){const svg=$(id);svg.onpointerdown=e=>{if(!S.g||S.g.original.status==='fit_failed')return;const preferred=document.querySelector('input[name=editMode]:checked').value,handle=e.target?.closest?.('[data-interval-kind]'),explicit=handle?{kind:handle.dataset.intervalKind,edge:Number(handle.dataset.intervalEdge)}:null,x=graphPointer(svg,e),axisMax=Number(svg.dataset.xmax),choice=chooseProfileBoundary(S.settings,x,axisMax,preferred,explicit);
- if(!choice){toast('Uncheck “Treat as no convincing bar” to edit the bar interval.');return;}const {kind,edge}=choice;document.querySelector(`input[name=editMode][value="${kind}"]`).checked=true;
+for(const id of ['epsPlot','incPlot','paPlot']){const svg=$(id);svg.onpointerdown=e=>{if(!S.g||S.g.original.status==='fit_failed')return;const handle=e.target?.closest?.('[data-interval-kind]'),explicit=handle?{kind:handle.dataset.intervalKind,edge:Number(handle.dataset.intervalEdge)}:null,x=graphPointer(svg,e),axisMax=Number(svg.dataset.xmax),choice=chooseProfileBoundary(S.settings,x,axisMax,explicit);
+ if(!choice)return;const {kind,edge}=choice;
  S.drag={kind,edge,axisMax,grabOffset:choice.snap?x-S.settings[kind][edge]:0};svg.setPointerCapture(e.pointerId);moveGraph(svg,e);};svg.onpointermove=e=>{if(S.drag)moveGraph(svg,e);};svg.onpointerup=()=>finishProfileDrag(true);svg.onpointercancel=()=>finishProfileDrag(false);}
 function finishProfileDrag(extend){if(!S.drag)return;const {kind,edge,axisMax}=S.drag;
  if(extend&&edge===1&&S.settings[kind][1]>=axisMax*.98)S.profileAxisFloor=axisMax+2;
@@ -262,7 +335,7 @@ function drawImage(){const canvas=$('image'),rect=canvas.getBoundingClientRect()
   let points=accepted.filter(p=>S.settings.display.overlayMode==='accepted'||disc.has(p)||bar.has(p));const stride=Math.max(1,Math.ceil(points.length/50));points=points.filter((p,i)=>i%stride===0||i===points.length-1||disc.has(p)||bar.has(p));for(const p of points)if(usable(p))outline(p,disc.has(p)?'#65d095':bar.has(p)?'#ffc35d':'#65c6db',false);
   ctx.setLineDash([]);
  }
- if(S.g.centre?.every(finite))for(const [enabled,pa,color,dash] of [[S.settings.display.euclidPAOverlay!==false,S.g.euclid?.disc_pa,'#55aaff',[2,5]],[S.settings.display.discPAOverlay!==false,S.calc?.disc_pa,'#3ddc84',[7,4]]]){
+ if(S.g.centre?.every(finite))for(const [enabled,pa,color,dash] of [[S.settings.display.paComparison===true,S.g.euclid?.disc_pa,'#55aaff',[2,5]],[S.settings.display.paComparison===true,S.calc?.disc_pa,'#3ddc84',[7,4]]]){
   const direction=enabled?skyPADirection(pa,S.g.compass_pixel_basis??S.g.compass):null;
   if(direction){const cx=t.x(S.g.centre[0]),cy=t.y(S.g.centre[1]),dx=direction[0]*t.w/(t.view[1]-t.view[0]),dy=-direction[1]*t.h/(t.view[3]-t.view[2]),norm=Math.hypot(dx,dy),length=2*Math.hypot(t.w,t.h);
    ctx.beginPath();ctx.setLineDash(dash);ctx.moveTo(cx-dx/norm*length,cy-dy/norm*length);ctx.lineTo(cx+dx/norm*length,cy+dy/norm*length);ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.stroke();ctx.setLineDash([]);
@@ -334,10 +407,9 @@ async function setReviewed(id,reviewed,box){box.disabled=true;clearError();try{
 async function saveReview(next=false){if(!S.g)return;clearError();try{const calculation={...S.calc};delete calculation.disc;delete calculation.bar;const payload={object_id:S.id,...getForm(),settings:{...S.settings,view:S.view},calculation};$('save').disabled=$('saveNext').disabled=true;const result=await api('/api/review',{method:'POST',headers:{'Content-Type':'application/json','X-Review-Token':S.token},body:JSON.stringify(payload)});S.boot.reviews[S.id]=result.review;S.dirty=false;const all=drafts();delete all[S.id];localStorage.setItem(storageKey('drafts'),JSON.stringify(all));$('saveStatus').textContent='Review saved to disk';toast(result.warning??'Review saved');const current=S.id,index=S.filtered.findIndex(r=>r.object_id===current),nextId=S.filtered[index+1]?.object_id;queue();if(next){const target=$('unreviewed').checked?S.filtered[0]?.object_id:nextId;if(target)await loadGalaxy(target);else toast('You reached the end of this review group.');}}catch(e){showError(e);}finally{$('save').disabled=$('saveNext').disabled=false;}}
 
 for(const id of fieldIds)$(id).onchange=()=>readGeometryControls(id);
-for(const id of displayIds)$(id).oninput=()=>{if(!S.settings)return;const el=$(id),d=S.settings.display;d[id]=el.type==='checkbox'?el.checked:el.type==='number'||el.type==='range'?el.valueAsNumber:el.value;if(id==='stfShadows'||id==='stfTarget'){if(!finite(d[id]))return;d[id]=clamp(d[id],Number(el.min),Number(el.max));el.value=d[id];}if(id==='stretch'){if(d.stretch==='autostf')d.gamma=1;writeControls();}if(id==='showRejected'||id==='discPAOverlay'){drawProfiles();drawImage();}else if(id==='unwrapPA')drawProfiles();else if(['ellipses','centres','overlayMode','excludedEllipses','euclidPAOverlay'].includes(id))drawImage();else scheduleImage();$('gammaValue').value=Number(d.gamma).toFixed(2);saveDraft();};
+for(const id of displayIds)$(id).oninput=()=>{if(!S.settings)return;const el=$(id),d=S.settings.display;d[id]=el.type==='checkbox'?el.checked:el.type==='number'||el.type==='range'?el.valueAsNumber:el.value;if(id==='stfShadows'||id==='stfTarget'){if(!finite(d[id]))return;d[id]=clamp(d[id],Number(el.min),Number(el.max));el.value=d[id];}if(id==='stretch'){if(d.stretch==='autostf')d.gamma=1;writeControls();}if(id==='showRejected'||id==='paComparison'){drawProfiles();drawImage();}else if(id==='unwrapPA'||id==='showWarnings')drawProfiles();else if(['ellipses','centres','overlayMode','excludedEllipses'].includes(id))drawImage();else scheduleImage();$('gammaValue').value=Number(d.gamma).toFixed(2);saveDraft();};
 for(const id of reviewIds)$(id).oninput=markDirty;
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>applyPreset(b.dataset.preset));
-document.querySelectorAll('input[name=editMode]').forEach(r=>r.onchange=drawProfiles);
 $('category').onchange=$('unreviewed').onchange=()=>{queue();if(!S.filtered.some(r=>r.object_id===S.id)&&S.filtered.length)loadGalaxy(S.filtered[0].object_id);};
 $('prev').onclick=()=>{const i=S.filtered.findIndex(r=>r.object_id===S.id);if(i>0)loadGalaxy(S.filtered[i-1].object_id);};$('next').onclick=()=>{const i=S.filtered.findIndex(r=>r.object_id===S.id);if(i>=0&&i<S.filtered.length-1)loadGalaxy(S.filtered[i+1].object_id);};
 $('resetGeometry').onclick=()=>{S.profileAxisFloor=null;const defaults=defaultSettings(S.g);Object.assign(S.settings,{disc:defaults.disc,bar:defaults.bar,noBar:defaults.noBar,editedDisc:false,editedBar:false,pool:'pipeline'});writeControls();markDirty();recalculate();expandProfileView();};
@@ -350,6 +422,6 @@ document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='Enter'){e.prevent
 
 async function start(){try{S.boot=await api('/api/bootstrap');S.token=S.boot.token;$('category').options[0].textContent=`All ${S.boot.sample.length} examples`;for(const [value,label] of Object.entries(S.boot.categories))$('category').add(new Option(label,value));$('outputPath').textContent='Saved locally in: '+S.boot.output;if(S.boot.sample_source_changed)toast('The source manifest has changed since this sample was selected. Review provenance is retained.');queue();const remembered=localStorage.getItem(storageKey('last_galaxy')),id=S.boot.catalogue.some(r=>r.object_id===remembered)?remembered:S.boot.sample.find(r=>!isReviewed(S.boot.reviews[r.object_id]))?.object_id??S.boot.sample[0].object_id;await loadGalaxy(id);}catch(e){showError(e);}}
 // Exposed for repeatable numerical verification; no filesystem or pipeline mutations.
-window.MER_VIS_REVIEW={state:S,calculate,radiusAxis,chooseProfileBoundary,skyPADirection,ellipseInclination,paReferenceLevels,profileImageWindow,expandProfileView,profilePAView,axialMean,axialDifference,scatter,loadGalaxy,imagePixel,midtonesTransfer,autoSTFParameters,autoSTFValue};
+window.MER_VIS_REVIEW={state:S,calculate,paComparisonDescription,thresholdDescription,relevantProfileDiagnostics,profileWarningEvidence,drawWarningGraphics,resetGalaxyOverlays,radiusAxis,chooseProfileBoundary,skyPADirection,ellipseInclination,paReferenceLevels,profileImageWindow,expandProfileView,profilePAView,axialMean,axialDifference,scatter,loadGalaxy,imagePixel,midtonesTransfer,autoSTFParameters,autoSTFValue};
 start();
 

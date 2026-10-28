@@ -1,0 +1,10 @@
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const element=()=>({value:'disc',checked:true,dataset:{},style:{},getContext:()=>({}),addEventListener(){}});
+const nodes=new Map();const document={getElementById:id=>{if(!nodes.has(id))nodes.set(id,element());return nodes.get(id);},createElement:()=>element(),querySelectorAll:()=>[],querySelector:()=>element(),addEventListener(){},activeElement:{tagName:'BODY'}};
+const window={addEventListener(){}};const localStorage={getItem:()=>null,setItem(){}};
+const context={document,window,localStorage,console,URLSearchParams,setTimeout,clearTimeout,requestAnimationFrame(){},Option:function(){}};
+vm.createContext(context);const source=fs.readFileSync(new URL('./app.js',import.meta.url),'utf8').replace(/start\(\);\s*$/,'');vm.runInContext(source,context);
+const tool=window.MER_VIS_REVIEW;
+tool.state.boot={rules:{min_disc:6,max_gap:.5,pa_rms:10,eps_span:.15,small_bar:1.5}};const targetId='-634620306474397690';const g=JSON.parse(fs.readFileSync(new URL('./test_galaxies.json',import.meta.url),'utf8')).find(g=>g.object_id===targetId);if(!g)throw Error('Galaxy not in fixtures');tool.state.g=g;tool.state.settings=context.defaultSettings(g);tool.state.settings.pool='pipeline';let c=tool.calculate();console.log('TARGET',JSON.stringify({id:g.object_id,name:g.name,disc:g.intervals.disc,selectedDisc:c.disc.map(p=>({radius:p.sma_arcsec,eps:p.ellipticity})),range:c.eps_span,threshold:tool.state.settings.rules.eps_span,issues:c.issues,originalFlags:g.original.flags}));
+try{const live=await(await fetch('http://127.0.0.1:8768/api/galaxy?id='+targetId)).json();console.log('LIVE_STATE',JSON.stringify({latestRefit:live.latest_refit_id,savedReview:live.review?.settings?{disc:live.review.settings.disc,pool:live.review.settings.pool,threshold:live.review.settings.rules?.eps_span}:null,storedRange:live.original?.eps_span}));}catch(e){console.log('Live server unavailable; calculated from saved profile fixtures.');}
+

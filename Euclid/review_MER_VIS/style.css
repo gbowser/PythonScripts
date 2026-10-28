@@ -4,3 +4,9 @@
 #centrePanel{margin:10px 0 16px;padding:12px 0;border-top:1px solid #d6e0e7;border-bottom:1px solid #d6e0e7}#centrePanel>summary{font-weight:600;cursor:pointer;color:#265a72}#centrePanel>p{margin-top:10px}#centrePanel .row{flex-wrap:wrap}#centrePanel .interval-grid{margin:10px 0}#centrePanel #exportRefit{display:inline-block;margin-top:8px}
 
 .queue-row{display:flex;align-items:center;border-left:3px solid transparent}.queue-row.active{border-left-color:var(--blue);background:white}.queue-row .queue-item{flex:1;min-width:0;width:auto;border-left:0;overflow-wrap:anywhere}.review-tick{flex:0 0 auto;width:16px;height:16px;margin:0 8px 0 3px;cursor:pointer}.queue-row:hover{background:#f6fafc}
+
+.profile-panel .panel-heading{flex-wrap:wrap}.profile-warning-note{font-size:12px;line-height:1.45;padding:7px 10px;margin:6px 0;background:#fff5e7;border-left:3px solid #ad5b00;border-radius:3px}#profileWarnings{margin-top:10px}
+
+.profile-warning-note.comparison{background:#edf4f7;border-left-color:#376b7f}.profile-warning-note summary{cursor:pointer}.profile-warning-note p{margin:6px 0 0}
+
+.diagnostic-comparison{display:block;margin:3px 0 0 15px;color:#405966;font-size:11px}

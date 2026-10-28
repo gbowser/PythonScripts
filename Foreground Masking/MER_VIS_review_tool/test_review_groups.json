@@ -1,0 +1,292 @@
+[
+  {
+    "object_id": "-518633776290631360",
+    "category": "sparse",
+    "selection_reason": "Three or fewer accepted disc ellipses"
+  },
+  {
+    "object_id": "2660707245679117478",
+    "category": "sparse",
+    "selection_reason": "Three or fewer accepted disc ellipses"
+  },
+  {
+    "object_id": "-618729512496482781",
+    "category": "sparse",
+    "selection_reason": "Three or fewer accepted disc ellipses"
+  },
+  {
+    "object_id": "2756030807655229287",
+    "category": "sparse",
+    "selection_reason": "Three or fewer accepted disc ellipses"
+  },
+  {
+    "object_id": "2666058208664417677",
+    "category": "sparse",
+    "selection_reason": "Four or five accepted disc ellipses"
+  },
+  {
+    "object_id": "2655917711678775055",
+    "category": "sparse",
+    "selection_reason": "Four or five accepted disc ellipses"
+  },
+  {
+    "object_id": "-658329695471315827",
+    "category": "sparse",
+    "selection_reason": "Four or five accepted disc ellipses"
+  },
+  {
+    "object_id": "-612313665481634505",
+    "category": "sparse",
+    "selection_reason": "Four or five accepted disc ellipses"
+  },
+  {
+    "object_id": "-524092835298509353",
+    "category": "sparse",
+    "selection_reason": "Additional sparse sampling example"
+  },
+  {
+    "object_id": "2651207279644403314",
+    "category": "sparse",
+    "selection_reason": "Additional sparse sampling example"
+  },
+  {
+    "object_id": "2765074250666048832",
+    "category": "sparse",
+    "selection_reason": "Additional sparse sampling example"
+  },
+  {
+    "object_id": "-617564098494950932",
+    "category": "sparse",
+    "selection_reason": "Additional sparse sampling example"
+  },
+  {
+    "object_id": "-602137290485223988",
+    "category": "bar",
+    "selection_reason": "Candidate bar end below 1 arcsec"
+  },
+  {
+    "object_id": "2697991504642661432",
+    "category": "bar",
+    "selection_reason": "Candidate bar end below 1 arcsec"
+  },
+  {
+    "object_id": "-573624059497939037",
+    "category": "bar",
+    "selection_reason": "Candidate bar end below 1 arcsec"
+  },
+  {
+    "object_id": "-653194755487198508",
+    "category": "bar",
+    "selection_reason": "Candidate bar end below 1 arcsec"
+  },
+  {
+    "object_id": "2673380029639652690",
+    "category": "bar",
+    "selection_reason": "Candidate bar end between 1 and 1.5 arcsec"
+  },
+  {
+    "object_id": "-508597523276742555",
+    "category": "bar",
+    "selection_reason": "Candidate bar end between 1 and 1.5 arcsec"
+  },
+  {
+    "object_id": "2680633579682384481",
+    "category": "bar",
+    "selection_reason": "Candidate bar end between 1 and 1.5 arcsec"
+  },
+  {
+    "object_id": "-652961675464811762",
+    "category": "bar",
+    "selection_reason": "Candidate bar end between 1 and 1.5 arcsec"
+  },
+  {
+    "object_id": "-532037676283720801",
+    "category": "bar",
+    "selection_reason": "Comparison just above the 1.5 arcsec warning"
+  },
+  {
+    "object_id": "2726422448641952391",
+    "category": "bar",
+    "selection_reason": "Comparison just above the 1.5 arcsec warning"
+  },
+  {
+    "object_id": "-521458338301461235",
+    "category": "bar",
+    "selection_reason": "Comparison just above the 1.5 arcsec warning"
+  },
+  {
+    "object_id": "-507659156277990678",
+    "category": "bar",
+    "selection_reason": "Comparison just above the 1.5 arcsec warning"
+  },
+  {
+    "object_id": "-652726207459340404",
+    "category": "ellipticity",
+    "selection_reason": "Ellipticity range just below the 0.15 threshold"
+  },
+  {
+    "object_id": "-634620306474397690",
+    "category": "ellipticity",
+    "selection_reason": "Ellipticity range just below the 0.15 threshold"
+  },
+  {
+    "object_id": "2689878327667932426",
+    "category": "ellipticity",
+    "selection_reason": "Ellipticity range just below the 0.15 threshold"
+  },
+  {
+    "object_id": "-530741698289927285",
+    "category": "ellipticity",
+    "selection_reason": "Ellipticity range just below the 0.15 threshold"
+  },
+  {
+    "object_id": "-531944064294413462",
+    "category": "ellipticity",
+    "selection_reason": "Moderate ellipticity change above threshold"
+  },
+  {
+    "object_id": "2681494150647395085",
+    "category": "ellipticity",
+    "selection_reason": "Moderate ellipticity change above threshold"
+  },
+  {
+    "object_id": "-585380040490691424",
+    "category": "ellipticity",
+    "selection_reason": "Moderate ellipticity change above threshold"
+  },
+  {
+    "object_id": "-612780225497926799",
+    "category": "ellipticity",
+    "selection_reason": "Moderate ellipticity change above threshold"
+  },
+  {
+    "object_id": "-595029565493921205",
+    "category": "ellipticity",
+    "selection_reason": "Pronounced ellipticity change"
+  },
+  {
+    "object_id": "2654474268655808169",
+    "category": "ellipticity",
+    "selection_reason": "Pronounced ellipticity change"
+  },
+  {
+    "object_id": "2725181809642499741",
+    "category": "ellipticity",
+    "selection_reason": "Pronounced ellipticity change"
+  },
+  {
+    "object_id": "-657516691464572923",
+    "category": "ellipticity",
+    "selection_reason": "Pronounced ellipticity change"
+  },
+  {
+    "object_id": "-601121275504424227",
+    "category": "variation",
+    "selection_reason": "Adequate sampling and disc PA scatter above 10 degrees"
+  },
+  {
+    "object_id": "-610695895481546016",
+    "category": "variation",
+    "selection_reason": "Adequate sampling and disc PA scatter above 10 degrees"
+  },
+  {
+    "object_id": "-639551465483219839",
+    "category": "variation",
+    "selection_reason": "Adequate sampling and disc PA scatter above 10 degrees"
+  },
+  {
+    "object_id": "-531839818276617665",
+    "category": "variation",
+    "selection_reason": "Adequate sampling and disc PA scatter above 10 degrees"
+  },
+  {
+    "object_id": "-523703623274519067",
+    "category": "variation",
+    "selection_reason": "Adequate sampling and disc PA scatter above 10 degrees"
+  },
+  {
+    "object_id": "-537890362287224823",
+    "category": "variation",
+    "selection_reason": "Adequate sampling and disc PA scatter above 10 degrees"
+  },
+  {
+    "object_id": "-524724591298089738",
+    "category": "control",
+    "selection_reason": "No quality issues; comparison at other disc inclinations"
+  },
+  {
+    "object_id": "2724315227685324582",
+    "category": "control",
+    "selection_reason": "No quality issues; comparison at other disc inclinations"
+  },
+  {
+    "object_id": "2666052054638783232",
+    "category": "control",
+    "selection_reason": "No quality issues; comparison at other disc inclinations"
+  },
+  {
+    "object_id": "2731221676651025355",
+    "category": "control",
+    "selection_reason": "No quality issues; comparison at other disc inclinations"
+  },
+  {
+    "object_id": "-657523792484909836",
+    "category": "control",
+    "selection_reason": "No quality issues; comparison at other disc inclinations"
+  },
+  {
+    "object_id": "-529398365297549606",
+    "category": "control",
+    "selection_reason": "No quality issues; comparison at other disc inclinations"
+  },
+  {
+    "object_id": "-603528383471076765",
+    "category": "control",
+    "selection_reason": "No quality issues; nearly face-on (informational)"
+  },
+  {
+    "object_id": "2675773156650292056",
+    "category": "control",
+    "selection_reason": "No quality issues; nearly face-on (informational)"
+  },
+  {
+    "object_id": "-530848125285468911",
+    "category": "control",
+    "selection_reason": "No quality issues; nearly face-on (informational)"
+  },
+  {
+    "object_id": "-663928688473758026",
+    "category": "control",
+    "selection_reason": "No quality issues; nearly face-on (informational)"
+  },
+  {
+    "object_id": "-597167084495151319",
+    "category": "control",
+    "selection_reason": "No quality issues; nearly face-on (informational)"
+  },
+  {
+    "object_id": "-529443041264453957",
+    "category": "control",
+    "selection_reason": "No quality issues; nearly face-on (informational)"
+  },
+  {
+    "object_id": "-586374330510251740",
+    "category": "failed",
+    "selection_reason": "ValueError: Only 0 accepted isophotes after recovery; need at least 3"
+  },
+  {
+    "object_id": "-524824554283124036",
+    "category": "failed",
+    "selection_reason": "Visual review: broader peak search switched to a saturated foreground star with diffraction spikes; no valid target-disc geometry adopted."
+  },
+  {
+    "object_id": "2645436353651870062",
+    "category": "failed",
+    "selection_reason": "ValueError: Only 0 accepted isophotes after recovery; need at least 3"
+  },
+  {
+    "object_id": "2697242050653408730",
+    "category": "failed",
+    "selection_reason": "Visual review: accepted contours cover only the unresolved central region below 0.5 arcsec; no resolved disc geometry adopted."
+  }
+]

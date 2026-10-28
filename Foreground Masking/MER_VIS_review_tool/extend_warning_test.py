@@ -1,0 +1,4 @@
+from pathlib import Path
+p=Path('MER_VIS_review_tool/test_warning_profiles.mjs');s=p.read_text(encoding='utf8');needle="for(const code of ['ellipticity','sampling','pa','smallbar','bar'])";addition="""// Deliberately narrow a real candidate bar interval to demonstrate a failed signature screen.
+{const g=fixtures.find(g=>g.intervals.bar.every(v=>typeof v==='number'&&Number.isFinite(v))),S=tool.state;S.g=g;S.settings=context.defaultSettings(g);S.settings.editedBar=true;S.settings.bar=[g.intervals.bar[1]-.0001,g.intervals.bar[1]];S.calc=tool.calculate();const w=tool.profileWarningEvidence(g,S.settings,S.calc).find(w=>w.code==='bar');assert.ok(w);context.drawProfiles();assert.ok(nodes.get('epsPlot').innerHTML.includes('class="warning-bar-range"'));codes.add('bar');examples.bar=g.object_id+' (narrowed bar interval)';}
+""";s=s.replace(needle,addition+needle);p.write_text(s,encoding='utf8')
