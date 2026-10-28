@@ -10,3 +10,5 @@
 .profile-warning-note.comparison{background:#edf4f7;border-left-color:#376b7f}.profile-warning-note summary{cursor:pointer}.profile-warning-note p{margin:6px 0 0}
 
 .diagnostic-comparison{display:block;margin:3px 0 0 15px;color:#405966;font-size:11px}
+
+.campaign-banner{padding:10px 12px;border-left:4px solid #176481;background:#e6f1f7;font-size:13px}.criteria-grid{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}.results>div:first-child{overflow-x:auto}

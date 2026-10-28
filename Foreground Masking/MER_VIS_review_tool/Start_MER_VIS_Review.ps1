@@ -3,6 +3,7 @@ $ErrorActionPreference = 'Stop'
 $reviewRoot = $PSScriptRoot
 $campaignPath = Join-Path $reviewRoot 'centre_policy_MER_VIS_campaign.json'
 $useCampaign = (-not $Original) -and (Test-Path -LiteralPath $campaignPath)
+$expectedCampaign = if ($useCampaign) { (Get-Content -LiteralPath $campaignPath -Raw | ConvertFrom-Json).campaign_id } else { $null }
 $saved = if ($useCampaign) { Join-Path $reviewRoot 'saved_reviews_centre_v3' } else { Join-Path $reviewRoot 'saved_reviews' }
 New-Item -ItemType Directory -Path $saved -Force | Out-Null
 $statePath = Join-Path $saved 'server.json'
@@ -11,7 +12,7 @@ if (Test-Path -LiteralPath $statePath) {
         $state = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
         if ($state.url -match '^http://127\.0\.0\.1:\d+/$') {
             $health = Invoke-RestMethod -Uri ($state.url + 'api/health') -TimeoutSec 2
-            if ($health.app -eq 'MER_VIS_sample_review_v1') {
+            if (($health.app -eq 'MER_VIS_sample_review_v1') -and ((-not $useCampaign) -or (($health.campaign_id -eq $expectedCampaign) -and ($health.output -eq $saved)))) {
                 if (-not $NoBrowser) { Start-Process $state.url }
                 Write-Output ('MER VIS review ready: ' + $state.url)
                 exit 0
@@ -50,7 +51,7 @@ for ($attempt = 0; $attempt -lt 80; $attempt++) {
             $state = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
             if ($state.pid -eq $process.Id -and $state.url -match '^http://127\.0\.0\.1:\d+/$') {
                 $health = Invoke-RestMethod -Uri ($state.url + 'api/health') -TimeoutSec 1
-                if ($health.app -eq 'MER_VIS_sample_review_v1') {
+                if (($health.app -eq 'MER_VIS_sample_review_v1') -and ((-not $useCampaign) -or (($health.campaign_id -eq $expectedCampaign) -and ($health.output -eq $saved)))) {
                     if (-not $NoBrowser) { Start-Process $state.url }
                     Write-Output ('MER VIS review ready: ' + $state.url)
                     exit 0

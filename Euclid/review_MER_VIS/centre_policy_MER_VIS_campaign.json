@@ -1,0 +1,1915 @@
+{
+  "campaign_id": "MER_VIS_centre_policy_v3_2026-10-28",
+  "title": "Centre acceptance re-review",
+  "policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+  "policy": {
+    "cap_native_pixels": 3.0,
+    "fraction_radius": 0.05,
+    "floor_native_pixels": 1.0
+  },
+  "original_output": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Euclid\\review_MER_VIS\\saved_reviews",
+  "source_review_sha256": "53992fbbb9f67991c03e65842595d2644295324a185f4a2475a478b5f121b69d",
+  "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+  "categories": {
+    "centre_priority": "Centre acceptance \u2014 priority re-review",
+    "centre_control": "Centre acceptance \u2014 clean references",
+    "centre_validation": "Centre acceptance \u2014 new validation examples"
+  },
+  "sample": [
+    {
+      "object_id": "-663928688473758026",
+      "category": "centre_priority",
+      "category_label": "Centre acceptance \u2014 priority re-review",
+      "selection_reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape"
+    },
+    {
+      "object_id": "2756030807655229287",
+      "category": "centre_priority",
+      "category_label": "Centre acceptance \u2014 priority re-review",
+      "selection_reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape"
+    },
+    {
+      "object_id": "-595029565493921205",
+      "category": "centre_priority",
+      "category_label": "Centre acceptance \u2014 priority re-review",
+      "selection_reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape"
+    },
+    {
+      "object_id": "-537890362287224823",
+      "category": "centre_priority",
+      "category_label": "Centre acceptance \u2014 priority re-review",
+      "selection_reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape"
+    },
+    {
+      "object_id": "-518633776290631360",
+      "category": "centre_priority",
+      "category_label": "Centre acceptance \u2014 priority re-review",
+      "selection_reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape"
+    },
+    {
+      "object_id": "2681494150647395085",
+      "category": "centre_priority",
+      "category_label": "Centre acceptance \u2014 priority re-review",
+      "selection_reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape"
+    },
+    {
+      "object_id": "2654474268655808169",
+      "category": "centre_priority",
+      "category_label": "Centre acceptance \u2014 priority re-review",
+      "selection_reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape"
+    },
+    {
+      "object_id": "-586374330510251740",
+      "category": "centre_priority",
+      "category_label": "Centre acceptance \u2014 priority re-review",
+      "selection_reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape"
+    },
+    {
+      "object_id": "-524824554283124036",
+      "category": "centre_priority",
+      "category_label": "Centre acceptance \u2014 priority re-review",
+      "selection_reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape"
+    },
+    {
+      "object_id": "2645436353651870062",
+      "category": "centre_priority",
+      "category_label": "Centre acceptance \u2014 priority re-review",
+      "selection_reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape"
+    },
+    {
+      "object_id": "2697242050653408730",
+      "category": "centre_priority",
+      "category_label": "Centre acceptance \u2014 priority re-review",
+      "selection_reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape"
+    },
+    {
+      "object_id": "-524724591298089738",
+      "category": "centre_control",
+      "category_label": "Centre acceptance \u2014 clean references",
+      "selection_reason": "Previously clean reference; confirm no degradation"
+    },
+    {
+      "object_id": "2724315227685324582",
+      "category": "centre_control",
+      "category_label": "Centre acceptance \u2014 clean references",
+      "selection_reason": "Previously clean reference; confirm no degradation"
+    },
+    {
+      "object_id": "-615088650482896879",
+      "category": "centre_validation",
+      "category_label": "Centre acceptance \u2014 new validation examples",
+      "selection_reason": "new_clean; centre needs visual confirmation"
+    },
+    {
+      "object_id": "2654162178650796134",
+      "category": "centre_validation",
+      "category_label": "Centre acceptance \u2014 new validation examples",
+      "selection_reason": "new_clean; centre needs visual confirmation"
+    },
+    {
+      "object_id": "-646641404494431826",
+      "category": "centre_validation",
+      "category_label": "Centre acceptance \u2014 new validation examples",
+      "selection_reason": "new_centre; centre needs visual confirmation"
+    },
+    {
+      "object_id": "2690070926643224042",
+      "category": "centre_validation",
+      "category_label": "Centre acceptance \u2014 new validation examples",
+      "selection_reason": "new_centre; centre needs visual confirmation"
+    },
+    {
+      "object_id": "-599118107493216367",
+      "category": "centre_validation",
+      "category_label": "Centre acceptance \u2014 new validation examples",
+      "selection_reason": "new_geometry; centre needs visual confirmation"
+    },
+    {
+      "object_id": "2634901320657220727",
+      "category": "centre_validation",
+      "category_label": "Centre acceptance \u2014 new validation examples",
+      "selection_reason": "new_geometry; centre needs visual confirmation"
+    }
+  ],
+  "cases": {
+    "-663928688473758026": {
+      "object_id": "-663928688473758026",
+      "reference_centre": [
+        595.7545638741553,
+        593.80470417281
+      ],
+      "reference_provenance": "previous_review_confirmed_adopted_centre",
+      "original_category": "control",
+      "previous_refit_id": null,
+      "previous_calculation": {
+        "disc_pa": 42.68410913303933,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 179.71822865805626,
+        "inclination": 23.757014260189585,
+        "n_disc": 3,
+        "n_bar": 5,
+        "pa_scatter": 34.398180000970406,
+        "eps_span": 0.14796031014059974,
+        "max_gap_fraction": 0.6282598387861547,
+        "span_arcsec": 0.8715587820544268,
+        "axis_ratio": 0.9152621672315772,
+        "face_on": true,
+        "sparse": true,
+        "issues": [
+          "Nearly face-on: PA ambiguity is informational",
+          "Small candidate feature: bar identification uncertain"
+        ],
+        "bar_grade": "A-style",
+        "bar_drop": 0.5261932116576874,
+        "bar_peak": 0.5863060084386963,
+        "bar_scatter": 0.9701933272913541,
+        "leave_one_out_pa_change": null
+      },
+      "reference_uncertain": false,
+      "reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "5057f994114d48ecb3dc8abfd705d4dd"
+    },
+    "2756030807655229287": {
+      "object_id": "2756030807655229287",
+      "reference_centre": [
+        705.327687145997,
+        704.1977542422726
+      ],
+      "reference_provenance": "previous_review_confirmed_adopted_centre",
+      "original_category": "sparse",
+      "previous_refit_id": null,
+      "previous_calculation": {
+        "disc_pa": 59.615223731458826,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 8.50988979186539,
+        "inclination": 33.42162321429003,
+        "n_disc": 3,
+        "n_bar": 6,
+        "pa_scatter": 25.374139795603536,
+        "eps_span": 0.11327066101947011,
+        "max_gap_fraction": 0.79076556369431,
+        "span_arcsec": 1.7575586555043707,
+        "axis_ratio": 0.834640054429656,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling",
+          "Small candidate feature: bar identification uncertain"
+        ],
+        "bar_grade": "A-style",
+        "bar_drop": 0.4534937934585853,
+        "bar_peak": 0.5159876143439734,
+        "bar_scatter": 1.4578778979813338,
+        "leave_one_out_pa_change": null
+      },
+      "reference_uncertain": false,
+      "reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "234aa5a48d0444db9c9e0692749f9876"
+    },
+    "-595029565493921205": {
+      "object_id": "-595029565493921205",
+      "reference_centre": [
+        1153.3587073585647,
+        1153.7192229201319
+      ],
+      "reference_provenance": "previous_review_confirmed_adopted_centre",
+      "original_category": "ellipticity",
+      "previous_refit_id": null,
+      "previous_calculation": {
+        "disc_pa": 55.310643027465034,
+        "n_disc_pa": 5,
+        "disc_pa_provisional": false,
+        "bar_pa": 37.99338114965212,
+        "inclination": 52.934966880596384,
+        "n_disc": 5,
+        "n_bar": 5,
+        "pa_scatter": 10.900021767920924,
+        "eps_span": 0.15539867586038142,
+        "max_gap_fraction": 0.29395931813007986,
+        "span_arcsec": 1.4991698945394276,
+        "axis_ratio": 0.6027211201838093,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling",
+          "Changing disc ellipticity"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.19651032015022318,
+        "bar_peak": 0.5862179737750381,
+        "bar_scatter": 1.6856445261862307,
+        "leave_one_out_pa_change": 5.890267851699946
+      },
+      "reference_uncertain": false,
+      "reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "8b3fa1ffefd64f36bfbfa2335b5620aa"
+    },
+    "-537890362287224823": {
+      "object_id": "-537890362287224823",
+      "reference_centre": [
+        944.08838360548,
+        944.5838062308258
+      ],
+      "reference_provenance": "previous_review_confirmed_adopted_centre",
+      "original_category": "variation",
+      "previous_refit_id": null,
+      "previous_calculation": {
+        "disc_pa": 63.69316082965173,
+        "n_disc_pa": 5,
+        "disc_pa_provisional": false,
+        "bar_pa": 123.08626793344686,
+        "inclination": 32.12255491164252,
+        "n_disc": 5,
+        "n_bar": 5,
+        "pa_scatter": 15.907351453917974,
+        "eps_span": 0.06738241057481581,
+        "max_gap_fraction": 0.2939593181300803,
+        "span_arcsec": 1.8897126611020059,
+        "axis_ratio": 0.8469126667291821,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.47900012779496187,
+        "bar_peak": 0.6014038718297439,
+        "bar_scatter": 1.350612171390494,
+        "leave_one_out_pa_change": 7.045037604885351
+      },
+      "reference_uncertain": false,
+      "reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "7b7b9a0f2e0e49b09b8f9518985c3b01"
+    },
+    "-518633776290631360": {
+      "object_id": "-518633776290631360",
+      "reference_centre": [
+        715.9720771053154,
+        716.1397361340572
+      ],
+      "reference_provenance": "previous_review_confirmed_adopted_centre",
+      "original_category": "sparse",
+      "previous_refit_id": null,
+      "previous_calculation": {
+        "disc_pa": 110.06084358620616,
+        "n_disc_pa": 2,
+        "disc_pa_provisional": true,
+        "bar_pa": 113.20309091317647,
+        "inclination": null,
+        "n_disc": 2,
+        "n_bar": 10,
+        "pa_scatter": 1.1841120932607794,
+        "eps_span": 0.02718416572329796,
+        "max_gap_fraction": 1,
+        "span_arcsec": 0.4761826378232348,
+        "axis_ratio": 0.6361503556792117,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses"
+        ],
+        "bar_grade": "A-style",
+        "bar_drop": 0.37656003192673193,
+        "bar_peak": 0.6907356693774241,
+        "bar_scatter": 0.8034658767057664,
+        "leave_one_out_pa_change": null
+      },
+      "reference_uncertain": false,
+      "reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "4075c4fd2b3647d98df3477ec98a31c2"
+    },
+    "2681494150647395085": {
+      "object_id": "2681494150647395085",
+      "reference_centre": [
+        765.5385729221249,
+        764.5961839060756
+      ],
+      "reference_provenance": "previous_review_confirmed_adopted_centre",
+      "original_category": "ellipticity",
+      "previous_refit_id": null,
+      "previous_calculation": {
+        "disc_pa": 126.0235795749839,
+        "n_disc_pa": 2,
+        "disc_pa_provisional": true,
+        "bar_pa": 45.46586800670161,
+        "inclination": null,
+        "n_disc": 2,
+        "n_bar": 3,
+        "pa_scatter": 10.751265116106765,
+        "eps_span": 0.006561994834813789,
+        "max_gap_fraction": 1,
+        "span_arcsec": 0.541736493829128,
+        "axis_ratio": 0.9291166443770285,
+        "face_on": true,
+        "sparse": true,
+        "issues": [
+          "Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.22799805878341295,
+        "bar_peak": 0.4786096855274138,
+        "bar_scatter": 0.5973504932241983,
+        "leave_one_out_pa_change": null
+      },
+      "reference_uncertain": false,
+      "reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "3d7d2b837ada4e31b7ce6bce78618bfc"
+    },
+    "2654474268655808169": {
+      "object_id": "2654474268655808169",
+      "reference_centre": [
+        444.06078608568987,
+        444.4853507930642
+      ],
+      "reference_provenance": "previous_review_confirmed_adopted_centre",
+      "original_category": "ellipticity",
+      "previous_refit_id": null,
+      "previous_calculation": {
+        "disc_pa": 134.57114956882924,
+        "n_disc_pa": 2,
+        "disc_pa_provisional": true,
+        "bar_pa": 63.30902291958182,
+        "inclination": null,
+        "n_disc": 2,
+        "n_bar": 7,
+        "pa_scatter": 14.439789007612262,
+        "eps_span": 0.008593446188712828,
+        "max_gap_fraction": 1,
+        "span_arcsec": 0.5718627039607891,
+        "axis_ratio": 0.9314215475613642,
+        "face_on": true,
+        "sparse": true,
+        "issues": [
+          "Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses",
+          "Small candidate feature: bar identification uncertain",
+          "Weaker B-style bar-profile evidence"
+        ],
+        "bar_grade": "B-style",
+        "bar_drop": 0.06731675158881656,
+        "bar_peak": 0.7197949064485047,
+        "bar_scatter": 1.4852642345522578,
+        "leave_one_out_pa_change": null
+      },
+      "reference_uncertain": false,
+      "reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "5d0a0304b2004f1ca7c07ad7ad348fae"
+    },
+    "-586374330510251740": {
+      "object_id": "-586374330510251740",
+      "reference_centre": [
+        846.0833255870381,
+        868.6979282087486
+      ],
+      "reference_provenance": "previous_review_confirmed_adopted_centre",
+      "original_category": "failed",
+      "previous_refit_id": "381c5f0fe20e4bf6a276ba1b9c04eb5c",
+      "previous_calculation": {
+        "disc_pa": 173.94547831796993,
+        "n_disc_pa": 4,
+        "disc_pa_provisional": false,
+        "bar_pa": 179.2049645276533,
+        "inclination": 36.85478190168822,
+        "n_disc": 4,
+        "n_bar": 6,
+        "pa_scatter": 5.099725951859473,
+        "eps_span": 0.09551295269859092,
+        "max_gap_fraction": 0.3717401612138457,
+        "span_arcsec": 2.266353470200767,
+        "axis_ratio": 0.8001582638605163,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.5516568714154102,
+        "bar_peak": 0.6943402358375378,
+        "bar_scatter": 0.5156116807986395,
+        "leave_one_out_pa_change": 1.6163236193583543
+      },
+      "reference_uncertain": false,
+      "reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "363d1c23819b4f78a37a20bd9dc5fc53"
+    },
+    "-524824554283124036": {
+      "object_id": "-524824554283124036",
+      "reference_centre": [
+        5844.43,
+        6056.16
+      ],
+      "reference_provenance": "previous_review_confirmed_adopted_centre",
+      "original_category": "failed",
+      "previous_refit_id": "e6f4c3baabe5415880af56cce261c025",
+      "previous_calculation": {
+        "disc_pa": 145.91742608578585,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 139.69317679579476,
+        "inclination": 57.54927851869868,
+        "n_disc": 3,
+        "n_bar": 4,
+        "pa_scatter": 4.512399971062961,
+        "eps_span": 0.03653824556028018,
+        "max_gap_fraction": 0.5283018867924538,
+        "span_arcsec": 2.421964172389151,
+        "axis_ratio": 0.5365740320029584,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.45952048425362774,
+        "bar_peak": 0.5914857852357016,
+        "bar_scatter": 0.8903865352048013,
+        "leave_one_out_pa_change": null
+      },
+      "reference_uncertain": false,
+      "reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "005fb69cf81b43529e857becc596bae9"
+    },
+    "2645436353651870062": {
+      "object_id": "2645436353651870062",
+      "reference_centre": [
+        457.6242598554462,
+        457.40209712778994
+      ],
+      "reference_provenance": "previous_review_confirmed_adopted_centre",
+      "original_category": "failed",
+      "previous_refit_id": "75870e20668d494eae7999d7a843443e",
+      "previous_calculation": {
+        "disc_pa": 66.81528258162302,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 68.307130567894,
+        "inclination": 72.59379017033267,
+        "n_disc": 3,
+        "n_bar": 3,
+        "pa_scatter": 17.313911013116645,
+        "eps_span": 0.598237114653946,
+        "max_gap_fraction": 0.5283018867924533,
+        "span_arcsec": 0.6392732808625374,
+        "axis_ratio": 0.29914421294969284,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling",
+          "Changing disc ellipticity"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.6082951291407332,
+        "bar_peak": 0.7807139125561531,
+        "bar_scatter": 0.05542346403884492,
+        "leave_one_out_pa_change": null
+      },
+      "reference_uncertain": false,
+      "reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "27eb0e27d9f5488498094a788b4f9386"
+    },
+    "2697242050653408730": {
+      "object_id": "2697242050653408730",
+      "reference_centre": [
+        295.75,
+        296.52
+      ],
+      "reference_provenance": "automatic_reference_unverified",
+      "original_category": "failed",
+      "previous_refit_id": "e41c21258e664e4392fba5a081c5fcef",
+      "previous_calculation": {
+        "disc_pa": 129.7200529513338,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 74.33284042609225,
+        "inclination": 41.8154093210239,
+        "n_disc": 3,
+        "n_bar": 4,
+        "pa_scatter": 27.46188901806143,
+        "eps_span": 0.034674917138178774,
+        "max_gap_fraction": 0.6282598387861542,
+        "span_arcsec": 0.7111648489878413,
+        "axis_ratio": 0.7452967132243437,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling",
+          "Small candidate feature: bar identification uncertain"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.41760417937811994,
+        "bar_peak": 0.6617064816319442,
+        "bar_scatter": 1.2463254332247873,
+        "leave_one_out_pa_change": null
+      },
+      "reference_uncertain": true,
+      "reason": "Previous review / geometry uncertainty; validate centre and fixed-centre shape",
+      "trial_action": "Existing trial retained: centre uncertain; no automatic refit/adoption",
+      "recommended_refit_id": "e41c21258e664e4392fba5a081c5fcef"
+    },
+    "-524724591298089738": {
+      "object_id": "-524724591298089738",
+      "reference_centre": [
+        936.1970574745351,
+        936.9067208224008
+      ],
+      "reference_provenance": "previous_review_confirmed_adopted_centre",
+      "original_category": "control",
+      "previous_refit_id": null,
+      "previous_calculation": {
+        "disc_pa": 15.781073420491083,
+        "n_disc_pa": 6,
+        "disc_pa_provisional": false,
+        "bar_pa": 25.82514306018149,
+        "inclination": 53.24470681819946,
+        "n_disc": 6,
+        "n_bar": 3,
+        "pa_scatter": 5.779518681662269,
+        "eps_span": 0.03271156258923097,
+        "max_gap_fraction": 0.24768726066165067,
+        "span_arcsec": 2.0597954885112024,
+        "axis_ratio": 0.5983986206090961,
+        "face_on": false,
+        "sparse": false,
+        "issues": [],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.2841158592399535,
+        "bar_peak": 0.6716189392090712,
+        "bar_scatter": 0.1217335279145,
+        "leave_one_out_pa_change": 1.987284974497129
+      },
+      "reference_uncertain": false,
+      "reason": "Previously clean reference; confirm no degradation",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "2020d9fa1f73444692afcf551022add6"
+    },
+    "2724315227685324582": {
+      "object_id": "2724315227685324582",
+      "reference_centre": [
+        1194.5188118196693,
+        1194.583592920559
+      ],
+      "reference_provenance": "previous_review_confirmed_adopted_centre",
+      "original_category": "control",
+      "previous_refit_id": null,
+      "previous_calculation": {
+        "disc_pa": 60.7151802282948,
+        "n_disc_pa": 7,
+        "disc_pa_provisional": false,
+        "bar_pa": 135.67916346056714,
+        "inclination": 37.07926598927557,
+        "n_disc": 7,
+        "n_bar": 3,
+        "pa_scatter": 6.364122179418187,
+        "eps_span": 0.13704047192564783,
+        "max_gap_fraction": 0.21716582002199034,
+        "span_arcsec": 2.997000644859786,
+        "axis_ratio": 0.7978021635455129,
+        "face_on": false,
+        "sparse": false,
+        "issues": [],
+        "bar_grade": "A-style",
+        "bar_drop": 0.4541471855391602,
+        "bar_peak": 0.5784700782641332,
+        "bar_scatter": 0.10136346329198863,
+        "leave_one_out_pa_change": 0.898823467876241
+      },
+      "reference_uncertain": false,
+      "reason": "Previously clean reference; confirm no degradation",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "78e6ae3b57c64b09a35b5facc59ba6aa"
+    },
+    "-615088650482896879": {
+      "object_id": "-615088650482896879",
+      "reference_centre": [
+        654.7653750930893,
+        654.8984154315102
+      ],
+      "reference_provenance": "automatic_reference_unverified",
+      "original_category": null,
+      "previous_refit_id": null,
+      "previous_calculation": null,
+      "reference_uncertain": false,
+      "reason": "new_clean; centre needs visual confirmation",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "9d5065d7dd354b859ebbf1db26f48e1b"
+    },
+    "2654162178650796134": {
+      "object_id": "2654162178650796134",
+      "reference_centre": [
+        957.0376272335898,
+        957.0910191725102
+      ],
+      "reference_provenance": "automatic_reference_unverified",
+      "original_category": null,
+      "previous_refit_id": null,
+      "previous_calculation": null,
+      "reference_uncertain": false,
+      "reason": "new_clean; centre needs visual confirmation",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "26aa0e83deb24a5bb150aa64545203bf"
+    },
+    "-646641404494431826": {
+      "object_id": "-646641404494431826",
+      "reference_centre": [
+        642.4539759870993,
+        640.6062809077232
+      ],
+      "reference_provenance": "automatic_reference_unverified",
+      "original_category": null,
+      "previous_refit_id": null,
+      "previous_calculation": null,
+      "reference_uncertain": false,
+      "reason": "new_centre; centre needs visual confirmation",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "af5d9473456445faa12755e0a341c012"
+    },
+    "2690070926643224042": {
+      "object_id": "2690070926643224042",
+      "reference_centre": [
+        2079.8051116344727,
+        2101.2738450474462
+      ],
+      "reference_provenance": "automatic_reference_unverified",
+      "original_category": null,
+      "previous_refit_id": null,
+      "previous_calculation": null,
+      "reference_uncertain": false,
+      "reason": "new_centre; centre needs visual confirmation",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "0bfa57415a0f4c9a82db9159ae40b6c6"
+    },
+    "-599118107493216367": {
+      "object_id": "-599118107493216367",
+      "reference_centre": [
+        546.2715018156777,
+        546.3888236933926
+      ],
+      "reference_provenance": "automatic_reference_unverified",
+      "original_category": null,
+      "previous_refit_id": null,
+      "previous_calculation": null,
+      "reference_uncertain": false,
+      "reason": "new_geometry; centre needs visual confirmation",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "f5d0eda0d62e45fda15e1768803a5a7e"
+    },
+    "2634901320657220727": {
+      "object_id": "2634901320657220727",
+      "reference_centre": [
+        522.1349580820624,
+        524.1559952886287
+      ],
+      "reference_provenance": "automatic_reference_unverified",
+      "original_category": null,
+      "previous_refit_id": null,
+      "previous_calculation": null,
+      "reference_uncertain": false,
+      "reason": "new_geometry; centre needs visual confirmation",
+      "trial_action": "Fixed-centre refit; visual acceptance pending",
+      "recommended_refit_id": "5b7117def8614389849d76fb304a97b8"
+    }
+  },
+  "previous_reviews": {
+    "-663928688473758026": {
+      "disc_decision": "uncertain",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "-663928688473758026",
+      "catalogue_name": "",
+      "category": "control",
+      "notes": "Bar ellipses : removed ones too far from the bar, updated disc , but shape is unclear",
+      "settings": {
+        "disc": [
+          2.1127767851858428,
+          3.082178289240056
+        ],
+        "bar": [
+          0.693008638417468,
+          1.128346699584931
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.009574587835883138,
+          "maximum": 0.14887294173240662,
+          "gamma": 0.7,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "excludedEllipses": false,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "paComparison": true,
+          "showWarnings": true
+        },
+        "refit_id": null,
+        "view": [
+          532.5,
+          659.5,
+          530.5,
+          660.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 42.68410913303933,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 179.71822865805626,
+        "inclination": 23.757014260189585,
+        "n_disc": 3,
+        "n_bar": 5,
+        "pa_scatter": 34.398180000970406,
+        "eps_span": 0.14796031014059974,
+        "max_gap_fraction": 0.6282598387861547,
+        "span_arcsec": 0.8715587820544268,
+        "axis_ratio": 0.9152621672315772,
+        "face_on": true,
+        "sparse": true,
+        "issues": [
+          "Nearly face-on: PA ambiguity is informational",
+          "Small candidate feature: bar identification uncertain"
+        ],
+        "bar_grade": "A-style",
+        "bar_drop": 0.5261932116576874,
+        "bar_peak": 0.5863060084386963,
+        "bar_scatter": 0.9701933272913541,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-28T12:02:54Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 42.684109133039335,
+      "original_bar_pa": 0.08091941648747099,
+      "original_inclination": 23.757014260189585
+    },
+    "2756030807655229287": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "2756030807655229287",
+      "catalogue_name": "",
+      "category": "sparse",
+      "notes": "Increased inner elipses in bar and tightened to bar shape.  Increased radius to capture 2 more ellipses with similar PA",
+      "settings": {
+        "disc": [
+          3.064514954655358,
+          4.864038670923618
+        ],
+        "bar": [
+          0.6641773242978994,
+          1.3880122914838584
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.005628817714750767,
+          "maximum": 2.1918599605560303,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "excludedEllipses": false,
+          "euclidPAOverlay": false,
+          "discPAOverlay": false,
+          "paComparison": true,
+          "showWarnings": false
+        },
+        "refit_id": null,
+        "view": [
+          620.5,
+          790.5,
+          619.5,
+          788.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 59.615223731458826,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 8.50988979186539,
+        "inclination": 33.42162321429003,
+        "n_disc": 3,
+        "n_bar": 6,
+        "pa_scatter": 25.374139795603536,
+        "eps_span": 0.11327066101947011,
+        "max_gap_fraction": 0.79076556369431,
+        "span_arcsec": 1.7575586555043707,
+        "axis_ratio": 0.834640054429656,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling",
+          "Small candidate feature: bar identification uncertain"
+        ],
+        "bar_grade": "A-style",
+        "bar_drop": 0.4534937934585853,
+        "bar_peak": 0.5159876143439734,
+        "bar_scatter": 1.4578778979813338,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-28T12:04:58Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 59.61522373145885,
+      "original_bar_pa": 5.160343116866329,
+      "original_inclination": 33.42162321429003
+    },
+    "-595029565493921205": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "-595029565493921205",
+      "catalogue_name": "PGC 477382",
+      "category": "ellipticity",
+      "notes": "removed 1 outer disc ellipse with angle too different. Better to have  outer disc ellipses with similar angle than many with hugely varying angles",
+      "settings": {
+        "disc": [
+          2.6139830650868126,
+          4.166092936368354
+        ],
+        "bar": [
+          1.3243251710034614,
+          2.083851295509257
+        ],
+        "editedDisc": true,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.012137533724796954,
+          "maximum": 2.4505562782287598,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "excludedEllipses": false,
+          "euclidPAOverlay": false,
+          "discPAOverlay": false,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "showWarnings": true,
+          "paComparison": true
+        },
+        "refit_id": null,
+        "view": [
+          1026.5,
+          1280.5,
+          1026.5,
+          1280.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 55.310643027465034,
+        "n_disc_pa": 5,
+        "disc_pa_provisional": false,
+        "bar_pa": 37.99338114965212,
+        "inclination": 52.934966880596384,
+        "n_disc": 5,
+        "n_bar": 5,
+        "pa_scatter": 10.900021767920924,
+        "eps_span": 0.15539867586038142,
+        "max_gap_fraction": 0.29395931813007986,
+        "span_arcsec": 1.4991698945394276,
+        "axis_ratio": 0.6027211201838093,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling",
+          "Changing disc ellipticity"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.19651032015022318,
+        "bar_peak": 0.5862179737750381,
+        "bar_scatter": 1.6856445261862307,
+        "leave_one_out_pa_change": 5.890267851699946
+      },
+      "reviewed_utc": "2026-10-28T11:02:39Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 55.27650935880132,
+      "original_bar_pa": 37.99338114965213,
+      "original_inclination": 52.662656617097795
+    },
+    "-537890362287224823": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "-537890362287224823",
+      "catalogue_name": "",
+      "category": "variation",
+      "notes": "excluded out disc ellipse to bring back inside tolerance",
+      "settings": {
+        "disc": [
+          3.291625291070291,
+          5.736868682742425
+        ],
+        "bar": [
+          1.4904641396267493,
+          2.3452741790884337
+        ],
+        "editedDisc": true,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.010755591094493866,
+          "maximum": 1.3231847286224365,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "excludedEllipses": false,
+          "euclidPAOverlay": false,
+          "discPAOverlay": false,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "paComparison": true,
+          "showWarnings": true
+        },
+        "refit_id": null,
+        "view": [
+          859.5,
+          1028.5,
+          859.5,
+          1029.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 63.69316082965173,
+        "n_disc_pa": 5,
+        "disc_pa_provisional": false,
+        "bar_pa": 123.08626793344686,
+        "inclination": 32.12255491164252,
+        "n_disc": 5,
+        "n_bar": 5,
+        "pa_scatter": 15.907351453917974,
+        "eps_span": 0.06738241057481581,
+        "max_gap_fraction": 0.2939593181300803,
+        "span_arcsec": 1.8897126611020059,
+        "axis_ratio": 0.8469126667291821,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.47900012779496187,
+        "bar_peak": 0.6014038718297439,
+        "bar_scatter": 1.350612171390494,
+        "leave_one_out_pa_change": 7.045037604885351
+      },
+      "reviewed_utc": "2026-10-28T11:33:36Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 60.70098495772754,
+      "original_bar_pa": 123.08626793344686,
+      "original_inclination": 33.67740235123137
+    },
+    "-518633776290631360": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "-518633776290631360",
+      "catalogue_name": "",
+      "category": "sparse",
+      "notes": "Ignore inner disc ellipse which has widely differing angle to outer ellipses",
+      "settings": {
+        "disc": [
+          2.409027326888297,
+          4.444371286350193
+        ],
+        "bar": [
+          0.5160216253622324,
+          1.7110768999421586
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.01195870326116681,
+          "maximum": 0.15643225610256195,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "paComparison": false,
+          "showWarnings": false
+        },
+        "refit_id": null,
+        "view": [
+          652.5,
+          779.5,
+          652.5,
+          779.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 110.06084358620616,
+        "n_disc_pa": 2,
+        "disc_pa_provisional": true,
+        "bar_pa": 113.20309091317647,
+        "inclination": null,
+        "n_disc": 2,
+        "n_bar": 10,
+        "pa_scatter": 1.1841120932607794,
+        "eps_span": 0.02718416572329796,
+        "max_gap_fraction": 1,
+        "span_arcsec": 0.4761826378232348,
+        "axis_ratio": 0.6361503556792117,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses"
+        ],
+        "bar_grade": "A-style",
+        "bar_drop": 0.37656003192673193,
+        "bar_peak": 0.6907356693774241,
+        "bar_scatter": 0.8034658767057664,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-28T09:44:05Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 113.69021016263804,
+      "original_bar_pa": 113.86950382756103,
+      "original_inclination": 49.47781434213959
+    },
+    "2681494150647395085": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "2681494150647395085",
+      "catalogue_name": "",
+      "category": "ellipticity",
+      "notes": "Ellipticity and disc PA are impacted by inner disc ellipse, so have excluded",
+      "settings": {
+        "disc": [
+          4.427728590333983,
+          5.056207275738521
+        ],
+        "bar": [
+          1.158752207545836,
+          1.6279634214429566
+        ],
+        "editedDisc": true,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.007592495379997417,
+          "maximum": 1.393892526626587,
+          "gamma": 0.9,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "excludedEllipses": false,
+          "euclidPAOverlay": true,
+          "discPAOverlay": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "showWarnings": true,
+          "paComparison": false
+        },
+        "refit_id": null,
+        "view": [
+          636.5,
+          833.5,
+          688.5,
+          885.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 126.0235795749839,
+        "n_disc_pa": 2,
+        "disc_pa_provisional": true,
+        "bar_pa": 45.46586800670161,
+        "inclination": null,
+        "n_disc": 2,
+        "n_bar": 3,
+        "pa_scatter": 10.751265116106765,
+        "eps_span": 0.006561994834813789,
+        "max_gap_fraction": 1,
+        "span_arcsec": 0.541736493829128,
+        "axis_ratio": 0.9291166443770285,
+        "face_on": true,
+        "sparse": true,
+        "issues": [
+          "Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.22799805878341295,
+        "bar_peak": 0.4786096855274138,
+        "bar_scatter": 0.5973504932241983,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-28T10:51:24Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 157.79847784780827,
+      "original_bar_pa": 45.46586800670162,
+      "original_inclination": 22.20529737579683
+    },
+    "2654474268655808169": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "2654474268655808169",
+      "catalogue_name": "",
+      "category": "ellipticity",
+      "notes": "Bar ellipses extended far too far out, trimmed outer bar ellipses in line with image. Only 2 convincing disc ellipses ",
+      "settings": {
+        "disc": [
+          2.0420133187330856,
+          2.8197506912280406
+        ],
+        "bar": [
+          0.5151579089845045,
+          1.0824274317230993
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.009159876964986324,
+          "maximum": 0.2272908091545105,
+          "gamma": 0.9,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "excludedEllipses": false,
+          "euclidPAOverlay": false,
+          "discPAOverlay": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "showWarnings": false,
+          "paComparison": true
+        },
+        "refit_id": null,
+        "view": [
+          400.5,
+          487.5,
+          400.5,
+          487.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 134.57114956882924,
+        "n_disc_pa": 2,
+        "disc_pa_provisional": true,
+        "bar_pa": 63.30902291958182,
+        "inclination": null,
+        "n_disc": 2,
+        "n_bar": 7,
+        "pa_scatter": 14.439789007612262,
+        "eps_span": 0.008593446188712828,
+        "max_gap_fraction": 1,
+        "span_arcsec": 0.5718627039607891,
+        "axis_ratio": 0.9314215475613642,
+        "face_on": true,
+        "sparse": true,
+        "issues": [
+          "Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses",
+          "Small candidate feature: bar identification uncertain",
+          "Weaker B-style bar-profile evidence"
+        ],
+        "bar_grade": "B-style",
+        "bar_drop": 0.06731675158881656,
+        "bar_peak": 0.7197949064485047,
+        "bar_scatter": 1.4852642345522578,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-28T11:04:44Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 61.97255861497691,
+      "original_bar_pa": 63.03710706928109,
+      "original_inclination": 22.00902684670147
+    },
+    "-586374330510251740": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "-586374330510251740",
+      "catalogue_name": "",
+      "category": "failed",
+      "notes": "put in correct centre",
+      "settings": {
+        "disc": [
+          5.5969295040124765,
+          7.863282974213243
+        ],
+        "bar": [
+          2.0183088882620783,
+          3.5569498833573134
+        ],
+        "editedDisc": false,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.008320113577507435,
+          "maximum": 0.6615177989006042,
+          "gamma": 1.55,
+          "invert": false,
+          "ellipses": false,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": false,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "paComparison": false,
+          "showWarnings": false
+        },
+        "refit_id": "381c5f0fe20e4bf6a276ba1b9c04eb5c",
+        "proposed_centre": [
+          843.3164075507492,
+          869.9481493590308
+        ],
+        "view": [
+          672.5,
+          961.5,
+          725.5,
+          1016.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 173.94547831796993,
+        "n_disc_pa": 4,
+        "disc_pa_provisional": false,
+        "bar_pa": 179.2049645276533,
+        "inclination": 36.85478190168822,
+        "n_disc": 4,
+        "n_bar": 6,
+        "pa_scatter": 5.099725951859473,
+        "eps_span": 0.09551295269859092,
+        "max_gap_fraction": 0.3717401612138457,
+        "span_arcsec": 2.266353470200767,
+        "axis_ratio": 0.8001582638605163,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.5516568714154102,
+        "bar_peak": 0.6943402358375378,
+        "bar_scatter": 0.5156116807986395,
+        "leave_one_out_pa_change": 1.6163236193583543
+      },
+      "reviewed_utc": "2026-10-28T11:41:01Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": null,
+      "original_bar_pa": null,
+      "original_inclination": null
+    },
+    "-524824554283124036": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "unsure",
+      "reviewed": true,
+      "object_id": "-524824554283124036",
+      "catalogue_name": "",
+      "category": "failed",
+      "notes": "corrected centre",
+      "settings": {
+        "disc": [
+          9.52029941976866,
+          13.239189430519385
+        ],
+        "bar": [
+          2.443623738437054,
+          3.4331154115948928
+        ],
+        "editedDisc": true,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.008457244433639568,
+          "maximum": 6.293806076049805,
+          "gamma": 0.5,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "euclidPAOverlay": true,
+          "paComparison": true,
+          "showWarnings": true
+        },
+        "refit_id": "e6f4c3baabe5415880af56cce261c025",
+        "proposed_centre": [
+          5844.43,
+          6056.16
+        ],
+        "view": [
+          5136.5,
+          6109.5,
+          5703.5,
+          6668.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 145.91742608578585,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 139.69317679579476,
+        "inclination": 57.54927851869868,
+        "n_disc": 3,
+        "n_bar": 4,
+        "pa_scatter": 4.512399971062961,
+        "eps_span": 0.03653824556028018,
+        "max_gap_fraction": 0.5283018867924538,
+        "span_arcsec": 2.421964172389151,
+        "axis_ratio": 0.5365740320029584,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.45952048425362774,
+        "bar_peak": 0.5914857852357016,
+        "bar_scatter": 0.8903865352048013,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-28T11:41:50Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": null,
+      "original_bar_pa": null,
+      "original_inclination": null
+    },
+    "2645436353651870062": {
+      "disc_decision": "uncertain",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "2645436353651870062",
+      "catalogue_name": "",
+      "category": "failed",
+      "notes": "just a weird shaped galaxy.  Should be excluded",
+      "settings": {
+        "disc": [
+          2.5128666700571407,
+          3.2011000104998546
+        ],
+        "bar": [
+          1.5969721974422613,
+          2.0032419244715727
+        ],
+        "editedDisc": true,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.008632547125406564,
+          "maximum": 0.4647738039493561,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "paComparison": false,
+          "showWarnings": false
+        },
+        "refit_id": "75870e20668d494eae7999d7a843443e",
+        "proposed_centre": [
+          455.25,
+          457.83
+        ],
+        "view": [
+          401.5,
+          512.5,
+          394.5,
+          505.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 66.81528258162302,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 68.307130567894,
+        "inclination": 72.59379017033267,
+        "n_disc": 3,
+        "n_bar": 3,
+        "pa_scatter": 17.313911013116645,
+        "eps_span": 0.598237114653946,
+        "max_gap_fraction": 0.5283018867924533,
+        "span_arcsec": 0.6392732808625374,
+        "axis_ratio": 0.29914421294969284,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling",
+          "Changing disc ellipticity"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.6082951291407332,
+        "bar_peak": 0.7807139125561531,
+        "bar_scatter": 0.05542346403884492,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-28T11:43:11Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": null,
+      "original_bar_pa": null,
+      "original_inclination": null
+    },
+    "2697242050653408730": {
+      "disc_decision": "uncertain",
+      "bar_decision": "convincing",
+      "centre_decision": "uncertain",
+      "rule_action": "remove",
+      "reviewed": true,
+      "object_id": "2697242050653408730",
+      "catalogue_name": "",
+      "category": "failed",
+      "notes": "bar is visually apparent , difficult to fit and sparse image",
+      "settings": {
+        "disc": [
+          1.7562748167275186,
+          2.46743966571536
+        ],
+        "bar": [
+          0.996557497033455,
+          1.4000915311922182
+        ],
+        "editedDisc": false,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.0073605404855310915,
+          "maximum": 0.22564221918582916,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "excludedEllipses": false,
+          "paComparison": false,
+          "showWarnings": false
+        },
+        "refit_id": "e41c21258e664e4392fba5a081c5fcef",
+        "proposed_centre": [
+          295.75,
+          296.52
+        ],
+        "view": [
+          253.5,
+          346.5,
+          247.5,
+          339.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 129.7200529513338,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 74.33284042609225,
+        "inclination": 41.8154093210239,
+        "n_disc": 3,
+        "n_bar": 4,
+        "pa_scatter": 27.46188901806143,
+        "eps_span": 0.034674917138178774,
+        "max_gap_fraction": 0.6282598387861542,
+        "span_arcsec": 0.7111648489878413,
+        "axis_ratio": 0.7452967132243437,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling",
+          "Small candidate feature: bar identification uncertain"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.41760417937811994,
+        "bar_peak": 0.6617064816319442,
+        "bar_scatter": 1.2463254332247873,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-28T11:45:28Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": null,
+      "original_bar_pa": null,
+      "original_inclination": null
+    },
+    "-524724591298089738": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "-524724591298089738",
+      "catalogue_name": "",
+      "category": "control",
+      "notes": "",
+      "settings": {
+        "disc": [
+          2.7019321308327484,
+          4.761727619343951
+        ],
+        "bar": [
+          1.717126715767099,
+          2.1539637522582495
+        ],
+        "editedDisc": false,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.007793962933565489,
+          "maximum": 1.2216780185699463,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "paComparison": true,
+          "showWarnings": true
+        },
+        "refit_id": null,
+        "view": [
+          813.5,
+          1055.5,
+          815.5,
+          1055.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 15.781073420491083,
+        "n_disc_pa": 6,
+        "disc_pa_provisional": false,
+        "bar_pa": 25.82514306018149,
+        "inclination": 53.24470681819946,
+        "n_disc": 6,
+        "n_bar": 3,
+        "pa_scatter": 5.779518681662269,
+        "eps_span": 0.03271156258923097,
+        "max_gap_fraction": 0.24768726066165067,
+        "span_arcsec": 2.0597954885112024,
+        "axis_ratio": 0.5983986206090961,
+        "face_on": false,
+        "sparse": false,
+        "issues": [],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.2841158592399535,
+        "bar_peak": 0.6716189392090712,
+        "bar_scatter": 0.1217335279145,
+        "leave_one_out_pa_change": 1.987284974497129
+      },
+      "reviewed_utc": "2026-10-28T11:33:56Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 15.781073420491072,
+      "original_bar_pa": 25.825143060181496,
+      "original_inclination": 53.24470681819946
+    },
+    "2724315227685324582": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "2724315227685324582",
+      "catalogue_name": "",
+      "category": "control",
+      "notes": "",
+      "settings": {
+        "disc": [
+          3.0775629798493664,
+          6.074563624709152
+        ],
+        "bar": [
+          1.242976070611368,
+          1.5591891829749003
+        ],
+        "editedDisc": false,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "marginal",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.008770521994672018,
+          "maximum": 2.5744872093200684,
+          "gamma": 0.75,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "paComparison": false,
+          "showWarnings": false
+        },
+        "refit_id": null,
+        "view": [
+          1067.5,
+          1321.5,
+          1067.5,
+          1321.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 60.7151802282948,
+        "n_disc_pa": 7,
+        "disc_pa_provisional": false,
+        "bar_pa": 135.67916346056714,
+        "inclination": 37.07926598927557,
+        "n_disc": 7,
+        "n_bar": 3,
+        "pa_scatter": 6.364122179418187,
+        "eps_span": 0.13704047192564783,
+        "max_gap_fraction": 0.21716582002199034,
+        "span_arcsec": 2.997000644859786,
+        "axis_ratio": 0.7978021635455129,
+        "face_on": false,
+        "sparse": false,
+        "issues": [],
+        "bar_grade": "A-style",
+        "bar_drop": 0.4541471855391602,
+        "bar_peak": 0.5784700782641332,
+        "bar_scatter": 0.10136346329198863,
+        "leave_one_out_pa_change": 0.898823467876241
+      },
+      "reviewed_utc": "2026-10-28T11:34:02Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 60.71518022829481,
+      "original_bar_pa": 135.67916346056714,
+      "original_inclination": 37.07926598927556
+    }
+  },
+  "requires_visual_validation": true
+}

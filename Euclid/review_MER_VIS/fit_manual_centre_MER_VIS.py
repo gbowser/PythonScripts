@@ -14,7 +14,11 @@ from astropy.stats import sigma_clipped_stats
 from scipy.ndimage import gaussian_filter,label,binary_dilation,median_filter
 from photutils.isophote import Ellipse,EllipseGeometry
 import inspect
-VERSION='MER_VIS_manual_centre_review_v1_2026-10-21'
+VERSION='MER_VIS_centre_constrained_v3_2026-10-28'
+from centre_policy_MER_VIS import POLICY_VERSION, DEFAULT_POLICY, checked_policy, centre_measurement, numerical_acceptance
+CENTRE_POLICY=dict(DEFAULT_POLICY)
+REFERENCE_CENTRE=None
+NATIVE_SCALE=None
 MANUAL_LOCK=True
 def axial_mean(a,w=None):
  a=np.asarray(a);w=np.ones(len(a)) if w is None else np.asarray(w)
@@ -46,11 +50,16 @@ def profile_rows(isos,wcs,xref,yref,xa,ya,b):
    try:return float(getattr(iso,k))
    except:return float('nan')
   out.append(dict(sma_arcsec=float(iso.sma*b*np.sqrt(abs(np.linalg.det(wcs.pixel_scale_matrix)))*3600),ellipticity=float(iso.eps),pa_pixel_deg=float(np.degrees(angle)%180),pa_sky_deg=float(np.degrees(np.arctan2(east.arcsec,north.arcsec))%180),ellipticity_error=val('ellip_err'),pa_error_deg=float(np.degrees(val('pa_err'))),intensity=val('intens'),intensity_error=val('int_err'),stop_code=int(iso.stop_code),valid=bool(iso.valid),sampled_fraction=float(n/max(1,n+nf)),centre_offset_fit_pix=float(np.hypot(iso.x0-xref,iso.y0-yref)),x_original_pix=x,y_original_pix=y,sma_fit_pix=float(iso.sma)))
+ for point in out:
+  point.update(centre_measurement(point,REFERENCE_CENTRE,NATIVE_SCALE,CENTRE_POLICY))
+  point.update(numerically_accepted_strict=numerical_acceptance(point),numerically_accepted_relaxed=numerical_acceptance(point,True))
  return out
 def accepted(p,relaxed=False):
- # Code2 may be used only by explicit relaxed recovery, retaining a quality warning.
- return bool(p['valid'] and p['stop_code'] in ((0,2) if relaxed else (0,)) and p['sampled_fraction']>=(.5 if relaxed else .65) and np.isfinite(p['ellipticity_error']) and p['ellipticity_error']<(.2 if relaxed else .1) and np.isfinite(p['pa_error_deg']) and p['pa_error_deg']<(20 if relaxed else 10) and p['centre_offset_fit_pix']<=max(4 if relaxed else 3,(.25 if relaxed else .15)*p['sma_fit_pix']) and p['intensity']>0)
+ # A relaxed numerical fit never relaxes the common centre-eligibility rule.
+ return numerical_acceptance(p,relaxed) and p.get('centre_accepted',False)
+
 def measure(task):
+ global REFERENCE_CENTRE,NATIVE_SCALE
  r,input_dir,out_dir,area=task;r=dict(r);out=Path(out_dir);oid=r['object_id'];start=time.monotonic();log=[]
  keys=['bar_pa_sky_deg','disc_pa_sky_deg','inclination_deg','disc_axis_ratio','radius_arcsec','disc_pa_scatter_deg','bar_pa_scatter_deg','bar_min_arcsec','bar_max_arcsec','disc_min_arcsec','disc_max_arcsec']
  for k in keys:r['codex_'+k]=''
@@ -61,6 +70,8 @@ def measure(task):
    h=hd[0].header.copy();ny,nx=hd[0].shape;catalogue_x=float(h['CENX'])-1;catalogue_y=float(h['CENY'])-1;x0=float(r['manual_centre_x_pix']);y0=float(r['manual_centre_y_pix'])
    if str(h.get('GALID'))!=oid:raise ValueError('GALID mismatch')
    wcs=WCS(h).celestial;scale=np.sqrt(abs(np.linalg.det(wcs.pixel_scale_matrix)))*3600
+   REFERENCE_CENTRE=(x0,y0);NATIVE_SCALE=float(scale)
+   r.update(centre_reference_x_pix=x0,centre_reference_y_pix=y0,centre_policy_version=POLICY_VERSION,centre_policy=checked_policy(CENTRE_POLICY))
    rseg=np.sqrt(float(area)/np.pi) if area else min(nx,ny)/8
    radius=min(max(nx,ny),int(max(4*rseg+40,80)))
    xa=max(0,int(x0-radius));xb=min(nx,int(x0+radius+1));ya=max(0,int(y0-radius));yb=min(ny,int(y0+radius+1))
@@ -86,7 +97,7 @@ def measure(task):
   masks=[('full_mask',mask_neighbours|binary_dilation(stars,iterations=2)),('neighbour_mask',mask_neighbours)]
   weights=np.where((segments==target)&~mask_neighbours,np.maximum(data,0),0);dx=xx-xc;dy=yy-yc
   cov=np.array([[np.sum(weights*dx*dx),np.sum(weights*dx*dy)],[np.sum(weights*dx*dy),np.sum(weights*dy*dy)]]);ev,vec=np.linalg.eigh(cov);pa=float(np.arctan2(vec[1,-1],vec[0,-1])%np.pi);eps=float(np.clip(1-np.sqrt(max(ev[0],1e-9)/max(ev[1],1e-9)),.08,.8))
-  margin=min(xc,yc,data.shape[1]-1-xc,data.shape[0]-1-yc);maxsma=min(.95*margin,max(12,3.2*rrseg));best=[];best_good=[];chosen='';chosen_mask=masks[0][1]
+  margin=min(xc,yc,data.shape[1]-1-xc,data.shape[0]-1-yc);maxsma=min(.95*margin,max(12,3.2*rrseg));best=[];best_isos=[];best_good=[];chosen='';chosen_mask=masks[0][1]
   with warnings.catch_warnings(record=True) as caught:
    warnings.simplefilter('always')
    # Maximise normally converged, reliable isophotes rather than total returned length.
@@ -96,7 +107,7 @@ def measure(task):
      try:isos=run_ellipse(data,maskuse,xc,yc,seed,e0,pa,maxsma,fixed)
      except Exception as e:log.append(str(e));continue
      p=profile_rows(isos,wcs,xc,yc,xa,ya,b);good=[z for z in p if accepted(z)]
-     if len(good)>len(best_good):best=p;best_good=good;chosen=maskname+('_fixed_centre' if fixed else '');chosen_mask=maskuse
+     if (len(good),sum(numerical_acceptance(z,True) for z in p),len(p))>(len(best_good),sum(numerical_acceptance(z,True) for z in best),len(best)):best=p;best_isos=isos;best_good=good;chosen=maskname+('_fixed_centre' if fixed else '');chosen_mask=maskuse
      if len(good)>=15:break
     if len(best_good)>=15:break
    if len(best_good)>=3:
@@ -105,27 +116,24 @@ def measure(task):
      try:
       isos=run_ellipse(data,chosen_mask,xc,yc,outer,last['ellipticity'],np.radians(last['pa_pixel_deg']),maxsma)
       extra=[z for z in profile_rows(isos,wcs,xc,yc,xa,ya,b) if z['sma_fit_pix']>=outer]
-      if sum(accepted(z) for z in extra)>=2:best=[z for z in best if z['sma_fit_pix']<outer]+extra;best_good=[z for z in best if accepted(z)];chosen+='_outer_pass'
+      if sum(accepted(z) for z in extra)>=2:best_isos=[iso for iso in best_isos if iso.sma<outer]+[iso for iso in isos if iso.sma>=outer];best=[z for z in best if z['sma_fit_pix']<outer]+extra;best_good=[z for z in best if accepted(z)];chosen+='_outer_pass'
      except Exception as e:log.append('Outer pass: '+str(e))
    method='standard';relaxed=False
    if len(best_good)<8:
-    # Re-reference centre from inner converged isophotes, then explicitly relax.
+    # Keep the explicit reference; only numerical criteria may be relaxed.
     inner=[z for z in best if z['valid'] and z['stop_code']==0 and z['sma_fit_pix']<max(10,.5*rrseg)]
-    if inner and not MANUAL_LOCK:
-     cx=np.median([z['x_original_pix'] for z in inner]);cy=np.median([z['y_original_pix'] for z in inner]);xc=(cx-xa+.5)/b-.5;yc=(cy-ya+.5)/b-.5
-     for z in best:z['centre_offset_fit_pix']=float(np.hypot((z['x_original_pix']-xa+.5)/b-.5-xc,(z['y_original_pix']-ya+.5)/b-.5-yc))
-     best_good=[z for z in best if accepted(z)]
-     if len(best_good)>=8:method='recentred'
     if len(best_good)<8:
-     relaxed=True;method='recentred_relaxed' if inner else 'relaxed';best_good=[z for z in best if accepted(z,True)]
+     relaxed=True;method='relaxed_same_reference';best_good=[z for z in best if accepted(z,True)]
    if len(best_good)<3:
     relaxed=True;method='smoothed_relaxed'
     try:
      isos=run_ellipse(gaussian_filter(data,1),chosen_mask,xc,yc,max(2,min(.5*rrseg,maxsma*.5)),eps,pa,maxsma,True);p=profile_rows(isos,wcs,xc,yc,xa,ya,b);g=[z for z in p if accepted(z,True)]
-     if len(g)>len(best_good):best=p;best_good=g
+     if len(g)>len(best_good):best=p;best_isos=isos;best_good=g
     except Exception as e:log.append('Smoothed retry: '+str(e))
    profile=sorted(best,key=lambda z:z['sma_arcsec']);r['codex_fit_warnings']='; '.join(dict.fromkeys(str(z.message) for z in caught))[:2000]
   good=sorted(best_good,key=lambda z:z['sma_arcsec']);r.update(codex_method=method,codex_mask_method=chosen,codex_n_good=len(good),codex_n_isophotes=len(profile),codex_binning=b,cutout_partial=h.get('PARTIAL',False),fits_path=str(path),codex_fit_centre_x_pix=xa+b*(xc+.5)-.5,codex_fit_centre_y_pix=ya+b*(yc+.5)-.5,codex_masked_fraction=float(chosen_mask.mean()))
+  for z in profile:z.update(used_for_geometry=bool(accepted(z,relaxed)),selected_disc=False,selected_bar=False)
+  r.update(codex_fit_centre_x_pix=x0,codex_fit_centre_y_pix=y0,centre_reference_x_pix=x0,centre_reference_y_pix=y0,centre_policy_version=POLICY_VERSION)
   if len(good)<3:raise ValueError(f'Only {len(good)} accepted isophotes after recovery; need at least 3')
   bright=[z for z in good if z['intensity']>(.2 if relaxed else 1)*noise]
   if len(bright)<5:bright=[z for z in good if z['intensity']>.5*noise]
@@ -150,8 +158,8 @@ def measure(task):
   barend=max(z['sma_arcsec'] for z in bar[3]) if bar else 0
   disc=[z for z in bright if max(.5*rout,1.25*barend)<=z['sma_arcsec']<=rout];range_fallback=len(disc)<3
   if range_fallback:disc=bright[-3:]
-  centre_x=float(np.median([z['x_original_pix'] for z in disc]));centre_y=float(np.median([z['y_original_pix'] for z in disc]));centre_offset=float(np.hypot(centre_x-catalogue_x,centre_y-catalogue_y)*scale);centre_scatter=float(np.sqrt(np.mean([(z['x_original_pix']-centre_x)**2+(z['y_original_pix']-centre_y)**2 for z in disc]))*scale)
-  r.update(codex_catalogue_centre_x_pix=catalogue_x,codex_catalogue_centre_y_pix=catalogue_y,codex_fit_centre_x_pix=centre_x,codex_fit_centre_y_pix=centre_y,codex_centre_offset_arcsec=centre_offset,codex_centre_scatter_arcsec=centre_scatter)
+  centre_x=float(np.median([z['x_original_pix'] for z in disc]));centre_y=float(np.median([z['y_original_pix'] for z in disc]));centre_offset=float(np.hypot(x0-catalogue_x,y0-catalogue_y)*scale);centre_scatter=float(np.sqrt(np.mean([(z['x_original_pix']-x0)**2+(z['y_original_pix']-y0)**2 for z in disc]))*scale)
+  r.update(codex_catalogue_centre_x_pix=catalogue_x,codex_catalogue_centre_y_pix=catalogue_y,codex_fit_centre_x_pix=x0,codex_fit_centre_y_pix=y0,codex_centre_offset_arcsec=centre_offset,codex_centre_scatter_arcsec=centre_scatter,measured_disc_centre_median_x_pix=centre_x,measured_disc_centre_median_y_pix=centre_y)
   dpa=axial_mean([z['pa_sky_deg'] for z in disc],[1/max(z['pa_error_deg'],.3)**2 for z in disc]);q=1-float(np.median([z['ellipticity'] for z in disc]));dscatter=scatter([z['pa_sky_deg'] for z in disc]);epsspan=float(np.ptp([z['ellipticity'] for z in disc]));flags=[];info=[]
   if centre_offset>max(.3,.15*rseg*scale):flags.append('centre_offset_large')
   if centre_scatter>max(.3,.1*rseg*scale):flags.append('centre_unstable')
@@ -160,7 +168,7 @@ def measure(task):
    radii=np.sort([z['sma_arcsec'] for z in disc]);span=float(np.ptp(radii));gap=float(np.max(np.diff(radii))) if len(radii)>1 else float('inf')
    sparse=len(disc)<6 or span<=0 or gap>0.5*span
    if sparse:flags.append('disc_PA_sparse_sampling')
-   elif dscatter>10:flags.append('disc_PA_unstable')
+   if dscatter>10:flags.append('disc_PA_unstable')
   if epsspan>.15:flags.append('disc_axis_ratio_unstable')
   if relaxed:flags.append('relaxed_fit')
   used=disc+(bar[3] if bar else [])
@@ -182,6 +190,29 @@ def measure(task):
  except Exception as e:r['codex_error']=f'{type(e).__name__}: {e}';log.append(traceback.format_exc())
  finally:
   if profile:write_csv(out/'profiles'/f'Euclid_{oid}_MER_VIS_ellipse_profile.csv',profile)
+  if profile and 'best_isos' in locals() and len(best_isos)>=3:
+   try:
+    from photutils.isophote import build_ellipse_model,IsophoteList
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from astropy.visualization import simple_norm
+    radii={round(z['sma_fit_pix'],8) for z in profile if accepted(z,relaxed)}
+    retained=[iso for iso in best_isos if round(float(iso.sma),8) in radii]
+    if len(retained)>=3:
+     model=build_ellipse_model(data.shape,IsophoteList(sorted(retained,key=lambda z:z.sma)),fill=np.nan)
+     science=np.where(chosen_mask,np.nan,data);residual=np.where(chosen_mask,np.nan,data-model)
+     finite_data=science[np.isfinite(science)];norm=simple_norm(finite_data,stretch='asinh',vmin=float(np.percentile(finite_data,2)),vmax=float(np.percentile(finite_data,99.7)))
+     fig,axes=plt.subplots(1,3,figsize=(12,4),layout='constrained')
+     for ax,array,title in zip(axes,[science,model,residual],['Background-subtracted science','Photutils elliptical model','Science − model (±5 sky noise)']):
+      if ax is axes[2]:ax.imshow(array,origin='lower',cmap='coolwarm',vmin=-5*noise,vmax=5*noise)
+      else:ax.imshow(array,origin='lower',cmap='gray',norm=norm)
+      ax.plot((x0-xa+.5)/b-.5,(y0-ya+.5)/b-.5,'+',color='#ffd35c',markersize=8);ax.set_title(title,fontsize=10);cx=(x0-xa+.5)/b-.5;cy=(y0-ya+.5)/b-.5;half=max(12,1.25*max(float(iso.sma) for iso in retained));ax.set_xlim(max(-.5,cx-half),min(data.shape[1]-.5,cx+half));ax.set_ylim(max(-.5,cy-half),min(data.shape[0]-.5,cy+half));ax.set_axis_off()
+     fig.suptitle(f'{oid} · fixed reference; residual structure can include real bars/arms',fontsize=11)
+     dest=out/'diagnostics';dest.mkdir(exist_ok=True);fig.savefig(dest/f'Euclid_{oid}_MER_VIS_model_residual.png',dpi=125);plt.close(fig)
+     r['centre_diagnostic_png']=str(dest/f'Euclid_{oid}_MER_VIS_model_residual.png');r['centre_model_isophotes']=len(retained)
+   except Exception as diagnostic_error:log.append('Model diagnostic: '+str(diagnostic_error));r['centre_diagnostic_error']=str(diagnostic_error)
+
   r['calculation_seconds']=round(time.monotonic()-start,3)
   (out/'logs').mkdir(exist_ok=True);(out/'logs'/f'{oid}.log').write_text('\n'.join(log),encoding='utf8')
  return r

@@ -1,4 +1,4 @@
-"""Local, read-only FITS exploration and saved geometry reviews. No refitting."""
+"""Local FITS review with isolated centre-constrained trials and separate review rounds."""
 from __future__ import annotations
 
 import argparse
@@ -11,12 +11,14 @@ import math
 import os
 from pathlib import Path
 import secrets
+import socket
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 import webbrowser
 from refit_MER_VIS import ReviewRefits
+from centre_policy_MER_VIS import POLICY_VERSION,DEFAULT_POLICY,centre_measurement,numerical_acceptance
 
 import numpy as np
 from astropy.io import fits
@@ -161,8 +163,9 @@ def select_sample(rows):
 
 
 class Store(ReviewRefits):
-    def __init__(self, data_root, output):
+    def __init__(self, data_root, output, campaign=None):
         self.data_root, self.output = data_root, output
+        self.campaign = campaign
         output.mkdir(parents=True, exist_ok=True)
         self.manifest = data_root / "Euclid_MER_VIS_geometry/MER_VIS_local_geometry_manifest.csv"
         with self.manifest.open(encoding="utf-8-sig") as stream:
@@ -170,7 +173,11 @@ class Store(ReviewRefits):
         self.byid = {r["object_id"]: r for r in self.rows}
         self.digest = hashlib.sha256(self.manifest.read_bytes()).hexdigest()
         sample_path = output / "MER_VIS_review_sample.json"
-        if sample_path.exists():
+        if campaign:
+            self.sample_document=dict(app=APP_ID,source_sha256=self.digest,sample=campaign["sample"],campaign=campaign["campaign_id"])
+            self.sample=self.sample_document["sample"]
+            atomic_json(sample_path,self.sample_document)
+        elif sample_path.exists():
             self.sample_document = json.loads(sample_path.read_text(encoding="utf-8"))
             self.sample = self.sample_document["sample"]
             if any(r["object_id"] not in self.byid for r in self.sample):
@@ -258,7 +265,10 @@ class Store(ReviewRefits):
                 vec = np.array([px-display_centre[0], py-display_centre[1]])
                 compass_pixel_basis[label] = vec.tolist()
                 compass[label] = (vec/np.linalg.norm(vec)).tolist()
-        profile = self.profile_cache[cache_key]
+        reference=[number(row.get('centre_reference_x_pix')),number(row.get('centre_reference_y_pix'))]
+        if any(v is None for v in reference):reference=centre
+        profile=[dict(p,**centre_measurement(p,reference,float(scale)),numerically_accepted_strict=numerical_acceptance(p),numerically_accepted_relaxed=numerical_acceptance(p,True)) for p in self.profile_cache[cache_key]]
+
         outer = max([number(row.get("codex_disc_max_arcsec"), 0),
                      number(row.get("codex_bar_max_arcsec"), 0), 3])
         radius = max(outer * 1.45, 4) / scale
@@ -289,6 +299,10 @@ class Store(ReviewRefits):
                           profile=profile, shape=shape, pixel_scale_arcsec=scale,
                           units=header.get("BUNIT", "FITS data units"), centre=centre, catalogue_centre=cat,
                           compass=compass, compass_pixel_basis=compass_pixel_basis, default_window=window, original=original,
+                          centre_reference=dict(x=reference[0],y=reference[1],provenance=row.get("centre_reference_provenance","legacy_fit_disc_median"),version=POLICY_VERSION,policy=DEFAULT_POLICY,policy_enabled_default=bool(self.campaign or row.get("centre_policy_version")==POLICY_VERSION)),
+                          diagnostic_available=bool(refit_id and (self.output/"refits"/refit_id/"diagnostics"/f"Euclid_{oid}_MER_VIS_model_residual.png").is_file()),
+                          previous_review=(self.campaign or {}).get("previous_reviews",{}).get(oid),
+                          campaign_case=(self.campaign or {}).get("cases",{}).get(oid),
                           intervals=dict(disc=[number(row.get("codex_disc_min_arcsec")), number(row.get("codex_disc_max_arcsec"))],
                                          bar=[number(row.get("codex_bar_min_arcsec")), number(row.get("codex_bar_max_arcsec"))]),
                           euclid=dict(disc_pa=number(row.get("euclid_adjusted_detection_pa_sky_deg")),
@@ -362,6 +376,12 @@ class Store(ReviewRefits):
                       original_disc_pa=number(self.byid[oid].get("codex_disc_pa_sky_deg")),
                       original_bar_pa=number(self.byid[oid].get("codex_bar_pa_sky_deg")),
                       original_inclination=number(self.byid[oid].get("codex_inclination_deg")))
+        reference=self.galaxy(oid,settings.get('refit_id')).get('centre_reference',{})
+        rules=settings.get('rules',{});calc=payload.get('calculation') or {}
+        record.update(review_campaign=(self.campaign or {}).get('campaign_id','original'),
+                      centre_policy_version=settings.get('centre_policy_version',''),centre_reference_x_pix=reference.get('x'),centre_reference_y_pix=reference.get('y'),centre_reference_provenance=reference.get('provenance'),
+                      centre_cap_native_pixels=rules.get('centre_cap_native'),centre_fraction_radius=rules.get('centre_fraction'),centre_floor_native_pixels=rules.get('centre_floor_native'),centre_screen_enabled=rules.get('centre_enabled'),refit_id=settings.get('refit_id'),
+                      centre_rejected_disc_n=len(calc.get('centre_rejected_disc',[])),centre_rejected_bar_n=len(calc.get('centre_rejected_bar',[])),trial_disc_pa_provisional=calc.get('disc_pa_provisional'))
         with self.lock:
             updated = dict(self.reviews); updated[oid] = clean(record)
             atomic_json(self.review_path, updated)
@@ -398,7 +418,7 @@ class Store(ReviewRefits):
         fields = ["object_id","reviewed","catalogue_name","category","disc_decision","bar_decision","centre_decision",
                   "rule_action","notes","reviewed_utc","original_disc_pa","original_bar_pa","original_inclination",
                   "trial_disc_pa","trial_bar_pa","trial_inclination","trial_disc_samples","trial_disc_scatter",
-                  "trial_disc_eps_span","settings_json","source_manifest_sha256"]
+                  "trial_disc_eps_span","settings_json","source_manifest_sha256","review_campaign","refit_id","centre_policy_version","centre_reference_x_pix","centre_reference_y_pix","centre_reference_provenance","centre_cap_native_pixels","centre_fraction_radius","centre_floor_native_pixels","centre_screen_enabled","centre_rejected_disc_n","centre_rejected_bar_n","trial_disc_pa_provisional"]
         stream = io.StringIO(newline=""); writer = csv.DictWriter(stream, fieldnames=fields); writer.writeheader()
         with self.lock:
             for r in self.reviews.values():
@@ -437,10 +457,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(dict(error="Use the local 127.0.0.1 review URL"), status=403)
             parsed=urlparse(self.path); params=parse_qs(parsed.query); route=parsed.path
             if route == "/api/health":
-                return self.send(dict(app=APP_ID))
+                return self.send(dict(app=APP_ID,output=str(self.server.store.output),campaign_id=(self.server.store.campaign or {}).get("campaign_id"),pid=os.getpid()))
             if route == "/api/bootstrap":
                 return self.send(dict(app=APP_ID,token=self.server.token,sample=self.server.store.sample,
-                    categories=CATEGORIES,rules=DEFAULT_RULES,reviews=self.server.store.reviews,
+                    categories=(self.server.store.campaign or {}).get("categories",CATEGORIES),rules=DEFAULT_RULES,centre_policy=dict(version=POLICY_VERSION,**DEFAULT_POLICY),campaign=self.server.store.campaign,reviews=self.server.store.reviews,
                     catalogue=self.server.store.catalogue(),output=str(self.server.store.output),
                     storage_key=hashlib.sha256(str(self.server.store.output.resolve()).encode()).hexdigest()[:16],
                     source_sha256=self.server.store.digest,
@@ -449,6 +469,11 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(self.server.store.galaxy(params.get("id",[""])[0],params.get("refit",[None])[0]))
             if route == "/api/refit":
                 return self.send(self.server.store.refit_status(params.get("job",[""])[0]))
+            if route == "/api/refit/diagnostic":
+                job=params.get("job",[""])[0]; status=self.server.store.refit_status(job)
+                path=self.server.store.output/'refits'/job/'diagnostics'/f'Euclid_{status["object_id"]}_MER_VIS_model_residual.png'
+                if not path.is_file():raise ValueError('No model diagnostic is available for this trial')
+                return self.send(path.read_bytes(),'image/png')
             if route == "/api/refit/export":
                 job=params.get("job",[""])[0]
                 status=self.server.store.refit_status(job)
@@ -500,19 +525,28 @@ class Handler(BaseHTTPRequestHandler):
             self.send(dict(error=str(exc)),status=500)
 
 
+class LocalReviewServer(ThreadingHTTPServer):
+    # On Windows, SO_REUSEADDR can let separate review rounds share a port.
+    allow_reuse_address=False
+    def server_bind(self):
+        if hasattr(socket,'SO_EXCLUSIVEADDRUSE'):
+            self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_EXCLUSIVEADDRUSE,1)
+        super().server_bind()
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("--data-root",type=Path,default=DEFAULT_DATA)
     p.add_argument("--output",type=Path,default=HERE/"saved_reviews")
     p.add_argument("--port",type=int,default=8768)
+    p.add_argument("--campaign",type=Path)
     p.add_argument("--no-browser",action="store_true")
     p.add_argument("--prepare-only",action="store_true")
-    a=p.parse_args(); store=Store(a.data_root,a.output)
+    a=p.parse_args(); campaign=json.loads(a.campaign.read_text(encoding="utf8")) if a.campaign else None; store=Store(a.data_root,a.output,campaign)
     if a.prepare_only:
         print(json.dumps(dict(sample=len(store.sample),output=str(a.output))));return
     server=None
     for port in range(a.port,a.port+20):
-        try: server=ThreadingHTTPServer(("127.0.0.1",port),Handler); break
+        try: server=LocalReviewServer(("127.0.0.1",port),Handler); break
         except OSError: continue
     if server is None:raise RuntimeError("No free local review port")
     server.store=store;server.token=secrets.token_urlsafe(32)

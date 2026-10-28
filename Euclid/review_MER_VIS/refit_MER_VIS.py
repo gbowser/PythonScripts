@@ -60,6 +60,9 @@ class ReviewRefits:
             row = dict(self.byid[oid], manual_centre_x_pix=x, manual_centre_y_pix=y)
             request = dict(object_id=oid, row=row, segmentation_area=area, lock_centre=locked,
                            source_manifest_sha256=self.digest,
+                           centre_policy=__import__('centre_policy_MER_VIS').checked_policy(payload.get('centre_policy')),
+                           reference_provenance=payload.get('reference_provenance','manual_selection'),
+                           policy_sha256=hashlib.sha256((HERE/'centre_policy_MER_VIS.py').read_bytes()).hexdigest(),
                            engine_sha256=hashlib.sha256((HERE/'fit_manual_centre_MER_VIS.py').read_bytes()).hexdigest(),
                            worker_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                            requested_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()))
@@ -100,6 +103,8 @@ def worker(request_path):
     import fit_manual_centre_MER_VIS as engine
     path=Path(request_path); request=json.loads(path.read_text(encoding='utf8')); folder=path.parent
     engine.MANUAL_LOCK=request['lock_centre']
+    from centre_policy_MER_VIS import checked_policy
+    engine.CENTRE_POLICY=checked_policy(request.get('centre_policy'))
     row=dict(request['row']); row['fits_filename']=Path(row['fits_path']).name
     # Do not carry stale geometry, flags or comparisons into a new measurement.
     for key in row:
@@ -110,7 +115,7 @@ def worker(request_path):
                   manual_centre_locked=request['lock_centre'], source_manifest_sha256=request['source_manifest_sha256'],
                   manual_refit_engine_sha256=request['engine_sha256'],
                   manual_refit_worker_sha256=request.get('worker_sha256',''),
-                  manual_refit_requires_visual_review=True)
+                  manual_refit_requires_visual_review=True,centre_reference_provenance=request.get('reference_provenance','manual_selection'),centre_policy=engine.CENTRE_POLICY)
     # Failed intermediate centres and angles must never be presented as adopted geometry.
     if result['codex_fit_status']=='fit_failed':
         for key in ['codex_fit_centre_x_pix','codex_fit_centre_y_pix','codex_disc_pa_sky_deg','codex_bar_pa_sky_deg','codex_inclination_deg']:
@@ -137,9 +142,8 @@ def worker(request_path):
         result.update(codex_disc_sampling_n=len(disc),codex_disc_sampling_span_arcsec=span,
                       codex_disc_sampling_max_gap_fraction=gap/span if span>0 else '',
                       codex_disc_sampling_assessment='nearly_face_on_information' if result['codex_disc_axis_ratio']>.9
-                      else 'sparse' if len(disc)<6 or span<=0 or gap>.5*span
-                      else 'PA_varies' if result['codex_disc_pa_scatter_deg']>10 else 'adequate_sampling',
-                      codex_quality_rule_version='manual_centre_existing_screens_2026-10-21')
+                      else '+'.join((["sparse"] if len(disc)<6 or span<=0 or gap>.5*span else [])+(["PA_varies"] if result['codex_disc_pa_scatter_deg']>10 else [])) or 'adequate_sampling',
+                      codex_quality_rule_version='independent_PA_sampling_screens_2026-10-28')
         from astropy.io import fits
         from astropy.wcs import WCS
         with fits.open(row['fits_path'],memmap=True) as hd:

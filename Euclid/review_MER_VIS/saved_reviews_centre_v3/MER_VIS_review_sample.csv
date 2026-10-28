@@ -1,0 +1,20 @@
+﻿object_id,category,category_label,selection_reason
+-663928688473758026,centre_priority,Centre acceptance — priority re-review,Previous review / geometry uncertainty; validate centre and fixed-centre shape
+2756030807655229287,centre_priority,Centre acceptance — priority re-review,Previous review / geometry uncertainty; validate centre and fixed-centre shape
+-595029565493921205,centre_priority,Centre acceptance — priority re-review,Previous review / geometry uncertainty; validate centre and fixed-centre shape
+-537890362287224823,centre_priority,Centre acceptance — priority re-review,Previous review / geometry uncertainty; validate centre and fixed-centre shape
+-518633776290631360,centre_priority,Centre acceptance — priority re-review,Previous review / geometry uncertainty; validate centre and fixed-centre shape
+2681494150647395085,centre_priority,Centre acceptance — priority re-review,Previous review / geometry uncertainty; validate centre and fixed-centre shape
+2654474268655808169,centre_priority,Centre acceptance — priority re-review,Previous review / geometry uncertainty; validate centre and fixed-centre shape
+-586374330510251740,centre_priority,Centre acceptance — priority re-review,Previous review / geometry uncertainty; validate centre and fixed-centre shape
+-524824554283124036,centre_priority,Centre acceptance — priority re-review,Previous review / geometry uncertainty; validate centre and fixed-centre shape
+2645436353651870062,centre_priority,Centre acceptance — priority re-review,Previous review / geometry uncertainty; validate centre and fixed-centre shape
+2697242050653408730,centre_priority,Centre acceptance — priority re-review,Previous review / geometry uncertainty; validate centre and fixed-centre shape
+-524724591298089738,centre_control,Centre acceptance — clean references,Previously clean reference; confirm no degradation
+2724315227685324582,centre_control,Centre acceptance — clean references,Previously clean reference; confirm no degradation
+-615088650482896879,centre_validation,Centre acceptance — new validation examples,new_clean; centre needs visual confirmation
+2654162178650796134,centre_validation,Centre acceptance — new validation examples,new_clean; centre needs visual confirmation
+-646641404494431826,centre_validation,Centre acceptance — new validation examples,new_centre; centre needs visual confirmation
+2690070926643224042,centre_validation,Centre acceptance — new validation examples,new_centre; centre needs visual confirmation
+-599118107493216367,centre_validation,Centre acceptance — new validation examples,new_geometry; centre needs visual confirmation
+2634901320657220727,centre_validation,Centre acceptance — new validation examples,new_geometry; centre needs visual confirmation

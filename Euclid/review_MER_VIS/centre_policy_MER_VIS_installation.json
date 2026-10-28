@@ -1,0 +1,32 @@
+{
+  "installed_files": {
+    "app.js": "c722361a43541ec3faa04a8a135f76c700f3772f5a41f6d9396b501f503568ff",
+    "index.html": "a9ac1f13ae6abbbb4ec0bc1c2a0e0c85ed235db98285eec0472f658b5c807a6f",
+    "style.css": "e7b45f94120b0b186213e34cdd43708b90154548f844689624d2e60f3d4c993e",
+    "review_MER_VIS.py": "1e39094e6034fd5abcf4199e668c428a8950d2bbdeb782d8924b4ab55c150e5a",
+    "refit_MER_VIS.py": "cfed638525bb1fb0e8a7c660fd1d09e5c0e4029af1f3bc4a1681305790ab842d",
+    "fit_manual_centre_MER_VIS.py": "3c220a7a18aad0899c3ded4c4d29fafeac7e3e8eceece6a993fdddd2349e5fd9",
+    "centre_policy_MER_VIS.py": "435d2ba0a9a7d2b7e59a03c9e71f1c3eab270d790129b16f8d5c546896c1e339",
+    "fit_centred_MER_VIS_geometry.py": "3294d4cc673e0e0a0ccfa4fa25fcdb4e1641e81083a96cde3d5c30dc24844077",
+    "Start_MER_VIS_Review.ps1": "4fa188cccf493ce98acd18d76e67424339f4665ee8f4cef3c47d2d5811282c65",
+    "Start Original MER VIS Review.cmd": "dea63f5e08620a9a5216e776df0bf70f2a2c95633d602299d4f3e4efac09e682",
+    "README_MER_VIS_REVIEW.md": "2be01b7cd086b931706af8c881871ec350dbe920a9c01f8150be4f36caea5ed5",
+    "CENTRE_POLICY_MER_VIS_REVIEW.md": "32b452c63642631026e16777134e0ad9940fe1eae09fa78166708e4bc5c955ee"
+  },
+  "campaign_examples": 19,
+  "pending": 19,
+  "original_reviews_unchanged": true,
+  "source_geometry_unchanged": true,
+  "backup": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Euclid\\review_MER_VIS\\code_backups\\before_centre_v3_20261028T140753Z",
+  "url": "http://127.0.0.1:8769/",
+  "numeric_cross_language_vectors": 35,
+  "synthetic_fit": "passed",
+  "batch_entry_test": "passed",
+  "review_persistence_tests": "passed",
+  "API_security_tests": "passed",
+  "campaign_cases_checked": 19,
+  "successful_new_fixed_centre_fits": 18,
+  "residual_PNGs": 18,
+  "old_reviews_and_master_unchanged": true,
+  "browser_automation": "unavailable; API, SVG generation and diagnostic images checked"
+}

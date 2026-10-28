@@ -11,6 +11,7 @@ import math
 import os
 from pathlib import Path
 import secrets
+import socket
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -456,7 +457,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(dict(error="Use the local 127.0.0.1 review URL"), status=403)
             parsed=urlparse(self.path); params=parse_qs(parsed.query); route=parsed.path
             if route == "/api/health":
-                return self.send(dict(app=APP_ID))
+                return self.send(dict(app=APP_ID,output=str(self.server.store.output),campaign_id=(self.server.store.campaign or {}).get("campaign_id"),pid=os.getpid()))
             if route == "/api/bootstrap":
                 return self.send(dict(app=APP_ID,token=self.server.token,sample=self.server.store.sample,
                     categories=(self.server.store.campaign or {}).get("categories",CATEGORIES),rules=DEFAULT_RULES,centre_policy=dict(version=POLICY_VERSION,**DEFAULT_POLICY),campaign=self.server.store.campaign,reviews=self.server.store.reviews,
@@ -524,6 +525,14 @@ class Handler(BaseHTTPRequestHandler):
             self.send(dict(error=str(exc)),status=500)
 
 
+class LocalReviewServer(ThreadingHTTPServer):
+    # On Windows, SO_REUSEADDR can let separate review rounds share a port.
+    allow_reuse_address=False
+    def server_bind(self):
+        if hasattr(socket,'SO_EXCLUSIVEADDRUSE'):
+            self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_EXCLUSIVEADDRUSE,1)
+        super().server_bind()
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("--data-root",type=Path,default=DEFAULT_DATA)
@@ -537,7 +546,7 @@ def main():
         print(json.dumps(dict(sample=len(store.sample),output=str(a.output))));return
     server=None
     for port in range(a.port,a.port+20):
-        try: server=ThreadingHTTPServer(("127.0.0.1",port),Handler); break
+        try: server=LocalReviewServer(("127.0.0.1",port),Handler); break
         except OSError: continue
     if server is None:raise RuntimeError("No free local review port")
     server.store=store;server.token=secrets.token_urlsafe(32)
