@@ -1,0 +1,11 @@
+import fs from 'node:fs';import vm from 'node:vm';
+const el=()=>({value:'disc',checked:true,dataset:{},style:{},getContext:()=>({}),addEventListener(){}}), nodes=new Map(), document={getElementById:id=>{if(!nodes.has(id))nodes.set(id,el());return nodes.get(id)},createElement:el,querySelectorAll:()=>[],querySelector:el,addEventListener(){},activeElement:{tagName:'BODY'}};
+const window={addEventListener(){}},ctx={document,window,localStorage:{getItem:()=>null,setItem(){}},console,URLSearchParams,setTimeout,clearTimeout,requestAnimationFrame(){},Option:function(){}};vm.createContext(ctx);vm.runInContext(fs.readFileSync('MER_VIS_review_tool/app.js','utf8').replace(/start\(\);\s*$/,''),ctx);
+const tool=window.MER_VIS_REVIEW, saved=JSON.parse(fs.readFileSync('MER_VIS_review_audit_2026_10_29/source_reviews.json')),boot=await(await fetch('http://127.0.0.1:8768/api/bootstrap')).json();tool.state.boot=boot;const rows=[];
+for(const [id,r] of Object.entries(saved)){
+ if(!r.reviewed)continue;
+ const g=await(await fetch('http://127.0.0.1:8768/api/galaxy?id='+id+'&refit='+r.settings.refit_id)).json();if(g.error)throw new Error(g.error);
+ const S=tool.state;S.g=g;S.settings={...ctx.defaultSettings(g),...r.settings};const c=tool.calculate(),diff={};for(const key of ['disc_pa','bar_pa','inclination','n_disc','n_bar','pa_scatter','eps_span','max_gap_fraction'])if(c[key]!==r.calculation[key]&&!(Math.abs(c[key]-r.calculation[key])<1e-9))diff[key]=[r.calculation[key],c[key]];
+ rows.push({id,review:r,current:{...c,disc:undefined,bar:undefined},differences:diff,euclid:g.euclid,previous:g.previous_review,lock_centre:g.refit?.lock_centre,reference:g.centre_reference,disc_points:c.disc.map(p=>({r:p.sma_arcsec,pa:p.pa_sky_deg,eps:p.ellipticity,offset:tool.centrePointStatus(p).offset})),bar_points:c.bar.map(p=>({r:p.sma_arcsec,pa:p.pa_sky_deg,eps:p.ellipticity})),fit_error:g.fit_error});
+}
+fs.writeFileSync('MER_VIS_review_audit_2026_10_29/recomputed_audit.json',JSON.stringify(rows,null,2));console.log(JSON.stringify({reviewed:rows.length,different:rows.filter(r=>Object.keys(r.differences).length).map(r=>({id:r.id,differences:r.differences})),fixed:rows.filter(r=>r.lock_centre).length,free:rows.filter(r=>!r.lock_centre).map(r=>r.id)}));

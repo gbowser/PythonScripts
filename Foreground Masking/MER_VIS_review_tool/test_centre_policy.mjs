@@ -12,3 +12,11 @@ const S=tool.state;S.boot={rules:{min_disc:6,max_gap:.5,pa_rms:10,eps_span:.15,s
 console.log('PASS: 35 Python/JavaScript centre-limit vectors agree, native units/reference correct, and marginal candidates cannot bypass centre acceptance.');
 S.settings.rules.centre_enabled=true;S.g.profile[1].x_original_pix=100;S.g.profile.push({sma_arcsec:5,pa_sky_deg:150,pa_error_deg:1,ellipticity:.4,x_original_pix:100,y_original_pix:200,used_for_geometry:true,selected_disc:true});c=tool.calculate();assert.ok(c.issues.includes('Sparse disc sampling'));assert.ok(c.issues.includes('Disc PA varies across radius'));
 console.log('PASS: sparse sampling no longer suppresses a simultaneous PA-variation warning.');
+const options={id:'epsPlot',x:v=>v*10,y:v=>100-v*50,value:p=>p.ellipticity,top:0,ph:100,left:0,right:300,xmax:10};
+const render=()=>context.drawWarningGraphics(tool.profileWarningEvidence(S.g,S.settings,tool.calculate()).filter(w=>w.code==='centre'),options);
+assert.ok(!render().includes('Centre-rejected:'),'Passing centre comparison must not label checked ellipses rejected');
+S.g.profile[1].x_original_pix=105;
+assert.ok(render().includes('Centre-rejected: 1'),'An actual rejection must be labelled');
+S.settings.rules.centre_enabled=false;
+assert.ok(!render().includes('Centre-rejected:'),'Disabled centre screen must not label exclusions');
+console.log('PASS: centre annotations count only actual exclusions; passing comparisons and disabled screens have no false rejection labels.');

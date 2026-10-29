@@ -1,0 +1,148 @@
+# MER VIS centre-pilot review findings
+
+Audit date: 29 October 2026. This is a read-only audit of the saved centre-pilot review; no assessments, fitting thresholds or master geometry were changed.
+
+## Completed assessments
+
+- 18 of 19 entries are saved as reviewed. Galaxy 2697242050653408730 remains unreviewed in this round. Its earlier assessment marked the disc and centre uncertain; it can remain excluded without another review.
+- Of the 18 completed entries: 14 discs usable, 4 uncertain; 18 convincing bars; 17 correct centres, 1 uncertain centre; 10 Keep and 8 Relax recommendations.
+- Recomputed all 18 saved selections against the displayed fit profiles. Disc PA, bar PA, inclination, counts, RMS, ellipticity span and gap fractions reproduce the saved values to 1e-9.
+- All 18 have zero selected-range centre exclusions. Sixteen fits fix the centre by constraint; two allow movement (2756030807655229287 and -595029565493921205). Zero displacement in the fixed fits does not calibrate the centre acceptance threshold.
+- Five recorded centres have manual_selection provenance. This count identifies the selected reference provenance, not proof that all five catalogue centres were incorrect.
+- Five unverified-centre warnings persist although the exact saved fit has a Looks correct assessment. These should be retained as original provenance and marked visually confirmed in the effective review status.
+
+## Recommended production policy
+
+1. Keep one explicit physical centre reference. Use a locally validated automatic centre, with manual correction when needed. Fixed-centre fitting is a useful option after confirmation; do not regard its zero scatter as independent validation. Retain the current centre limits as provisional settings: this pilot did not test their rejection behaviour adequately.
+2. Separate numerical availability, numerical evidence, visual assessment and adoption. A visible bar may have insufficient samples for a quantitative PA; a returned inclination may still have an uncertain disc identification. Do not overwrite raw warnings when a reviewer approves a fit.
+3. Keep sparse sampling as a caution rather than a universal rejection. Allow at least three visually approved disc samples to yield a provisional geometry, with count, radial span, gap and stability recorded. Six is a preferred target, not evidence that five good samples are unusable. Adjacent isophotes are not independent replicates.
+4. Interpret the gap statistic together with count: for three samples the two gaps sum to the span, so the largest gap is necessarily at least 50%. A 52.8% gap is close to balanced sampling and is not a separate strong defect beyond the small sample count. Avoid double-counting both warnings.
+5. Retain PA variation and changing ellipticity as separate diagnostics. Do not globally relax 10 deg RMS or 0.15 ellipticity range based on this small, deliberately selected pilot. Test disc interval shifts and modest centre perturbations, recording the resulting PA and inclination ranges. Denser radial sampling may improve a profile but does not manufacture independent information.
+6. Nearly face-on remains information. A weakly constrained PA must still be recorded as such; assess its impact by comparing deprojected outputs over plausible PAs and inclinations. Do not automatically set inclination to zero.
+7. For two-sample bars, preserve visual confirmation and optionally expose a manual-approved provisional PA. Do not label this an automatic class A/B detection. Prefer additional resolved samples and explicit bar/disc separation; retain no adopted bar PA when unsupported.
+8. Bind visual centre confirmation to the actual refit ID and reference coordinates. A new centre/refit should require renewed confirmation. Relabel fixed-centre consistency as constrained/informational when nothing is excluded.
+9. Export a reviewed adoption status and reason alongside numerical results, original Euclid values, quality metrics, centre provenance and the adopted +90 deg Euclid convention adjustment. Exclude uncertain discs from automatic deprojection without removing their FITS images or bar classifications.
+10. Use the existing 18 reviewed cases as a regression set, then run the revised pipeline on the library and request review only for new failures, large geometry sensitivity or unresolved disc/bar identification. No further broad manual review is justified by this pilot alone.
+
+## Warning outcomes
+
+Counts overlap. These are stored diagnostics, not mutually exclusive galaxy outcomes.
+
+| Diagnostic | Completed entries |
+|---|---:|
+| Nearly face-on: PA ambiguity is informational | 1 |
+| Sparse disc sampling | 8 |
+| Disc PA varies across radius | 4 |
+| Changing disc ellipticity | 3 |
+| Selected bar interval does not pass the signature screen | 4 |
+| Small candidate feature: bar identification uncertain | 2 |
+| Weaker B-style bar-profile evidence | 1 |
+| Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses | 1 |
+| Centre reference unverified: visual confirmation required | 5 |
+
+## Per-galaxy results and disposition
+
+PA and inclination are degrees. PA is North towards East modulo 180; RMS is axial radial scatter, not a confidence interval. Inclination assumes a thin circular disc. Euclid detection shape describes the whole source and is not an independent measurement of the chosen outer-disc interval.
+
+| Galaxy ID | Disc assessment | n disc / bar | Disc PA | Bar PA | Inclination | PA RMS | Δε | Radial span (arcsec) |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| -663928688473758026 | usable | 5 / 6 | 100.50 | 0.90 | 24.76 | 37.46 | 0.120 | 1.234 |
+| 2756030807655229287 | uncertain | 3 / 4 | 10.10 | 5.44 | 48.76 | 44.60 | 0.341 | 2.875 |
+| -595029565493921205 | usable | 3 / 7 | 65.04 | 41.64 | 52.39 | 8.90 | 0.052 | 0.834 |
+| -537890362287224823 | usable | 5 / 2 | 62.64 | — | 32.10 | 15.36 | 0.061 | 1.890 |
+| -518633776290631360 | uncertain | 3 / 11 | 125.17 | 112.92 | 50.77 | 16.91 | 0.033 | 2.434 |
+| 2681494150647395085 | usable | 7 / 4 | 157.42 | 45.91 | 28.23 | 32.44 | 0.184 | 2.495 |
+| 2654474268655808169 | uncertain | 3 / 7 | 55.84 | 62.68 | 70.18 | 1.13 | 0.056 | 0.363 |
+| -586374330510251740 | usable | 6 / 6 | 175.07 | 178.99 | 33.45 | 4.08 | 0.125 | 3.401 |
+| -524824554283124036 | usable | 3 / 4 | 170.62 | 139.69 | 32.34 | 2.87 | 0.038 | 3.403 |
+| 2645436353651870062 | uncertain | 1 / 2 | 21.17 | — | — | 0.00 | 0.000 | 0.000 |
+| -524724591298089738 | usable | 6 / 3 | 16.20 | 26.01 | 52.94 | 5.99 | 0.033 | 2.060 |
+| 2724315227685324582 | usable | 7 / 3 | 61.63 | 129.12 | 37.82 | 8.62 | 0.190 | 2.997 |
+| -615088650482896879 | usable | 6 / 8 | 90.23 | 70.16 | 60.04 | 2.32 | 0.120 | 1.904 |
+| 2654162178650796134 | usable | 7 / 10 | 65.48 | 54.36 | 46.80 | 8.55 | 0.147 | 2.716 |
+| -646641404494431826 | usable | 6 / 2 | 155.10 | — | 67.14 | 9.14 | 0.056 | 2.802 |
+| 2690070926643224042 | usable | 7 / 6 | 20.88 | 30.86 | 67.56 | 4.17 | 0.072 | 9.774 |
+| -599118107493216367 | usable | 5 / 8 | 91.21 | 124.36 | 63.95 | 0.18 | 0.102 | 0.313 |
+| 2634901320657220727 | usable | 3 / 5 | 45.41 | 5.34 | 36.66 | 7.26 | 0.046 | 0.774 |
+
+### -663928688473758026
+
+Keep centre correction. Near-face-on: retain PA as weakly constrained; leave-one-out PA change 30.3 deg despite no counted warning. Test deprojection sensitivity rather than declaring PA reliable.
+
+### 2756030807655229287
+
+Withhold adopted disc geometry: reviewer uncertain about both centre and disc; RMS 44.6 deg, ellipticity span 0.341, gap 91.9%. Bar visibility does not establish a usable disc.
+
+### -595029565493921205
+
+Retain as visually approved, limited sampling. Three disc samples, PA RMS 8.9 deg. Not equivalent to a well-sampled independent measurement.
+
+### -537890362287224823
+
+Disc visually approved but PA varies (RMS 15.4 deg). Bar visible but only two samples: retain visual confirmation, keep automatic bar PA unavailable or add an explicitly provisional manual-approved estimate.
+
+### -518633776290631360
+
+Withhold adopted disc geometry: reviewer uncertain, only three disc samples, RMS 16.9 deg. Bar is convincing.
+
+### 2681494150647395085
+
+Retain visual approval but investigate radial interval stability: seven samples, PA RMS 32.4 deg, ellipticity span 0.184. More samples did not resolve radial structure; do not simply remove warning.
+
+### 2654474268655808169
+
+Withhold adopted disc geometry: reviewer uncertain. Three inner samples have stable PA but may trace bar/inner structure; inclination 70.2 deg differs from Euclid detection proxy by 57.6 deg. Stable contours alone do not prove an outer disc.
+
+### -586374330510251740
+
+Good recovery reference: six disc and six bar samples, PA RMS 4.1 deg, no counted warnings. Retain manual-approved disc interval; Euclid whole-source inclination is not independent outer-disc truth.
+
+### -524824554283124036
+
+Visually approved but limited: three disc samples, PA 170.6 deg, inclination 32.3 deg. PA differs from previous reviewed selection by 24.7 deg and inclination by -25.2 deg. Euclid comparison differs by 83.6 deg in PA. Inspect radial stability before final quantitative use.
+
+### 2645436353651870062
+
+Withhold deprojection: reviewer uncertain, one disc ellipse, no inclination, two bar ellipses. Keep visual bar classification, no robust adopted disc geometry.
+
+### -524724591298089738
+
+Good control: six disc samples, RMS 6.0 deg; leave-one-out PA change 2.1 deg.
+
+### 2724315227685324582
+
+Retain visual approval. Disc PA stable (RMS 8.6 deg; leave-one-out change 2.2 deg), but ellipticity span 0.190 needs an inclination sensitivity range.
+
+### -615088650482896879
+
+Good validation reference: six disc samples, RMS 2.3 deg; centre now visually confirmed. Remove only the stale unverified-centre workflow warning.
+
+### 2654162178650796134
+
+Good validation reference: seven disc samples, RMS 8.6 deg. Ellipticity span 0.147 is close to 0.15; preserve measured value as information. Centre visually confirmed.
+
+### -646641404494431826
+
+Disc visually approved with six samples and RMS 9.1 deg. Bar visible but only two selected samples and little outward ellipticity drop; automatic signature is inconclusive, not proof of no bar.
+
+### 2690070926643224042
+
+Good validation reference: seven disc samples, RMS 4.2 deg. Centre visually confirmed. Whole-source Euclid inclination difference remains a comparison, not a rejection criterion.
+
+### -599118107493216367
+
+Five disc samples across only 0.313 arcsec: RMS 0.18 deg over such a narrow interval does not establish a representative outer disc. Bar/disc separation is difficult in reviewer notes; test wider physically credible intervals before adoption.
+
+### 2634901320657220727
+
+Keep corrected centre and visual approval with sampling caveat: three disc samples over 0.774 arcsec, RMS 7.3 deg; bar/disc separation noted difficult.
+
+## Additional inspection
+
+Inspected the saved science/model/residual panels for -524824554283124036 and 2681494150647395085. Both show pronounced non-elliptical structure. Residual arms and asymmetries can be real galaxy light; they do not alone demonstrate miscentring. Models cover the fitted profile and do not automatically represent only the user-selected green interval.
+
+Priority for automated sensitivity testing: 2681494150647395085, -524824554283124036, -599118107493216367 and -537890362287224823. Retain uncertain-disc cases separately. For the near-face-on -663928688473758026, test the effect on the final deprojected image rather than demanding a uniquely determined disc PA.
+
+No thresholds were calibrated against an independent physical ground truth. The pilot is deliberately enriched for difficult cases; its percentages must not be presented as full-library performance.
+
+Source snapshots and recomputation records accompany this report in the audit workspace.

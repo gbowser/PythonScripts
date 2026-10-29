@@ -1,0 +1,5104 @@
+[
+  {
+    "id": "-663928688473758026",
+    "review": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "-663928688473758026",
+      "catalogue_name": "",
+      "category": "centre_priority",
+      "notes": "Catalog centre was incorrect. Re-centred by eye.  Removed 1 outer disc ellipse which was outside galaxy and had different PA",
+      "settings": {
+        "disc": [
+          2.152379637995954,
+          3.409104677059088
+        ],
+        "bar": [
+          0.9736272403545766,
+          1.715863869575856
+        ],
+        "editedDisc": true,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.008998546358905731,
+          "maximum": 0.14887294173240662,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": false,
+          "centres": true,
+          "excludedEllipses": false,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "paComparison": false,
+          "showWarnings": false
+        },
+        "refit_id": "dffac6035eb646d9a09ad42dc1cc286c",
+        "view": [
+          513.5,
+          659.5,
+          515.5,
+          657.5
+        ],
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+        "proposed_centre": [
+          596.01,
+          593.64
+        ]
+      },
+      "calculation": {
+        "disc_pa": 100.50479482860746,
+        "n_disc_pa": 5,
+        "disc_pa_provisional": false,
+        "bar_pa": 0.8965893614214906,
+        "inclination": 24.76460243341408,
+        "n_disc": 5,
+        "n_bar": 6,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 37.46065147873625,
+        "eps_span": 0.12002024121833979,
+        "max_gap_fraction": 0.2939593181300802,
+        "span_arcsec": 1.2344313924604728,
+        "axis_ratio": 0.9080364444849464,
+        "face_on": true,
+        "sparse": true,
+        "issues": [
+          "Nearly face-on: PA ambiguity is informational"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.5318303848805566,
+        "bar_peak": 0.6026488738181728,
+        "bar_scatter": 0.9789467830429283,
+        "leave_one_out_pa_change": 30.30865239488125
+      },
+      "reviewed_utc": "2026-10-29T11:06:54Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 42.684109133039335,
+      "original_bar_pa": 0.08091941648747099,
+      "original_inclination": 23.757014260189585,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 596.01,
+      "centre_reference_y_pix": 593.64,
+      "centre_reference_provenance": "manual_selection",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "dffac6035eb646d9a09ad42dc1cc286c",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": false
+    },
+    "current": {
+      "disc_pa": 100.50479482860746,
+      "n_disc_pa": 5,
+      "disc_pa_provisional": false,
+      "bar_pa": 0.8965893614214906,
+      "inclination": 24.76460243341408,
+      "n_disc": 5,
+      "n_bar": 6,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 37.46065147873625,
+      "eps_span": 0.12002024121833979,
+      "max_gap_fraction": 0.2939593181300802,
+      "span_arcsec": 1.2344313924604728,
+      "axis_ratio": 0.9080364444849464,
+      "face_on": true,
+      "sparse": true,
+      "issues": [
+        "Nearly face-on: PA ambiguity is informational"
+      ],
+      "bar_grade": "A (stored)",
+      "bar_drop": 0.5318303848805566,
+      "bar_peak": 0.6026488738181728,
+      "bar_scatter": 0.9789467830429283,
+      "leave_one_out_pa_change": 30.30865239488125
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 7.621150109273117,
+      "inclination": 32.51690605273538,
+      "sersic_inclination": 37.378958623869714
+    },
+    "previous": {
+      "disc_decision": "uncertain",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "-663928688473758026",
+      "catalogue_name": "",
+      "category": "control",
+      "notes": "Bar ellipses : removed ones too far from the bar, updated disc , but shape is unclear",
+      "settings": {
+        "disc": [
+          2.1127767851858428,
+          3.082178289240056
+        ],
+        "bar": [
+          0.693008638417468,
+          1.128346699584931
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.009574587835883138,
+          "maximum": 0.14887294173240662,
+          "gamma": 0.7,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "excludedEllipses": false,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "paComparison": true,
+          "showWarnings": true
+        },
+        "refit_id": null,
+        "view": [
+          532.5,
+          659.5,
+          530.5,
+          660.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 42.68410913303933,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 179.71822865805626,
+        "inclination": 23.757014260189585,
+        "n_disc": 3,
+        "n_bar": 5,
+        "pa_scatter": 34.398180000970406,
+        "eps_span": 0.14796031014059974,
+        "max_gap_fraction": 0.6282598387861547,
+        "span_arcsec": 0.8715587820544268,
+        "axis_ratio": 0.9152621672315772,
+        "face_on": true,
+        "sparse": true,
+        "issues": [
+          "Nearly face-on: PA ambiguity is informational",
+          "Small candidate feature: bar identification uncertain"
+        ],
+        "bar_grade": "A-style",
+        "bar_drop": 0.5261932116576874,
+        "bar_peak": 0.5863060084386963,
+        "bar_scatter": 0.9701933272913541,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-28T12:02:54Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 42.684109133039335,
+      "original_bar_pa": 0.08091941648747099,
+      "original_inclination": 23.757014260189585
+    },
+    "lock_centre": true,
+    "reference": {
+      "x": 596.01,
+      "y": 593.64,
+      "provenance": "manual_selection",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 2.152379637995954,
+        "pa": 28.46171586042472,
+        "eps": 0.19083873015595607,
+        "offset": 0
+      },
+      {
+        "r": 2.410665194555469,
+        "pa": 74.16607546993545,
+        "eps": 0.09870906275160936,
+        "offset": 0
+      },
+      {
+        "r": 2.6999450179021256,
+        "pa": 84.83673016272766,
+        "eps": 0.07081848893761628,
+        "offset": 0
+      },
+      {
+        "r": 3.023938420050381,
+        "pa": 115.08244145131204,
+        "eps": 0.0885272926051337,
+        "offset": 0
+      },
+      {
+        "r": 3.386811030456427,
+        "pa": 136.81847397440507,
+        "eps": 0.09196355551505363,
+        "offset": 0
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 0.9736272403545766,
+        "pa": 0.8486204830850099,
+        "eps": 0.5583375965279508
+      },
+      {
+        "r": 1.0904625091971256,
+        "pa": 1.1714249738793892,
+        "eps": 0.6022072048149298
+      },
+      {
+        "r": 1.221318010300781,
+        "pa": 0.5495424256972142,
+        "eps": 0.6026488738181728
+      },
+      {
+        "r": 1.3678761715368748,
+        "pa": 179.43921374140376,
+        "eps": 0.6029106729157503
+      },
+      {
+        "r": 1.5320213121212998,
+        "pa": 0.8763063325869086,
+        "eps": 0.6011144199174714
+      },
+      {
+        "r": 1.715863869575856,
+        "pa": 2.750867844501701,
+        "eps": 0.5755995220167003
+      }
+    ],
+    "fit_error": ""
+  },
+  {
+    "id": "2756030807655229287",
+    "review": {
+      "disc_decision": "uncertain",
+      "bar_decision": "convincing",
+      "centre_decision": "uncertain",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "2756030807655229287",
+      "catalogue_name": "",
+      "category": "centre_priority",
+      "notes": "Adjusted centre ",
+      "settings": {
+        "disc": [
+          1.947554655225441,
+          4.822073610159729
+        ],
+        "bar": [
+          1.2377061920772556,
+          1.947554655225441
+        ],
+        "editedDisc": false,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.005628817714750767,
+          "maximum": 2.1918599605560303,
+          "gamma": 0.6,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "excludedEllipses": false,
+          "euclidPAOverlay": false,
+          "discPAOverlay": false,
+          "paComparison": false,
+          "showWarnings": true
+        },
+        "refit_id": "98f46cc617d342e9a3034726d6ec2b67",
+        "view": [
+          640.5,
+          767.5,
+          640.5,
+          767.5
+        ],
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+        "proposed_centre": [
+          704.2198904569032,
+          704.1658677398182
+        ]
+      },
+      "calculation": {
+        "disc_pa": 10.100582527132417,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 5.443537514915562,
+        "inclination": 48.757368448018696,
+        "n_disc": 3,
+        "n_bar": 4,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 44.59705166564013,
+        "eps_span": 0.3411951179672117,
+        "max_gap_fraction": 0.9186971586233998,
+        "span_arcsec": 2.8745189549342873,
+        "axis_ratio": 0.6592491202828801,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling",
+          "Disc PA varies across radius",
+          "Changing disc ellipticity"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.3760449316871456,
+        "bar_peak": 0.5447930666782378,
+        "bar_scatter": 1.7026947279278761,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-29T11:09:31Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 59.61522373145885,
+      "original_bar_pa": 5.160343116866329,
+      "original_inclination": 33.42162321429003,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 703.87,
+      "centre_reference_y_pix": 704.27,
+      "centre_reference_provenance": "manual_selection",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "98f46cc617d342e9a3034726d6ec2b67",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": false
+    },
+    "current": {
+      "disc_pa": 10.100582527132417,
+      "n_disc_pa": 3,
+      "disc_pa_provisional": false,
+      "bar_pa": 5.443537514915562,
+      "inclination": 48.757368448018696,
+      "n_disc": 3,
+      "n_bar": 4,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 44.59705166564013,
+      "eps_span": 0.3411951179672117,
+      "max_gap_fraction": 0.9186971586233998,
+      "span_arcsec": 2.8745189549342873,
+      "axis_ratio": 0.6592491202828801,
+      "face_on": false,
+      "sparse": true,
+      "issues": [
+        "Sparse disc sampling",
+        "Disc PA varies across radius",
+        "Changing disc ellipticity"
+      ],
+      "bar_grade": "A (stored)",
+      "bar_drop": 0.3760449316871456,
+      "bar_peak": 0.5447930666782378,
+      "bar_scatter": 1.7026947279278761,
+      "leave_one_out_pa_change": null
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 53.16374218957071,
+      "inclination": 17.332420844003867,
+      "sersic_inclination": 40.69473391062806
+    },
+    "previous": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "2756030807655229287",
+      "catalogue_name": "",
+      "category": "sparse",
+      "notes": "Increased inner elipses in bar and tightened to bar shape.  Increased radius to capture 2 more ellipses with similar PA",
+      "settings": {
+        "disc": [
+          3.064514954655358,
+          4.864038670923618
+        ],
+        "bar": [
+          0.6641773242978994,
+          1.3880122914838584
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.005628817714750767,
+          "maximum": 2.1918599605560303,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "excludedEllipses": false,
+          "euclidPAOverlay": false,
+          "discPAOverlay": false,
+          "paComparison": true,
+          "showWarnings": false
+        },
+        "refit_id": null,
+        "view": [
+          620.5,
+          790.5,
+          619.5,
+          788.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 59.615223731458826,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 8.50988979186539,
+        "inclination": 33.42162321429003,
+        "n_disc": 3,
+        "n_bar": 6,
+        "pa_scatter": 25.374139795603536,
+        "eps_span": 0.11327066101947011,
+        "max_gap_fraction": 0.79076556369431,
+        "span_arcsec": 1.7575586555043707,
+        "axis_ratio": 0.834640054429656,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling",
+          "Small candidate feature: bar identification uncertain"
+        ],
+        "bar_grade": "A-style",
+        "bar_drop": 0.4534937934585853,
+        "bar_peak": 0.5159876143439734,
+        "bar_scatter": 1.4578778979813338,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-28T12:04:58Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 59.61522373145885,
+      "original_bar_pa": 5.160343116866329,
+      "original_inclination": 33.42162321429003
+    },
+    "lock_centre": false,
+    "reference": {
+      "x": 703.87,
+      "y": 704.27,
+      "provenance": "manual_selection",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 1.947554655225441,
+        "pa": 2.6424956749657564,
+        "eps": 0.5099432529583039,
+        "offset": 0.9358364817393535
+      },
+      {
+        "r": 2.181261213852494,
+        "pa": 10.832322977944578,
+        "eps": 0.34075087971712,
+        "offset": 0.28669233375946135
+      },
+      {
+        "r": 4.822073610159729,
+        "pa": 89.83965813859385,
+        "eps": 0.16874813499109217,
+        "offset": 0.9494356744588712
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 1.2377061920772556,
+        "pa": 6.807193663439659,
+        "eps": 0.500541401619186
+      },
+      {
+        "r": 1.3862309351265265,
+        "pa": 6.807193803419902,
+        "eps": 0.5302288447178125
+      },
+      {
+        "r": 1.738888085022715,
+        "pa": 5.6304134714469125,
+        "eps": 0.5796428803981717
+      },
+      {
+        "r": 1.947554655225441,
+        "pa": 2.6424956749657564,
+        "eps": 0.5099432529583039
+      }
+    ],
+    "fit_error": ""
+  },
+  {
+    "id": "-595029565493921205",
+    "review": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "-595029565493921205",
+      "catalogue_name": "PGC 477382",
+      "category": "centre_priority",
+      "notes": "",
+      "settings": {
+        "disc": [
+          3.278980356844898,
+          4.11315295962624
+        ],
+        "bar": [
+          0.8416325878592691,
+          2.6139830650868126
+        ],
+        "editedDisc": true,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.013863931637057103,
+          "maximum": 2.4505562782287598,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "excludedEllipses": false,
+          "euclidPAOverlay": false,
+          "discPAOverlay": false,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "showWarnings": true,
+          "paComparison": false
+        },
+        "refit_id": "603740140a5e43188f5db5e70b66e708",
+        "view": [
+          1047.5,
+          1259.5,
+          1047.5,
+          1259.5
+        ],
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+        "proposed_centre": [
+          1153.38,
+          1153.16
+        ]
+      },
+      "calculation": {
+        "disc_pa": 65.04319791463459,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 41.644757450800626,
+        "inclination": 52.39062129425096,
+        "n_disc": 3,
+        "n_bar": 7,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 8.89629166510262,
+        "eps_span": 0.051565648720975577,
+        "max_gap_fraction": 0.5283018867924522,
+        "span_arcsec": 0.8341726027813423,
+        "axis_ratio": 0.6102748450595918,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.1615252790044016,
+        "bar_peak": 0.5066370680609156,
+        "bar_scatter": 2.1173706075859675,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-29T14:27:24Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 55.27650935880132,
+      "original_bar_pa": 37.99338114965213,
+      "original_inclination": 52.662656617097795,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 1153.38,
+      "centre_reference_y_pix": 1153.16,
+      "centre_reference_provenance": "manual_selection",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "603740140a5e43188f5db5e70b66e708",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": false
+    },
+    "current": {
+      "disc_pa": 65.04319791463459,
+      "n_disc_pa": 3,
+      "disc_pa_provisional": false,
+      "bar_pa": 41.644757450800626,
+      "inclination": 52.39062129425096,
+      "n_disc": 3,
+      "n_bar": 7,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 8.89629166510262,
+      "eps_span": 0.051565648720975577,
+      "max_gap_fraction": 0.5283018867924522,
+      "span_arcsec": 0.8341726027813423,
+      "axis_ratio": 0.6102748450595918,
+      "face_on": false,
+      "sparse": true,
+      "issues": [
+        "Sparse disc sampling"
+      ],
+      "bar_grade": "A (stored)",
+      "bar_drop": 0.1615252790044016,
+      "bar_peak": 0.5066370680609156,
+      "bar_scatter": 2.1173706075859675,
+      "leave_one_out_pa_change": null
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 61.56029500534598,
+      "inclination": 44.94507816999489,
+      "sersic_inclination": 53.6851461597121
+    },
+    "previous": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "-595029565493921205",
+      "catalogue_name": "PGC 477382",
+      "category": "ellipticity",
+      "notes": "removed 1 outer disc ellipse with angle too different. Better to have  outer disc ellipses with similar angle than many with hugely varying angles",
+      "settings": {
+        "disc": [
+          2.6139830650868126,
+          4.166092936368354
+        ],
+        "bar": [
+          1.3243251710034614,
+          2.083851295509257
+        ],
+        "editedDisc": true,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.012137533724796954,
+          "maximum": 2.4505562782287598,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "excludedEllipses": false,
+          "euclidPAOverlay": false,
+          "discPAOverlay": false,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "showWarnings": true,
+          "paComparison": true
+        },
+        "refit_id": null,
+        "view": [
+          1026.5,
+          1280.5,
+          1026.5,
+          1280.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 55.310643027465034,
+        "n_disc_pa": 5,
+        "disc_pa_provisional": false,
+        "bar_pa": 37.99338114965212,
+        "inclination": 52.934966880596384,
+        "n_disc": 5,
+        "n_bar": 5,
+        "pa_scatter": 10.900021767920924,
+        "eps_span": 0.15539867586038142,
+        "max_gap_fraction": 0.29395931813007986,
+        "span_arcsec": 1.4991698945394276,
+        "axis_ratio": 0.6027211201838093,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling",
+          "Changing disc ellipticity"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.19651032015022318,
+        "bar_peak": 0.5862179737750381,
+        "bar_scatter": 1.6856445261862307,
+        "leave_one_out_pa_change": 5.890267851699946
+      },
+      "reviewed_utc": "2026-10-28T11:02:39Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 55.27650935880132,
+      "original_bar_pa": 37.99338114965213,
+      "original_inclination": 52.662656617097795
+    },
+    "lock_centre": false,
+    "reference": {
+      "x": 1153.38,
+      "y": 1153.16,
+      "provenance": "manual_selection",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 3.278980356844898,
+        "pa": 49.50183837156954,
+        "eps": 0.39667743777748954,
+        "offset": 0.6553463702795547
+      },
+      {
+        "r": 3.6724579996662863,
+        "pa": 64.32368340653194,
+        "eps": 0.3897251549404082,
+        "offset": 0.6776131384959306
+      },
+      {
+        "r": 4.11315295962624,
+        "pa": 70.7461791539639,
+        "eps": 0.34511178905651396,
+        "offset": 0.055211612346861026
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 0.8416325878592691,
+        "pa": 43.48023873917362,
+        "eps": 0.4691496602163162
+      },
+      {
+        "r": 0.9426284984023815,
+        "pa": 41.42401383256384,
+        "eps": 0.4779399847903535
+      },
+      {
+        "r": 1.0557439182106672,
+        "pa": 39.37339964419855,
+        "eps": 0.47670251225430743
+      },
+      {
+        "r": 1.1824331883959474,
+        "pa": 38.5033308241901,
+        "eps": 0.5059618797853381
+      },
+      {
+        "r": 2.083851295509257,
+        "pa": 41.291049765748575,
+        "eps": 0.5449444136278281
+      },
+      {
+        "r": 2.333913450970368,
+        "pa": 41.64980786348862,
+        "eps": 0.5066370680609156
+      },
+      {
+        "r": 2.6139830650868126,
+        "pa": 45.23046306137489,
+        "eps": 0.5007364366616114
+      }
+    ],
+    "fit_error": ""
+  },
+  {
+    "id": "-537890362287224823",
+    "review": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "-537890362287224823",
+      "catalogue_name": "",
+      "category": "centre_priority",
+      "notes": "Despite bar having only 2 ellipses, they are clearly at the right place/angle.",
+      "settings": {
+        "disc": [
+          3.270643068946711,
+          5.212298024993057
+        ],
+        "bar": [
+          1.553415584002144,
+          2.3452741790884337
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.008939302077512257,
+          "maximum": 18.699249267578125,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "excludedEllipses": false,
+          "euclidPAOverlay": false,
+          "discPAOverlay": false,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "paComparison": false,
+          "showWarnings": true
+        },
+        "refit_id": "7b7b9a0f2e0e49b09b8f9518985c3b01",
+        "view": [
+          816.5,
+          1071.5,
+          817.5,
+          1071.5
+        ],
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+        "proposed_centre": [
+          944.08838360548,
+          944.5838062308258
+        ]
+      },
+      "calculation": {
+        "disc_pa": 62.64143696328259,
+        "n_disc_pa": 5,
+        "disc_pa_provisional": false,
+        "bar_pa": null,
+        "inclination": 32.102422028419525,
+        "n_disc": 5,
+        "n_bar": 2,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 15.360799736864564,
+        "eps_span": 0.060988731005006014,
+        "max_gap_fraction": 0.2939593181300803,
+        "span_arcsec": 1.8897126611020059,
+        "axis_ratio": 0.8470994571476249,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling",
+          "Disc PA varies across radius",
+          "Selected bar interval does not pass the signature screen"
+        ],
+        "bar_grade": null,
+        "bar_drop": 0.4799680549738492,
+        "bar_peak": 0.6103966582233917,
+        "bar_scatter": 0,
+        "leave_one_out_pa_change": 7.801564484513733
+      },
+      "reviewed_utc": "2026-10-29T14:29:15Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 60.70098495772754,
+      "original_bar_pa": 123.08626793344686,
+      "original_inclination": 33.67740235123137,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 944.08838360548,
+      "centre_reference_y_pix": 944.5838062308258,
+      "centre_reference_provenance": "previous_review_confirmed_adopted_centre",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "7b7b9a0f2e0e49b09b8f9518985c3b01",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": false
+    },
+    "current": {
+      "disc_pa": 62.64143696328259,
+      "n_disc_pa": 5,
+      "disc_pa_provisional": false,
+      "bar_pa": null,
+      "inclination": 32.102422028419525,
+      "n_disc": 5,
+      "n_bar": 2,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 15.360799736864564,
+      "eps_span": 0.060988731005006014,
+      "max_gap_fraction": 0.2939593181300803,
+      "span_arcsec": 1.8897126611020059,
+      "axis_ratio": 0.8470994571476249,
+      "face_on": false,
+      "sparse": true,
+      "issues": [
+        "Sparse disc sampling",
+        "Disc PA varies across radius",
+        "Selected bar interval does not pass the signature screen"
+      ],
+      "bar_grade": null,
+      "bar_drop": 0.4799680549738492,
+      "bar_peak": 0.6103966582233917,
+      "bar_scatter": 0,
+      "leave_one_out_pa_change": 7.801564484513733
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 61.1842106404099,
+      "inclination": 31.70129659940858,
+      "sersic_inclination": 29.6732418475948
+    },
+    "previous": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "-537890362287224823",
+      "catalogue_name": "",
+      "category": "variation",
+      "notes": "excluded out disc ellipse to bring back inside tolerance",
+      "settings": {
+        "disc": [
+          3.291625291070291,
+          5.736868682742425
+        ],
+        "bar": [
+          1.4904641396267493,
+          2.3452741790884337
+        ],
+        "editedDisc": true,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.010755591094493866,
+          "maximum": 1.3231847286224365,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "excludedEllipses": false,
+          "euclidPAOverlay": false,
+          "discPAOverlay": false,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "paComparison": true,
+          "showWarnings": true
+        },
+        "refit_id": null,
+        "view": [
+          859.5,
+          1028.5,
+          859.5,
+          1029.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 63.69316082965173,
+        "n_disc_pa": 5,
+        "disc_pa_provisional": false,
+        "bar_pa": 123.08626793344686,
+        "inclination": 32.12255491164252,
+        "n_disc": 5,
+        "n_bar": 5,
+        "pa_scatter": 15.907351453917974,
+        "eps_span": 0.06738241057481581,
+        "max_gap_fraction": 0.2939593181300803,
+        "span_arcsec": 1.8897126611020059,
+        "axis_ratio": 0.8469126667291821,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.47900012779496187,
+        "bar_peak": 0.6014038718297439,
+        "bar_scatter": 1.350612171390494,
+        "leave_one_out_pa_change": 7.045037604885351
+      },
+      "reviewed_utc": "2026-10-28T11:33:36Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 60.70098495772754,
+      "original_bar_pa": 123.08626793344686,
+      "original_inclination": 33.67740235123137
+    },
+    "lock_centre": true,
+    "reference": {
+      "x": 944.08838360548,
+      "y": 944.5838062308258,
+      "provenance": "previous_review_confirmed_adopted_centre",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 3.294941361878356,
+        "pa": 27.52505432984055,
+        "eps": 0.14332715887950448,
+        "offset": 0
+      },
+      {
+        "r": 3.6903343253037586,
+        "pa": 45.013387893359756,
+        "eps": 0.13042860324954256,
+        "offset": 0
+      },
+      {
+        "r": 4.13317444434021,
+        "pa": 52.9588314653385,
+        "eps": 0.16209050350463533,
+        "offset": 0
+      },
+      {
+        "r": 4.629155377661037,
+        "pa": 67.01134134861593,
+        "eps": 0.15290054285237514,
+        "offset": 0
+      },
+      {
+        "r": 5.184654022980362,
+        "pa": 69.48980032814853,
+        "eps": 0.19141733425454857,
+        "offset": 0
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 1.8696382167477945,
+        "pa": 124.5163767509527,
+        "eps": 0.6158542247955725
+      },
+      {
+        "r": 2.0939948027575297,
+        "pa": 124.5163767509527,
+        "eps": 0.6049390916512111
+      }
+    ],
+    "fit_error": ""
+  },
+  {
+    "id": "-518633776290631360",
+    "review": {
+      "disc_decision": "uncertain",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "-518633776290631360",
+      "catalogue_name": "",
+      "category": "centre_priority",
+      "notes": "User centre required to find bar.  Disc geometry difficult to assess",
+      "settings": {
+        "disc": [
+          2.0104078640463294,
+          4.444371286350193
+        ],
+        "bar": [
+          0.5160216253622324,
+          1.6026848405981575
+        ],
+        "editedDisc": true,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.011927718876861032,
+          "maximum": 0.15643225610256195,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "paComparison": true,
+          "showWarnings": true
+        },
+        "refit_id": "34847521611d41389b5866ec32ecedfa",
+        "view": [
+          652.5,
+          779.5,
+          650.5,
+          777.5
+        ],
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+        "proposed_centre": [
+          716.07,
+          714.23
+        ]
+      },
+      "calculation": {
+        "disc_pa": 125.1731440440972,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 112.92114459354968,
+        "inclination": 50.77189252613197,
+        "n_disc": 3,
+        "n_bar": 11,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 16.908188855573822,
+        "eps_span": 0.03325851655104828,
+        "max_gap_fraction": 0.9008822640986094,
+        "span_arcsec": 2.4339634223038633,
+        "axis_ratio": 0.6324093895380731,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling",
+          "Disc PA varies across radius"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.36985183371604685,
+        "bar_peak": 0.7052027078529236,
+        "bar_scatter": 0.5752727839856926,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-29T14:31:23Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 113.69021016263804,
+      "original_bar_pa": 113.86950382756103,
+      "original_inclination": 49.47781434213959,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 716.07,
+      "centre_reference_y_pix": 714.23,
+      "centre_reference_provenance": "manual_selection",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "34847521611d41389b5866ec32ecedfa",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": false
+    },
+    "current": {
+      "disc_pa": 125.1731440440972,
+      "n_disc_pa": 3,
+      "disc_pa_provisional": false,
+      "bar_pa": 112.92114459354968,
+      "inclination": 50.77189252613197,
+      "n_disc": 3,
+      "n_bar": 11,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 16.908188855573822,
+      "eps_span": 0.03325851655104828,
+      "max_gap_fraction": 0.9008822640986094,
+      "span_arcsec": 2.4339634223038633,
+      "axis_ratio": 0.6324093895380731,
+      "face_on": false,
+      "sparse": true,
+      "issues": [
+        "Sparse disc sampling",
+        "Disc PA varies across radius"
+      ],
+      "bar_grade": "A (stored)",
+      "bar_drop": 0.36985183371604685,
+      "bar_peak": 0.7052027078529236,
+      "bar_scatter": 0.5752727839856926,
+      "leave_one_out_pa_change": null
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 110.37379622393539,
+      "inclination": 50.28255678226567,
+      "sersic_inclination": 51.3931948021934
+    },
+    "previous": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "-518633776290631360",
+      "catalogue_name": "",
+      "category": "sparse",
+      "notes": "Ignore inner disc ellipse which has widely differing angle to outer ellipses",
+      "settings": {
+        "disc": [
+          2.409027326888297,
+          4.444371286350193
+        ],
+        "bar": [
+          0.5160216253622324,
+          1.7110768999421586
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.01195870326116681,
+          "maximum": 0.15643225610256195,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "paComparison": false,
+          "showWarnings": false
+        },
+        "refit_id": null,
+        "view": [
+          652.5,
+          779.5,
+          652.5,
+          779.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 110.06084358620616,
+        "n_disc_pa": 2,
+        "disc_pa_provisional": true,
+        "bar_pa": 113.20309091317647,
+        "inclination": null,
+        "n_disc": 2,
+        "n_bar": 10,
+        "pa_scatter": 1.1841120932607794,
+        "eps_span": 0.02718416572329796,
+        "max_gap_fraction": 1,
+        "span_arcsec": 0.4761826378232348,
+        "axis_ratio": 0.6361503556792117,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses"
+        ],
+        "bar_grade": "A-style",
+        "bar_drop": 0.37656003192673193,
+        "bar_peak": 0.6907356693774241,
+        "bar_scatter": 0.8034658767057664,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-28T09:44:05Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 113.69021016263804,
+      "original_bar_pa": 113.86950382756103,
+      "original_inclination": 49.47781434213959
+    },
+    "lock_centre": true,
+    "reference": {
+      "x": 716.07,
+      "y": 714.23,
+      "provenance": "manual_selection",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 2.0104078640463294,
+        "pa": 145.76497785655624,
+        "eps": 0.3675906104619269,
+        "offset": 0
+      },
+      {
+        "r": 2.2516568077318886,
+        "pa": 149.14649348767904,
+        "eps": 0.33535087413687675,
+        "offset": 0
+      },
+      {
+        "r": 4.444371286350193,
+        "pa": 111.74520124476796,
+        "eps": 0.36860939068792503,
+        "offset": 0
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 0.5160216253622324,
+        "pa": 111.93839762760281,
+        "eps": 0.6995068593353809
+      },
+      {
+        "r": 0.5779442204057004,
+        "pa": 112.55893958447668,
+        "eps": 0.6863620961678095
+      },
+      {
+        "r": 0.6472975268543845,
+        "pa": 112.72206236185869,
+        "eps": 0.6817346811406954
+      },
+      {
+        "r": 0.7249732300769106,
+        "pa": 113.47167290821848,
+        "eps": 0.6694778660098296
+      },
+      {
+        "r": 0.81197001768614,
+        "pa": 113.33202095591389,
+        "eps": 0.6684037376869865
+      },
+      {
+        "r": 0.9094064198084768,
+        "pa": 113.11411100766756,
+        "eps": 0.6815513338060589
+      },
+      {
+        "r": 1.0185351901854942,
+        "pa": 113.07589454928821,
+        "eps": 0.6953845878277948
+      },
+      {
+        "r": 1.1407594130077534,
+        "pa": 112.32989013838728,
+        "eps": 0.7052027078529236
+      },
+      {
+        "r": 1.2776505425686842,
+        "pa": 112.43049832845892,
+        "eps": 0.7091668477065243
+      },
+      {
+        "r": 1.4309686076769261,
+        "pa": 112.49311296634946,
+        "eps": 0.6974424120449375
+      },
+      {
+        "r": 1.6026848405981575,
+        "pa": 114.03184519776362,
+        "eps": 0.6945291866014159
+      }
+    ],
+    "fit_error": ""
+  },
+  {
+    "id": "2681494150647395085",
+    "review": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "2681494150647395085",
+      "catalogue_name": "",
+      "category": "centre_priority",
+      "notes": "Added inward disc ellipses as otherwise very sparse sampling.",
+      "settings": {
+        "disc": [
+          2.360926228335087,
+          5.056207275738521
+        ],
+        "bar": [
+          1.158752207545836,
+          1.6279634214429566
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.0075695150398043904,
+          "maximum": 1.393892526626587,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "excludedEllipses": false,
+          "euclidPAOverlay": true,
+          "discPAOverlay": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "showWarnings": true,
+          "paComparison": true
+        },
+        "refit_id": "3d7d2b837ada4e31b7ce6bce78618bfc",
+        "view": [
+          667.5,
+          864.5,
+          679.5,
+          876.5
+        ],
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+        "proposed_centre": [
+          765.5385729221249,
+          764.5961839060756
+        ]
+      },
+      "calculation": {
+        "disc_pa": 157.41851684741428,
+        "n_disc_pa": 7,
+        "disc_pa_provisional": false,
+        "bar_pa": 45.91285069077793,
+        "inclination": 28.231523000203573,
+        "n_disc": 7,
+        "n_bar": 4,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 32.440125886040505,
+        "eps_span": 0.18370206874216735,
+        "max_gap_fraction": 0.2171658200219906,
+        "span_arcsec": 2.4945753147261884,
+        "axis_ratio": 0.8810433306459299,
+        "face_on": false,
+        "sparse": false,
+        "issues": [
+          "Disc PA varies across radius",
+          "Changing disc ellipticity"
+        ],
+        "bar_grade": "A-style",
+        "bar_drop": 0.42854323389755145,
+        "bar_peak": 0.49476004288874814,
+        "bar_scatter": 0.31850792749243734,
+        "leave_one_out_pa_change": 18.98801920095653
+      },
+      "reviewed_utc": "2026-10-29T14:32:42Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 157.79847784780827,
+      "original_bar_pa": 45.46586800670162,
+      "original_inclination": 22.20529737579683,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 765.5385729221249,
+      "centre_reference_y_pix": 764.5961839060756,
+      "centre_reference_provenance": "previous_review_confirmed_adopted_centre",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "3d7d2b837ada4e31b7ce6bce78618bfc",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": false
+    },
+    "current": {
+      "disc_pa": 157.41851684741428,
+      "n_disc_pa": 7,
+      "disc_pa_provisional": false,
+      "bar_pa": 45.91285069077793,
+      "inclination": 28.231523000203573,
+      "n_disc": 7,
+      "n_bar": 4,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 32.440125886040505,
+      "eps_span": 0.18370206874216735,
+      "max_gap_fraction": 0.2171658200219906,
+      "span_arcsec": 2.4945753147261884,
+      "axis_ratio": 0.8810433306459299,
+      "face_on": false,
+      "sparse": false,
+      "issues": [
+        "Disc PA varies across radius",
+        "Changing disc ellipticity"
+      ],
+      "bar_grade": "A-style",
+      "bar_drop": 0.42854323389755145,
+      "bar_peak": 0.49476004288874814,
+      "bar_scatter": 0.31850792749243734,
+      "leave_one_out_pa_change": 18.98801920095653
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 156.04753133750086,
+      "inclination": 19.948682972258286,
+      "sersic_inclination": 43.6132886483678
+    },
+    "previous": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "2681494150647395085",
+      "catalogue_name": "",
+      "category": "ellipticity",
+      "notes": "Ellipticity and disc PA are impacted by inner disc ellipse, so have excluded",
+      "settings": {
+        "disc": [
+          4.427728590333983,
+          5.056207275738521
+        ],
+        "bar": [
+          1.158752207545836,
+          1.6279634214429566
+        ],
+        "editedDisc": true,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.007592495379997417,
+          "maximum": 1.393892526626587,
+          "gamma": 0.9,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "excludedEllipses": false,
+          "euclidPAOverlay": true,
+          "discPAOverlay": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "showWarnings": true,
+          "paComparison": false
+        },
+        "refit_id": null,
+        "view": [
+          636.5,
+          833.5,
+          688.5,
+          885.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 126.0235795749839,
+        "n_disc_pa": 2,
+        "disc_pa_provisional": true,
+        "bar_pa": 45.46586800670161,
+        "inclination": null,
+        "n_disc": 2,
+        "n_bar": 3,
+        "pa_scatter": 10.751265116106765,
+        "eps_span": 0.006561994834813789,
+        "max_gap_fraction": 1,
+        "span_arcsec": 0.541736493829128,
+        "axis_ratio": 0.9291166443770285,
+        "face_on": true,
+        "sparse": true,
+        "issues": [
+          "Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.22799805878341295,
+        "bar_peak": 0.4786096855274138,
+        "bar_scatter": 0.5973504932241983,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-28T10:51:24Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 157.79847784780827,
+      "original_bar_pa": 45.46586800670162,
+      "original_inclination": 22.20529737579683
+    },
+    "lock_centre": true,
+    "reference": {
+      "x": 765.5385729221249,
+      "y": 764.5961839060756,
+      "provenance": "previous_review_confirmed_adopted_centre",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 2.561631961012332,
+        "pa": 74.18885647777337,
+        "eps": 0.1460219486647916,
+        "offset": 0
+      },
+      {
+        "r": 2.8690277963338118,
+        "pa": 149.4747331923097,
+        "eps": 0.11895666935407014,
+        "offset": 0
+      },
+      {
+        "r": 3.21331113189387,
+        "pa": 169.76222012331692,
+        "eps": 0.17770753649642393,
+        "offset": 0
+      },
+      {
+        "r": 3.598908467721135,
+        "pa": 171.62724680757202,
+        "eps": 0.24991887773336405,
+        "offset": 0
+      },
+      {
+        "r": 4.030777483847672,
+        "pa": 138.68283456255335,
+        "eps": 0.0662168089911967,
+        "offset": 0
+      },
+      {
+        "r": 4.5144707819093925,
+        "pa": 112.48143617877886,
+        "eps": 0.06883597699313569,
+        "offset": 0
+      },
+      {
+        "r": 5.056207275738521,
+        "pa": 142.42730239383633,
+        "eps": 0.07931844461376063,
+        "offset": 0
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 1.158752207545836,
+        "pa": 45.73897917755598,
+        "eps": 0.4192881933479723
+      },
+      {
+        "r": 1.2978024724513364,
+        "pa": 45.536263193153104,
+        "eps": 0.44967275877406915
+      },
+      {
+        "r": 1.4535387691454968,
+        "pa": 45.61162298841102,
+        "eps": 0.48504877615702646
+      },
+      {
+        "r": 1.6279634214429566,
+        "pa": 46.345234124942806,
+        "eps": 0.5044713096204698
+      }
+    ],
+    "fit_error": ""
+  },
+  {
+    "id": "2654474268655808169",
+    "review": {
+      "disc_decision": "uncertain",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "2654474268655808169",
+      "catalogue_name": "",
+      "category": "centre_priority",
+      "notes": "Inner disc ellipses more convincing with closer PA",
+      "settings": {
+        "disc": [
+          1.3775580975762045,
+          1.9454664671513362
+        ],
+        "bar": [
+          0.5151579089845045,
+          1.0824274317230993
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.009159876964986324,
+          "maximum": 0.2272908091545105,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "excludedEllipses": false,
+          "euclidPAOverlay": false,
+          "discPAOverlay": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "showWarnings": true,
+          "paComparison": true
+        },
+        "refit_id": "5d0a0304b2004f1ca7c07ad7ad348fae",
+        "view": [
+          400.5,
+          487.5,
+          400.5,
+          487.5
+        ],
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+        "proposed_centre": [
+          444.06078608568987,
+          444.4853507930642
+        ]
+      },
+      "calculation": {
+        "disc_pa": 55.84231123004443,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 62.68469956713329,
+        "inclination": 70.17562211807387,
+        "n_disc": 3,
+        "n_bar": 7,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 1.1274030656890262,
+        "eps_span": 0.05609082878294991,
+        "max_gap_fraction": 0.528301886792453,
+        "span_arcsec": 0.3634290867325518,
+        "axis_ratio": 0.33913821016319956,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling",
+          "Small candidate feature: bar identification uncertain",
+          "Weaker B-style bar-profile evidence"
+        ],
+        "bar_grade": "B-style",
+        "bar_drop": 0.09632250161204281,
+        "bar_peak": 0.750548796112738,
+        "bar_scatter": 0.9619395429806861,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-29T14:34:03Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 61.97255861497691,
+      "original_bar_pa": 63.03710706928109,
+      "original_inclination": 22.00902684670147,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 444.06078608568987,
+      "centre_reference_y_pix": 444.4853507930642,
+      "centre_reference_provenance": "previous_review_confirmed_adopted_centre",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "5d0a0304b2004f1ca7c07ad7ad348fae",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": false
+    },
+    "current": {
+      "disc_pa": 55.84231123004443,
+      "n_disc_pa": 3,
+      "disc_pa_provisional": false,
+      "bar_pa": 62.68469956713329,
+      "inclination": 70.17562211807387,
+      "n_disc": 3,
+      "n_bar": 7,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 1.1274030656890488,
+      "eps_span": 0.05609082878294991,
+      "max_gap_fraction": 0.528301886792453,
+      "span_arcsec": 0.3634290867325518,
+      "axis_ratio": 0.33913821016319956,
+      "face_on": false,
+      "sparse": true,
+      "issues": [
+        "Sparse disc sampling",
+        "Small candidate feature: bar identification uncertain",
+        "Weaker B-style bar-profile evidence"
+      ],
+      "bar_grade": "B-style",
+      "bar_drop": 0.09632250161204281,
+      "bar_peak": 0.750548796112738,
+      "bar_scatter": 0.9619395429806861,
+      "leave_one_out_pa_change": null
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 9.590863682705788,
+      "inclination": 12.579815203051915,
+      "sersic_inclination": 44.55522981206531
+    },
+    "previous": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "2654474268655808169",
+      "catalogue_name": "",
+      "category": "ellipticity",
+      "notes": "Bar ellipses extended far too far out, trimmed outer bar ellipses in line with image. Only 2 convincing disc ellipses ",
+      "settings": {
+        "disc": [
+          2.0420133187330856,
+          2.8197506912280406
+        ],
+        "bar": [
+          0.5151579089845045,
+          1.0824274317230993
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "minimum": -0.009159876964986324,
+          "maximum": 0.2272908091545105,
+          "gamma": 0.9,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "excludedEllipses": false,
+          "euclidPAOverlay": false,
+          "discPAOverlay": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "unwrapPA": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "showWarnings": false,
+          "paComparison": true
+        },
+        "refit_id": null,
+        "view": [
+          400.5,
+          487.5,
+          400.5,
+          487.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 134.57114956882924,
+        "n_disc_pa": 2,
+        "disc_pa_provisional": true,
+        "bar_pa": 63.30902291958182,
+        "inclination": null,
+        "n_disc": 2,
+        "n_bar": 7,
+        "pa_scatter": 14.439789007612262,
+        "eps_span": 0.008593446188712828,
+        "max_gap_fraction": 1,
+        "span_arcsec": 0.5718627039607891,
+        "axis_ratio": 0.9314215475613642,
+        "face_on": true,
+        "sparse": true,
+        "issues": [
+          "Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses",
+          "Small candidate feature: bar identification uncertain",
+          "Weaker B-style bar-profile evidence"
+        ],
+        "bar_grade": "B-style",
+        "bar_drop": 0.06731675158881656,
+        "bar_peak": 0.7197949064485047,
+        "bar_scatter": 1.4852642345522578,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-28T11:04:44Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 61.97255861497691,
+      "original_bar_pa": 63.03710706928109,
+      "original_inclination": 22.00902684670147
+    },
+    "lock_centre": true,
+    "reference": {
+      "x": 444.06078608568987,
+      "y": 444.4853507930642,
+      "provenance": "previous_review_confirmed_adopted_centre",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 1.428573454137387,
+        "pa": 57.20245097166061,
+        "eps": 0.6631832342525744,
+        "offset": 0
+      },
+      {
+        "r": 1.6000022686338735,
+        "pa": 55.74084955957932,
+        "eps": 0.6608617898368004,
+        "offset": 0
+      },
+      {
+        "r": 1.7920025408699387,
+        "pa": 54.44249760785354,
+        "eps": 0.6070924054696245,
+        "offset": 0
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 0.5151579089845045,
+        "pa": 61.13502943435793,
+        "eps": 0.7667128927238919
+      },
+      {
+        "r": 0.5769768580626452,
+        "pa": 61.29390326412372,
+        "eps": 0.734384699501584
+      },
+      {
+        "r": 0.6462140810301625,
+        "pa": 62.59515851415651,
+        "eps": 0.6973566692930326
+      },
+      {
+        "r": 0.7237597707537822,
+        "pa": 64.03196530270286,
+        "eps": 0.6605417210978489
+      },
+      {
+        "r": 0.8106109432442361,
+        "pa": 63.24719742865406,
+        "eps": 0.6659879969859142
+      },
+      {
+        "r": 0.9078842564335445,
+        "pa": 62.98652343085144,
+        "eps": 0.6677101057079667
+      },
+      {
+        "r": 1.0168303672055699,
+        "pa": 62.38630261633493,
+        "eps": 0.66869835889924
+      }
+    ],
+    "fit_error": ""
+  },
+  {
+    "id": "-586374330510251740",
+    "review": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "-586374330510251740",
+      "catalogue_name": "",
+      "category": "centre_priority",
+      "notes": "Included more inner disc ellipses as their PA was consistent with found outer ones",
+      "settings": {
+        "disc": [
+          4.4079040361173805,
+          7.863282974213243
+        ],
+        "bar": [
+          2.0183088882620783,
+          3.5569498833573134
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.010854801163077354,
+          "maximum": 0.6615177989006042,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": false,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "paComparison": false,
+          "showWarnings": true
+        },
+        "refit_id": "363d1c23819b4f78a37a20bd9dc5fc53",
+        "proposed_centre": [
+          846.0833255870381,
+          868.6979282087486
+        ],
+        "view": [
+          740.5,
+          952.5,
+          762.5,
+          974.5
+        ],
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+      },
+      "calculation": {
+        "disc_pa": 175.06856106769436,
+        "n_disc_pa": 6,
+        "disc_pa_provisional": false,
+        "bar_pa": 178.9882515711376,
+        "inclination": 33.45430737502737,
+        "n_disc": 6,
+        "n_bar": 6,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 4.084324291008414,
+        "eps_span": 0.12521547232007105,
+        "max_gap_fraction": 0.24768726066165095,
+        "span_arcsec": 3.401445040529829,
+        "axis_ratio": 0.8343257192834694,
+        "face_on": false,
+        "sparse": false,
+        "issues": [],
+        "bar_grade": "A-style",
+        "bar_drop": 0.6007554654002724,
+        "bar_peak": 0.6809212668261972,
+        "bar_scatter": 0.9825837597103174,
+        "leave_one_out_pa_change": 2.1907420929657064
+      },
+      "reviewed_utc": "2026-10-29T14:38:04Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": null,
+      "original_bar_pa": null,
+      "original_inclination": null,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 846.0833255870381,
+      "centre_reference_y_pix": 868.6979282087486,
+      "centre_reference_provenance": "previous_review_confirmed_adopted_centre",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "363d1c23819b4f78a37a20bd9dc5fc53",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": false
+    },
+    "current": {
+      "disc_pa": 175.06856106769436,
+      "n_disc_pa": 6,
+      "disc_pa_provisional": false,
+      "bar_pa": 178.9882515711376,
+      "inclination": 33.45430737502737,
+      "n_disc": 6,
+      "n_bar": 6,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 4.084324291008414,
+      "eps_span": 0.12521547232007105,
+      "max_gap_fraction": 0.24768726066165095,
+      "span_arcsec": 3.401445040529829,
+      "axis_ratio": 0.8343257192834694,
+      "face_on": false,
+      "sparse": false,
+      "issues": [],
+      "bar_grade": "A-style",
+      "bar_drop": 0.6007554654002724,
+      "bar_peak": 0.6809212668261972,
+      "bar_scatter": 0.9825837597103174,
+      "leave_one_out_pa_change": 2.1907420929657064
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 8.93061320597954,
+      "inclination": 68.69762238950942,
+      "sersic_inclination": 54.60292160781311
+    },
+    "previous": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "-586374330510251740",
+      "catalogue_name": "",
+      "category": "failed",
+      "notes": "put in correct centre",
+      "settings": {
+        "disc": [
+          5.5969295040124765,
+          7.863282974213243
+        ],
+        "bar": [
+          2.0183088882620783,
+          3.5569498833573134
+        ],
+        "editedDisc": false,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.008320113577507435,
+          "maximum": 0.6615177989006042,
+          "gamma": 1.55,
+          "invert": false,
+          "ellipses": false,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": false,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "paComparison": false,
+          "showWarnings": false
+        },
+        "refit_id": "381c5f0fe20e4bf6a276ba1b9c04eb5c",
+        "proposed_centre": [
+          843.3164075507492,
+          869.9481493590308
+        ],
+        "view": [
+          672.5,
+          961.5,
+          725.5,
+          1016.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 173.94547831796993,
+        "n_disc_pa": 4,
+        "disc_pa_provisional": false,
+        "bar_pa": 179.2049645276533,
+        "inclination": 36.85478190168822,
+        "n_disc": 4,
+        "n_bar": 6,
+        "pa_scatter": 5.099725951859473,
+        "eps_span": 0.09551295269859092,
+        "max_gap_fraction": 0.3717401612138457,
+        "span_arcsec": 2.266353470200767,
+        "axis_ratio": 0.8001582638605163,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.5516568714154102,
+        "bar_peak": 0.6943402358375378,
+        "bar_scatter": 0.5156116807986395,
+        "leave_one_out_pa_change": 1.6163236193583543
+      },
+      "reviewed_utc": "2026-10-28T11:41:01Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": null,
+      "original_bar_pa": null,
+      "original_inclination": null
+    },
+    "lock_centre": true,
+    "reference": {
+      "x": 846.0833255870381,
+      "y": 868.6979282087486,
+      "provenance": "previous_review_confirmed_adopted_centre",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 4.461837933683414,
+        "pa": 172.27228984224104,
+        "eps": 0.08016580142592489,
+        "offset": 0
+      },
+      {
+        "r": 4.997258485725425,
+        "pa": 172.29028459011778,
+        "eps": 0.14109691174858924,
+        "offset": 0
+      },
+      {
+        "r": 5.5969295040124765,
+        "pa": 176.02289452285947,
+        "eps": 0.18839090690214433,
+        "offset": 0
+      },
+      {
+        "r": 6.268561044493974,
+        "pa": 172.22235505429992,
+        "eps": 0.20538127374599593,
+        "offset": 0
+      },
+      {
+        "r": 7.020788369833252,
+        "pa": 172.22235505429992,
+        "eps": 0.18214506291982807,
+        "offset": 0
+      },
+      {
+        "r": 7.863282974213243,
+        "pa": 3.3234474117895263,
+        "eps": 0.14920349851323303,
+        "offset": 0
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 2.0183088882620783,
+        "pa": 178.8908924942559,
+        "eps": 0.6741010094118143
+      },
+      {
+        "r": 2.2605059548535285,
+        "pa": 177.82118298034146,
+        "eps": 0.6877415242405802
+      },
+      {
+        "r": 2.5317666694359517,
+        "pa": 178.81557371127687,
+        "eps": 0.6790919852924118
+      },
+      {
+        "r": 2.835578669768266,
+        "pa": 179.83059779656395,
+        "eps": 0.6806569848489735
+      },
+      {
+        "r": 3.1758481101404583,
+        "pa": 179.74535570241542,
+        "eps": 0.7016098028763202
+      },
+      {
+        "r": 3.5569498833573134,
+        "pa": 0.953800011015073,
+        "eps": 0.5645343345506146
+      }
+    ],
+    "fit_error": ""
+  },
+  {
+    "id": "-524824554283124036",
+    "review": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "-524824554283124036",
+      "catalogue_name": "",
+      "category": "centre_priority",
+      "notes": "Outer ellipses were more credible. Galaxy looks circular/face-on",
+      "settings": {
+        "disc": [
+          12.230576322092682,
+          18.135176122389254
+        ],
+        "bar": [
+          2.443623738437054,
+          3.4331154115948928
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.009148828899301586,
+          "maximum": 6.293806076049805,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "euclidPAOverlay": true,
+          "paComparison": false,
+          "showWarnings": false
+        },
+        "refit_id": "005fb69cf81b43529e857becc596bae9",
+        "proposed_centre": [
+          5844.43,
+          6056.16
+        ],
+        "view": [
+          5318.5,
+          6033.5,
+          5776.5,
+          6492.5
+        ],
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+      },
+      "calculation": {
+        "disc_pa": 170.62277890252986,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 139.69317679579476,
+        "inclination": 32.34256912315866,
+        "n_disc": 3,
+        "n_bar": 4,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 2.872315416313426,
+        "eps_span": 0.038261112982788614,
+        "max_gap_fraction": 0.528301886792453,
+        "span_arcsec": 3.4026852807863417,
+        "axis_ratio": 0.8448645914722972,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling"
+        ],
+        "bar_grade": "A-style",
+        "bar_drop": 0.45952048425362774,
+        "bar_peak": 0.5914857852357016,
+        "bar_scatter": 0.8903865352048013,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-29T14:39:15Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": null,
+      "original_bar_pa": null,
+      "original_inclination": null,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 5844.43,
+      "centre_reference_y_pix": 6056.16,
+      "centre_reference_provenance": "previous_review_confirmed_adopted_centre",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "005fb69cf81b43529e857becc596bae9",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": false
+    },
+    "current": {
+      "disc_pa": 170.62277890252986,
+      "n_disc_pa": 3,
+      "disc_pa_provisional": false,
+      "bar_pa": 139.69317679579476,
+      "inclination": 32.34256912315866,
+      "n_disc": 3,
+      "n_bar": 4,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 2.872315416313426,
+      "eps_span": 0.038261112982788614,
+      "max_gap_fraction": 0.528301886792453,
+      "span_arcsec": 3.4026852807863417,
+      "axis_ratio": 0.8448645914722972,
+      "face_on": false,
+      "sparse": true,
+      "issues": [
+        "Sparse disc sampling"
+      ],
+      "bar_grade": "A-style",
+      "bar_drop": 0.45952048425362774,
+      "bar_peak": 0.5914857852357016,
+      "bar_scatter": 0.8903865352048013,
+      "leave_one_out_pa_change": null
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 74.24548342318354,
+      "inclination": 73.438947988844,
+      "sersic_inclination": 68.94571545154031
+    },
+    "previous": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "unsure",
+      "reviewed": true,
+      "object_id": "-524824554283124036",
+      "catalogue_name": "",
+      "category": "failed",
+      "notes": "corrected centre",
+      "settings": {
+        "disc": [
+          9.52029941976866,
+          13.239189430519385
+        ],
+        "bar": [
+          2.443623738437054,
+          3.4331154115948928
+        ],
+        "editedDisc": true,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.008457244433639568,
+          "maximum": 6.293806076049805,
+          "gamma": 0.5,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "euclidPAOverlay": true,
+          "paComparison": true,
+          "showWarnings": true
+        },
+        "refit_id": "e6f4c3baabe5415880af56cce261c025",
+        "proposed_centre": [
+          5844.43,
+          6056.16
+        ],
+        "view": [
+          5136.5,
+          6109.5,
+          5703.5,
+          6668.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 145.91742608578585,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 139.69317679579476,
+        "inclination": 57.54927851869868,
+        "n_disc": 3,
+        "n_bar": 4,
+        "pa_scatter": 4.512399971062961,
+        "eps_span": 0.03653824556028018,
+        "max_gap_fraction": 0.5283018867924538,
+        "span_arcsec": 2.421964172389151,
+        "axis_ratio": 0.5365740320029584,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.45952048425362774,
+        "bar_peak": 0.5914857852357016,
+        "bar_scatter": 0.8903865352048013,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-28T11:41:50Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": null,
+      "original_bar_pa": null,
+      "original_inclination": null
+    },
+    "lock_centre": true,
+    "reference": {
+      "x": 5844.43,
+      "y": 6056.16,
+      "provenance": "previous_review_confirmed_adopted_centre",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 13.37533522321675,
+        "pa": 171.4912927577705,
+        "eps": 0.11873162781307492,
+        "offset": 0
+      },
+      {
+        "r": 14.980375450002759,
+        "pa": 167.38047337676863,
+        "eps": 0.1551354085277028,
+        "offset": 0
+      },
+      {
+        "r": 16.77802050400309,
+        "pa": 174.38075411927264,
+        "eps": 0.15699274079586353,
+        "offset": 0
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 2.443623738437054,
+        "pa": 138.04351625398436,
+        "eps": 0.5428705180884605
+      },
+      {
+        "r": 2.7368585870495004,
+        "pa": 139.30246818283447,
+        "eps": 0.5610149815127867
+      },
+      {
+        "r": 3.0652816174954403,
+        "pa": 139.61159566801626,
+        "eps": 0.5853896777357425
+      },
+      {
+        "r": 3.4331154115948928,
+        "pa": 140.5313287313936,
+        "eps": 0.5975818927356606
+      }
+    ],
+    "fit_error": ""
+  },
+  {
+    "id": "2645436353651870062",
+    "review": {
+      "disc_decision": "uncertain",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "2645436353651870062",
+      "catalogue_name": "",
+      "category": "centre_priority",
+      "notes": "Difficult disc to assess but only 1 credible ellipse around bar",
+      "settings": {
+        "disc": [
+          3.098636683012212,
+          3.2011000104998546
+        ],
+        "bar": [
+          1.5969721974422613,
+          2.0032419244715727
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.008435323653006926,
+          "maximum": 0.4647738039493561,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "paComparison": false,
+          "showWarnings": true
+        },
+        "refit_id": "27eb0e27d9f5488498094a788b4f9386",
+        "proposed_centre": [
+          457.6242598554462,
+          457.40209712778994
+        ],
+        "view": [
+          401.5,
+          512.5,
+          394.5,
+          510.5
+        ],
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28"
+      },
+      "calculation": {
+        "disc_pa": 21.174933642339056,
+        "n_disc_pa": 1,
+        "disc_pa_provisional": true,
+        "bar_pa": null,
+        "inclination": null,
+        "n_disc": 1,
+        "n_bar": 2,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 0,
+        "eps_span": 0,
+        "max_gap_fraction": 1,
+        "span_arcsec": 0,
+        "axis_ratio": 0.8518641228218212,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses",
+          "Selected bar interval does not pass the signature screen"
+        ],
+        "bar_grade": null,
+        "bar_drop": 0.6134808207399074,
+        "bar_peak": 0.7616166979180862,
+        "bar_scatter": 0.18536980347414556,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-29T14:40:29Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": null,
+      "original_bar_pa": null,
+      "original_inclination": null,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 457.6242598554462,
+      "centre_reference_y_pix": 457.40209712778994,
+      "centre_reference_provenance": "previous_review_confirmed_adopted_centre",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "27eb0e27d9f5488498094a788b4f9386",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": true
+    },
+    "current": {
+      "disc_pa": 21.174933642339056,
+      "n_disc_pa": 1,
+      "disc_pa_provisional": true,
+      "bar_pa": null,
+      "inclination": null,
+      "n_disc": 1,
+      "n_bar": 2,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 0,
+      "eps_span": 0,
+      "max_gap_fraction": 1,
+      "span_arcsec": 0,
+      "axis_ratio": 0.8518641228218212,
+      "face_on": false,
+      "sparse": true,
+      "issues": [
+        "Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses",
+        "Selected bar interval does not pass the signature screen"
+      ],
+      "bar_grade": null,
+      "bar_drop": 0.6134808207399074,
+      "bar_peak": 0.7616166979180862,
+      "bar_scatter": 0.18536980347414556,
+      "leave_one_out_pa_change": null
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 64.59102377042885,
+      "inclination": 45.83940592409947,
+      "sersic_inclination": 70.75388378306621
+    },
+    "previous": {
+      "disc_decision": "uncertain",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "2645436353651870062",
+      "catalogue_name": "",
+      "category": "failed",
+      "notes": "just a weird shaped galaxy.  Should be excluded",
+      "settings": {
+        "disc": [
+          2.5128666700571407,
+          3.2011000104998546
+        ],
+        "bar": [
+          1.5969721974422613,
+          2.0032419244715727
+        ],
+        "editedDisc": true,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.008632547125406564,
+          "maximum": 0.4647738039493561,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "paComparison": false,
+          "showWarnings": false
+        },
+        "refit_id": "75870e20668d494eae7999d7a843443e",
+        "proposed_centre": [
+          455.25,
+          457.83
+        ],
+        "view": [
+          401.5,
+          512.5,
+          394.5,
+          505.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 66.81528258162302,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 68.307130567894,
+        "inclination": 72.59379017033267,
+        "n_disc": 3,
+        "n_bar": 3,
+        "pa_scatter": 17.313911013116645,
+        "eps_span": 0.598237114653946,
+        "max_gap_fraction": 0.5283018867924533,
+        "span_arcsec": 0.6392732808625374,
+        "axis_ratio": 0.29914421294969284,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling",
+          "Changing disc ellipticity"
+        ],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.6082951291407332,
+        "bar_peak": 0.7807139125561531,
+        "bar_scatter": 0.05542346403884492,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-28T11:43:11Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": null,
+      "original_bar_pa": null,
+      "original_inclination": null
+    },
+    "lock_centre": true,
+    "reference": {
+      "x": 457.6242598554462,
+      "y": 457.40209712778994,
+      "provenance": "previous_review_confirmed_adopted_centre",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 3.099970773875978,
+        "pa": 21.17493364233905,
+        "eps": 0.1481358771781788,
+        "offset": 0
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 1.7590066690399988,
+        "pa": 68.31452242347294,
+        "eps": 0.7552658962688915
+      },
+      {
+        "r": 1.9700874693247985,
+        "pa": 67.94378281652459,
+        "eps": 0.7679674995672808
+      }
+    ],
+    "fit_error": ""
+  },
+  {
+    "id": "-524724591298089738",
+    "review": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "-524724591298089738",
+      "catalogue_name": "",
+      "category": "centre_control",
+      "notes": "",
+      "settings": {
+        "disc": [
+          2.7019321308327484,
+          4.761727619343951
+        ],
+        "bar": [
+          1.717126715767099,
+          2.1539637522582495
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.007793962933565489,
+          "maximum": 1.2216780185699463,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "paComparison": false,
+          "showWarnings": true
+        },
+        "refit_id": "2020d9fa1f73444692afcf551022add6",
+        "view": [
+          813.5,
+          1055.5,
+          815.5,
+          1055.5
+        ],
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+        "proposed_centre": [
+          936.1970574745351,
+          936.9067208224008
+        ]
+      },
+      "calculation": {
+        "disc_pa": 16.20452734816405,
+        "n_disc_pa": 6,
+        "disc_pa_provisional": false,
+        "bar_pa": 26.007831566457867,
+        "inclination": 52.93648908424177,
+        "n_disc": 6,
+        "n_bar": 3,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 5.987815106710015,
+        "eps_span": 0.03287070508820156,
+        "max_gap_fraction": 0.24768726066165067,
+        "span_arcsec": 2.0597954885112024,
+        "axis_ratio": 0.6026999204112544,
+        "face_on": false,
+        "sparse": false,
+        "issues": [],
+        "bar_grade": "A-style",
+        "bar_drop": 0.27793423854306537,
+        "bar_peak": 0.6673648751381676,
+        "bar_scatter": 0.2218975071252906,
+        "leave_one_out_pa_change": 2.0713567376299693
+      },
+      "reviewed_utc": "2026-10-29T14:40:59Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 15.781073420491072,
+      "original_bar_pa": 25.825143060181496,
+      "original_inclination": 53.24470681819946,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 936.1970574745351,
+      "centre_reference_y_pix": 936.9067208224008,
+      "centre_reference_provenance": "previous_review_confirmed_adopted_centre",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "2020d9fa1f73444692afcf551022add6",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": false
+    },
+    "current": {
+      "disc_pa": 16.20452734816405,
+      "n_disc_pa": 6,
+      "disc_pa_provisional": false,
+      "bar_pa": 26.007831566457867,
+      "inclination": 52.93648908424177,
+      "n_disc": 6,
+      "n_bar": 3,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 5.987815106710015,
+      "eps_span": 0.03287070508820156,
+      "max_gap_fraction": 0.24768726066165067,
+      "span_arcsec": 2.0597954885112024,
+      "axis_ratio": 0.6026999204112544,
+      "face_on": false,
+      "sparse": false,
+      "issues": [],
+      "bar_grade": "A-style",
+      "bar_drop": 0.27793423854306537,
+      "bar_peak": 0.6673648751381676,
+      "bar_scatter": 0.2218975071252906,
+      "leave_one_out_pa_change": 2.0713567376299693
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 174.89195877508553,
+      "inclination": 45.449057182704315,
+      "sersic_inclination": 60.15917061047279
+    },
+    "previous": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "-524724591298089738",
+      "catalogue_name": "",
+      "category": "control",
+      "notes": "",
+      "settings": {
+        "disc": [
+          2.7019321308327484,
+          4.761727619343951
+        ],
+        "bar": [
+          1.717126715767099,
+          2.1539637522582495
+        ],
+        "editedDisc": false,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.007793962933565489,
+          "maximum": 1.2216780185699463,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "paComparison": true,
+          "showWarnings": true
+        },
+        "refit_id": null,
+        "view": [
+          813.5,
+          1055.5,
+          815.5,
+          1055.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 15.781073420491083,
+        "n_disc_pa": 6,
+        "disc_pa_provisional": false,
+        "bar_pa": 25.82514306018149,
+        "inclination": 53.24470681819946,
+        "n_disc": 6,
+        "n_bar": 3,
+        "pa_scatter": 5.779518681662269,
+        "eps_span": 0.03271156258923097,
+        "max_gap_fraction": 0.24768726066165067,
+        "span_arcsec": 2.0597954885112024,
+        "axis_ratio": 0.5983986206090961,
+        "face_on": false,
+        "sparse": false,
+        "issues": [],
+        "bar_grade": "A (stored)",
+        "bar_drop": 0.2841158592399535,
+        "bar_peak": 0.6716189392090712,
+        "bar_scatter": 0.1217335279145,
+        "leave_one_out_pa_change": 1.987284974497129
+      },
+      "reviewed_utc": "2026-10-28T11:33:56Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 15.781073420491072,
+      "original_bar_pa": 25.825143060181496,
+      "original_inclination": 53.24470681819946
+    },
+    "lock_centre": true,
+    "reference": {
+      "x": 936.1970574745351,
+      "y": 936.9067208224008,
+      "provenance": "previous_review_confirmed_adopted_centre",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 2.7019321308327484,
+        "pa": 21.08919795273766,
+        "eps": 0.4023428349264929,
+        "offset": 0
+      },
+      {
+        "r": 3.0261639865326786,
+        "pa": 17.812909772363135,
+        "eps": 0.3894306365951022,
+        "offset": 0
+      },
+      {
+        "r": 3.3893036649166004,
+        "pa": 15.389588226796807,
+        "eps": 0.38963606171072096,
+        "offset": 0
+      },
+      {
+        "r": 3.7960201047065927,
+        "pa": 12.072933502069054,
+        "eps": 0.3931188035789991,
+        "offset": 0
+      },
+      {
+        "r": 4.2515425172713845,
+        "pa": 6.12800759746945,
+        "eps": 0.42230134168330374,
+        "offset": 0
+      },
+      {
+        "r": 4.761727619343951,
+        "pa": 4.461106642378817,
+        "eps": 0.40148135559849196,
+        "offset": 0
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 1.717126715767099,
+        "pa": 25.929476449755544,
+        "eps": 0.6400237229074673
+      },
+      {
+        "r": 1.9231819216591513,
+        "pa": 26.363778243283942,
+        "eps": 0.6580738866132433
+      },
+      {
+        "r": 2.1539637522582495,
+        "pa": 25.863590722384842,
+        "eps": 0.6766558636630917
+      }
+    ],
+    "fit_error": ""
+  },
+  {
+    "id": "2724315227685324582",
+    "review": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "2724315227685324582",
+      "catalogue_name": "",
+      "category": "centre_control",
+      "notes": "",
+      "settings": {
+        "disc": [
+          3.0775629798493664,
+          6.074563624709152
+        ],
+        "bar": [
+          1.242976070611368,
+          1.5591891829749003
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "marginal",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.008770521994672018,
+          "maximum": 2.5744872093200684,
+          "gamma": 1,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "paComparison": true,
+          "showWarnings": true
+        },
+        "refit_id": "78e6ae3b57c64b09a35b5facc59ba6aa",
+        "view": [
+          1067.5,
+          1321.5,
+          1067.5,
+          1321.5
+        ],
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+        "proposed_centre": [
+          1194.5188118196693,
+          1194.583592920559
+        ]
+      },
+      "calculation": {
+        "disc_pa": 61.634195600115646,
+        "n_disc_pa": 7,
+        "disc_pa_provisional": false,
+        "bar_pa": 129.12247339796735,
+        "inclination": 37.815495446598675,
+        "n_disc": 7,
+        "n_bar": 3,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 8.622984790030486,
+        "eps_span": 0.18963418577389607,
+        "max_gap_fraction": 0.21716582002199034,
+        "span_arcsec": 2.997000644859786,
+        "axis_ratio": 0.7899892248755948,
+        "face_on": false,
+        "sparse": false,
+        "issues": [
+          "Changing disc ellipticity"
+        ],
+        "bar_grade": "A-style",
+        "bar_drop": 0.4958790549098796,
+        "bar_peak": 0.5630921065013086,
+        "bar_scatter": 1.640800605329776,
+        "leave_one_out_pa_change": 2.226028748784188
+      },
+      "reviewed_utc": "2026-10-29T14:41:35Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 60.71518022829481,
+      "original_bar_pa": 135.67916346056714,
+      "original_inclination": 37.07926598927556,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 1194.5188118196693,
+      "centre_reference_y_pix": 1194.583592920559,
+      "centre_reference_provenance": "previous_review_confirmed_adopted_centre",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "78e6ae3b57c64b09a35b5facc59ba6aa",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": false
+    },
+    "current": {
+      "disc_pa": 61.63419560011562,
+      "n_disc_pa": 7,
+      "disc_pa_provisional": false,
+      "bar_pa": 129.12247339796735,
+      "inclination": 37.815495446598675,
+      "n_disc": 7,
+      "n_bar": 3,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 8.622984790030486,
+      "eps_span": 0.18963418577389607,
+      "max_gap_fraction": 0.21716582002199034,
+      "span_arcsec": 2.997000644859786,
+      "axis_ratio": 0.7899892248755948,
+      "face_on": false,
+      "sparse": false,
+      "issues": [
+        "Changing disc ellipticity"
+      ],
+      "bar_grade": "A-style",
+      "bar_drop": 0.4958790549098796,
+      "bar_peak": 0.5630921065013086,
+      "bar_scatter": 1.640800605329776,
+      "leave_one_out_pa_change": 2.2260287487842447
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 68.85366487826906,
+      "inclination": 42.177621203328215,
+      "sersic_inclination": 33.19184517058856
+    },
+    "previous": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "2724315227685324582",
+      "catalogue_name": "",
+      "category": "control",
+      "notes": "",
+      "settings": {
+        "disc": [
+          3.0775629798493664,
+          6.074563624709152
+        ],
+        "bar": [
+          1.242976070611368,
+          1.5591891829749003
+        ],
+        "editedDisc": false,
+        "editedBar": false,
+        "noBar": false,
+        "pool": "marginal",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true
+        },
+        "display": {
+          "stretch": "autostf",
+          "minimum": -0.008770521994672018,
+          "maximum": 2.5744872093200684,
+          "gamma": 0.75,
+          "invert": false,
+          "ellipses": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showRejected": true,
+          "stfShadows": -2.8,
+          "stfTarget": 0.25,
+          "defaultVersion": 2,
+          "excludedEllipses": false,
+          "paComparison": false,
+          "showWarnings": false
+        },
+        "refit_id": null,
+        "view": [
+          1067.5,
+          1321.5,
+          1067.5,
+          1321.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 60.7151802282948,
+        "n_disc_pa": 7,
+        "disc_pa_provisional": false,
+        "bar_pa": 135.67916346056714,
+        "inclination": 37.07926598927557,
+        "n_disc": 7,
+        "n_bar": 3,
+        "pa_scatter": 6.364122179418187,
+        "eps_span": 0.13704047192564783,
+        "max_gap_fraction": 0.21716582002199034,
+        "span_arcsec": 2.997000644859786,
+        "axis_ratio": 0.7978021635455129,
+        "face_on": false,
+        "sparse": false,
+        "issues": [],
+        "bar_grade": "A-style",
+        "bar_drop": 0.4541471855391602,
+        "bar_peak": 0.5784700782641332,
+        "bar_scatter": 0.10136346329198863,
+        "leave_one_out_pa_change": 0.898823467876241
+      },
+      "reviewed_utc": "2026-10-28T11:34:02Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 60.71518022829481,
+      "original_bar_pa": 135.67916346056714,
+      "original_inclination": 37.07926598927556
+    },
+    "lock_centre": true,
+    "reference": {
+      "x": 1194.5188118196693,
+      "y": 1194.583592920559,
+      "provenance": "previous_review_confirmed_adopted_centre",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 3.0775629798493664,
+        "pa": 82.88278846155777,
+        "eps": 0.21921373175299474,
+        "offset": 0
+      },
+      {
+        "r": 3.4468705374312902,
+        "pa": 68.40114420892823,
+        "eps": 0.24893112535700493,
+        "offset": 0
+      },
+      {
+        "r": 3.8604950019230455,
+        "pa": 73.67391598318136,
+        "eps": 0.15094959605941768,
+        "offset": 0
+      },
+      {
+        "r": 4.323754402153812,
+        "pa": 60.21442491673449,
+        "eps": 0.07293983253143355,
+        "offset": 0
+      },
+      {
+        "r": 4.84260493041227,
+        "pa": 59.20818225723686,
+        "eps": 0.1371279311120802,
+        "offset": 0
+      },
+      {
+        "r": 5.423717522061743,
+        "pa": 59.20818225723686,
+        "eps": 0.21001077512440527,
+        "offset": 0
+      },
+      {
+        "r": 6.074563624709152,
+        "pa": 59.28513479407979,
+        "eps": 0.2625740183053296,
+        "offset": 0
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 1.242976070611368,
+        "pa": 129.85555910946505,
+        "eps": 0.5508936336954835
+      },
+      {
+        "r": 1.3921331990847323,
+        "pa": 130.7110703613879,
+        "eps": 0.5752905793071336
+      },
+      {
+        "r": 1.5591891829749003,
+        "pa": 126.88241867251759,
+        "eps": 0.5392959609893571
+      }
+    ],
+    "fit_error": ""
+  },
+  {
+    "id": "-615088650482896879",
+    "review": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "-615088650482896879",
+      "catalogue_name": "",
+      "category": "centre_validation",
+      "notes": "",
+      "settings": {
+        "disc": [
+          2.4971486133408103,
+          4.400829090435592
+        ],
+        "bar": [
+          0.9004968238395462,
+          1.9907115858903142
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "gamma": 1,
+          "ellipses": true,
+          "excludedEllipses": false,
+          "paComparison": false,
+          "centres": true,
+          "overlayMode": "selected",
+          "showWarnings": true,
+          "minimum": -0.0074643974683852865,
+          "maximum": 2.26302433013916
+        },
+        "refit_id": "9d5065d7dd354b859ebbf1db26f48e1b",
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+        "proposed_centre": [
+          654.7653750930893,
+          654.8984154315102
+        ],
+        "view": [
+          569.5,
+          739.5,
+          570.5,
+          739.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 90.22589248637173,
+        "n_disc_pa": 6,
+        "disc_pa_provisional": false,
+        "bar_pa": 70.15855078272966,
+        "inclination": 60.0393605458722,
+        "n_disc": 6,
+        "n_bar": 8,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 2.316589030212727,
+        "eps_span": 0.11988771717594965,
+        "max_gap_fraction": 0.2476872606616506,
+        "span_arcsec": 1.903680477094782,
+        "axis_ratio": 0.4994049476221447,
+        "face_on": false,
+        "sparse": false,
+        "issues": [
+          "Centre reference unverified: visual confirmation required"
+        ],
+        "bar_grade": "A-style",
+        "bar_drop": 0.1572527624941113,
+        "bar_peak": 0.5627490858103142,
+        "bar_scatter": 1.696261928144797,
+        "leave_one_out_pa_change": 0.363048470581532
+      },
+      "reviewed_utc": "2026-10-29T14:43:24Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 89.98773807154754,
+      "original_bar_pa": 69.15059303434965,
+      "original_inclination": 60.1121587074813,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 654.7653750930893,
+      "centre_reference_y_pix": 654.8984154315102,
+      "centre_reference_provenance": "automatic_reference_unverified",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "9d5065d7dd354b859ebbf1db26f48e1b",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": false
+    },
+    "current": {
+      "disc_pa": 90.22589248637173,
+      "n_disc_pa": 6,
+      "disc_pa_provisional": false,
+      "bar_pa": 70.15855078272966,
+      "inclination": 60.039360545872206,
+      "n_disc": 6,
+      "n_bar": 8,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 2.316589030212727,
+      "eps_span": 0.11988771717594965,
+      "max_gap_fraction": 0.2476872606616506,
+      "span_arcsec": 1.903680477094782,
+      "axis_ratio": 0.4994049476221447,
+      "face_on": false,
+      "sparse": false,
+      "issues": [
+        "Centre reference unverified: visual confirmation required"
+      ],
+      "bar_grade": "A-style",
+      "bar_drop": 0.1572527624941113,
+      "bar_peak": 0.5627490858103142,
+      "bar_scatter": 1.696261928144797,
+      "leave_one_out_pa_change": 0.363048470581532
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 87.66695252913553,
+      "inclination": 59.653585659073045,
+      "sersic_inclination": 61.108713970215234
+    },
+    "previous": null,
+    "lock_centre": true,
+    "reference": {
+      "x": 654.7653750930893,
+      "y": 654.8984154315102,
+      "provenance": "automatic_reference_unverified",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 2.4971486133408103,
+        "pa": 84.53140238109508,
+        "eps": 0.40549632331620294,
+        "offset": 0
+      },
+      {
+        "r": 2.7968064469417078,
+        "pa": 89.4480284475469,
+        "eps": 0.44744977065488156,
+        "offset": 0
+      },
+      {
+        "r": 3.1324232205747133,
+        "pa": 90.84799515044898,
+        "eps": 0.4914764053446776,
+        "offset": 0
+      },
+      {
+        "r": 3.5083140070436794,
+        "pa": 90.22453432858362,
+        "eps": 0.5179548309144449,
+        "offset": 0
+      },
+      {
+        "r": 3.9293116878889216,
+        "pa": 91.10933501732339,
+        "eps": 0.5253840404921526,
+        "offset": 0
+      },
+      {
+        "r": 4.400829090435592,
+        "pa": 91.10933501732339,
+        "eps": 0.5097136994110328,
+        "offset": 0
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 0.9004968238395462,
+        "pa": 74.74212562420121,
+        "eps": 0.46810040682734944
+      },
+      {
+        "r": 1.008556442700292,
+        "pa": 71.801832529738,
+        "eps": 0.4883149770900397
+      },
+      {
+        "r": 1.129583215824327,
+        "pa": 69.88521777312748,
+        "eps": 0.5003061209133394
+      },
+      {
+        "r": 1.2651332017232464,
+        "pa": 69.05243518965433,
+        "eps": 0.5131486162057813
+      },
+      {
+        "r": 1.4169491859300363,
+        "pa": 69.61612557640723,
+        "eps": 0.5188017270083983
+      },
+      {
+        "r": 1.5869830882416405,
+        "pa": 70.27087452614674,
+        "eps": 0.5442472283813026
+      },
+      {
+        "r": 1.7774210588306374,
+        "pa": 70.48095751315857,
+        "eps": 0.5632138420131694
+      },
+      {
+        "r": 1.9907115858903142,
+        "pa": 69.87400934691705,
+        "eps": 0.5622843296074591
+      }
+    ],
+    "fit_error": ""
+  },
+  {
+    "id": "2654162178650796134",
+    "review": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "2654162178650796134",
+      "catalogue_name": "",
+      "category": "centre_validation",
+      "notes": "",
+      "settings": {
+        "disc": [
+          2.788889038470724,
+          5.504772450594514
+        ],
+        "bar": [
+          0.8017389555435113,
+          2.223285266638013
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "gamma": 1,
+          "ellipses": true,
+          "excludedEllipses": false,
+          "paComparison": false,
+          "centres": true,
+          "overlayMode": "selected",
+          "showWarnings": true,
+          "minimum": -0.009297157823455051,
+          "maximum": 0.6776014566421509
+        },
+        "refit_id": "26aa0e83deb24a5bb150aa64545203bf",
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+        "proposed_centre": [
+          957.0376272335898,
+          957.0910191725102
+        ],
+        "view": [
+          867.5,
+          1046.5,
+          867.5,
+          1046.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 65.47866369149506,
+        "n_disc_pa": 7,
+        "disc_pa_provisional": false,
+        "bar_pa": 54.36483217696133,
+        "inclination": 46.80008451737832,
+        "n_disc": 7,
+        "n_bar": 10,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 8.552995884212391,
+        "eps_span": 0.1470098633699914,
+        "max_gap_fraction": 0.21716582002199045,
+        "span_arcsec": 2.7158834121237896,
+        "axis_ratio": 0.6845460306215637,
+        "face_on": false,
+        "sparse": false,
+        "issues": [
+          "Centre reference unverified: visual confirmation required"
+        ],
+        "bar_grade": "A-style",
+        "bar_drop": 0.30064786576916597,
+        "bar_peak": 0.7288129764919834,
+        "bar_scatter": 1.437969306121318,
+        "leave_one_out_pa_change": 1.8791574949480037
+      },
+      "reviewed_utc": "2026-10-29T14:43:43Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 64.15051279899,
+      "original_bar_pa": 54.992854334344734,
+      "original_inclination": 47.65675935879031,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 957.0376272335898,
+      "centre_reference_y_pix": 957.0910191725102,
+      "centre_reference_provenance": "automatic_reference_unverified",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "26aa0e83deb24a5bb150aa64545203bf",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": false
+    },
+    "current": {
+      "disc_pa": 65.47866369149506,
+      "n_disc_pa": 7,
+      "disc_pa_provisional": false,
+      "bar_pa": 54.36483217696133,
+      "inclination": 46.80008451737832,
+      "n_disc": 7,
+      "n_bar": 10,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 8.552995884212391,
+      "eps_span": 0.1470098633699914,
+      "max_gap_fraction": 0.21716582002199045,
+      "span_arcsec": 2.7158834121237896,
+      "axis_ratio": 0.6845460306215637,
+      "face_on": false,
+      "sparse": false,
+      "issues": [
+        "Centre reference unverified: visual confirmation required"
+      ],
+      "bar_grade": "A-style",
+      "bar_drop": 0.30064786576916597,
+      "bar_peak": 0.7288129764919834,
+      "bar_scatter": 1.437969306121318,
+      "leave_one_out_pa_change": 1.8791574949480037
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 69.7543441523284,
+      "inclination": 44.1565531315144,
+      "sersic_inclination": 49.73734743795946
+    },
+    "previous": null,
+    "lock_centre": true,
+    "reference": {
+      "x": 957.0376272335898,
+      "y": 957.0910191725102,
+      "provenance": "automatic_reference_unverified",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 2.788889038470724,
+        "pa": 51.84044735509198,
+        "eps": 0.42816511072281743,
+        "offset": 0
+      },
+      {
+        "r": 3.1235557230872115,
+        "pa": 50.6258695794216,
+        "eps": 0.3154539693784363,
+        "offset": 0
+      },
+      {
+        "r": 3.4983824098576775,
+        "pa": 56.61706482277563,
+        "eps": 0.3056735977148728,
+        "offset": 0
+      },
+      {
+        "r": 3.9181882990405987,
+        "pa": 64.93145349939974,
+        "eps": 0.2912532257343121,
+        "offset": 0
+      },
+      {
+        "r": 4.388370894925472,
+        "pa": 70.81379413141958,
+        "eps": 0.3344959346853591,
+        "offset": 0
+      },
+      {
+        "r": 4.9149754023165295,
+        "pa": 68.2592806863161,
+        "eps": 0.328136707407882,
+        "offset": 0
+      },
+      {
+        "r": 5.504772450594514,
+        "pa": 73.21660979243566,
+        "eps": 0.28115524735282604,
+        "offset": 0
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 0.8017389555435113,
+        "pa": 57.05368762732137,
+        "eps": 0.6938047620404443
+      },
+      {
+        "r": 0.8979476302087328,
+        "pa": 55.71822405426581,
+        "eps": 0.7200087315163167
+      },
+      {
+        "r": 1.005701345833781,
+        "pa": 54.73240605097721,
+        "eps": 0.7245644145570388
+      },
+      {
+        "r": 1.1263855073338347,
+        "pa": 53.97523768121703,
+        "eps": 0.7288129764919834
+      },
+      {
+        "r": 1.261551768213895,
+        "pa": 53.254461656655906,
+        "eps": 0.73652699562424
+      },
+      {
+        "r": 1.4129379803995625,
+        "pa": 52.97451671499229,
+        "eps": 0.7275573181617133
+      },
+      {
+        "r": 1.58249053804751,
+        "pa": 53.27268755070396,
+        "eps": 0.7141851877409409
+      },
+      {
+        "r": 1.7723894026132112,
+        "pa": 53.47744014960111,
+        "eps": 0.7086145496958536
+      },
+      {
+        "r": 1.9850761309267972,
+        "pa": 55.08880596188587,
+        "eps": 0.7088267513884969
+      },
+      {
+        "r": 2.223285266638013,
+        "pa": 56.903370335810365,
+        "eps": 0.7011183897657995
+      }
+    ],
+    "fit_error": ""
+  },
+  {
+    "id": "-646641404494431826",
+    "review": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "-646641404494431826",
+      "catalogue_name": "",
+      "category": "centre_validation",
+      "notes": "",
+      "settings": {
+        "disc": [
+          1.1304364828848072,
+          3.932279820016475
+        ],
+        "bar": [
+          0.51135205602114,
+          0.8046223599250687
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "gamma": 1,
+          "ellipses": true,
+          "excludedEllipses": false,
+          "paComparison": false,
+          "centres": true,
+          "overlayMode": "selected",
+          "showWarnings": true,
+          "minimum": -0.009738169812904669,
+          "maximum": 4.457855224609375
+        },
+        "refit_id": "af5d9473456445faa12755e0a341c012",
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+        "proposed_centre": [
+          642.4539759870993,
+          640.6062809077232
+        ],
+        "view": [
+          578.5,
+          706.5,
+          576.5,
+          704.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 155.1047586666076,
+        "n_disc_pa": 6,
+        "disc_pa_provisional": false,
+        "bar_pa": null,
+        "inclination": 67.13755192973103,
+        "n_disc": 6,
+        "n_bar": 2,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 9.136150870469406,
+        "eps_span": 0.05621725618789852,
+        "max_gap_fraction": 0.3641015185159542,
+        "span_arcsec": 2.8018433371316678,
+        "axis_ratio": 0.38852011725861657,
+        "face_on": false,
+        "sparse": false,
+        "issues": [
+          "Centre reference unverified: visual confirmation required",
+          "Small candidate feature: bar identification uncertain",
+          "Selected bar interval does not pass the signature screen"
+        ],
+        "bar_grade": null,
+        "bar_drop": 0.0037822253382009396,
+        "bar_peak": 0.6156054839627176,
+        "bar_scatter": 0.5168276214644436,
+        "leave_one_out_pa_change": 2.9489230792254375
+      },
+      "reviewed_utc": "2026-10-29T14:44:23Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 163.5919219998035,
+      "original_bar_pa": 146.6904883725947,
+      "original_inclination": 65.1483146254724,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 642.4539759870993,
+      "centre_reference_y_pix": 640.6062809077232,
+      "centre_reference_provenance": "automatic_reference_unverified",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "af5d9473456445faa12755e0a341c012",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": false
+    },
+    "current": {
+      "disc_pa": 155.1047586666076,
+      "n_disc_pa": 6,
+      "disc_pa_provisional": false,
+      "bar_pa": null,
+      "inclination": 67.13755192973103,
+      "n_disc": 6,
+      "n_bar": 2,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 9.136150870469406,
+      "eps_span": 0.05621725618789852,
+      "max_gap_fraction": 0.3641015185159542,
+      "span_arcsec": 2.8018433371316678,
+      "axis_ratio": 0.38852011725861657,
+      "face_on": false,
+      "sparse": false,
+      "issues": [
+        "Centre reference unverified: visual confirmation required",
+        "Small candidate feature: bar identification uncertain",
+        "Selected bar interval does not pass the signature screen"
+      ],
+      "bar_grade": null,
+      "bar_drop": 0.0037822253382009396,
+      "bar_peak": 0.6156054839627176,
+      "bar_scatter": 0.5168276214644436,
+      "leave_one_out_pa_change": 2.9489230792254375
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 177.66500634392128,
+      "inclination": 55.34372278693633,
+      "sersic_inclination": 65.2584415159566
+    },
+    "previous": null,
+    "lock_centre": true,
+    "reference": {
+      "x": 642.4539759870993,
+      "y": 640.6062809077232,
+      "provenance": "automatic_reference_unverified",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 1.1304364828848072,
+        "pa": 148.2420274801789,
+        "eps": 0.6118232586245167,
+        "offset": 0
+      },
+      {
+        "r": 1.7787636910695532,
+        "pa": 148.13444950751122,
+        "eps": 0.5896583907577005,
+        "offset": 0
+      },
+      {
+        "r": 2.798919104763002,
+        "pa": 155.82855933254743,
+        "eps": 0.6458756469455991,
+        "offset": 0
+      },
+      {
+        "r": 3.134789397334562,
+        "pa": 163.39797752158896,
+        "eps": 0.6127204153910062,
+        "offset": 0
+      },
+      {
+        "r": 3.5109641250147097,
+        "pa": 167.7984163900977,
+        "eps": 0.5922044154721142,
+        "offset": 0
+      },
+      {
+        "r": 3.932279820016475,
+        "pa": 171.66485169497957,
+        "eps": 0.6111365068582502,
+        "offset": 0
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 0.6414400190729181,
+        "pa": 146.3474707479129,
+        "eps": 0.6031161520969542
+      },
+      {
+        "r": 0.8046223599250687,
+        "pa": 147.38112599084175,
+        "eps": 0.628094815828481
+      }
+    ],
+    "fit_error": ""
+  },
+  {
+    "id": "2690070926643224042",
+    "review": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "keep",
+      "reviewed": true,
+      "object_id": "2690070926643224042",
+      "catalogue_name": "",
+      "category": "centre_validation",
+      "notes": "",
+      "settings": {
+        "disc": [
+          10.037174501747355,
+          19.811602726699356
+        ],
+        "bar": [
+          2.0538047657406646,
+          3.6195057478195864
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "gamma": 1,
+          "ellipses": true,
+          "excludedEllipses": false,
+          "paComparison": false,
+          "centres": true,
+          "overlayMode": "selected",
+          "showWarnings": true,
+          "minimum": -0.008348023027470331,
+          "maximum": 9.879659652709961
+        },
+        "refit_id": "0bfa57415a0f4c9a82db9159ae40b6c6",
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+        "proposed_centre": [
+          2079.8051116344727,
+          2101.2738450474462
+        ],
+        "view": [
+          1758.5,
+          2401.5,
+          1779.5,
+          2423.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 20.87970242450166,
+        "n_disc_pa": 7,
+        "disc_pa_provisional": false,
+        "bar_pa": 30.86481675918506,
+        "inclination": 67.55989861116508,
+        "n_disc": 7,
+        "n_bar": 6,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 4.1682696949858045,
+        "eps_span": 0.0724185056307819,
+        "max_gap_fraction": 0.21716582002199047,
+        "span_arcsec": 9.774428224952,
+        "axis_ratio": 0.3817173739044454,
+        "face_on": false,
+        "sparse": false,
+        "issues": [
+          "Centre reference unverified: visual confirmation required"
+        ],
+        "bar_grade": "A-style",
+        "bar_drop": 0.22065788826935206,
+        "bar_peak": 0.7354659034260991,
+        "bar_scatter": 0.5895978109966915,
+        "leave_one_out_pa_change": 0.8261050839618065
+      },
+      "reviewed_utc": "2026-10-29T14:44:52Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 21.19616884826747,
+      "original_bar_pa": 28.87795731164975,
+      "original_inclination": 67.66785565204982,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 2079.8051116344727,
+      "centre_reference_y_pix": 2101.2738450474462,
+      "centre_reference_provenance": "automatic_reference_unverified",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "0bfa57415a0f4c9a82db9159ae40b6c6",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": false
+    },
+    "current": {
+      "disc_pa": 20.87970242450166,
+      "n_disc_pa": 7,
+      "disc_pa_provisional": false,
+      "bar_pa": 30.86481675918506,
+      "inclination": 67.55989861116508,
+      "n_disc": 7,
+      "n_bar": 6,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 4.1682696949858045,
+      "eps_span": 0.0724185056307819,
+      "max_gap_fraction": 0.21716582002199047,
+      "span_arcsec": 9.774428224952,
+      "axis_ratio": 0.3817173739044454,
+      "face_on": false,
+      "sparse": false,
+      "issues": [
+        "Centre reference unverified: visual confirmation required"
+      ],
+      "bar_grade": "A-style",
+      "bar_drop": 0.22065788826935206,
+      "bar_peak": 0.7354659034260991,
+      "bar_scatter": 0.5895978109966915,
+      "leave_one_out_pa_change": 0.8261050839618065
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 22.959274360772355,
+      "inclination": 53.650906096104414,
+      "sersic_inclination": 59.55655404194711
+    },
+    "previous": null,
+    "lock_centre": true,
+    "reference": {
+      "x": 2079.8051116344727,
+      "y": 2101.2738450474462,
+      "provenance": "automatic_reference_unverified",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 10.037174501747355,
+        "pa": 13.773623349744796,
+        "eps": 0.6560295733243804,
+        "offset": 0
+      },
+      {
+        "r": 11.24163544195704,
+        "pa": 14.929040419016879,
+        "eps": 0.6606277039621238,
+        "offset": 0
+      },
+      {
+        "r": 12.590631694991886,
+        "pa": 18.46253269442068,
+        "eps": 0.6461501716223832,
+        "offset": 0
+      },
+      {
+        "r": 14.101507498390914,
+        "pa": 22.212614992796823,
+        "eps": 0.6182826260955546,
+        "offset": 0
+      },
+      {
+        "r": 15.793688398197826,
+        "pa": 24.254880446779005,
+        "eps": 0.5882091983313419,
+        "offset": 0
+      },
+      {
+        "r": 17.688931005981566,
+        "pa": 25.17879477004618,
+        "eps": 0.5926744752899596,
+        "offset": 0
+      },
+      {
+        "r": 19.811602726699356,
+        "pa": 22.26277588035399,
+        "eps": 0.5907582044148856,
+        "offset": 0
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 2.0538047657406646,
+        "pa": 32.19989953187571,
+        "eps": 0.7236771869917517
+      },
+      {
+        "r": 2.3002613376295447,
+        "pa": 31.705743813950207,
+        "eps": 0.7072678109305043
+      },
+      {
+        "r": 2.57629269814509,
+        "pa": 31.340461431125497,
+        "eps": 0.710068557956595
+      },
+      {
+        "r": 2.8854478219225017,
+        "pa": 30.979342682774863,
+        "eps": 0.7160217012154104
+      },
+      {
+        "r": 3.231701560553202,
+        "pa": 30.682944087194315,
+        "eps": 0.7281360824196638
+      },
+      {
+        "r": 3.6195057478195864,
+        "pa": 30.492107570038613,
+        "eps": 0.7427957244325343
+      }
+    ],
+    "fit_error": ""
+  },
+  {
+    "id": "-599118107493216367",
+    "review": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "-599118107493216367",
+      "catalogue_name": "",
+      "category": "centre_validation",
+      "notes": "Bar and disc difficult to differentiate.",
+      "settings": {
+        "disc": [
+          0.442992351557255,
+          0.9443307373232607
+        ],
+        "bar": [
+          1.2274019902804083,
+          3.147060612636784
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "gamma": 1,
+          "ellipses": true,
+          "excludedEllipses": false,
+          "paComparison": true,
+          "centres": true,
+          "overlayMode": "selected",
+          "showWarnings": true,
+          "minimum": -0.008049885645709,
+          "maximum": 0.8860487937927246
+        },
+        "refit_id": "f5d0eda0d62e45fda15e1768803a5a7e",
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+        "proposed_centre": [
+          546.2715018156777,
+          546.3888236933926
+        ],
+        "view": [
+          460.5,
+          631.5,
+          460.5,
+          632.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 91.20920722253845,
+        "n_disc_pa": 5,
+        "disc_pa_provisional": false,
+        "bar_pa": 124.35659910073431,
+        "inclination": 63.95340419096871,
+        "n_disc": 5,
+        "n_bar": 8,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 0.1832050822695437,
+        "eps_span": 0.1015030773480608,
+        "max_gap_fraction": 0.2939593181300803,
+        "span_arcsec": 0.31342415532973333,
+        "axis_ratio": 0.43910194625894294,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling",
+          "Centre reference unverified: visual confirmation required",
+          "Selected bar interval does not pass the signature screen"
+        ],
+        "bar_grade": null,
+        "bar_drop": 0.09251001313936691,
+        "bar_peak": 0.5532666466373074,
+        "bar_scatter": 12.912550095992822,
+        "leave_one_out_pa_change": 0.13517218019234178
+      },
+      "reviewed_utc": "2026-10-29T14:47:16Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 90.62038187563192,
+      "original_bar_pa": null,
+      "original_inclination": 62.443311426150764,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 546.2715018156777,
+      "centre_reference_y_pix": 546.3888236933926,
+      "centre_reference_provenance": "automatic_reference_unverified",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "f5d0eda0d62e45fda15e1768803a5a7e",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": false
+    },
+    "current": {
+      "disc_pa": 91.20920722253845,
+      "n_disc_pa": 5,
+      "disc_pa_provisional": false,
+      "bar_pa": 124.35659910073431,
+      "inclination": 63.95340419096871,
+      "n_disc": 5,
+      "n_bar": 8,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 0.1832050822695437,
+      "eps_span": 0.1015030773480608,
+      "max_gap_fraction": 0.2939593181300803,
+      "span_arcsec": 0.31342415532973333,
+      "axis_ratio": 0.43910194625894294,
+      "face_on": false,
+      "sparse": true,
+      "issues": [
+        "Sparse disc sampling",
+        "Centre reference unverified: visual confirmation required",
+        "Selected bar interval does not pass the signature screen"
+      ],
+      "bar_grade": null,
+      "bar_drop": 0.09251001313936691,
+      "bar_peak": 0.5532666466373074,
+      "bar_scatter": 12.912550095992822,
+      "leave_one_out_pa_change": 0.13517218019234178
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 144.75433872813846,
+      "inclination": 55.760434971241985,
+      "sersic_inclination": 55.51723592373545
+    },
+    "previous": null,
+    "lock_centre": true,
+    "reference": {
+      "x": 546.2715018156777,
+      "y": 546.3888236933926,
+      "provenance": "automatic_reference_unverified",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 0.5464927205416973,
+        "pa": 91.04663400214875,
+        "eps": 0.4979811436634484,
+        "offset": 0
+      },
+      {
+        "r": 0.612071847006701,
+        "pa": 91.41512909668063,
+        "eps": 0.532703014937165,
+        "offset": 0
+      },
+      {
+        "r": 0.6855204686475052,
+        "pa": 91.39105847836429,
+        "eps": 0.5608980537410571,
+        "offset": 0
+      },
+      {
+        "r": 0.7677829248852058,
+        "pa": 91.34160604286353,
+        "eps": 0.5812950165477242,
+        "offset": 0
+      },
+      {
+        "r": 0.8599168758714306,
+        "pa": 90.98167527467854,
+        "eps": 0.5994842210115092,
+        "offset": 0
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 1.3530958521744136,
+        "pa": 95.69772626788262,
+        "eps": 0.47720638308749047
+      },
+      {
+        "r": 1.5154673544353434,
+        "pa": 104.16884819659667,
+        "eps": 0.44147454808788933
+      },
+      {
+        "r": 1.6973234369675847,
+        "pa": 110.12349379873612,
+        "eps": 0.45084086066360096
+      },
+      {
+        "r": 1.901002249403695,
+        "pa": 116.6930241488956,
+        "eps": 0.472251806272473
+      },
+      {
+        "r": 2.129122519332139,
+        "pa": 121.2936843249511,
+        "eps": 0.4995469933775525
+      },
+      {
+        "r": 2.3846172216519954,
+        "pa": 126.27808778175145,
+        "eps": 0.5243017568265583
+      },
+      {
+        "r": 2.670771288250235,
+        "pa": 130.77772340828642,
+        "eps": 0.5509525460785943
+      },
+      {
+        "r": 2.991263842840264,
+        "pa": 136.42554300663392,
+        "eps": 0.5555807471960205
+      }
+    ],
+    "fit_error": ""
+  },
+  {
+    "id": "2634901320657220727",
+    "review": {
+      "disc_decision": "usable",
+      "bar_decision": "convincing",
+      "centre_decision": "looks_correct",
+      "rule_action": "relax",
+      "reviewed": true,
+      "object_id": "2634901320657220727",
+      "catalogue_name": "",
+      "category": "centre_validation",
+      "notes": "Required user to find centre.  Difficult to identify bar from disc.",
+      "settings": {
+        "disc": [
+          2.983195428274147,
+          3.8188874630195984
+        ],
+        "bar": [
+          0.841914140440503,
+          1.64011904103752
+        ],
+        "editedDisc": true,
+        "editedBar": true,
+        "noBar": false,
+        "pool": "pipeline",
+        "rules": {
+          "min_disc": 6,
+          "max_gap": 0.5,
+          "pa_rms": 10,
+          "eps_span": 0.15,
+          "small_bar": 1.5,
+          "sparse_enabled": true,
+          "pa_enabled": true,
+          "eps_enabled": true,
+          "small_bar_enabled": true,
+          "centre_enabled": true,
+          "centre_cap_native": 3,
+          "centre_fraction": 0.05,
+          "centre_floor_native": 1
+        },
+        "display": {
+          "defaultVersion": 2,
+          "stretch": "autostf",
+          "gamma": 1,
+          "ellipses": true,
+          "excludedEllipses": false,
+          "paComparison": false,
+          "centres": true,
+          "overlayMode": "selected",
+          "showWarnings": true,
+          "minimum": -0.011560030199449973,
+          "maximum": 1.483923077583313
+        },
+        "refit_id": "1949d91b9009414ebdc54c861ccf49db",
+        "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+        "proposed_centre": [
+          522.2,
+          522.97
+        ],
+        "view": [
+          469.5,
+          575.5,
+          469.5,
+          575.5
+        ]
+      },
+      "calculation": {
+        "disc_pa": 45.40971552267516,
+        "n_disc_pa": 3,
+        "disc_pa_provisional": false,
+        "bar_pa": 5.341014679302191,
+        "inclination": 36.66191478975769,
+        "n_disc": 3,
+        "n_bar": 5,
+        "centre_rejected_disc": [],
+        "centre_rejected_bar": [],
+        "pa_scatter": 7.255205015181605,
+        "eps_span": 0.045702713494586045,
+        "max_gap_fraction": 0.5283018867924524,
+        "span_arcsec": 0.7744937584440259,
+        "axis_ratio": 0.8021727158802185,
+        "face_on": false,
+        "sparse": true,
+        "issues": [
+          "Sparse disc sampling"
+        ],
+        "bar_grade": "A-style",
+        "bar_drop": 0.10572363179782457,
+        "bar_peak": 0.49720119801939594,
+        "bar_scatter": 1.070111981954331,
+        "leave_one_out_pa_change": null
+      },
+      "reviewed_utc": "2026-10-29T14:49:14Z",
+      "source_manifest_sha256": "b874c938391dbfb0c54b82d444d306230b91a6961baf0159b437324075665b85",
+      "original_disc_pa": 15.455893161308895,
+      "original_bar_pa": 6.256454130130431,
+      "original_inclination": 49.161163706047276,
+      "review_campaign": "MER_VIS_centre_policy_v3_2026-10-28",
+      "centre_policy_version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "centre_reference_x_pix": 522.2,
+      "centre_reference_y_pix": 522.97,
+      "centre_reference_provenance": "manual_selection",
+      "centre_cap_native_pixels": 3,
+      "centre_fraction_radius": 0.05,
+      "centre_floor_native_pixels": 1,
+      "centre_screen_enabled": true,
+      "refit_id": "1949d91b9009414ebdc54c861ccf49db",
+      "centre_rejected_disc_n": 0,
+      "centre_rejected_bar_n": 0,
+      "trial_disc_pa_provisional": false
+    },
+    "current": {
+      "disc_pa": 45.40971552267516,
+      "n_disc_pa": 3,
+      "disc_pa_provisional": false,
+      "bar_pa": 5.341014679302191,
+      "inclination": 36.66191478975769,
+      "n_disc": 3,
+      "n_bar": 5,
+      "centre_rejected_disc": [],
+      "centre_rejected_bar": [],
+      "pa_scatter": 7.255205015181605,
+      "eps_span": 0.045702713494586045,
+      "max_gap_fraction": 0.5283018867924524,
+      "span_arcsec": 0.7744937584440259,
+      "axis_ratio": 0.8021727158802185,
+      "face_on": false,
+      "sparse": true,
+      "issues": [
+        "Sparse disc sampling"
+      ],
+      "bar_grade": "A-style",
+      "bar_drop": 0.10572363179782457,
+      "bar_peak": 0.49720119801939594,
+      "bar_scatter": 1.070111981954331,
+      "leave_one_out_pa_change": null
+    },
+    "differences": {},
+    "euclid": {
+      "disc_pa": 33.70444531272409,
+      "inclination": 34.241390177221774,
+      "sersic_inclination": 51.81139015479655
+    },
+    "previous": null,
+    "lock_centre": true,
+    "reference": {
+      "x": 522.2,
+      "y": 522.97,
+      "provenance": "manual_selection",
+      "version": "MER_VIS_centre_policy_v3_pilot_2026-10-28",
+      "policy": {
+        "cap_native_pixels": 3,
+        "fraction_radius": 0.05,
+        "floor_native_pixels": 1
+      },
+      "policy_enabled_default": true
+    },
+    "disc_points": [
+      {
+        "r": 3.0443937045755725,
+        "pa": 54.057938230155735,
+        "eps": 0.23255275625717142,
+        "offset": 0
+      },
+      {
+        "r": 3.4097209491246416,
+        "pa": 39.091661646705134,
+        "eps": 0.1978272841197814,
+        "offset": 0
+      },
+      {
+        "r": 3.8188874630195984,
+        "pa": 38.2763069601905,
+        "eps": 0.18685004276258538,
+        "offset": 0
+      }
+    ],
+    "bar_points": [
+      {
+        "r": 0.8751904415344068,
+        "pa": 5.465073693643646,
+        "eps": 0.43212054533302485
+      },
+      {
+        "r": 1.0978388898607603,
+        "pa": 6.388373270184806,
+        "eps": 0.49720119801939594
+      },
+      {
+        "r": 1.2295795566440517,
+        "pa": 6.801576510531237,
+        "eps": 0.5092612452515172
+      },
+      {
+        "r": 1.3771291034413378,
+        "pa": 5.0412869820214254,
+        "eps": 0.44615272838067294
+      },
+      {
+        "r": 1.5423845958542985,
+        "pa": 3.7589795918261317,
+        "eps": 0.40093073550351344
+      }
+    ],
+    "fit_error": ""
+  }
+]
