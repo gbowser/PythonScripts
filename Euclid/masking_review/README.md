@@ -63,13 +63,16 @@ This pass searches the whole Fit galaxy rectangle, including the bar and nucleus
 Its labels become separately selectable sublabels on the original image, while
 original-source wings and companion masks remain available. Initial mask proposals
 are inherited from the original segmentation by majority overlap; newly separated
-features within a previously retained galaxy require an explicit Mask decision.
+compact residual labels between Minimum object area and Compact residual maximum
+area (default 100 native pixels) are also proposed for masking automatically.
+This is a reviewable compact-source proposal, not a physical foreground classifier.
+Larger residual structures remain available for manual Mask/Retain decisions.
 There is no hard-coded spatial exclusion or unmaskable centre label.
 
 For the two marked features in -599118107493216367, isolated diagnostics separated
 compact candidates near native (531,559) and (567,550) with galaxy sigma=3,
 MTO smoothing FWHM=0, move=0.9, minimum area=5 and dilation=1. Use the residual
-mode and inspect/select the small labels; these settings do not establish physical
+mode with Compact residual maximum area=100 and inspect the proposed small-label masks; these settings do not establish physical
 foreground membership or guarantee complete source-wing coverage. Residuals can
 also detect intrinsic galaxy structure. Alpha stays at the original test's 1e-6.
 Detection uses temporary arrays only. Fitting and display use the unchanged science

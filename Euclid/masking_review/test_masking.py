@@ -30,6 +30,9 @@ class MaskingTests(unittest.TestCase):
         self.assertEqual(bg['mean'],7.)  # Raw science background retained for geometry.
         self.assertEqual(bg['residual_background']['mean'],0.)
         foreground=[int(labels[55,55]),int(labels[65,65])]
+        self.assertTrue(set(foreground)<=set(bg['proposed_mask_labels']))
+        # Compact central detections are not spatially protected either.
+        self.assertIn(int(labels[60,60]),bg['proposed_mask_labels'])
         mask=core.build_mask(labels,bad,foreground,int(labels[60,60]),0)
         self.assertTrue(mask[55,55]);self.assertTrue(mask[65,65]);self.assertFalse(mask[60,60])
 

@@ -58,6 +58,7 @@ def worker(request_path):
             choices=set(background['proposed_mask_labels'])
             for obj in objects:
                 obj['mask']=obj['label'] in choices
+                obj['origin']='residual' if obj['label']>=background['residual_first_label'] else 'original'
         np.savez_compressed(folder / 'detection.npz', segmentation=segmentation, bad=bad)
         (folder / 'image.png').write_bytes(png_bytes(core.preview(np.where(bad, np.nan, data))))
         (folder / 'labels.bin').write_bytes(segmentation.astype('<u4').tobytes())

@@ -29,11 +29,11 @@ PROCESSING_POLICY = 'fit_galaxy_crop_v1'
 DEFAULTS = dict(move_factor=0.5, dilation=2, minarea=5,
                 alpha=1e-6, min_distance=0., gaussian_fwhm=1.,
                 bg_mean=None, bg_variance=None, gain=1., soft_bias=0.,
-                detect_on='original', residual_sigma=3.)
+                detect_on='original', residual_sigma=3., residual_max_area=100)
 BOUNDS = dict(move_factor=(0, 1), dilation=(0, 30),
               minarea=(1, 100000), alpha=(1e-10, 1e-2), min_distance=(0, 1e9),
               gaussian_fwhm=(0, 15), gain=(1e-9, 1e9), soft_bias=(-1e15, 1e15),
-              bg_mean=(-1e15, 1e15), bg_variance=(1e-20, 1e30), residual_sigma=(1,30))
+              bg_mean=(-1e15, 1e15), bg_variance=(1e-20, 1e30), residual_sigma=(1,30), residual_max_area=(1,100000))
 
 
 def digest(path):
@@ -76,7 +76,7 @@ def parameters(values):
         lo, hi = BOUNDS[key]
         if not math.isfinite(value) or not lo <= value <= hi:
             raise ValueError(f'{key} must be between {lo} and {hi}')
-        if key in ('dilation', 'minarea'):
+        if key in ('dilation', 'minarea', 'residual_max_area'):
             if not value.is_integer():
                 raise ValueError(f'{key} must be an integer')
             value = int(value)
@@ -274,12 +274,16 @@ def detect_fit_galaxy(data, bad, geometry, params, root):
         # Retain ordinary source wings; residual sublabels inherit the old proposal
         # by majority overlap, and remain independently selectable by the reviewer.
         combined=cropped.copy()
+        original_max=int(cropped.max())
         use=extra>0
-        combined[use]=extra[use]+int(cropped.max())
+        combined[use]=extra[use]+original_max
         ids,counts=np.unique(combined,return_counts=True)
         selected_counts=np.bincount(combined[original_mask].ravel(),minlength=int(combined.max())+1)
         background['proposed_mask_labels']=[int(label) for label,count in zip(ids,counts)
-                    if label>0 and count>=params['minarea'] and selected_counts[label]>.5*count]
+                    if label>0 and count>=params['minarea'] and
+                    (selected_counts[label]>.5*count or
+                     (label>original_max and count<=params['residual_max_area']))]
+        background['residual_first_label']=original_max+1
         background['residual_background']=residual_background
         background['residual_sigma']=sigma
         cropped=combined

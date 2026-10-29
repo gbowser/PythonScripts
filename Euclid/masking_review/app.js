@@ -54,16 +54,17 @@ function file(kind,id,name){return `/api/file?kind=${kind}&id=${id}&name=${name}
 async function picture(src){const im=new Image();im.src=src;await im.decode();return im;}
 function safe(fn){return async(...args)=>{try{await fn(...args);}catch(e){status(e.message,true);}};}
 function params(){const p={move_factor:Number($('moveNumber').value),detect_on:$('detect_on').value};
-  for(const key of ['dilation','minarea','residual_sigma',...Object.keys(advanced)])p[key]=$(key).value===''?null:Number($(key).value);
+  for(const key of ['dilation','minarea','residual_sigma','residual_max_area',...Object.keys(advanced)])p[key]=$(key).value===''?null:Number($(key).value);
   return p;
 }
 function setParams(p){$('move').value=$('moveNumber').value=p.move_factor;$('moveValue').value=Number(p.move_factor).toFixed(2);
   for(const key of ['dilation','minarea',...Object.keys(advanced)])$(key).value=p[key]??'';
   $('detect_on').value=p.detect_on||'original';$('residual_sigma').value=p.residual_sigma??3;
+  $('residual_max_area').value=p.residual_max_area??100;
   dirty=false;$('dirty').hidden=true;
 }
 function changed(){dirty=true;$('dirty').hidden=false;updateButtons();}
-function updateButtons(){for(const id of ['detect','sweep','showComparison','galaxy','previous','next','restore','resetParams'])$(id).disabled=busy;
+function updateButtons(){for(const id of ['detect','sweep','showComparison','galaxy','previous','next','restore','resetParams','projectedPreset'])$(id).disabled=busy;
   $('save').disabled=busy||!result||dirty||!$('confirm').checked;
   $('refit').disabled=busy||!accepted||dirty;
   for(const id of ['undo','resetObjects','pin'])$(id).disabled=busy||!result;
@@ -194,7 +195,8 @@ async function showSweep(results){$('sweepSection').hidden=false;$('sweepResults
     const stats=document.createElement('p');stats.className='hint';stats.textContent=`${(100*summary.aoi_masked_fraction).toFixed(1)}% masked · ${r.objects.length} objects`;
     const button=document.createElement('button');button.textContent='Use result';button.onclick=safe(async()=>{if(unsaved()&&!confirm('Replace unsaved object decisions?'))return;await useResult(r);status('Comparison result loaded. Review before saving.');});
     figure.append(caption,img,stats,button);$('sweepResults').append(figure);}redrawSweep();
-  $('sweepProgress').textContent=`${results.length} comparison results ready. Only move factor differs between these results.`;
+  const p=results[0]?.params;
+  $('sweepProgress').textContent=`${results.length} comparison results ready. Only move factor differs. Detection: ${p?.detect_on==='original+residual'?'Original + galaxy residual':'Original image'}; MTO FWHM ${p?.gaussian_fwhm}; dilation ${p?.dilation}; minimum area ${p?.minarea}${p?.detect_on==='original+residual'?'; galaxy sigma '+p.residual_sigma+'; compact residual maximum '+(p.residual_max_area??'not automatically proposed'):''}.`;
   $('sweepSection').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function showRefit(r){$('refitSection').hidden=false;$('refitImage').src=file('refits',r.artifact_id,'geometry.png');
@@ -218,8 +220,9 @@ for(const canvas of canvases){let drag=null;
 }
 $('move').oninput=()=>{$('moveNumber').value=$('move').value;$('moveValue').value=Number($('move').value).toFixed(2);changed();};
 $('moveNumber').oninput=()=>{$('move').value=$('moveNumber').value;$('moveValue').value=Number($('moveNumber').value).toFixed(2);changed();};
-for(const id of ['dilation','minarea','detect_on','residual_sigma',...Object.keys(advanced)])$(id).oninput=changed;
+for(const id of ['dilation','minarea','detect_on','residual_sigma','residual_max_area',...Object.keys(advanced)])$(id).oninput=changed;
 $('resetParams').onclick=()=>{setParams(config.defaults);changed();};
+$('projectedPreset').onclick=()=>{setParams({...config.defaults,detect_on:'original+residual',residual_sigma:3,gaussian_fwhm:0,move_factor:.9,minarea:5,dilation:2,min_distance:0,residual_max_area:100});changed();status('Projected-source preset loaded. Click Run MTO to calculate a new proposed mask, including compact residual detections.');};
 $('detect').onclick=safe(()=>start('detect'));$('sweep').onclick=safe(()=>start('sweep'));$('refit').onclick=safe(()=>start('refit'));
 $('showComparison').onclick=safe(async()=>{const job=await api('/api/job');if(job.action!=='sweep'||job.object_id!==galaxy.object_id||!job.results?.length)throw Error('No comparison results are available for this galaxy in the current server session. Click Compare move to calculate them.');await showSweep(job.results);status(job.status==='complete'?'Last comparison reopened. Choose Use result to inspect a candidate.':'Showing the completed candidates from the last comparison.');});
 $('galaxy').onchange=safe(async()=>{if(unsaved()&&!confirm('Leave the unsaved mask decisions?')){$('galaxy').value=galaxy.object_id;return;}await loadGalaxy();});
