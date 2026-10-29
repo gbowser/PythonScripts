@@ -1,0 +1,1878 @@
+[
+  {
+    "id": "2681494150647395085",
+    "baseline": {
+      "disc_pa": 157.41851684741428,
+      "n_disc_pa": 7,
+      "disc_pa_provisional": false,
+      "bar_pa": 45.91285069077793,
+      "inclination": 28.231523000203573,
+      "n_disc": 7,
+      "n_bar": 4,
+      "pa_scatter": 32.440125886040505,
+      "eps_span": 0.18370206874216735,
+      "max_gap_fraction": 0.2171658200219906,
+      "span_arcsec": 2.4945753147261884,
+      "axis_ratio": 0.8810433306459299,
+      "face_on": false,
+      "sparse": false,
+      "issues": [
+        "Disc PA varies across radius",
+        "Changing disc ellipticity"
+      ],
+      "bar_grade": "A-style",
+      "bar_drop": 0.42854323389755145,
+      "bar_peak": 0.49476004288874814,
+      "bar_scatter": 0.31850792749243734,
+      "leave_one_out_pa_change": 18.98801920095653
+    },
+    "centre_summary": {
+      "max_disc_pa_change_deg": 34.406396649243334,
+      "max_inclination_change_deg": 9.522702719482432,
+      "max_bar_pa_change_deg": 2.506050276685471,
+      "incomplete_disc_trials": 0,
+      "min_disc_samples": 4,
+      "max_disc_samples": 7
+    },
+    "interval_summary": {
+      "max_disc_pa_change_deg": 63.84161578770451,
+      "max_inclination_change_deg": 3.1214599743484683,
+      "max_bar_pa_change_deg": 0,
+      "incomplete_disc_trials": 0,
+      "min_disc_samples": 6,
+      "max_disc_samples": 8
+    },
+    "sensitivity_requires_attention": true,
+    "centre_trials": [
+      {
+        "probe": "xminus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\2681494150647395085\\xminus",
+        "reference": {
+          "x": 764.5385729221249,
+          "y": 764.5961839060756,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 123.01212019817095,
+          "n_disc_pa": 6,
+          "disc_pa_provisional": false,
+          "bar_pa": 45.45261312530113,
+          "inclination": 26.659066365421772,
+          "n_disc": 6,
+          "n_bar": 4,
+          "pa_scatter": 35.255384819285105,
+          "eps_span": 0.16813815691943118,
+          "max_gap_fraction": 0.32769760332673264,
+          "span_arcsec": 2.4945753147261884,
+          "axis_ratio": 0.8936921657983208,
+          "face_on": false,
+          "sparse": false,
+          "issues": [
+            "Disc PA varies across radius",
+            "Changing disc ellipticity"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.411256595309231,
+          "bar_peak": 0.4984982878855131,
+          "bar_scatter": 0.3995177762236869,
+          "leave_one_out_pa_change": 50.261546672136234
+        }
+      },
+      {
+        "probe": "xplus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\2681494150647395085\\xplus",
+        "reference": {
+          "x": 766.5385729221249,
+          "y": 764.5961839060756,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 161.50619283853362,
+          "n_disc_pa": 7,
+          "disc_pa_provisional": false,
+          "bar_pa": 48.4189009674634,
+          "inclination": 27.800304770069086,
+          "n_disc": 7,
+          "n_bar": 3,
+          "pa_scatter": 30.754115108717926,
+          "eps_span": 0.18058445565015424,
+          "max_gap_fraction": 0.2171658200219906,
+          "span_arcsec": 2.4945753147261884,
+          "axis_ratio": 0.8845784943795526,
+          "face_on": false,
+          "sparse": false,
+          "issues": [
+            "Disc PA varies across radius",
+            "Changing disc ellipticity"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.3647386918598112,
+          "bar_peak": 0.45442127808642546,
+          "bar_scatter": 0.4687780587356338,
+          "leave_one_out_pa_change": 14.670536850993557
+        }
+      },
+      {
+        "probe": "yminus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\2681494150647395085\\yminus",
+        "reference": {
+          "x": 765.5385729221249,
+          "y": 763.5961839060756,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 154.33306872135802,
+          "n_disc_pa": 6,
+          "disc_pa_provisional": false,
+          "bar_pa": 44.904894563659326,
+          "inclination": 28.73019516156168,
+          "n_disc": 6,
+          "n_bar": 4,
+          "pa_scatter": 33.037857201125775,
+          "eps_span": 0.2029915074919908,
+          "max_gap_fraction": 0.261238523060214,
+          "span_arcsec": 2.4945753147261884,
+          "axis_ratio": 0.8768929617323072,
+          "face_on": false,
+          "sparse": false,
+          "issues": [
+            "Disc PA varies across radius",
+            "Changing disc ellipticity"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.44600376341698716,
+          "bar_peak": 0.4944732148089176,
+          "bar_scatter": 0.39834767842202695,
+          "leave_one_out_pa_change": 19.284688034886614
+        }
+      },
+      {
+        "probe": "yplus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\2681494150647395085\\yplus",
+        "reference": {
+          "x": 765.5385729221249,
+          "y": 765.5961839060756,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 167.14133171595137,
+          "n_disc_pa": 4,
+          "disc_pa_provisional": false,
+          "bar_pa": 44.94809908483421,
+          "inclination": 37.754225719686005,
+          "n_disc": 4,
+          "n_bar": 4,
+          "pa_scatter": 14.391888607688205,
+          "eps_span": 0.167931996849972,
+          "max_gap_fraction": 0.5564229950319376,
+          "span_arcsec": 1.8428961438446505,
+          "axis_ratio": 0.7906444189026929,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Disc PA varies across radius",
+            "Changing disc ellipticity"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.3048609335415503,
+          "bar_peak": 0.48440684534292133,
+          "bar_scatter": 0.5055302615446952,
+          "leave_one_out_pa_change": 4.246800908956288
+        }
+      }
+    ],
+    "interval_trials": [
+      {
+        "probe": "inner_in",
+        "bounds": [
+          2.0913981235947436,
+          5.056207275738521
+        ],
+        "calculation": {
+          "disc_pa": 40.53266054975333,
+          "n_disc_pa": 8,
+          "disc_pa_provisional": false,
+          "bar_pa": 45.91285069077793,
+          "inclination": 29.82935824388724,
+          "n_disc": 8,
+          "n_bar": 4,
+          "pa_scatter": 41.763379258857185,
+          "eps_span": 0.5210738391970049,
+          "max_gap_fraction": 0.195640835626242,
+          "span_arcsec": 2.76903588197751,
+          "axis_ratio": 0.8675106909905691,
+          "face_on": false,
+          "sparse": false,
+          "issues": [
+            "Disc PA varies across radius",
+            "Changing disc ellipticity"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.42854323389755145,
+          "bar_peak": 0.49476004288874814,
+          "bar_scatter": 0.31850792749243734,
+          "leave_one_out_pa_change": 63.11414370233905
+        }
+      },
+      {
+        "probe": "inner_out",
+        "bounds": [
+          2.63045433307543,
+          5.056207275738521
+        ],
+        "calculation": {
+          "disc_pa": 158.33200660913099,
+          "n_disc_pa": 6,
+          "disc_pa_provisional": false,
+          "bar_pa": 45.91285069077793,
+          "inclination": 25.728335894620074,
+          "n_disc": 6,
+          "n_bar": 4,
+          "pa_scatter": 20.059086078720377,
+          "eps_span": 0.18370206874216735,
+          "max_gap_fraction": 0.2476872606616509,
+          "span_arcsec": 2.187179479404709,
+          "axis_ratio": 0.9008624430160846,
+          "face_on": true,
+          "sparse": false,
+          "issues": [
+            "Nearly face-on: PA ambiguity is informational",
+            "Changing disc ellipticity"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.42854323389755145,
+          "bar_peak": 0.49476004288874814,
+          "bar_scatter": 0.31850792749243734,
+          "leave_one_out_pa_change": 14.268401242100765
+        }
+      },
+      {
+        "probe": "outer_in",
+        "bounds": [
+          2.360926228335087,
+          4.786679170998177
+        ],
+        "calculation": {
+          "disc_pa": 161.7368968381789,
+          "n_disc_pa": 6,
+          "disc_pa_provisional": false,
+          "bar_pa": 45.91285069077793,
+          "inclination": 29.82935824388724,
+          "n_disc": 6,
+          "n_bar": 4,
+          "pa_scatter": 35.17418822650957,
+          "eps_span": 0.18370206874216735,
+          "max_gap_fraction": 0.2476872606616507,
+          "span_arcsec": 1.9528388208970604,
+          "axis_ratio": 0.8675106909905691,
+          "face_on": false,
+          "sparse": false,
+          "issues": [
+            "Disc PA varies across radius",
+            "Changing disc ellipticity"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.42854323389755145,
+          "bar_peak": 0.49476004288874814,
+          "bar_scatter": 0.31850792749243734,
+          "leave_one_out_pa_change": 26.700464558466194
+        }
+      },
+      {
+        "probe": "outer_out",
+        "bounds": [
+          2.360926228335087,
+          5.325735380478864
+        ],
+        "calculation": {
+          "disc_pa": 157.41851684741428,
+          "n_disc_pa": 7,
+          "disc_pa_provisional": false,
+          "bar_pa": 45.91285069077793,
+          "inclination": 28.231523000203573,
+          "n_disc": 7,
+          "n_bar": 4,
+          "pa_scatter": 32.440125886040505,
+          "eps_span": 0.18370206874216735,
+          "max_gap_fraction": 0.2171658200219906,
+          "span_arcsec": 2.4945753147261884,
+          "axis_ratio": 0.8810433306459299,
+          "face_on": false,
+          "sparse": false,
+          "issues": [
+            "Disc PA varies across radius",
+            "Changing disc ellipticity"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.42854323389755145,
+          "bar_peak": 0.49476004288874814,
+          "bar_scatter": 0.31850792749243734,
+          "leave_one_out_pa_change": 18.98801920095653
+        }
+      },
+      {
+        "probe": "shift_in",
+        "bounds": [
+          2.0913981235947436,
+          4.786679170998177
+        ],
+        "calculation": {
+          "disc_pa": 41.260132635118794,
+          "n_disc_pa": 7,
+          "disc_pa_provisional": false,
+          "bar_pa": 45.91285069077793,
+          "inclination": 31.35298297455204,
+          "n_disc": 7,
+          "n_bar": 4,
+          "pa_scatter": 44.57168288067078,
+          "eps_span": 0.5210738391970049,
+          "max_gap_fraction": 0.2171658200219904,
+          "span_arcsec": 2.227299388148382,
+          "axis_ratio": 0.8539780513352084,
+          "face_on": false,
+          "sparse": false,
+          "issues": [
+            "Disc PA varies across radius",
+            "Changing disc ellipticity"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.42854323389755145,
+          "bar_peak": 0.49476004288874814,
+          "bar_scatter": 0.31850792749243734,
+          "leave_one_out_pa_change": 59.5232357969399
+        }
+      },
+      {
+        "probe": "shift_out",
+        "bounds": [
+          2.63045433307543,
+          5.325735380478864
+        ],
+        "calculation": {
+          "disc_pa": 158.33200660913099,
+          "n_disc_pa": 6,
+          "disc_pa_provisional": false,
+          "bar_pa": 45.91285069077793,
+          "inclination": 25.728335894620074,
+          "n_disc": 6,
+          "n_bar": 4,
+          "pa_scatter": 20.059086078720377,
+          "eps_span": 0.18370206874216735,
+          "max_gap_fraction": 0.2476872606616509,
+          "span_arcsec": 2.187179479404709,
+          "axis_ratio": 0.9008624430160846,
+          "face_on": true,
+          "sparse": false,
+          "issues": [
+            "Nearly face-on: PA ambiguity is informational",
+            "Changing disc ellipticity"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.42854323389755145,
+          "bar_peak": 0.49476004288874814,
+          "bar_scatter": 0.31850792749243734,
+          "leave_one_out_pa_change": 14.268401242100765
+        }
+      }
+    ]
+  },
+  {
+    "id": "-524824554283124036",
+    "baseline": {
+      "disc_pa": 170.62277890252986,
+      "n_disc_pa": 3,
+      "disc_pa_provisional": false,
+      "bar_pa": 139.69317679579476,
+      "inclination": 32.34256912315866,
+      "n_disc": 3,
+      "n_bar": 4,
+      "pa_scatter": 2.872315416313426,
+      "eps_span": 0.038261112982788614,
+      "max_gap_fraction": 0.528301886792453,
+      "span_arcsec": 3.4026852807863417,
+      "axis_ratio": 0.8448645914722972,
+      "face_on": false,
+      "sparse": true,
+      "issues": [
+        "Sparse disc sampling"
+      ],
+      "bar_grade": "A-style",
+      "bar_drop": 0.45952048425362774,
+      "bar_peak": 0.5914857852357016,
+      "bar_scatter": 0.8903865352048013,
+      "leave_one_out_pa_change": null
+    },
+    "centre_summary": {
+      "max_disc_pa_change_deg": 0.4212167977251511,
+      "max_inclination_change_deg": 0.3414807707886851,
+      "max_bar_pa_change_deg": 2.3186616039340606,
+      "incomplete_disc_trials": 0,
+      "min_disc_samples": 3,
+      "max_disc_samples": 3
+    },
+    "interval_summary": {
+      "max_disc_pa_change_deg": 8.546741404535965,
+      "max_inclination_change_deg": 0.09932319411337431,
+      "max_bar_pa_change_deg": 0,
+      "incomplete_disc_trials": 0,
+      "min_disc_samples": 3,
+      "max_disc_samples": 4
+    },
+    "sensitivity_requires_attention": false,
+    "centre_trials": [
+      {
+        "probe": "xminus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-524824554283124036\\xminus",
+        "reference": {
+          "x": 5843.43,
+          "y": 6056.16,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 170.36783964259195,
+          "n_disc_pa": 3,
+          "disc_pa_provisional": false,
+          "bar_pa": 137.37451519186072,
+          "inclination": 32.413020988181884,
+          "n_disc": 3,
+          "n_bar": 4,
+          "pa_scatter": 3.631383987269293,
+          "eps_span": 0.03322937283455346,
+          "max_gap_fraction": 0.528301886792453,
+          "span_arcsec": 3.4026852807863417,
+          "axis_ratio": 0.8442061321761238,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.43258084175789513,
+          "bar_peak": 0.58187689606976,
+          "bar_scatter": 1.7558134064577626,
+          "leave_one_out_pa_change": null
+        }
+      },
+      {
+        "probe": "xplus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-524824554283124036\\xplus",
+        "reference": {
+          "x": 5845.43,
+          "y": 6056.16,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 170.2015621048047,
+          "n_disc_pa": 3,
+          "disc_pa_provisional": false,
+          "bar_pa": 141.99322788691103,
+          "inclination": 32.29896299706424,
+          "n_disc": 3,
+          "n_bar": 4,
+          "pa_scatter": 3.165542430104451,
+          "eps_span": 0.03317790893132325,
+          "max_gap_fraction": 0.528301886792453,
+          "span_arcsec": 3.4026852807863417,
+          "axis_ratio": 0.8452715043883441,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.4664199214492939,
+          "bar_peak": 0.5949353849302762,
+          "bar_scatter": 0.330180447113985,
+          "leave_one_out_pa_change": null
+        }
+      },
+      {
+        "probe": "yminus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-524824554283124036\\yminus",
+        "reference": {
+          "x": 5844.43,
+          "y": 6055.16,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 170.53958870395698,
+          "n_disc_pa": 3,
+          "disc_pa_provisional": false,
+          "bar_pa": 140.69389224106243,
+          "inclination": 32.001088352369976,
+          "n_disc": 3,
+          "n_bar": 4,
+          "pa_scatter": 2.7206391810542696,
+          "eps_span": 0.03048062431216679,
+          "max_gap_fraction": 0.528301886792453,
+          "span_arcsec": 3.4026852807863417,
+          "axis_ratio": 0.8480380300109245,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.45346051166497836,
+          "bar_peak": 0.6042504583781432,
+          "bar_scatter": 0.5296473180982576,
+          "leave_one_out_pa_change": null
+        }
+      },
+      {
+        "probe": "yplus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-524824554283124036\\yplus",
+        "reference": {
+          "x": 5844.43,
+          "y": 6057.16,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 170.80383380150104,
+          "n_disc_pa": 3,
+          "disc_pa_provisional": false,
+          "bar_pa": 139.02992530230134,
+          "inclination": 32.61456175769392,
+          "n_disc": 3,
+          "n_bar": 4,
+          "pa_scatter": 3.3780945601868497,
+          "eps_span": 0.03620838390638956,
+          "max_gap_fraction": 0.528301886792453,
+          "span_arcsec": 3.4026852807863417,
+          "axis_ratio": 0.8423154408733182,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.4502807661117519,
+          "bar_peak": 0.5789807436407319,
+          "bar_scatter": 1.0807384434811058,
+          "leave_one_out_pa_change": null
+        }
+      }
+    ],
+    "interval_trials": [
+      {
+        "probe": "inner_in",
+        "bounds": [
+          11.640116342063026,
+          18.135176122389254
+        ],
+        "calculation": {
+          "disc_pa": 162.07603749799387,
+          "n_disc_pa": 4,
+          "disc_pa_provisional": false,
+          "bar_pa": 139.69317679579476,
+          "inclination": 32.441892317272035,
+          "n_disc": 4,
+          "n_bar": 4,
+          "pa_scatter": 8.420582864211406,
+          "eps_span": 0.3278468726965651,
+          "max_gap_fraction": 0.37174016121384557,
+          "span_arcsec": 4.83575691184528,
+          "axis_ratio": 0.8439359253382168,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Changing disc ellipticity"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.45952048425362774,
+          "bar_peak": 0.5914857852357016,
+          "bar_scatter": 0.8903865352048013,
+          "leave_one_out_pa_change": 8.546741404535965
+        }
+      },
+      {
+        "probe": "inner_out",
+        "bounds": [
+          12.821036302122339,
+          18.135176122389254
+        ],
+        "calculation": {
+          "disc_pa": 170.62277890252986,
+          "n_disc_pa": 3,
+          "disc_pa_provisional": false,
+          "bar_pa": 139.69317679579476,
+          "inclination": 32.34256912315866,
+          "n_disc": 3,
+          "n_bar": 4,
+          "pa_scatter": 2.872315416313426,
+          "eps_span": 0.038261112982788614,
+          "max_gap_fraction": 0.528301886792453,
+          "span_arcsec": 3.4026852807863417,
+          "axis_ratio": 0.8448645914722972,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.45952048425362774,
+          "bar_peak": 0.5914857852357016,
+          "bar_scatter": 0.8903865352048013,
+          "leave_one_out_pa_change": null
+        }
+      },
+      {
+        "probe": "outer_in",
+        "bounds": [
+          12.230576322092682,
+          17.544716142359597
+        ],
+        "calculation": {
+          "disc_pa": 170.62277890252986,
+          "n_disc_pa": 3,
+          "disc_pa_provisional": false,
+          "bar_pa": 139.69317679579476,
+          "inclination": 32.34256912315866,
+          "n_disc": 3,
+          "n_bar": 4,
+          "pa_scatter": 2.872315416313426,
+          "eps_span": 0.038261112982788614,
+          "max_gap_fraction": 0.528301886792453,
+          "span_arcsec": 3.4026852807863417,
+          "axis_ratio": 0.8448645914722972,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.45952048425362774,
+          "bar_peak": 0.5914857852357016,
+          "bar_scatter": 0.8903865352048013,
+          "leave_one_out_pa_change": null
+        }
+      },
+      {
+        "probe": "outer_out",
+        "bounds": [
+          12.230576322092682,
+          18.72563610241891
+        ],
+        "calculation": {
+          "disc_pa": 170.62277890252986,
+          "n_disc_pa": 3,
+          "disc_pa_provisional": false,
+          "bar_pa": 139.69317679579476,
+          "inclination": 32.34256912315866,
+          "n_disc": 3,
+          "n_bar": 4,
+          "pa_scatter": 2.872315416313426,
+          "eps_span": 0.038261112982788614,
+          "max_gap_fraction": 0.528301886792453,
+          "span_arcsec": 3.4026852807863417,
+          "axis_ratio": 0.8448645914722972,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.45952048425362774,
+          "bar_peak": 0.5914857852357016,
+          "bar_scatter": 0.8903865352048013,
+          "leave_one_out_pa_change": null
+        }
+      },
+      {
+        "probe": "shift_in",
+        "bounds": [
+          11.640116342063026,
+          17.544716142359597
+        ],
+        "calculation": {
+          "disc_pa": 162.07603749799387,
+          "n_disc_pa": 4,
+          "disc_pa_provisional": false,
+          "bar_pa": 139.69317679579476,
+          "inclination": 32.441892317272035,
+          "n_disc": 4,
+          "n_bar": 4,
+          "pa_scatter": 8.420582864211406,
+          "eps_span": 0.3278468726965651,
+          "max_gap_fraction": 0.37174016121384557,
+          "span_arcsec": 4.83575691184528,
+          "axis_ratio": 0.8439359253382168,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Changing disc ellipticity"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.45952048425362774,
+          "bar_peak": 0.5914857852357016,
+          "bar_scatter": 0.8903865352048013,
+          "leave_one_out_pa_change": 8.546741404535965
+        }
+      },
+      {
+        "probe": "shift_out",
+        "bounds": [
+          12.821036302122339,
+          18.72563610241891
+        ],
+        "calculation": {
+          "disc_pa": 170.62277890252986,
+          "n_disc_pa": 3,
+          "disc_pa_provisional": false,
+          "bar_pa": 139.69317679579476,
+          "inclination": 32.34256912315866,
+          "n_disc": 3,
+          "n_bar": 4,
+          "pa_scatter": 2.872315416313426,
+          "eps_span": 0.038261112982788614,
+          "max_gap_fraction": 0.528301886792453,
+          "span_arcsec": 3.4026852807863417,
+          "axis_ratio": 0.8448645914722972,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.45952048425362774,
+          "bar_peak": 0.5914857852357016,
+          "bar_scatter": 0.8903865352048013,
+          "leave_one_out_pa_change": null
+        }
+      }
+    ]
+  },
+  {
+    "id": "-599118107493216367",
+    "baseline": {
+      "disc_pa": 91.20920722253845,
+      "n_disc_pa": 5,
+      "disc_pa_provisional": false,
+      "bar_pa": 124.35659910073431,
+      "inclination": 63.95340419096871,
+      "n_disc": 5,
+      "n_bar": 8,
+      "pa_scatter": 0.1832050822695437,
+      "eps_span": 0.1015030773480608,
+      "max_gap_fraction": 0.2939593181300803,
+      "span_arcsec": 0.31342415532973333,
+      "axis_ratio": 0.43910194625894294,
+      "face_on": false,
+      "sparse": true,
+      "issues": [
+        "Sparse disc sampling",
+        "Selected bar interval does not pass the signature screen"
+      ],
+      "bar_grade": null,
+      "bar_drop": 0.09251001313936691,
+      "bar_peak": 0.5532666466373074,
+      "bar_scatter": 12.912550095992822,
+      "leave_one_out_pa_change": 0.13517218019234178
+    },
+    "centre_summary": {
+      "max_disc_pa_change_deg": 2.533504895795886,
+      "max_inclination_change_deg": 10.052087395909801,
+      "max_bar_pa_change_deg": 3.8666816977540748,
+      "incomplete_disc_trials": 0,
+      "min_disc_samples": 3,
+      "max_disc_samples": 6
+    },
+    "interval_summary": {
+      "max_disc_pa_change_deg": 0.09321480449835917,
+      "max_inclination_change_deg": 0.9025485883798865,
+      "max_bar_pa_change_deg": 0,
+      "incomplete_disc_trials": 0,
+      "min_disc_samples": 5,
+      "max_disc_samples": 6
+    },
+    "sensitivity_requires_attention": true,
+    "centre_trials": [
+      {
+        "probe": "xminus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-599118107493216367\\xminus",
+        "reference": {
+          "x": 545.2715018156777,
+          "y": 546.3888236933926,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 89.70197765596544,
+          "n_disc_pa": 4,
+          "disc_pa_provisional": false,
+          "bar_pa": 123.49289697332175,
+          "inclination": 63.421704315706066,
+          "n_disc": 4,
+          "n_bar": 8,
+          "pa_scatter": 0.47159086578158754,
+          "eps_span": 0.1634941281948709,
+          "max_gap_fraction": 0.5311633994618753,
+          "span_arcsec": 0.37197694681634386,
+          "axis_ratio": 0.4474203395705528,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Changing disc ellipticity",
+            "Selected bar interval does not pass the signature screen"
+          ],
+          "bar_grade": null,
+          "bar_drop": 0.10765584140611384,
+          "bar_peak": 0.5436147986673893,
+          "bar_scatter": 13.421828700662449,
+          "leave_one_out_pa_change": 0.20996652531914606
+        }
+      },
+      {
+        "probe": "yminus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-599118107493216367\\yminus",
+        "reference": {
+          "x": 546.2715018156777,
+          "y": 545.3888236933926,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 89.56168077362412,
+          "n_disc_pa": 5,
+          "disc_pa_provisional": false,
+          "bar_pa": 128.2232807984884,
+          "inclination": 56.550872427194925,
+          "n_disc": 5,
+          "n_bar": 7,
+          "pa_scatter": 2.1149054547079764,
+          "eps_span": 0.23118061402556606,
+          "max_gap_fraction": 0.3670213157259409,
+          "span_arcsec": 0.4313960013094611,
+          "axis_ratio": 0.5511963678384729,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Changing disc ellipticity",
+            "Selected bar interval does not pass the signature screen"
+          ],
+          "bar_grade": null,
+          "bar_drop": 0.13192640207066408,
+          "bar_peak": 0.5404747459915887,
+          "bar_scatter": 13.18014916020271,
+          "leave_one_out_pa_change": 0.9921567889705329
+        }
+      },
+      {
+        "probe": "xplus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-599118107493216367\\xplus",
+        "reference": {
+          "x": 547.2715018156777,
+          "y": 546.3888236933926,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 93.74271211833437,
+          "n_disc_pa": 6,
+          "disc_pa_provisional": false,
+          "bar_pa": 123.778714271036,
+          "inclination": 65.70232311940819,
+          "n_disc": 6,
+          "n_bar": 8,
+          "pa_scatter": 1.2986012595136622,
+          "eps_span": 0.06397820509102514,
+          "max_gap_fraction": 0.24768726066165084,
+          "span_arcsec": 0.37197694681634386,
+          "axis_ratio": 0.4114774044343301,
+          "face_on": false,
+          "sparse": false,
+          "issues": [
+            "Selected bar interval does not pass the signature screen"
+          ],
+          "bar_grade": null,
+          "bar_drop": 0.051453844162603346,
+          "bar_peak": 0.551055180324816,
+          "bar_scatter": 11.856476117533482,
+          "leave_one_out_pa_change": 0.35324009426682323
+        }
+      },
+      {
+        "probe": "yplus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-599118107493216367\\yplus",
+        "reference": {
+          "x": 546.2715018156777,
+          "y": 547.3888236933926,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 92.18672483029759,
+          "n_disc_pa": 3,
+          "disc_pa_provisional": false,
+          "bar_pa": 123.88292607309384,
+          "inclination": 53.90131679505891,
+          "n_disc": 3,
+          "n_bar": 7,
+          "pa_scatter": 1.7281961569262734,
+          "eps_span": 0.22458983704325308,
+          "max_gap_fraction": 0.8767742815753707,
+          "span_arcsec": 0.4313960013094611,
+          "axis_ratio": 0.5891777876434755,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Changing disc ellipticity",
+            "Selected bar interval does not pass the signature screen"
+          ],
+          "bar_grade": null,
+          "bar_drop": 0.12722345859984407,
+          "bar_peak": 0.5531926184514098,
+          "bar_scatter": 16.447286427868423,
+          "leave_one_out_pa_change": null
+        }
+      }
+    ],
+    "interval_trials": [
+      {
+        "probe": "inner_in",
+        "bounds": [
+          0.39285851298065444,
+          0.9443307373232607
+        ],
+        "calculation": {
+          "disc_pa": 91.1681640772853,
+          "n_disc_pa": 6,
+          "disc_pa_provisional": false,
+          "bar_pa": 124.35659910073431,
+          "inclination": 63.050855602588825,
+          "n_disc": 6,
+          "n_bar": 8,
+          "pa_scatter": 0.3368737582445712,
+          "eps_span": 0.16899677409734692,
+          "max_gap_fraction": 0.26123852306021417,
+          "span_arcsec": 0.4242562249293889,
+          "axis_ratio": 0.453199465660889,
+          "face_on": false,
+          "sparse": false,
+          "issues": [
+            "Changing disc ellipticity",
+            "Selected bar interval does not pass the signature screen"
+          ],
+          "bar_grade": null,
+          "bar_drop": 0.09251001313936691,
+          "bar_peak": 0.5532666466373074,
+          "bar_scatter": 12.912550095992822,
+          "leave_one_out_pa_change": 0.10153555446407836
+        }
+      },
+      {
+        "probe": "inner_out",
+        "bounds": [
+          0.4931261901338556,
+          0.9443307373232607
+        ],
+        "calculation": {
+          "disc_pa": 91.20920722253845,
+          "n_disc_pa": 5,
+          "disc_pa_provisional": false,
+          "bar_pa": 124.35659910073431,
+          "inclination": 63.95340419096871,
+          "n_disc": 5,
+          "n_bar": 8,
+          "pa_scatter": 0.1832050822695437,
+          "eps_span": 0.1015030773480608,
+          "max_gap_fraction": 0.2939593181300803,
+          "span_arcsec": 0.31342415532973333,
+          "axis_ratio": 0.43910194625894294,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Selected bar interval does not pass the signature screen"
+          ],
+          "bar_grade": null,
+          "bar_drop": 0.09251001313936691,
+          "bar_peak": 0.5532666466373074,
+          "bar_scatter": 12.912550095992822,
+          "leave_one_out_pa_change": 0.13517218019234178
+        }
+      },
+      {
+        "probe": "outer_in",
+        "bounds": [
+          0.442992351557255,
+          0.8941968987466601
+        ],
+        "calculation": {
+          "disc_pa": 91.20920722253845,
+          "n_disc_pa": 5,
+          "disc_pa_provisional": false,
+          "bar_pa": 124.35659910073431,
+          "inclination": 63.95340419096871,
+          "n_disc": 5,
+          "n_bar": 8,
+          "pa_scatter": 0.1832050822695437,
+          "eps_span": 0.1015030773480608,
+          "max_gap_fraction": 0.2939593181300803,
+          "span_arcsec": 0.31342415532973333,
+          "axis_ratio": 0.43910194625894294,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Selected bar interval does not pass the signature screen"
+          ],
+          "bar_grade": null,
+          "bar_drop": 0.09251001313936691,
+          "bar_peak": 0.5532666466373074,
+          "bar_scatter": 12.912550095992822,
+          "leave_one_out_pa_change": 0.13517218019234178
+        }
+      },
+      {
+        "probe": "outer_out",
+        "bounds": [
+          0.442992351557255,
+          0.9944645758998613
+        ],
+        "calculation": {
+          "disc_pa": 91.1159924180401,
+          "n_disc_pa": 6,
+          "disc_pa_provisional": false,
+          "bar_pa": 124.35659910073431,
+          "inclination": 64.60200862185927,
+          "n_disc": 6,
+          "n_bar": 8,
+          "pa_scatter": 0.22683019229400467,
+          "eps_span": 0.1069748560825759,
+          "max_gap_fraction": 0.24768726066165084,
+          "span_arcsec": 0.4166141804343051,
+          "axis_ratio": 0.4289034648556094,
+          "face_on": false,
+          "sparse": false,
+          "issues": [
+            "Selected bar interval does not pass the signature screen"
+          ],
+          "bar_grade": null,
+          "bar_drop": 0.09251001313936691,
+          "bar_peak": 0.5532666466373074,
+          "bar_scatter": 12.912550095992822,
+          "leave_one_out_pa_change": 0.09321480449835917
+        }
+      },
+      {
+        "probe": "shift_in",
+        "bounds": [
+          0.39285851298065444,
+          0.8941968987466601
+        ],
+        "calculation": {
+          "disc_pa": 91.1681640772853,
+          "n_disc_pa": 6,
+          "disc_pa_provisional": false,
+          "bar_pa": 124.35659910073431,
+          "inclination": 63.050855602588825,
+          "n_disc": 6,
+          "n_bar": 8,
+          "pa_scatter": 0.3368737582445712,
+          "eps_span": 0.16899677409734692,
+          "max_gap_fraction": 0.26123852306021417,
+          "span_arcsec": 0.4242562249293889,
+          "axis_ratio": 0.453199465660889,
+          "face_on": false,
+          "sparse": false,
+          "issues": [
+            "Changing disc ellipticity",
+            "Selected bar interval does not pass the signature screen"
+          ],
+          "bar_grade": null,
+          "bar_drop": 0.09251001313936691,
+          "bar_peak": 0.5532666466373074,
+          "bar_scatter": 12.912550095992822,
+          "leave_one_out_pa_change": 0.10153555446407836
+        }
+      },
+      {
+        "probe": "shift_out",
+        "bounds": [
+          0.4931261901338556,
+          0.9944645758998613
+        ],
+        "calculation": {
+          "disc_pa": 91.1159924180401,
+          "n_disc_pa": 6,
+          "disc_pa_provisional": false,
+          "bar_pa": 124.35659910073431,
+          "inclination": 64.60200862185927,
+          "n_disc": 6,
+          "n_bar": 8,
+          "pa_scatter": 0.22683019229400467,
+          "eps_span": 0.1069748560825759,
+          "max_gap_fraction": 0.24768726066165084,
+          "span_arcsec": 0.4166141804343051,
+          "axis_ratio": 0.4289034648556094,
+          "face_on": false,
+          "sparse": false,
+          "issues": [
+            "Selected bar interval does not pass the signature screen"
+          ],
+          "bar_grade": null,
+          "bar_drop": 0.09251001313936691,
+          "bar_peak": 0.5532666466373074,
+          "bar_scatter": 12.912550095992822,
+          "leave_one_out_pa_change": 0.09321480449835917
+        }
+      }
+    ]
+  },
+  {
+    "id": "-537890362287224823",
+    "baseline": {
+      "disc_pa": 62.64143696328259,
+      "n_disc_pa": 5,
+      "disc_pa_provisional": false,
+      "bar_pa": null,
+      "inclination": 32.102422028419525,
+      "n_disc": 5,
+      "n_bar": 2,
+      "pa_scatter": 15.360799736864564,
+      "eps_span": 0.060988731005006014,
+      "max_gap_fraction": 0.2939593181300803,
+      "span_arcsec": 1.8897126611020059,
+      "axis_ratio": 0.8470994571476249,
+      "face_on": false,
+      "sparse": true,
+      "issues": [
+        "Sparse disc sampling",
+        "Disc PA varies across radius",
+        "Selected bar interval does not pass the signature screen"
+      ],
+      "bar_grade": null,
+      "bar_drop": 0.4799680549738492,
+      "bar_peak": 0.6103966582233917,
+      "bar_scatter": 0,
+      "leave_one_out_pa_change": 7.801564484513733
+    },
+    "centre_summary": {
+      "max_disc_pa_change_deg": 1.653202038966242,
+      "max_inclination_change_deg": 0.9150417066404586,
+      "max_bar_pa_change_deg": null,
+      "incomplete_disc_trials": 0,
+      "min_disc_samples": 5,
+      "max_disc_samples": 5
+    },
+    "interval_summary": {
+      "max_disc_pa_change_deg": 7.801564484513733,
+      "max_inclination_change_deg": 0.519835857618741,
+      "max_bar_pa_change_deg": null,
+      "incomplete_disc_trials": 0,
+      "min_disc_samples": 4,
+      "max_disc_samples": 5
+    },
+    "sensitivity_requires_attention": false,
+    "centre_trials": [
+      {
+        "probe": "xminus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-537890362287224823\\xminus",
+        "reference": {
+          "x": 943.08838360548,
+          "y": 944.5838062308258,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 63.09266023056972,
+          "n_disc_pa": 5,
+          "disc_pa_provisional": false,
+          "bar_pa": 123.75782089920946,
+          "inclination": 31.502506429130456,
+          "n_disc": 5,
+          "n_bar": 4,
+          "pa_scatter": 14.47490536398111,
+          "eps_span": 0.07181510422332155,
+          "max_gap_fraction": 0.2939593181300803,
+          "span_arcsec": 1.8897126611020059,
+          "axis_ratio": 0.8526173066082384,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Disc PA varies across radius"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.4997043987945423,
+          "bar_peak": 0.6203290032762404,
+          "bar_scatter": 0.5036550832351441,
+          "leave_one_out_pa_change": 5.75370980143191
+        }
+      },
+      {
+        "probe": "xplus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-537890362287224823\\xplus",
+        "reference": {
+          "x": 945.08838360548,
+          "y": 944.5838062308258,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 61.95726899250059,
+          "n_disc_pa": 5,
+          "disc_pa_provisional": false,
+          "bar_pa": 124.42676537849249,
+          "inclination": 31.90936273794926,
+          "n_disc": 5,
+          "n_bar": 3,
+          "pa_scatter": 16.397927249474808,
+          "eps_span": 0.051635934370726444,
+          "max_gap_fraction": 0.2939593181300803,
+          "span_arcsec": 1.8897126611020059,
+          "axis_ratio": 0.8488853238669016,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Disc PA varies across radius"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.461501700469351,
+          "bar_peak": 0.5982732004164231,
+          "bar_scatter": 0.5403263256452768,
+          "leave_one_out_pa_change": 9.111515725097092
+        }
+      },
+      {
+        "probe": "yminus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-537890362287224823\\yminus",
+        "reference": {
+          "x": 944.08838360548,
+          "y": 943.5838062308258,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 61.739612901554864,
+          "n_disc_pa": 5,
+          "disc_pa_provisional": false,
+          "bar_pa": 126.30522716508045,
+          "inclination": 33.017463735059984,
+          "n_disc": 5,
+          "n_bar": 3,
+          "pa_scatter": 15.39043820744954,
+          "eps_span": 0.042706874380520204,
+          "max_gap_fraction": 0.2939593181300803,
+          "span_arcsec": 1.8897126611020059,
+          "axis_ratio": 0.8385045231888769,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Disc PA varies across radius"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.45032493986408756,
+          "bar_peak": 0.5949320747526634,
+          "bar_scatter": 0.8883447416445595,
+          "leave_one_out_pa_change": 6.821971333037936
+        }
+      },
+      {
+        "probe": "yplus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-537890362287224823\\yplus",
+        "reference": {
+          "x": 944.08838360548,
+          "y": 945.5838062308258,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 64.29463900224883,
+          "n_disc_pa": 5,
+          "disc_pa_provisional": false,
+          "bar_pa": 122.71800791175086,
+          "inclination": 32.17826695115265,
+          "n_disc": 5,
+          "n_bar": 4,
+          "pa_scatter": 16.309948811962226,
+          "eps_span": 0.06821654368113049,
+          "max_gap_fraction": 0.2939593181300803,
+          "span_arcsec": 1.8897126611020059,
+          "axis_ratio": 0.8463952322850534,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Disc PA varies across radius"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.49697222913374806,
+          "bar_peak": 0.6154760497852754,
+          "bar_scatter": 2.0076045296774923,
+          "leave_one_out_pa_change": 5.8081578955658415
+        }
+      }
+    ],
+    "interval_trials": [
+      {
+        "probe": "inner_in",
+        "bounds": [
+          3.0764775733420766,
+          5.212298024993057
+        ],
+        "calculation": {
+          "disc_pa": 62.64143696328259,
+          "n_disc_pa": 5,
+          "disc_pa_provisional": false,
+          "bar_pa": null,
+          "inclination": 32.102422028419525,
+          "n_disc": 5,
+          "n_bar": 2,
+          "pa_scatter": 15.360799736864564,
+          "eps_span": 0.060988731005006014,
+          "max_gap_fraction": 0.2939593181300803,
+          "span_arcsec": 1.8897126611020059,
+          "axis_ratio": 0.8470994571476249,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Disc PA varies across radius",
+            "Selected bar interval does not pass the signature screen"
+          ],
+          "bar_grade": null,
+          "bar_drop": 0.4799680549738492,
+          "bar_peak": 0.6103966582233917,
+          "bar_scatter": 0,
+          "leave_one_out_pa_change": 7.801564484513733
+        }
+      },
+      {
+        "probe": "inner_out",
+        "bounds": [
+          3.464808564551346,
+          5.212298024993057
+        ],
+        "calculation": {
+          "disc_pa": 64.93946887407958,
+          "n_disc_pa": 4,
+          "disc_pa_provisional": false,
+          "bar_pa": null,
+          "inclination": 32.59446113413486,
+          "n_disc": 4,
+          "n_bar": 2,
+          "pa_scatter": 10.071785910728426,
+          "eps_span": 0.060988731005006014,
+          "max_gap_fraction": 0.3717401612138454,
+          "span_arcsec": 1.494319697676603,
+          "axis_ratio": 0.8425044768214948,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Disc PA varies across radius",
+            "Selected bar interval does not pass the signature screen"
+          ],
+          "bar_grade": null,
+          "bar_drop": 0.4799680549738492,
+          "bar_peak": 0.6103966582233917,
+          "bar_scatter": 0,
+          "leave_one_out_pa_change": 5.684362818360967
+        }
+      },
+      {
+        "probe": "outer_in",
+        "bounds": [
+          3.270643068946711,
+          5.0181325293884225
+        ],
+        "calculation": {
+          "disc_pa": 54.83987247876888,
+          "n_disc_pa": 4,
+          "disc_pa_provisional": false,
+          "bar_pa": null,
+          "inclination": 31.582586170800784,
+          "n_disc": 4,
+          "n_bar": 2,
+          "pa_scatter": 14.266614358697474,
+          "eps_span": 0.03166190025509277,
+          "max_gap_fraction": 0.37174016121384573,
+          "span_arcsec": 1.3342140157826807,
+          "axis_ratio": 0.8518861491340601,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Disc PA varies across radius",
+            "Selected bar interval does not pass the signature screen"
+          ],
+          "bar_grade": null,
+          "bar_drop": 0.4799680549738492,
+          "bar_peak": 0.6103966582233917,
+          "bar_scatter": 0,
+          "leave_one_out_pa_change": 10.759995678218445
+        }
+      },
+      {
+        "probe": "outer_out",
+        "bounds": [
+          3.270643068946711,
+          5.406463520597692
+        ],
+        "calculation": {
+          "disc_pa": 62.64143696328259,
+          "n_disc_pa": 5,
+          "disc_pa_provisional": false,
+          "bar_pa": null,
+          "inclination": 32.102422028419525,
+          "n_disc": 5,
+          "n_bar": 2,
+          "pa_scatter": 15.360799736864564,
+          "eps_span": 0.060988731005006014,
+          "max_gap_fraction": 0.2939593181300803,
+          "span_arcsec": 1.8897126611020059,
+          "axis_ratio": 0.8470994571476249,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Disc PA varies across radius",
+            "Selected bar interval does not pass the signature screen"
+          ],
+          "bar_grade": null,
+          "bar_drop": 0.4799680549738492,
+          "bar_peak": 0.6103966582233917,
+          "bar_scatter": 0,
+          "leave_one_out_pa_change": 7.801564484513733
+        }
+      },
+      {
+        "probe": "shift_in",
+        "bounds": [
+          3.0764775733420766,
+          5.0181325293884225
+        ],
+        "calculation": {
+          "disc_pa": 54.83987247876888,
+          "n_disc_pa": 4,
+          "disc_pa_provisional": false,
+          "bar_pa": null,
+          "inclination": 31.582586170800784,
+          "n_disc": 4,
+          "n_bar": 2,
+          "pa_scatter": 14.266614358697474,
+          "eps_span": 0.03166190025509277,
+          "max_gap_fraction": 0.37174016121384573,
+          "span_arcsec": 1.3342140157826807,
+          "axis_ratio": 0.8518861491340601,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Disc PA varies across radius",
+            "Selected bar interval does not pass the signature screen"
+          ],
+          "bar_grade": null,
+          "bar_drop": 0.4799680549738492,
+          "bar_peak": 0.6103966582233917,
+          "bar_scatter": 0,
+          "leave_one_out_pa_change": 10.759995678218445
+        }
+      },
+      {
+        "probe": "shift_out",
+        "bounds": [
+          3.464808564551346,
+          5.406463520597692
+        ],
+        "calculation": {
+          "disc_pa": 64.93946887407958,
+          "n_disc_pa": 4,
+          "disc_pa_provisional": false,
+          "bar_pa": null,
+          "inclination": 32.59446113413486,
+          "n_disc": 4,
+          "n_bar": 2,
+          "pa_scatter": 10.071785910728426,
+          "eps_span": 0.060988731005006014,
+          "max_gap_fraction": 0.3717401612138454,
+          "span_arcsec": 1.494319697676603,
+          "axis_ratio": 0.8425044768214948,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Disc PA varies across radius",
+            "Selected bar interval does not pass the signature screen"
+          ],
+          "bar_grade": null,
+          "bar_drop": 0.4799680549738492,
+          "bar_peak": 0.6103966582233917,
+          "bar_scatter": 0,
+          "leave_one_out_pa_change": 5.684362818360967
+        }
+      }
+    ]
+  },
+  {
+    "id": "-663928688473758026",
+    "baseline": {
+      "disc_pa": 100.50479482860746,
+      "n_disc_pa": 5,
+      "disc_pa_provisional": false,
+      "bar_pa": 0.8965893614214906,
+      "inclination": 24.76460243341408,
+      "n_disc": 5,
+      "n_bar": 6,
+      "pa_scatter": 37.46065147873625,
+      "eps_span": 0.12002024121833979,
+      "max_gap_fraction": 0.2939593181300802,
+      "span_arcsec": 1.2344313924604728,
+      "axis_ratio": 0.9080364444849464,
+      "face_on": true,
+      "sparse": true,
+      "issues": [
+        "Nearly face-on: PA ambiguity is informational"
+      ],
+      "bar_grade": "A (stored)",
+      "bar_drop": 0.5318303848805566,
+      "bar_peak": 0.6026488738181728,
+      "bar_scatter": 0.9789467830429283,
+      "leave_one_out_pa_change": 30.30865239488125
+    },
+    "centre_summary": {
+      "max_disc_pa_change_deg": 48.64908313963562,
+      "max_inclination_change_deg": 2.4835553361557423,
+      "max_bar_pa_change_deg": 0.564176897346897,
+      "incomplete_disc_trials": 1,
+      "min_disc_samples": 2,
+      "max_disc_samples": 5
+    },
+    "interval_summary": {
+      "max_disc_pa_change_deg": 11.468870849246514,
+      "max_inclination_change_deg": 0.2360601818281971,
+      "max_bar_pa_change_deg": 0,
+      "incomplete_disc_trials": 0,
+      "min_disc_samples": 4,
+      "max_disc_samples": 5
+    },
+    "sensitivity_requires_attention": true,
+    "centre_trials": [
+      {
+        "probe": "xminus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-663928688473758026\\xminus",
+        "reference": {
+          "x": 595.01,
+          "y": 593.64,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 96.0778058289841,
+          "n_disc_pa": 5,
+          "disc_pa_provisional": false,
+          "bar_pa": 0.9411172956436644,
+          "inclination": 26.84254211176601,
+          "n_disc": 5,
+          "n_bar": 6,
+          "pa_scatter": 32.08081655862175,
+          "eps_span": 0.07854503591054914,
+          "max_gap_fraction": 0.2939593181300802,
+          "span_arcsec": 1.2344313924604728,
+          "axis_ratio": 0.8922507959005063,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Disc PA varies across radius"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.5101794617085091,
+          "bar_peak": 0.5790339842959563,
+          "bar_scatter": 1.2595407007458075,
+          "leave_one_out_pa_change": 16.852785368601758
+        }
+      },
+      {
+        "probe": "xplus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-663928688473758026\\xplus",
+        "reference": {
+          "x": 597.01,
+          "y": 593.64,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 51.85571168897184,
+          "n_disc_pa": 2,
+          "disc_pa_provisional": true,
+          "bar_pa": 1.4607662587683876,
+          "inclination": null,
+          "n_disc": 2,
+          "n_bar": 6,
+          "pa_scatter": 38.1188493889198,
+          "eps_span": 0.1296543862897711,
+          "max_gap_fraction": 1,
+          "span_arcsec": 0.8715587820544268,
+          "axis_ratio": 0.8413981113284803,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Fewer than three disc ellipses: Disc PA provisional; inclination requires three selected ellipses"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.5187184363849433,
+          "bar_peak": 0.6124931319115774,
+          "bar_scatter": 1.9145890958814147,
+          "leave_one_out_pa_change": null
+        }
+      },
+      {
+        "probe": "yminus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-663928688473758026\\yminus",
+        "reference": {
+          "x": 596.01,
+          "y": 592.64,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 79.939614396146,
+          "n_disc_pa": 4,
+          "disc_pa_provisional": false,
+          "bar_pa": 1.112122683926799,
+          "inclination": 26.146726849646516,
+          "n_disc": 4,
+          "n_bar": 6,
+          "pa_scatter": 24.250407346485517,
+          "eps_span": 0.09814972892118072,
+          "max_gap_fraction": 0.37174016121384534,
+          "span_arcsec": 0.8715587820544268,
+          "axis_ratio": 0.8976684903248628,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Disc PA varies across radius"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.5519310062446801,
+          "bar_peak": 0.6090663237465692,
+          "bar_scatter": 1.1036133042815075,
+          "leave_one_out_pa_change": 17.743480771763984
+        }
+      },
+      {
+        "probe": "yplus",
+        "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-663928688473758026\\yplus",
+        "reference": {
+          "x": 596.01,
+          "y": 594.64,
+          "provenance": "sensitivity_probe_not_adopted"
+        },
+        "calculation": {
+          "disc_pa": 118.55547073964553,
+          "n_disc_pa": 5,
+          "disc_pa_provisional": false,
+          "bar_pa": 0.572526403094173,
+          "inclination": 27.248157769569822,
+          "n_disc": 5,
+          "n_bar": 6,
+          "pa_scatter": 39.416694104769455,
+          "eps_span": 0.08935153966966097,
+          "max_gap_fraction": 0.2939593181300802,
+          "span_arcsec": 1.2344313924604728,
+          "axis_ratio": 0.8890318630400458,
+          "face_on": false,
+          "sparse": true,
+          "issues": [
+            "Sparse disc sampling",
+            "Disc PA varies across radius"
+          ],
+          "bar_grade": "A-style",
+          "bar_drop": 0.5097682330654848,
+          "bar_peak": 0.6025451635829866,
+          "bar_scatter": 0.620305940177538,
+          "leave_one_out_pa_change": 27.878835228895184
+        }
+      }
+    ],
+    "interval_trials": [
+      {
+        "probe": "inner_in",
+        "bounds": [
+          2.0267071340896408,
+          3.409104677059088
+        ],
+        "calculation": {
+          "disc_pa": 100.50479482860746,
+          "n_disc_pa": 5,
+          "disc_pa_provisional": false,
+          "bar_pa": 0.8965893614214906,
+          "inclination": 24.76460243341408,
+          "n_disc": 5,
+          "n_bar": 6,
+          "pa_scatter": 37.46065147873625,
+          "eps_span": 0.12002024121833979,
+          "max_gap_fraction": 0.2939593181300802,
+          "span_arcsec": 1.2344313924604728,
+          "axis_ratio": 0.9080364444849464,
+          "face_on": true,
+          "sparse": true,
+          "issues": [
+            "Nearly face-on: PA ambiguity is informational"
+          ],
+          "bar_grade": "A (stored)",
+          "bar_drop": 0.5318303848805566,
+          "bar_peak": 0.6026488738181728,
+          "bar_scatter": 0.9789467830429283,
+          "leave_one_out_pa_change": 30.30865239488125
+        }
+      },
+      {
+        "probe": "inner_out",
+        "bounds": [
+          2.2780521419022675,
+          3.409104677059088
+        ],
+        "calculation": {
+          "disc_pa": 106.63354700762187,
+          "n_disc_pa": 4,
+          "disc_pa_provisional": false,
+          "bar_pa": 0.8965893614214906,
+          "inclination": 24.528542251585883,
+          "n_disc": 4,
+          "n_bar": 6,
+          "pa_scatter": 24.766661192588376,
+          "eps_span": 0.027890573813993083,
+          "max_gap_fraction": 0.3717401612138454,
+          "span_arcsec": 0.976145835900958,
+          "axis_ratio": 0.9097545759399064,
+          "face_on": true,
+          "sparse": true,
+          "issues": [
+            "Nearly face-on: PA ambiguity is informational"
+          ],
+          "bar_grade": "A (stored)",
+          "bar_drop": 0.5318303848805566,
+          "bar_peak": 0.6026488738181728,
+          "bar_scatter": 0.9789467830429283,
+          "leave_one_out_pa_change": 10.98061866677159
+        }
+      },
+      {
+        "probe": "outer_in",
+        "bounds": [
+          2.152379637995954,
+          3.2834321731527747
+        ],
+        "calculation": {
+          "disc_pa": 89.03592397936097,
+          "n_disc_pa": 4,
+          "disc_pa_provisional": false,
+          "bar_pa": 0.8965893614214906,
+          "inclination": 24.98996090119709,
+          "n_disc": 4,
+          "n_bar": 6,
+          "pa_scatter": 31.28640039943918,
+          "eps_span": 0.12002024121833979,
+          "max_gap_fraction": 0.37174016121384534,
+          "span_arcsec": 0.8715587820544268,
+          "axis_ratio": 0.9063818223216284,
+          "face_on": true,
+          "sparse": true,
+          "issues": [
+            "Nearly face-on: PA ambiguity is informational"
+          ],
+          "bar_grade": "A (stored)",
+          "bar_drop": 0.5318303848805566,
+          "bar_peak": 0.6026488738181728,
+          "bar_scatter": 0.9789467830429283,
+          "leave_one_out_pa_change": 29.18229329659391
+        }
+      },
+      {
+        "probe": "outer_out",
+        "bounds": [
+          2.152379637995954,
+          3.5347771809654014
+        ],
+        "calculation": {
+          "disc_pa": 100.50479482860746,
+          "n_disc_pa": 5,
+          "disc_pa_provisional": false,
+          "bar_pa": 0.8965893614214906,
+          "inclination": 24.76460243341408,
+          "n_disc": 5,
+          "n_bar": 6,
+          "pa_scatter": 37.46065147873625,
+          "eps_span": 0.12002024121833979,
+          "max_gap_fraction": 0.2939593181300802,
+          "span_arcsec": 1.2344313924604728,
+          "axis_ratio": 0.9080364444849464,
+          "face_on": true,
+          "sparse": true,
+          "issues": [
+            "Nearly face-on: PA ambiguity is informational"
+          ],
+          "bar_grade": "A (stored)",
+          "bar_drop": 0.5318303848805566,
+          "bar_peak": 0.6026488738181728,
+          "bar_scatter": 0.9789467830429283,
+          "leave_one_out_pa_change": 30.30865239488125
+        }
+      },
+      {
+        "probe": "shift_in",
+        "bounds": [
+          2.0267071340896408,
+          3.2834321731527747
+        ],
+        "calculation": {
+          "disc_pa": 89.03592397936097,
+          "n_disc_pa": 4,
+          "disc_pa_provisional": false,
+          "bar_pa": 0.8965893614214906,
+          "inclination": 24.98996090119709,
+          "n_disc": 4,
+          "n_bar": 6,
+          "pa_scatter": 31.28640039943918,
+          "eps_span": 0.12002024121833979,
+          "max_gap_fraction": 0.37174016121384534,
+          "span_arcsec": 0.8715587820544268,
+          "axis_ratio": 0.9063818223216284,
+          "face_on": true,
+          "sparse": true,
+          "issues": [
+            "Nearly face-on: PA ambiguity is informational"
+          ],
+          "bar_grade": "A (stored)",
+          "bar_drop": 0.5318303848805566,
+          "bar_peak": 0.6026488738181728,
+          "bar_scatter": 0.9789467830429283,
+          "leave_one_out_pa_change": 29.18229329659391
+        }
+      },
+      {
+        "probe": "shift_out",
+        "bounds": [
+          2.2780521419022675,
+          3.5347771809654014
+        ],
+        "calculation": {
+          "disc_pa": 106.63354700762187,
+          "n_disc_pa": 4,
+          "disc_pa_provisional": false,
+          "bar_pa": 0.8965893614214906,
+          "inclination": 24.528542251585883,
+          "n_disc": 4,
+          "n_bar": 6,
+          "pa_scatter": 24.766661192588376,
+          "eps_span": 0.027890573813993083,
+          "max_gap_fraction": 0.3717401612138454,
+          "span_arcsec": 0.976145835900958,
+          "axis_ratio": 0.9097545759399064,
+          "face_on": true,
+          "sparse": true,
+          "issues": [
+            "Nearly face-on: PA ambiguity is informational"
+          ],
+          "bar_grade": "A (stored)",
+          "bar_drop": 0.5318303848805566,
+          "bar_peak": 0.6026488738181728,
+          "bar_scatter": 0.9789467830429283,
+          "leave_one_out_pa_change": 10.98061866677159
+        }
+      }
+    ]
+  }
+]

@@ -1,3 +1,5 @@
+> Historical audit of the first 18 saved reviews. The completed 19-review findings and adopted changes are in [the current report](MER_VIS_adopted_review_policy_and_sensitivity.md).
+
 # MER VIS centre-pilot review findings
 
 Audit date: 29 October 2026. This is a read-only audit of the saved centre-pilot review; no assessments, fitting thresholds or master geometry were changed.

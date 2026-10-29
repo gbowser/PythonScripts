@@ -1,3 +1,5 @@
+> Current status (29 October 2026): all 19 centre-pilot reviews are complete. See [reviewed geometry policy](REVIEW_ADOPTION_MER_VIS.md) for adoption statuses and the sensitivity experiment.
+
 > Active centre-acceptance re-review: the usual launcher now opens a separate 19-galaxy round. Read [CENTRE_POLICY_MER_VIS_REVIEW.md](CENTRE_POLICY_MER_VIS_REVIEW.md) for the new reference-centre checks, comparison columns and residual diagnostics. Earlier reviews and notes remain under `saved_reviews`; the new round uses `saved_reviews_centre_v3`. Use `Start Original MER VIS Review.cmd` to reopen the completed original review.
 
 # MER VIS sample review

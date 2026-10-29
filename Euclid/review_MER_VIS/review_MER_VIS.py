@@ -19,6 +19,7 @@ from urllib.parse import parse_qs, urlparse
 import webbrowser
 from refit_MER_VIS import ReviewRefits
 from centre_policy_MER_VIS import POLICY_VERSION,DEFAULT_POLICY,centre_measurement,numerical_acceptance
+from review_policy_MER_VIS import centre_confirmation,adoption_status
 
 import numpy as np
 from astropy.io import fits
@@ -295,6 +296,8 @@ class Store(ReviewRefits):
         baseline=self.galaxy(oid)["original"] if refit_id else None
         index_path=self.output/"MER_VIS_latest_refits.json"
         latest=json.loads(index_path.read_text(encoding="utf8")).get(oid) if index_path.exists() else None
+        reference_record=dict(x=reference[0],y=reference[1])
+        confirmed=centre_confirmation(self.reviews.get(oid),refit_id,reference_record)
         return clean(dict(latest_refit_id=latest, refit=refit, pipeline_original=baseline, object_id=oid, name=row.get("catalogue_name", ""), filename=Path(row["fits_path"]).name,
                           profile=profile, shape=shape, pixel_scale_arcsec=scale,
                           units=header.get("BUNIT", "FITS data units"), centre=centre, catalogue_centre=cat,
@@ -308,6 +311,8 @@ class Store(ReviewRefits):
                           euclid=dict(disc_pa=number(row.get("euclid_adjusted_detection_pa_sky_deg")),
                                       inclination=number(row.get("euclid_detection_inclination_proxy_deg")),
                                       sersic_inclination=number(row.get("euclid_sersic_inclination_proxy_deg"))),
+                          centre_visually_confirmed=confirmed,
+                          saved_adoption=adoption_status(self.reviews.get(oid),confirmation=confirmed),
                           review=self.reviews.get(oid), fit_error=row.get("codex_error", "")))
 
     def image(self, oid, params):
@@ -382,6 +387,7 @@ class Store(ReviewRefits):
                       centre_policy_version=settings.get('centre_policy_version',''),centre_reference_x_pix=reference.get('x'),centre_reference_y_pix=reference.get('y'),centre_reference_provenance=reference.get('provenance'),
                       centre_cap_native_pixels=rules.get('centre_cap_native'),centre_fraction_radius=rules.get('centre_fraction'),centre_floor_native_pixels=rules.get('centre_floor_native'),centre_screen_enabled=rules.get('centre_enabled'),refit_id=settings.get('refit_id'),
                       centre_rejected_disc_n=len(calc.get('centre_rejected_disc',[])),centre_rejected_bar_n=len(calc.get('centre_rejected_bar',[])),trial_disc_pa_provisional=calc.get('disc_pa_provisional'))
+        record['adoption']=adoption_status(record,confirmation=centre_confirmation(record,settings.get('refit_id'),reference))
         with self.lock:
             updated = dict(self.reviews); updated[oid] = clean(record)
             atomic_json(self.review_path, updated)
@@ -407,6 +413,7 @@ class Store(ReviewRefits):
                 rule_action="unsure", notes="", settings={}, calculation={}, source_manifest_sha256=self.digest))
             record.update(reviewed=payload["reviewed"], review_status_changed_utc=now)
             if payload["reviewed"]: record["reviewed_utc"] = now
+            record['adoption']=self.review_adoption(record)
             updated = dict(self.reviews); updated[oid] = record
             atomic_json(self.review_path, updated); self.reviews = updated
             warning = None
@@ -414,16 +421,34 @@ class Store(ReviewRefits):
             except PermissionError: warning = "Status saved in JSON. Close the CSV in Excel to refresh the CSV copy."
         return dict(saved=True, review=record, warning=warning)
 
+    def review_adoption(self, record):
+        job=record.get('refit_id',record.get('settings',{}).get('refit_id'))
+        reference={}
+        if job and len(job)==32 and all(c in '0123456789abcdef' for c in job):
+            try:
+                row=json.loads((self.output/'refits'/job/'result.json').read_text(encoding='utf8'))
+                reference=dict(x=number(row.get('centre_reference_x_pix'),number(row.get('codex_fit_centre_x_pix'))),
+                               y=number(row.get('centre_reference_y_pix'),number(row.get('codex_fit_centre_y_pix'))))
+            except (OSError,ValueError):
+                pass
+        elif not job:
+            row=self.byid.get(record.get('object_id'),{})
+            reference=dict(x=number(row.get('codex_fit_centre_x_pix')),y=number(row.get('codex_fit_centre_y_pix')))
+        return adoption_status(record,confirmation=centre_confirmation(record,job,reference))
+
     def export_csv(self):
         fields = ["object_id","reviewed","catalogue_name","category","disc_decision","bar_decision","centre_decision",
                   "rule_action","notes","reviewed_utc","original_disc_pa","original_bar_pa","original_inclination",
                   "trial_disc_pa","trial_bar_pa","trial_inclination","trial_disc_samples","trial_disc_scatter",
                   "trial_disc_eps_span","settings_json","source_manifest_sha256","review_campaign","refit_id","centre_policy_version","centre_reference_x_pix","centre_reference_y_pix","centre_reference_provenance","centre_cap_native_pixels","centre_fraction_radius","centre_floor_native_pixels","centre_screen_enabled","centre_rejected_disc_n","centre_rejected_bar_n","trial_disc_pa_provisional"]
+        fields += ['adoption_status','adoption_reason','centre_visually_confirmed','automatic_deprojection_ready']
         stream = io.StringIO(newline=""); writer = csv.DictWriter(stream, fieldnames=fields); writer.writeheader()
         with self.lock:
             for r in self.reviews.values():
                 result = {k:r.get(k,"") for k in fields}
                 result["reviewed"] = r.get("reviewed", True)
+                status=self.review_adoption(r)
+                result.update({k:status[k] for k in ['adoption_status','adoption_reason','centre_visually_confirmed','automatic_deprojection_ready']})
                 calc = r.get("calculation", {})
                 for k, src in [("trial_disc_pa","disc_pa"),("trial_bar_pa","bar_pa"),("trial_inclination","inclination"),
                                ("trial_disc_samples","n_disc"),("trial_disc_scatter","pa_scatter"),("trial_disc_eps_span","eps_span")]:

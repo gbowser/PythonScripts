@@ -1,3 +1,5 @@
+> Current status (29 October 2026): all 19 centre-pilot reviews are complete. See [reviewed geometry policy](REVIEW_ADOPTION_MER_VIS.md) for adoption statuses and the sensitivity experiment.
+
 # MER VIS centre-acceptance re-review
 
 Prepared 28 October 2026. The completed 58-galaxy review and original geometry remain preserved.

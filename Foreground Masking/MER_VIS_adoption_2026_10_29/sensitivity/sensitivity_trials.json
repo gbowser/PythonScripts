@@ -1,0 +1,122 @@
+[
+  {
+    "id": "2681494150647395085",
+    "probe": "xminus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\2681494150647395085\\xminus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "2681494150647395085",
+    "probe": "xplus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\2681494150647395085\\xplus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "2681494150647395085",
+    "probe": "yminus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\2681494150647395085\\yminus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "2681494150647395085",
+    "probe": "yplus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\2681494150647395085\\yplus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "-524824554283124036",
+    "probe": "xminus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-524824554283124036\\xminus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "-524824554283124036",
+    "probe": "xplus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-524824554283124036\\xplus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "-524824554283124036",
+    "probe": "yminus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-524824554283124036\\yminus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "-524824554283124036",
+    "probe": "yplus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-524824554283124036\\yplus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "-599118107493216367",
+    "probe": "xminus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-599118107493216367\\xminus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "-599118107493216367",
+    "probe": "yminus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-599118107493216367\\yminus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "-599118107493216367",
+    "probe": "xplus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-599118107493216367\\xplus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "-599118107493216367",
+    "probe": "yplus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-599118107493216367\\yplus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "-537890362287224823",
+    "probe": "xminus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-537890362287224823\\xminus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "-537890362287224823",
+    "probe": "xplus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-537890362287224823\\xplus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "-537890362287224823",
+    "probe": "yminus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-537890362287224823\\yminus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "-537890362287224823",
+    "probe": "yplus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-537890362287224823\\yplus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "-663928688473758026",
+    "probe": "xminus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-663928688473758026\\xminus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "-663928688473758026",
+    "probe": "xplus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-663928688473758026\\xplus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "-663928688473758026",
+    "probe": "yminus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-663928688473758026\\yminus",
+    "status": "provisional_fit"
+  },
+  {
+    "id": "-663928688473758026",
+    "probe": "yplus",
+    "folder": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Foreground Masking\\MER_VIS_adoption_2026_10_29\\sensitivity\\trials\\-663928688473758026\\yplus",
+    "status": "provisional_fit"
+  }
+]

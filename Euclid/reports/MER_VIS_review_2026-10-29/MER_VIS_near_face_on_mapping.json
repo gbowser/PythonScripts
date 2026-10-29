@@ -1,0 +1,41 @@
+{
+  "radius_arcsec": 4.300000000000341,
+  "metrics": [
+    {
+      "probe": "Reviewed selection",
+      "disc_pa_deg": 100.50479482860746,
+      "inclination_deg": 24.76460243341408,
+      "bar_pa_deg": 0.8965893614214906,
+      "maximum_input_mapping_change_native_pixels": 0.0,
+      "rms_input_mapping_change_native_pixels": 0.0
+    },
+    {
+      "probe": "xminus",
+      "disc_pa_deg": 96.0778058289841,
+      "inclination_deg": 26.84254211176601,
+      "bar_pa_deg": 0.9411172956436644,
+      "maximum_input_mapping_change_native_pixels": 1.3319011126401263,
+      "rms_input_mapping_change_native_pixels": 1.0885198150306177
+    },
+    {
+      "probe": "xplus",
+      "status": "No complete geometry"
+    },
+    {
+      "probe": "yminus",
+      "disc_pa_deg": 79.939614396146,
+      "inclination_deg": 26.146726849646516,
+      "bar_pa_deg": 1.112122683926799,
+      "maximum_input_mapping_change_native_pixels": 3.699244239969535,
+      "rms_input_mapping_change_native_pixels": 1.6825288777129337
+    },
+    {
+      "probe": "yplus",
+      "disc_pa_deg": 118.55547073964553,
+      "inclination_deg": 27.248157769569822,
+      "bar_pa_deg": 0.572526403094173,
+      "maximum_input_mapping_change_native_pixels": 3.4522283437550425,
+      "rms_input_mapping_change_native_pixels": 1.6033007220712927
+    }
+  ]
+}
