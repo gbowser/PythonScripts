@@ -171,6 +171,14 @@ class Store(ReviewRefits):
         self.manifest = data_root / "Euclid_MER_VIS_geometry/MER_VIS_local_geometry_manifest.csv"
         with self.manifest.open(encoding="utf-8-sig") as stream:
             self.rows = list(csv.DictReader(stream))
+        # A local data root also overrides stale machine-specific FITS paths.
+        # Keep the source manifest and its provenance digest unchanged.
+        for row in self.rows:
+            filename = row.get("fits_filename", "")
+            if filename and Path(filename).name == filename:
+                local_fits = data_root / "Euclid_MER_VIS_cutouts" / filename
+                if local_fits.is_file():
+                    row["fits_path"] = str(local_fits)
         self.byid = {r["object_id"]: r for r in self.rows}
         self.digest = hashlib.sha256(self.manifest.read_bytes()).hexdigest()
         sample_path = output / "MER_VIS_review_sample.json"

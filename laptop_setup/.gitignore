@@ -1,0 +1,5 @@
+﻿/verification/
+/MER_review/
+/SEP_MTO_comparisons/
+*.log
+__pycache__/

@@ -1,0 +1,18 @@
+{
+  "sep-diagnostic-rejected-fold20.json": {
+    "label": "SEP diagnostic rejected fold 20",
+    "source": "\\\\?\\C:\\Users\\gordo\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\clean22_haigh_aligned_bright150_galaxy150_sep_sensitivity\\SEP_cross_validation\\fold_20\\training_optimisation\\20260901_090925\\sep_toy_object_optimisation_best.json",
+    "sha256": "9b9c2da1108f22ccf28f016bdbdedb195c08b8a5d2dec09616682d1a213c8b26"
+  },
+  "mto-final.json": {
+    "label": "MTObjects final winner",
+    "source": "C:\\Users\\gordo\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\clean22_haigh_aligned_bright150_galaxy150_sep_sensitivity\\MTObjects_cross_validation\\mtobjects_toy_cross_validation_best.json",
+    "sha256": "0469f39785b5e60967a86bc02240c50d3899cf5501b546e7a1db33f438f64fb3"
+  },
+  "paired-injections-laptop.json": {
+    "source": "C:\\Users\\gordo\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Remove foreground objects\\clean22_haigh_aligned_bright150_galaxy150_sep_sensitivity\\paired_injections\\paired_toy_injection_manifest.json",
+    "source_sha256": "3844166eca3e8d05c86ca6c6460de402ae7913261cf5719df79ad0ac635da752",
+    "translated_paths": 221,
+    "missing": []
+  }
+}
