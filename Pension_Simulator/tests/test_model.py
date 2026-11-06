@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from simulation import Settings as ModelSettings, pension_during, run_path, simulate, threshold_scale
 
 def Settings(**changes):
-    options=dict(withdrawal_strategy='annual_tax', tax_rules='legacy_2026_27', ann_tax_free_share=0.0)
+    options=dict(withdrawal_strategy='annual_tax', tax_rules='legacy_2026_27', ann_tax_free_share=0.0, ann_contribution_is_net=False)
     options.update(changes)
     return ModelSettings(**options)
 

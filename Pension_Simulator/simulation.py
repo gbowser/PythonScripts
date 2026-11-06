@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, replace
 from datetime import date
+from calendar import monthrange
 from pathlib import Path
 import math
 
@@ -41,9 +42,7 @@ def evelyn_preset(number):
     _, gift, y = next(s for s in EVELYN_SCENARIOS if s[0] == number)
     return dict(non_stochastic=True, years=34, initial_y=y, std_y=0.0,
                 gift=gift, gift_years=5 if gift else 0, withdrawal=150000.0,
-                ann_property=10000.0, crash_enabled=False, property_sale_enabled=False,
-                ann_pension_contribution=0.0, ann_contribution_from_portfolio=False,
-                gordon_citibank_pension=0.0, gordon_interest=0.0, ann_interest=0.0)
+                crash_enabled=False, property_sale_enabled=False)
 
 
 
@@ -60,7 +59,7 @@ def evelyn_mismatches(settings):
     # illustration when their central return and cash-flow assumptions match.
     expected.pop('non_stochastic')
     expected.pop('std_y')
-    expected.update(inflation=.02,starting_balance=4335877.0,annual_fee=0.0)
+    expected.update(inflation=.02,starting_balance=4335877.0,annual_fee=0.0,ann_pension_contribution=0.0)
     labels={'years':'projection length',
             'initial_y':'return above CPI',
             'gift':'annual gift','gift_years':'gift duration','withdrawal':'regular withdrawal',
@@ -120,7 +119,10 @@ class Settings:
     property_sale_enabled: bool = False
     property_sale_date: str = "2031-11-05"
     property_sale_amount: float = 325000.0
+    property_sale_mode: str = "date"
+    property_sale_threshold: float = 1000000.0
     ann_pension_contribution: float = 2880.0
+    ann_contribution_is_net: bool = True
     ann_contribution_from_portfolio: bool = False
     ann_state_pension: float = 9494.0
     gordon_state_weekly: float = 241.30
@@ -140,6 +142,8 @@ class Settings:
     annual_fee: float = 0.0
 
     def validate(self):
+        if self.property_sale_mode not in {'date','threshold'}:
+            raise ValueError('Choose date or threshold for the property sale trigger.')
         if self.withdrawal_strategy not in {'estate','annual_tax'}:
             raise ValueError('Choose estate or annual_tax withdrawal strategy.')
         if self.tax_rules not in {'current_law','legacy_2026_27'}:
@@ -172,7 +176,7 @@ class Settings:
             raise ValueError("The deterministic crash year must be within the projection.")
         for n in ["starting_balance", "income_yield", "withdrawal", "gift", "gift_years", "gordon_interest",
                   "gordon_citibank_pension", "ann_interest", "ann_property", "ann_pension_contribution",
-                  "ann_state_pension", "property_sale_amount", "gordon_state_weekly", "seed"]:
+                  "ann_state_pension", "property_sale_amount", "property_sale_threshold", "gordon_state_weekly", "seed"]:
             if getattr(self, n) < 0:
                 raise ValueError(f"{n} cannot be negative.")
         for v in (self.dividend_share_gordon, self.dividend_share_ann):
@@ -181,9 +185,11 @@ class Settings:
         if self.gordon_citibank_growth is not None and self.gordon_citibank_growth <= -1:
             raise ValueError("Citibank pension growth must exceed -100%.")
         date.fromisoformat(self.start_date)
-        if self.property_sale_enabled and date.fromisoformat(self.property_sale_date) < date.fromisoformat(self.start_date):
+        if self.property_sale_enabled and self.property_sale_mode == "date" and date.fromisoformat(self.property_sale_date) < date.fromisoformat(self.start_date):
             raise ValueError("The rental-property sale date cannot precede the valuation date.")
-        if self.ann_pension_contribution > 3600:
+        first_end=anniversary(date.fromisoformat(self.start_date),1)
+        gross,_,_=pension_contribution(self,first_end)
+        if gross > 3600+1e-8:
             raise ValueError("Without relevant earnings, this model supports at most £3,600 gross annual pension contributions.")
 
 
@@ -218,10 +224,64 @@ def pension_during(start, end, eligibility, annual_2026, uprate):
     return total
 
 
+
+
+def pension_contribution(settings,when):
+    """Gross credit, bank cash and gross relief-eligible contribution at year end."""
+    eligible=when < date(2032,6,26)
+    amount=settings.ann_pension_contribution
+    if settings.ann_contribution_is_net:
+        gross=amount/.8 if eligible else amount
+        return gross,amount,gross if eligible else 0.0
+    return amount,amount*(.8 if eligible else 1),amount if eligible else 0.0
+
+def threshold_property_sale(settings,ys,crash_year,opening_balance):
+    """First monthly crossing of the real total portfolio before sale proceeds.
+
+    Gross portfolio flows and common returns/fees are independent of account
+    selection and bank-paid tax. This cheap prepass therefore determines the
+    event separately for each return/crash path without borrowing future sale
+    proceeds. It checks opening value, monthly market/fee changes, then the
+    value after the planned monthly cash outflow. An immediate sale can fund
+    that same payment if the portfolio would otherwise be exhausted.
+    """
+    s=settings; start=date.fromisoformat(s.start_date); value=float(opening_balance)
+    threshold=s.property_sale_threshold
+    crossed=lambda v: v <= threshold+1e-7
+    if crossed(value): return start,1,0,value
+    for year in range(1,s.years+1):
+        a,b=anniversary(start,year-1),anniversary(start,year)
+        factor=((1+max(-1.0,s.inflation+ys[year-1]))/(1+s.inflation))**(1/12)
+        factor*=(1-s.annual_fee)**(1/12)
+        gift=s.gift if year <= s.gift_years and (not crash_year or year < crash_year) else 0.0
+        contribution,net_contribution,relief=pension_contribution(s,b)
+        for month in range(1,13):
+            value*=factor
+            if year == crash_year and month == 12: value*=1-s.crash_loss
+            month_index=a.year*12+a.month-1+month
+            my,mm=divmod(month_index,12); mm+=1
+            when=date(my,mm,min(a.day,monthrange(my,mm)[1]))
+            if crossed(value): return when,year,month,max(0.0,value)
+            prices=(1+s.inflation)**(year-1+month/12)
+            outflow=s.withdrawal*(4 if month == 12 else 1)/15
+            if month == 12:
+                outflow+=gift/prices
+                if s.ann_contribution_from_portfolio: outflow+=net_contribution/prices
+            after=max(0.0,value-outflow)
+            if crossed(after): return when,year,month,after
+            value=after
+            if month == 12: value+=contribution/prices
+    return None,None,None,None
+
 def run_path(settings, ys, crash_year=0, account_balances=None, initial_gains=None):
     s = settings
     start = date.fromisoformat(s.start_date)
-    sale_date = date.fromisoformat(s.property_sale_date) if s.property_sale_enabled else None
+    sale_date = (date.fromisoformat(s.property_sale_date)
+                 if s.property_sale_enabled and s.property_sale_mode == 'date' else None)
+    trigger_year=trigger_month=trigger_value=None
+    if s.property_sale_enabled and s.property_sale_mode == 'threshold':
+        total=s.starting_balance if account_balances is None else float(np.sum(account_balances))
+        sale_date,trigger_year,trigger_month,trigger_value=threshold_property_sale(s,ys,crash_year,total)
     balances = (REFERENCE_BALANCES/REFERENCE_BALANCES.sum()*s.starting_balance
                 if account_balances is None else np.array(account_balances, dtype=float).copy())
     gains = REFERENCE_GAINS if initial_gains is None else initial_gains
@@ -248,6 +308,10 @@ def run_path(settings, ys, crash_year=0, account_balances=None, initial_gains=No
         sold_this_year = sale_date is not None and (a < sale_date <= b or (year == 1 and sale_date == a))
         sale_proceeds = s.property_sale_amount if sold_this_year else 0.0
         remaining_fraction = (b-sale_date).days/(b-a).days if sold_this_year else 0.0
+        if sold_this_year and s.property_sale_mode == 'threshold':
+            # Align triggered deposits to the engine's equal monthly periods;
+            # report dates retain calendar month anniversaries for readability.
+            remaining_fraction=1-trigger_month/12
         # The annual crash occurs at period end. A sale on that exact date is
         # deposited after the crash; earlier proceeds are exposed to it.
         sale_factor = ((1+normal_return)**remaining_fraction if remaining_fraction > 0 else 1.0)
@@ -269,9 +333,7 @@ def run_path(settings, ys, crash_year=0, account_balances=None, initial_gains=No
         citibank_growth = s.inflation if s.gordon_citibank_growth is None else s.gordon_citibank_growth
         citibank = s.gordon_citibank_pension*(1+citibank_growth)**(year-1)
         gift = s.gift if year <= s.gift_years and (not crash_year or year < crash_year) else 0.0
-        contribution = s.ann_pension_contribution
-        pension_relief = contribution if b < date(2032, 6, 26) else 0.0
-        contribution_net = contribution-.2*pension_relief
+        contribution,contribution_net,pension_relief=pension_contribution(s,b)
         contribution_draw = contribution_net if s.ann_contribution_from_portfolio else 0.0
         other_income = np.array([state_g+citibank,state_a])
         property_income = [0.0,rental_profit]
@@ -408,6 +470,9 @@ def run_path(settings, ys, crash_year=0, account_balances=None, initial_gains=No
                      "property_sale_proceeds_real": sale_proceeds_real,
                      "property_sale_investment_gain_real": sale_gain_real,
                      "property_sale_proceeds": sale_proceeds,
+                     "property_sale_actual_date": sale_date.isoformat() if sold_this_year else None,
+                     "property_sale_triggered": bool(sold_this_year and s.property_sale_mode == 'threshold'),
+                     "property_sale_trigger_value_real": trigger_value if sold_this_year and trigger_year else None,
                      "property_sale_investment_gain": sale_investment_gain,
                      "rental_profit_ann": rental_profit,
                      "portfolio_nominal": float(balances.sum()*cpi_index),

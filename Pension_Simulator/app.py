@@ -166,6 +166,22 @@ defaults = Settings()
 source = source or {"balance": defaults.starting_balance, "valuation_date": defaults.start_date,
                     "std_y": defaults.std_y, "mean_y": defaults.initial_y}
 
+# Restore personal inputs cleared by the old Evelyn preset once. Future
+# manual edits, including zero contributions, survive ordinary reruns.
+if st.session_state.get('personal_income_defaults_version') != 1:
+    for key,value,decimals in [('citibank',defaults.gordon_citibank_pension,2),
+                               ('ann_contribution',2880.0,0),
+                               ('g_bank_interest_confirmed',defaults.gordon_interest,0),
+                               ('a_bank_interest_confirmed',defaults.ann_interest,0)]:
+        if st.session_state.get(key+'_raw',0) == 0:
+            st.session_state[key+'_raw']=value
+            st.session_state[key]=f'£{value:,.{decimals}f}'
+    if st.session_state.get('ann_rental_confirmed_raw') == 10000:
+        st.session_state.ann_rental_confirmed_raw=defaults.ann_property
+        st.session_state.ann_rental_confirmed=f'£{defaults.ann_property:,.0f}'
+    st.session_state.ann_contribution_net_mode=True
+    st.session_state.personal_income_defaults_version=1
+
 # Migrate existing browser sessions once, before constructing return widgets.
 # Streamlit retains explicit session values when a widget's default changes.
 if st.session_state.get('custom_return_defaults_version') != 1:
@@ -187,15 +203,12 @@ with st.sidebar:
         preset = evelyn_preset(number)
         widget_map = {'years': 'projection_years', 'initial_y': 'initial_y', 'std_y': 'std_y',
                       'gift_years': 'gift_years', 'crash_enabled': 'crash_enabled',
-                      'property_sale_enabled': 'property_sale_enabled',
-                      'ann_contribution_from_portfolio': 'contribution_portfolio'}
+                      'property_sale_enabled': 'property_sale_enabled'}
         for field, key in widget_map.items():
             value = preset[field]*100 if field in {'initial_y', 'std_y'} else preset[field]
             st.session_state[key] = value
         st.session_state.simulation_type = 'Non-stochastic (zero volatility)'
-        money_map = {'gift': 'gift', 'withdrawal': 'withdrawal', 'ann_property': 'ann_rental_confirmed',
-                     'ann_pension_contribution': 'ann_contribution', 'gordon_citibank_pension': 'citibank',
-                     'gordon_interest': 'g_bank_interest_confirmed', 'ann_interest': 'a_bank_interest_confirmed'}
+        money_map = {'gift': 'gift', 'withdrawal': 'withdrawal'}
         for field, key in money_map.items():
             value = preset[field]
             st.session_state[key+'_raw'] = value
@@ -274,13 +287,23 @@ with st.sidebar:
     st.caption("Normal annual return is followed by the crash loss. Gifts stop in the crash year and never resume.")
     st.header("Rental property sale")
     property_sale_enabled = st.checkbox("Sell rental property", False, key='property_sale_enabled')
+    property_sale_mode = st.radio('Rental property sale trigger',['date','threshold'],
+        format_func=lambda value: 'Specified date' if value == 'date' else 'Portfolio value threshold',
+        disabled=not property_sale_enabled,key='property_sale_mode')
+    property_sale_threshold = money('Sell when portfolio reaches (£, real)',defaults.property_sale_threshold,
+        'property_sale_threshold',disabled=not property_sale_enabled or property_sale_mode != 'threshold')
     property_sale_date = st.date_input("Rental property sale date", anniversary(start, 5),
-                                       min_value=start, disabled=not property_sale_enabled)
+                                       min_value=start, disabled=not property_sale_enabled or property_sale_mode != 'date')
     property_sale_amount = money("Rental property sale proceeds (£)", defaults.property_sale_amount,
                                  "property_sale_amount", disabled=not property_sale_enabled)
     st.caption("Proceeds are nominal pounds credited to Ann's GIA with no property CGT. "
                "Rental profit stops on the sale date; the sale year's profit is prorated by days.")
-    if property_sale_enabled and property_sale_date > anniversary(start, years):
+    if property_sale_mode == 'threshold':
+        st.caption('The threshold is in valuation-date purchasing power. Each path is checked at the start and monthly, '
+                   'after market changes and including that month’s withdrawals. Sale is assumed immediate at the first '
+                   'value at or below the threshold; proceeds can fund that month’s payment. '
+                   'The property is sold only once, and rent stops on its actual sale date.')
+    if property_sale_enabled and property_sale_mode == 'date' and property_sale_date > anniversary(start, years):
         st.caption("The selected sale falls after the projection, so it has no effect on these results.")
 
 with st.expander("Accounts and tax inputs"):
@@ -345,8 +368,11 @@ with st.expander("Accounts and tax inputs"):
     with c2:
         a_interest = money("Ann gross external bank interest per year (£)", defaults.ann_interest, "a_bank_interest_confirmed")
         a_property = money("Ann taxable rental profit per year (£)", defaults.ann_property, "ann_rental_confirmed")
-        a_contribution = money("Ann annual gross SIPP contribution (£)", defaults.ann_pension_contribution,
-                                "ann_contribution", maximum=3600.0)
+        contribution_is_net=st.checkbox('Enter Ann contribution as bank cash',True,key='ann_contribution_net_mode')
+        contribution_label=('Ann annual bank contribution (£)' if contribution_is_net
+                            else 'Ann annual gross SIPP contribution (£)')
+        a_contribution = money(contribution_label,defaults.ann_pension_contribution,
+                                'ann_contribution',maximum=2880.0 if contribution_is_net else 3600.0)
         contribution_portfolio = st.checkbox("Fund Ann's contribution from portfolio", False, key='contribution_portfolio')
         a_state = money("Ann State Pension, 2026/27 (£/year)", 9494.0, "ann_state")
     with c3:
@@ -365,10 +391,11 @@ with st.expander("Accounts and tax inputs"):
                "The historical returns imply dividend shares of 78.81% of Gordon's GIA income and 95.45% of Ann's. "
                "These are historical reference figures; the forecast uses your selected dividend shares, defaulting to 50% each. "
                "Ann's £9,306 State Pension in the return relates to 2025/26; the newer schedule's £9,494 remains the starting forecast amount.")
-    st.caption("Ann's £2,880 gross contribution defaults to external bank funding: £2,304 net plus £576 relief "
-               "credited to her SIPP at each period end while under 75. From age 75 the same gross contribution "
-               "continues with no tax relief and costs £2,880. It stays fixed in nominal pounds. "
-               "If portfolio-funded, it is an additional withdrawal and is skipped when obligations cannot be fully funded.")
+    st.caption("Ann's default £2,880 annual bank payment receives £720 relief while eligible, giving £3,600 gross in the SIPP. "
+               "After age 75 the bank payment stays £2,880 with no relief. Gross-entry mode is also available. "
+               "Contributions occur at each period end. If portfolio-funded, the cash payment is an additional "
+               "withdrawal and is skipped when obligations cannot be fully funded. Evelyn presets preserve personal income and contribution inputs.")
+
 
 settings = Settings(start_date=start.isoformat(), starting_balance=balance, years=years,
                     evelyn_scenario=selected_evelyn,
@@ -382,7 +409,9 @@ settings = Settings(start_date=start.isoformat(), starting_balance=balance, year
                     ann_interest=a_interest, ann_property=a_property,
                     property_sale_enabled=property_sale_enabled, property_sale_date=property_sale_date.isoformat(),
                     property_sale_amount=property_sale_amount,
-                    ann_pension_contribution=a_contribution, ann_contribution_from_portfolio=contribution_portfolio,
+                    property_sale_mode=property_sale_mode,property_sale_threshold=property_sale_threshold,
+                    ann_pension_contribution=a_contribution, ann_contribution_is_net=contribution_is_net,
+                    ann_contribution_from_portfolio=contribution_portfolio,
                     ann_state_pension=a_state, gordon_state_weekly=state_weekly,
                     dividend_share_gordon=shares[0], dividend_share_ann=shares[1],
                     gordon_tax_free_share=tfc_shares[0],ann_tax_free_share=tfc_shares[1],

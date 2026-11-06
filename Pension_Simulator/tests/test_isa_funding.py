@@ -6,7 +6,7 @@ import pytest
 from simulation import Settings as ModelSettings, run_path
 
 def Settings(**changes):
-    options=dict(withdrawal_strategy='annual_tax', tax_rules='legacy_2026_27', ann_tax_free_share=0.0)
+    options=dict(withdrawal_strategy='annual_tax', tax_rules='legacy_2026_27', ann_tax_free_share=0.0, ann_contribution_is_net=False)
     options.update(changes)
     return ModelSettings(**options)
 

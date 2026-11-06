@@ -27,7 +27,7 @@ def test_seven_presets_and_original_reference_curves():
 
 
 def test_reference_is_hidden_when_preset_parameters_change():
-    s = Settings(**evelyn_preset(3),evelyn_scenario=3,sipp_income_target=50270)
+    s = Settings(**evelyn_preset(3),evelyn_scenario=3,sipp_income_target=50270,ann_pension_contribution=0)
     assert not evelyn_mismatches(s)
     for field,value in [('gift',0),('initial_y',.20),('inflation',.03),('years',20),
                         ('annual_fee',.01),('starting_balance',5000000),
@@ -51,6 +51,7 @@ def test_preset_populates_inputs_and_graph_has_only_selected_reference():
     assert next(n for n in app.number_input if n.label == 'Gift duration (years)').value == 5
     assert next(n for n in app.number_input if n.label == 'Base case and first-year y (%)').value == 2.5
     assert next(n for n in app.text_input if n.label == 'Annual gift (£)').value == '£150,000'
+    next(w for w in app.text_input if w.label == 'Ann annual bank contribution (£)').set_value('£0').run()
     next(b for b in app.button if b.label == 'Run simulation').click().run(timeout=60)
     assert not app.exception
     assert not app.error
@@ -80,6 +81,7 @@ def test_stochastic_preset_keeps_reference_and_hides_fixed_y_curve():
     app=AppTest.from_file(str(Path(__file__).resolve().parents[1]/'app.py'),default_timeout=60).run()
     next(w for w in app.radio if w.label == 'Projection mode').set_value('Evelyn preset').run()
     next(w for w in app.selectbox if w.label == 'Withdrawal strategy').set_value('annual_tax').run()
+    next(w for w in app.text_input if w.label == 'Ann annual bank contribution (£)').set_value('£0').run()
     next(b for b in app.button if b.label == 'Run simulation').click().run(timeout=60)
     assert not app.exception and not app.error
     initial=json.loads(app.get('plotly_chart')[0].proto.spec)
