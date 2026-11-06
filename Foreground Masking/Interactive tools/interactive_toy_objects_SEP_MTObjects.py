@@ -335,6 +335,8 @@ class CombinedToyTester(tk.Tk):
         self.minsize(1600, 900)
 
         self.pc = args.pc
+        self.explicit_sep_best = args.sep_best
+        self.explicit_mto_best = args.mto_best
         self.manifest = args.manifest
         self.mtobjects_root = args.mtobjects_root
         if self.mtobjects_root is None and os.name != "nt":
@@ -393,7 +395,7 @@ class CombinedToyTester(tk.Tk):
         self.mto_defaults = production_params(
             self.mto_best, core.AZURE_MEAN_PARAMS["MTObjects"], mto_batch.load_best_params
         )
-        self.output_dir = research_root / "interactive_sep_mtobjects_toy_laboratory"
+        self.output_dir = args.output or research_root / "interactive_sep_mtobjects_toy_laboratory"
 
         self._build_controls()
         self._build_figure()
@@ -778,10 +780,10 @@ class CombinedToyTester(tk.Tk):
 
     def reload_optimised_parameters(self) -> None:
         """Reload completed clean-22 winners using the production batch loaders."""
-        sep_path = current_optimisation_winner(
+        sep_path = self.explicit_sep_best or current_optimisation_winner(
             self.research_root, SEP_WINNER_RELATIVE, "sep_toy_cross_validation_best.json"
         )
-        mto_path = current_optimisation_winner(
+        mto_path = self.explicit_mto_best or current_optimisation_winner(
             self.research_root, MTO_WINNER_RELATIVE, "mtobjects_toy_cross_validation_best.json"
         )
         try:
@@ -1365,6 +1367,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sep-best", type=Path)
     parser.add_argument("--mto-best", type=Path)
     parser.add_argument("--mtobjects-root", type=Path)
+    parser.add_argument("--output", type=Path, help="Folder for saved comparison images.")
     parser.add_argument("--print-parameter-sources", action="store_true",
                         help="Print the resolved SEP/MTO parameter sources and values, then exit.")
     return parser.parse_args()
