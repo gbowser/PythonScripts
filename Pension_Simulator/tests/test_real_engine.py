@@ -5,21 +5,32 @@ import json
 import numpy as np
 import pytest
 
-from simulation import Settings, run_path
+from simulation import Settings as ModelSettings, run_path
+
+def Settings(**changes):
+    options=dict(withdrawal_strategy='annual_tax', tax_rules='legacy_2026_27', ann_tax_free_share=0.0)
+    options.update(changes)
+    return ModelSettings(**options)
+
 from tax_ledger import NominalTaxLedger
 from withdrawals import plan_withdrawals
 
 CASES = json.loads((Path(__file__).parent/'fixtures'/'nominal_engine_portfolio.json').read_text(encoding='utf-8'))['cases']
 
 
-@pytest.mark.parametrize('case', CASES, ids=lambda c: c['name'])
-def test_real_engine_preserves_pre_refactor_portfolio_forecasts(case):
-    settings = Settings(**case['settings'])
-    result = run_path(settings, case['ys'], case['crash_year'])
-    for expected in case['expected']:
-        row = result.loc[result.year == expected['year']].iloc[0]
-        assert row.portfolio_real == pytest.approx(expected['portfolio_real'], abs=.01, rel=0)
-        assert row.portfolio_nominal == pytest.approx(expected['portfolio_nominal'], abs=.01, rel=0)
+@pytest.mark.parametrize('cpi,y', [(0.02, .025), (0, .025), (-.01, .025), (.02, -.1)])
+def test_monthly_forecast_matches_independent_nominal_cashflow(cpi, y):
+    s = Settings(years=34, initial_y=y, inflation=cpi, gift=0, ann_pension_contribution=0,
+                 taxes_enabled=False)
+    result = run_path(s, [y]*34)
+    balance = s.starting_balance
+    for m in range(1, 34*12+1):
+        amount = (40000 if m%12 == 0 else 10000)*(1+cpi)**(m/12)
+        balance = max(0, balance*(1+cpi+y)**(1/12)-amount)
+        if m%12 == 0:
+            assert result.portfolio_nominal.iloc[m//12] == pytest.approx(balance, abs=.0001)
+    if cpi == .02 and y == .025:
+        assert result.portfolio_real.iloc[-1] == pytest.approx(1985839.940992, abs=.01)
 
 
 def test_real_growth_and_real_cashflow_accounting():
@@ -28,7 +39,7 @@ def test_real_growth_and_real_cashflow_accounting():
     result = run_path(s, [.025]*4, crash_year=3)
     assert result.real_return.iloc[1] == pytest.approx(1.045/1.02-1)
     assert result.real_return.iloc[1] != pytest.approx(.025)
-    assert result.regular_requested_real.iloc[1:].tolist() == pytest.approx([150000/1.02]*4)
+    assert result.regular_requested_real.iloc[1:].tolist() == pytest.approx([150000]*4)
     assert result.gift_requested_real.iloc[1] == pytest.approx(100000/1.02)
     assert result.gift_requested_real.iloc[2] == pytest.approx(100000/1.02**2)
     for _, row in result.iloc[1:].iterrows():

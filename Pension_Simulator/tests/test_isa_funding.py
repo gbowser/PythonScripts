@@ -3,7 +3,13 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from simulation import Settings, run_path
+from simulation import Settings as ModelSettings, run_path
+
+def Settings(**changes):
+    options=dict(withdrawal_strategy='annual_tax', tax_rules='legacy_2026_27', ann_tax_free_share=0.0)
+    options.update(changes)
+    return ModelSettings(**options)
+
 from tax_ledger import NominalTaxLedger
 
 

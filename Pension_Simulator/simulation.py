@@ -10,6 +10,9 @@ import numpy as np
 import pandas as pd
 
 from tax_ledger import NominalTaxLedger
+from tax import owner_tax
+from tax_rules import period_tax_year, parameters_for_year
+from strategies import select_strategy, assess_family_tax
 
 ACCOUNT_NAMES = ["Gordon GIA", "Gordon ISA", "Gordon SIPP", "Ann GIA", "Ann ISA", "Ann SIPP"]
 REFERENCE_BALANCES = np.array([179128, 407395, 2766090, 543702, 340267, 350021], dtype=float)
@@ -43,6 +46,38 @@ def evelyn_preset(number):
                 gordon_citibank_pension=0.0, gordon_interest=0.0, ann_interest=0.0)
 
 
+
+def evelyn_mismatches(settings):
+    """Compare against the documented preset and our agreed comparison baseline.
+
+    Original charts have no underlying account/tax data. Do not invent adviser
+    tax or allocation assumptions: these do not change gross portfolio flows.
+    """
+    if not settings.evelyn_scenario:
+        return []
+    expected=evelyn_preset(settings.evelyn_scenario)
+    # Stochastic paths may be compared with the original deterministic
+    # illustration when their central return and cash-flow assumptions match.
+    expected.pop('non_stochastic')
+    expected.pop('std_y')
+    expected.update(inflation=.02,starting_balance=4335877.0,annual_fee=0.0)
+    labels={'years':'projection length',
+            'initial_y':'return above CPI',
+            'gift':'annual gift','gift_years':'gift duration','withdrawal':'regular withdrawal',
+            'ann_property':'rental profit','crash_enabled':'market crisis',
+            'property_sale_enabled':'property sale','ann_pension_contribution':'pension contribution',
+            'ann_contribution_from_portfolio':'contribution funding',
+            'gordon_citibank_pension':'Citibank pension','gordon_interest':'Gordon bank interest',
+            'ann_interest':'Ann bank interest','inflation':'CPI inflation',
+            'starting_balance':'starting portfolio','annual_fee':'additional investment fee'}
+    differences=[]
+    for key,value in expected.items():
+        actual=getattr(settings,key)
+        same=(math.isclose(actual,value,rel_tol=1e-10,abs_tol=1e-8)
+              if isinstance(value,(float,int)) and not isinstance(value,bool) else actual == value)
+        if not same: differences.append(labels[key])
+    return differences
+
 def evelyn_reference(number, years, inflation):
     if not number:
         return None
@@ -64,8 +99,8 @@ class Settings:
     non_stochastic: bool = False
     evelyn_scenario: int = 0
     inflation: float = .02
-    initial_y: float = .025
-    std_y: float = .10
+    initial_y: float = -.006227264187740222
+    std_y: float = .13304562358622968
     taxes_enabled: bool = True
     income_yield: float = .0267
     withdrawal: float = 150000.0
@@ -92,7 +127,34 @@ class Settings:
     dividend_share_gordon: float | None = .5
     dividend_share_ann: float | None = .5
 
+    gordon_tax_free_share: float = 0.0
+    ann_tax_free_share: float = 0.25
+    ann_lsa_remaining: float = 268275.0
+    gordon_lsa_remaining: float = 0.0
+    withdrawal_strategy: str = "estate"
+    sipp_income_target: float | None = None
+    iht_rate: float = .40
+    beneficiary_income_tax_rate: float = .40
+    estate_assessment_year: int | None = None
+    tax_rules: str = "current_law"
+    annual_fee: float = 0.0
+
     def validate(self):
+        if self.withdrawal_strategy not in {'estate','annual_tax'}:
+            raise ValueError('Choose estate or annual_tax withdrawal strategy.')
+        if self.tax_rules not in {'current_law','legacy_2026_27'}:
+            raise ValueError('Choose current_law or legacy_2026_27 tax rules.')
+        for value in (self.gordon_tax_free_share,self.ann_tax_free_share):
+            if not 0 <= value <= .25: raise ValueError('Tax-free shares must be 0–25%.')
+        for value in (self.gordon_lsa_remaining,self.ann_lsa_remaining):
+            if value < 0: raise ValueError('Remaining lump sum allowances cannot be negative.')
+        if self.sipp_income_target is not None and self.sipp_income_target < 0:
+            raise ValueError('The SIPP taxable-income target cannot be negative.')
+        if self.estate_assessment_year is not None and not 1 <= self.estate_assessment_year <= self.years:
+            raise ValueError('Estate assessment year must be within the projection.')
+        if not 0 <= self.iht_rate <= 1 or not 0 <= self.beneficiary_income_tax_rate <= 1:
+            raise ValueError('Estate tax rates must be 0–100%.')
+        if not 0 <= self.annual_fee < 1: raise ValueError('Annual fee must be 0–100%, excluding 100%.')
         if self.evelyn_scenario not in range(8):
             raise ValueError('Choose Custom or Evelyn scenario 1–7.')
         for name, value in asdict(self).items():
@@ -165,7 +227,8 @@ def run_path(settings, ys, crash_year=0, account_balances=None, initial_gains=No
     gains = REFERENCE_GAINS if initial_gains is None else initial_gains
     if np.any(balances < 0):
         raise ValueError("Account balances and GIA acquisition costs cannot be negative.")
-    tax_ledger = NominalTaxLedger(balances, gains)
+    tax_ledger = NominalTaxLedger(balances,gains,
+        (s.gordon_lsa_remaining,s.ann_lsa_remaining),(s.gordon_tax_free_share,s.ann_tax_free_share))
     rows = [{"year": 0, "date": start.isoformat(), "portfolio_nominal": float(balances.sum()),
              "portfolio_real": float(balances.sum()), "inflation_index": 1.0,
              **dict(zip(ACCOUNT_NAMES, balances))}]
@@ -181,8 +244,7 @@ def run_path(settings, ys, crash_year=0, account_balances=None, initial_gains=No
         normal_return = max(-1.0, normal_return)
         crash = year == crash_year
         total_return = (1+normal_return)*(1-s.crash_loss if crash else 1)-1
-        real_factor = (1+total_return)/(1+s.inflation)
-        real_return = real_factor-1
+        real_return = (1+total_return)/(1+s.inflation)-1
         sold_this_year = sale_date is not None and (a < sale_date <= b or (year == 1 and sale_date == a))
         sale_proceeds = s.property_sale_amount if sold_this_year else 0.0
         remaining_fraction = (b-sale_date).days/(b-a).days if sold_this_year else 0.0
@@ -194,68 +256,155 @@ def run_path(settings, ys, crash_year=0, account_balances=None, initial_gains=No
         sale_investment_gain = sale_proceeds*(sale_factor-1)
         sale_price_index = opening_price_index*(1+s.inflation)**(1-remaining_fraction)
         sale_proceeds_real = sale_proceeds/sale_price_index
-        sale_real_factor = sale_factor/(1+s.inflation)**remaining_fraction
-        sale_end_value_real = sale_proceeds_real*sale_real_factor
-        sale_gain_real = sale_end_value_real-sale_proceeds_real
+        sale_gain_real = sale_proceeds*(sale_factor/cpi_index-1/sale_price_index)
         rent_fraction = (max(0.0, min(1.0, (sale_date-a).days/(b-a).days))
                          if sale_date is not None else 1.0)
         rental_profit = s.ann_property*rent_fraction
-        # Yield is part of total_return, never an additional return. GIA
-        # reinvestment adds acquisition cost so income is not also taxed as CGT.
-        yields = opening[[0, 3]]*opening_price_index*s.income_yield
-        yields[1] += sale_proceeds*s.income_yield*remaining_fraction
-        balances *= real_factor
-        balances[3] += sale_end_value_real
-        tax_ledger.reinvest(yields, sale_proceeds)
-        isa_transfers, isa_gains = tax_ledger.fund_isas(balances, cpi_index)
-        scale = threshold_scale(year, s.inflation)
+        tax_year = period_tax_year(a,b)
+        params = parameters_for_year(tax_year,s.inflation) if s.tax_rules == 'current_law' else None
+        scale = params.allowance/12570 if params is not None else threshold_scale(year,s.inflation)
+        target_scale = scale
         state_g = pension_during(a, b, date(2028, 6, 27), s.gordon_state_weekly*52, uprate)
         state_a = pension_during(a, b, date(2023, 6, 26), s.ann_state_pension, uprate)
         citibank_growth = s.inflation if s.gordon_citibank_growth is None else s.gordon_citibank_growth
         citibank = s.gordon_citibank_pension*(1+citibank_growth)**(year-1)
-        # Keep the established year-end timing: the first £150k nominal
-        # receipt is paid after one year's inflation, so its constant real
-        # value is £150k/(1+CPI). No first-year uplift is introduced here.
-        regular_real = s.withdrawal/(1+s.inflation)
-        regular = regular_real*cpi_index
         gift = s.gift if year <= s.gift_years and (not crash_year or year < crash_year) else 0.0
         contribution = s.ann_pension_contribution
-        # Contributions occur at period end. Ann turns 75 on 26 June 2032.
         pension_relief = contribution if b < date(2032, 6, 26) else 0.0
         contribution_net = contribution-.2*pension_relief
         contribution_draw = contribution_net if s.ann_contribution_from_portfolio else 0.0
-        plan = tax_ledger.allocate(balances, regular_real+(gift+contribution_draw)/cpi_index, cpi_index,
-                                [state_g+citibank, state_a+rental_profit], [s.gordon_interest, s.ann_interest],
-                                yields, scale,
-                                (s.dividend_share_gordon, s.dividend_share_ann), (0.0, pension_relief), s.taxes_enabled)
-        if s.ann_contribution_from_portfolio and plan.shortfall*cpi_index > .01:
-            # No contribution or relief is assumed when the portfolio cannot
-            # fund all requested obligations. Recalculate the tax without it.
-            contribution = pension_relief = contribution_net = contribution_draw = 0.0
-            plan = tax_ledger.allocate(balances, regular_real+gift/cpi_index, cpi_index,
-                                    [state_g+citibank, state_a+rental_profit], [s.gordon_interest, s.ann_interest],
-                                    yields, scale,
-                                    (s.dividend_share_gordon, s.dividend_share_ann), taxes_enabled=s.taxes_enabled)
-        realised = tax_ledger.realise(balances, plan.withdrawals, cpi_index, scale)
-        balances = np.maximum(0.0, balances-plan.withdrawals)
+        other_income = np.array([state_g+citibank,state_a])
+        property_income = [0.0,rental_profit]
+        target = s.sipp_income_target if s.sipp_income_target is not None else 50270.0
+        estate_mode = s.withdrawal_strategy == 'estate' and target > 0
+        rooms = np.maximum(0.0,target*target_scale-other_income-property_income)
+        shares = np.array(tax_ledger.tax_free_shares)
+        # Gross-up is capped at remaining nominal LSA, including partial exhaustion.
+        goals = rooms+np.minimum(rooms*shares/(1-shares),tax_ledger.tfc_remaining)
+        tfc_taken = np.zeros(2)
+        fees = fees_real = 0.0
+        yields, withdrawals = np.zeros(2), np.zeros(6)
+        regular_paid_real = 0.0
+        withdrawals_real = np.zeros(6)
+        regular = regular_paid = gift_paid = gross = gross_real = shortfall = shortfall_real = 0.0
+        investment_gain = investment_gain_real = 0.0
+        isa_transfers, isa_gains = np.zeros(2), np.zeros(2)
+        solver_warning = False
+        # Monthly receipts are £10k for months 1–11 and £40k in month 12
+        # at the default £150k annual Day-0 spending level. Each payment is
+        # inflated from Day 0; growth is compounded evenly between months.
+        sale_t = 1-remaining_fraction if sold_this_year else None
+        monthly_nominal_factor = (1+normal_return)**(1/12)
+        monthly_real_factor = monthly_nominal_factor/(1+s.inflation)**(1/12)
+        for month in range(1, 13):
+            t0, t1 = (month-1)/12, month/12
+            prices = opening_price_index*(1+s.inflation)**t1
+            old_prices = opening_price_index*(1+s.inflation)**t0
+            before = balances.copy()
+            month_yield = before[[0, 3]]*old_prices*s.income_yield/12
+            balances *= monthly_real_factor
+            month_nominal_gain = before.sum()*old_prices*(monthly_nominal_factor-1)
+            deposit_real = 0.0
+            deposit_now = sold_this_year and (t0 < sale_t <= t1 or (month == 1 and sale_t == 0))
+            if deposit_now:
+                deposit_real = sale_proceeds_real
+                part = t1-sale_t
+                deposit_end = sale_proceeds*(1+normal_return)**part
+                balances[3] += deposit_end/prices
+                month_nominal_gain += deposit_end-sale_proceeds
+                month_yield[1] += sale_proceeds*s.income_yield*part
+            if crash and month == 12:
+                # A sale exactly at the period end is deposited after the crash.
+                exempt = sale_proceeds/prices if deposit_now and sale_t == 1 else 0.0
+                exposed = balances.copy(); exposed[3] -= exempt
+                month_nominal_gain -= exposed.sum()*prices*s.crash_loss
+                balances -= exposed*s.crash_loss
+            market_after = balances.sum()
+            balances *= (1-s.annual_fee)**(1/12)
+            month_fee_real = market_after-balances.sum()
+            fees_real += month_fee_real
+            fees += month_fee_real*prices
+            investment_gain += month_nominal_gain
+            investment_gain_real += balances.sum()-before.sum()-deposit_real+month_fee_real
+            yields += month_yield
+            tax_ledger.reinvest(month_yield, sale_proceeds if deposit_now else 0.0)
+            # Retain the annual ISA subscription at the period end, before
+            # the final month's scheduled receipt and any gift.
+            if month == 12:
+                isa_transfers, isa_gains = tax_ledger.fund_isas(balances, prices)
+            regular_month_real = s.withdrawal*(4 if month == 12 else 1)/15
+            regular_month = regular_month_real*prices
+            regular += regular_month
+            gift_month = gift if month == 12 else 0.0
+            contribution_month = contribution_draw if month == 12 else 0.0
+            target_real = regular_month_real+(gift_month+contribution_month)/prices
+            non_savings = other_income+withdrawals[[2,5]]-tfc_taken
+            monthly_goals = goals*(4 if month == 12 else 1)/15 if estate_mode else None
+            plan = tax_ledger.allocate(balances, target_real, prices, non_savings,
+                                      [s.gordon_interest, s.ann_interest], yields, scale,
+                                      (s.dividend_share_gordon, s.dividend_share_ann),
+                                      (0.0,pension_relief),s.taxes_enabled,property_income=property_income,params=params,
+                                      estate_goals=monthly_goals)
+            if month == 12 and s.ann_contribution_from_portfolio and (shortfall > .01 or plan.shortfall*prices > .01):
+                contribution = pension_relief = contribution_net = contribution_draw = contribution_month = 0.0
+                target_real = regular_month_real+gift_month/prices
+                plan = tax_ledger.allocate(balances, target_real, prices, non_savings,
+                                          [s.gordon_interest, s.ann_interest], yields, scale,
+                                          (s.dividend_share_gordon, s.dividend_share_ann),
+                                          taxes_enabled=s.taxes_enabled,property_income=property_income,params=params,
+                                          estate_goals=monthly_goals)
+            tax_ledger.record_disposals(balances, plan.withdrawals, prices)
+            tfc_taken += tax_ledger.record_pension_withdrawals(plan.withdrawals*prices)
+            balances = np.maximum(0.0, balances-plan.withdrawals)
+            month_gross_real = float(plan.withdrawals.sum())
+            month_gross = month_gross_real*prices
+            withdrawals += plan.withdrawals*prices
+            withdrawals_real += plan.withdrawals
+            regular_paid += min(regular_month, month_gross)
+            regular_paid_real += min(regular_month_real, month_gross_real)
+            gift_paid += min(gift_month, max(0.0, month_gross-regular_month-contribution_month))
+            gross_real += month_gross_real
+            gross += month_gross
+            shortfall += plan.shortfall*prices
+            shortfall_real += plan.shortfall
+            solver_warning |= plan.solver_fallback
         balances[5] += contribution/cpi_index
-        tax = sum(t.total for t in plan.taxes)
-        gross_real = float(plan.withdrawals.sum())
-        gross = gross_real*cpi_index
-        regular_paid = min(regular, gross)
-        gift_paid = min(gift, max(0.0, gross-regular_paid-contribution_draw))
-        # Gordon pays tax from his regular bank receipt; it is not another
-        # portfolio withdrawal and must not reduce family gifts a second time.
+        regular_real = s.withdrawal
+        # Aggregate the actual twelve receipts, reinvested income and disposals.
+        # Tax allowances and carried-forward losses are applied once per year.
+        realised = tax_ledger.year_gains.copy()
+        taxes = [owner_tax(n+withdrawals[j*3+2]-tfc_taken[j], interest, yields[j], realised[j],
+                           tax_ledger.losses[j],scale,share,relief,property_income=property_income[j],params=params)
+                 for j, (n, interest, share, relief) in enumerate(zip(
+                     other_income, [s.gordon_interest, s.ann_interest],
+                     [s.dividend_share_gordon, s.dividend_share_ann], [0.0, pension_relief]))]
+        if not s.taxes_enabled:
+            taxes = [replace(t, income_tax=0.0, capital_gains_tax=0.0) for t in taxes]
+        tax_ledger.finish_year(scale,params)
+        tax = sum(t.total for t in taxes)
         tax_paid = min(regular_paid, tax)
         spendable_after_tax = max(0.0, regular_paid-tax)
         row = {"year": year, "date": b.isoformat(), "period_start": a.isoformat(),
+                     "tax_year": f"{tax_year}/{str(tax_year+1)[-2:]}",
+                     "withdrawal_strategy": s.withdrawal_strategy,"tax_rules":s.tax_rules,
+                     "sipp_income_target": target*target_scale if estate_mode else 0.0,
+                     "personal_allowance": params.allowance if params else 12570*scale,
+                     "basic_band": params.basic_band if params else 37700*scale,
+                     "tax_free_cash_gordon": tfc_taken[0], "tax_free_cash_ann": tfc_taken[1],
+                     "lsa_remaining_gordon": tax_ledger.tfc_remaining[0],
+                     "lsa_remaining_ann": tax_ledger.tfc_remaining[1],
+                     "sipp_taxable_gordon": withdrawals[2]-tfc_taken[0],
+                     "sipp_taxable_ann": withdrawals[5]-tfc_taken[1],
+                     "non_savings_gordon": other_income[0]+withdrawals[2]-tfc_taken[0],
+                     "non_savings_ann": other_income[1]+withdrawals[5]-tfc_taken[1]+rental_profit,
+                     "annual_fees": fees,"annual_fees_real":fees_real,
                      "opening_portfolio": float(opening.sum()*opening_price_index), "y": float(ys[year-1]),
                      "normal_nominal_return": normal_return, "total_return": total_return,
                      "real_return": real_return,
                      "return_clipped": clipped, "crash": crash,
-                     "investment_gain": float(opening.sum()*opening_price_index*total_return+sale_investment_gain),
+                     "investment_gain": float(investment_gain),
                      "opening_portfolio_real": float(opening.sum()),
-                     "investment_gain_real": float(opening.sum()*real_return+sale_gain_real),
+                     "investment_gain_real": float(investment_gain_real),
                      "property_sale_proceeds_real": sale_proceeds_real,
                      "property_sale_investment_gain_real": sale_gain_real,
                      "property_sale_proceeds": sale_proceeds,
@@ -272,23 +421,23 @@ def run_path(settings, ys, crash_year=0, account_balances=None, initial_gains=No
                      "ann_pension_relief_at_source": .2*pension_relief,
                      "ann_contribution_portfolio_draw": contribution_draw,
                      "ann_contribution_external_cash": contribution_net-contribution_draw,
-                     "income_tax": sum(t.income_tax for t in plan.taxes),
-                     "cgt": sum(t.capital_gains_tax for t in plan.taxes), "total_tax": tax,
+                     "income_tax": sum(t.income_tax for t in taxes),
+                     "cgt": sum(t.capital_gains_tax for t in taxes), "total_tax": tax,
                      "tax_paid": tax_paid, "unpaid_tax": max(0.0, tax-tax_paid),
                      "spendable_after_tax": spendable_after_tax,
-                     "shortfall": plan.shortfall*cpi_index, "state_pension_gordon": state_g,
+                     "shortfall": shortfall, "state_pension_gordon": state_g,
                      "state_pension_ann": state_a, "citibank_pension_gordon": citibank,
                      "external_interest_gordon": s.gordon_interest,
                      "external_interest_ann": s.ann_interest,
                      "external_income": state_g+state_a+citibank+rental_profit+s.gordon_interest+s.ann_interest,
                      "gia_yield_gordon": yields[0], "gia_yield_ann": yields[1],
-                     "gordon_dividends": plan.taxes[0].dividends,
-                     "ann_dividends": plan.taxes[1].dividends,
+                     "gordon_dividends": taxes[0].dividends,
+                     "ann_dividends": taxes[1].dividends,
                      "realised_gain_gordon": realised[0], "realised_gain_ann": realised[1],
                      "loss_forward_gordon": tax_ledger.losses[0], "loss_forward_ann": tax_ledger.losses[1],
-                     "solver_warning": plan.solver_fallback,
+                     "solver_warning": solver_warning,
                      **dict(zip(ACCOUNT_NAMES, balances*cpi_index)),
-                     **{f"withdrawal_{n}": v*cpi_index for n, v in zip(ACCOUNT_NAMES, plan.withdrawals)}}
+                     **{f"withdrawal_{n}": v for n, v in zip(ACCOUNT_NAMES, withdrawals)}}
         # Preserve nominal export columns and add explicit real reporting
         # counterparts. True real investment gains above exclude inflation;
         # nominal taxable gains below are only deflated for presentation.
@@ -299,11 +448,30 @@ def run_path(settings, ys, crash_year=0, account_balances=None, initial_gains=No
                 row.setdefault(name+'_real', value/cpi_index)
         row['gross_withdrawal_real'] = gross_real
         row['regular_requested_real'] = regular_real
-        row['shortfall_real'] = plan.shortfall
+        row['regular_paid_real'] = regular_paid_real
+        row['spendable_after_tax_real'] = max(0.0,regular_paid_real-tax_paid/cpi_index)
+        for name, value in zip(ACCOUNT_NAMES, withdrawals_real):
+            row['withdrawal_'+name+'_real'] = value
+        row['shortfall_real'] = shortfall_real
         rows.append(row)
     for name in ACCOUNT_NAMES:
         rows[0][name+'_real'] = rows[0][name]
-    return pd.DataFrame(rows)
+    table=pd.DataFrame(rows)
+    table['net_annual_income']=household_net_income(table,real=False)
+    table['net_annual_income_real']=household_net_income(table,real=True)
+    return table
+
+
+def household_net_income(table,real=True):
+    """Actual regular receipts plus external cash income less full tax liability.
+
+    Gifts, property-sale principal and reinvested GIA yield are not household
+    income. Keep deficits negative instead of masking tax shortfalls at zero.
+    Regular real receipts already reflect their individual monthly dates;
+    external annual income and tax use the existing period-end deflation.
+    """
+    suffix='_real' if real else ''
+    return table['regular_paid'+suffix]+table['external_income'+suffix]-table['total_tax'+suffix]
 
 
 def simulate(settings, account_balances=None, initial_gains=None, progress=None):
@@ -318,6 +486,8 @@ def simulate(settings, account_balances=None, initial_gains=None, progress=None)
             raise ValueError("The six account balances must sum to the starting portfolio.")
     if initial_gains is not None and (len(initial_gains) != 2 or not np.all(np.isfinite(initial_gains))):
         raise ValueError("Supply two finite GIA unrealised-gain figures.")
+    runner = lambda policy: run_path(policy,np.full(policy.years,policy.initial_y),0,account_balances,initial_gains)
+    settings,comparison,sensitivity,base = select_strategy(settings,runner)
     returns_seed, crash_seed = np.random.SeedSequence(settings.seed).spawn(2)
     rng, crash_rng = np.random.default_rng(returns_seed), np.random.default_rng(crash_seed)
     ys = (np.full((1, settings.years), settings.initial_y) if settings.non_stochastic else
@@ -334,19 +504,32 @@ def simulate(settings, account_balances=None, initial_gains=None, progress=None)
         paths.append(path)
         if progress:
             progress(.8*(k+1)/settings.simulations)
-    base = run_path(settings, np.full(settings.years, settings.initial_y), 0, account_balances, initial_gains)
     stress = (run_path(settings, np.full(settings.years, settings.initial_y), settings.deterministic_crash_year,
                        account_balances, initial_gains) if settings.crash_enabled else None)
     details = pd.concat(paths, ignore_index=True)
     quantiles = []
-    for value in ("portfolio_nominal", "portfolio_real"):
-        q = details.groupby("year")[value].quantile(np.arange(.1, 1, .1)).unstack()
+    for value in ("portfolio_nominal", "portfolio_real", "net_annual_income_real"):
+        data=details.query("year > 0") if value == "net_annual_income_real" else details
+        q = data.groupby("year")[value].quantile(np.arange(.1, 1, .1)).unstack()
         q.columns = [f"p{int(round(c*100))}" for c in q.columns]
         q.insert(0, "value", value)
         quantiles.append(q.reset_index())
-    reference = evelyn_reference(settings.evelyn_scenario, settings.years, settings.inflation)
+    reference_mismatches=evelyn_mismatches(settings)
+    reference=(None if reference_mismatches else
+               evelyn_reference(settings.evelyn_scenario,settings.years,settings.inflation))
     if progress:
         progress(1.0)
     return {"settings": asdict(settings), "details": details, "base": base, "stress": stress,
-            "evelyn_reference": reference,
+            "evelyn_reference": reference,"evelyn_reference_mismatches":reference_mismatches,
+            "strategy_comparison": comparison,"strategy_sensitivity":sensitivity,
+            "family_tax_summary":assess_family_tax(base,settings),
+            "spending_summary":spending_summary(base),
             "quantiles": pd.concat(quantiles, ignore_index=True), "crash_years": crash_years.tolist()}
+
+
+def spending_summary(base):
+    years=base[base.year > 0]
+    lowest=years.loc[years.spendable_after_tax_real.idxmin()]
+    return dict(average_household_real=float(household_net_income(years).mean()),minimum_real=float(years.spendable_after_tax_real.min()),
+                average_real=float(years.spendable_after_tax_real.mean()),
+                lowest_year=int(lowest.year),lifetime_tax_real=float(years.total_tax_real.sum()))

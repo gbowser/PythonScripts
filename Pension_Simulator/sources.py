@@ -1,7 +1,6 @@
 """Read cached Excel values without opening Excel or executing macros."""
 from __future__ import annotations
 
-import csv
 import json
 import math
 from bisect import bisect_left
@@ -41,11 +40,7 @@ def interpolate(points, when):
     return math.exp(math.log(v0)*(1-weight) + math.log(v1)*weight)
 
 
-def read_workbook(path=DEFAULT_WORKBOOK, cpi_path=ROOT / "data" / "cpi_december.csv"):
-    with Path(cpi_path).open(newline="", encoding="utf-8") as f:
-        cpi = {int(r["year"]): float(r["index"]) for r in csv.DictReader(f)}
-    if any(not math.isfinite(v) or v <= 0 for v in cpi.values()):
-        raise ValueError("CPI indices must be positive finite numbers.")
+def read_workbook(path=DEFAULT_WORKBOOK):
     wb = load_workbook(path, read_only=True, data_only=True)
     try:
         valuations = []
@@ -56,39 +51,49 @@ def read_workbook(path=DEFAULT_WORKBOOK, cpi_path=ROOT / "data" / "cpi_december.
         if not valuations:
             raise ValueError("No dated positive balances in Pensions columns B/I.")
         latest_date, balance = max(valuations, key=lambda p: p[0])
-        points = {}
-        for row in wb["Pension_Performance"].iter_rows(min_row=41, min_col=16, max_col=17, values_only=True):
-            d, v = _date(row[0]), row[1]
-            if d and _number(v) and v > 0 and d <= latest_date:
-                points[d] = float(v)
+        sheet = wb["Pension_Performance"]
+        # The workbook's published single-year TWR returns already exclude
+        # payments. Use five independent anniversary years, not overlapping
+        # multi-year annualised returns or the obsolete P/Q value series.
+        records = []
+        for cells in sheet.iter_rows(min_row=16, max_row=36, min_col=1, max_col=9):
+            row = [cell.value for cell in cells]
+            a, b = _date(row[1]), _date(row[2])
+            nominal, c0, c1, inflation = row[3], row[4], row[5], row[6]
+            if not (a and b and b <= latest_date and 364 <= (b-a).days <= 366):
+                continue
+            if not all(_number(v) for v in (nominal, c0, c1, inflation)) or min(c0, c1) <= 0:
+                raise ValueError(f"Missing cached return/CPI values in Pension_Performance row {cells[0].row}; recalculate and save the workbook.")
+            if not math.isclose(inflation, c1/c0-1, abs_tol=1e-8):
+                raise ValueError(f"Inconsistent CPI calculation in Pension_Performance row {cells[0].row}.")
+            records.append({"year": b.year, "period_start": a.isoformat(), "period_end": b.isoformat(),
+                            "source_row": cells[0].row, "nominal_return": nominal,
+                            "cpi_start": c0, "cpi_end": c1, "inflation": inflation,
+                            "y": nominal-inflation,
+                            "exact_real_return": (1+nominal)/(1+inflation)-1})
+        history = sorted(records, key=lambda h: h["period_end"])[-5:]
+        if len(history) != 5 or history[-1]['period_end'] != latest_date.isoformat():
+            raise ValueError("Need five complete single-year TWR records ending at the latest valuation in Pension_Performance A16:I36.")
+        if any(a['period_end'] != b['period_start'] for a, b in zip(history, history[1:])):
+            raise ValueError("The five annual performance records must form consecutive years.")
+        cpi_lag = sheet['B11'].value
+        target_margin = sheet['B10'].value
     finally:
         wb.close()
-    points = sorted(points.items())
-    if not points:
-        raise ValueError("No positive performance index observations in P41:Q onwards.")
-    # A complete calendar year needs both December CPI indices and bracketing
-    # performance observations. Partial current years are deliberately excluded.
-    end_year = min(latest_date.year-1, points[-1][0].year, max(cpi))
-    years = list(range(end_year-4, end_year+1))
-    history = []
-    for year in years:
-        if year not in cpi or year-1 not in cpi:
-            raise ValueError(f"Add December D7BT CPI indices for {year-1} and {year} to the CPI CSV.")
-        start = interpolate(points, date(year-1, 12, 31))
-        end = interpolate(points, date(year, 12, 31))
-        nominal = end/start-1
-        inflation = cpi[year]/cpi[year-1]-1
-        history.append({"year": year, "start_index": start, "end_index": end,
-                        "cpi_start": cpi[year-1], "cpi_end": cpi[year],
-                        "nominal_return": nominal, "inflation": inflation,
-                        "y": nominal-inflation,
-                        "exact_real_return": (1+nominal)/(1+inflation)-1})
-    return {"workbook": str(Path(path).resolve()), "valuation_date": latest_date.isoformat(),
+    portfolio_cagr = math.prod(1+h["nominal_return"] for h in history)**(1/5)-1
+    cpi_cagr = math.prod(1+h["inflation"] for h in history)**(1/5)-1
+    return {"portfolio_cagr": portfolio_cagr, "cpi_cagr": cpi_cagr,
+            "cagr_y": portfolio_cagr-cpi_cagr, "target_margin": target_margin,
+            "vs_target_cagr": portfolio_cagr-cpi_cagr-target_margin if _number(target_margin) else None,
+            "workbook": str(Path(path).resolve()), "valuation_date": latest_date.isoformat(),
             "balance": balance, "history": history,
             "mean_y": mean(h["y"] for h in history),
             "std_y": stdev(h["y"] for h in history),
-            "cpi_source": "https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23",
-            "cpi_verified": "2026-11-06", "performance_rows": len(points)}
+            "calibration_method": "five_anniversary_twr_years",
+            "performance_source": "Pension_Performance A6:J51; individual years D16:D20 minus G16:G20",
+            "cpi_lag_months": cpi_lag,
+            "cpi_source": "Workbook CPI indices and configured lag in Pension_Performance B11",
+            "performance_rows": len(history)}
 
 
 def load_snapshot():

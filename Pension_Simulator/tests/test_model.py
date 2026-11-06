@@ -7,7 +7,13 @@ import numpy as np
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from simulation import Settings, pension_during, run_path, simulate, threshold_scale
+from simulation import Settings as ModelSettings, pension_during, run_path, simulate, threshold_scale
+
+def Settings(**changes):
+    options=dict(withdrawal_strategy='annual_tax', tax_rules='legacy_2026_27', ann_tax_free_share=0.0)
+    options.update(changes)
+    return ModelSettings(**options)
+
 from sources import interpolate, read_workbook
 from tax import income_tax, owner_tax, update_loss_forward
 from withdrawals import plan_withdrawals
@@ -105,9 +111,9 @@ def test_cashflow_yield_is_not_double_counted_and_gifts_stop():
     assert p.gift_requested.iloc[1:].tolist() == [500, 0, 0, 0]
     assert p.total_return.iloc[1] == pytest.approx(.045)
     assert p.total_return.iloc[2] == pytest.approx(1.045*.6-1)
-    assert p.regular_requested.iloc[2] == 1020
+    assert p.regular_requested.iloc[2] == pytest.approx(sum((1000*(4 if m == 12 else 1)/15)*1.02**(1+m/12) for m in range(1,13)))
     for _, r in p.iloc[1:].iterrows():
-        assert r.portfolio_nominal == pytest.approx(r.opening_portfolio*(1+r.total_return)-r.gross_withdrawal+r.ann_pension_contribution_gross, abs=.001)
+        assert r.portfolio_nominal == pytest.approx(r.opening_portfolio+r.investment_gain-r.gross_withdrawal+r.ann_pension_contribution_gross, abs=.001)
         assert r.gross_withdrawal == pytest.approx(r.regular_paid+r.gift_paid+r.ann_contribution_portfolio_draw, abs=.001)
         assert r.spendable_after_tax == pytest.approx(max(0, r.regular_paid-r.total_tax))
         assert r.portfolio_real == pytest.approx(r.portfolio_nominal/r.inflation_index)
@@ -163,7 +169,7 @@ def test_charity_excluded_and_bank_interest_external_gross():
                  initial_y=-.02, gordon_citibank_pension=0, gordon_interest=0,
                  ann_property=0, ann_state_pension=0, ann_interest=0, ann_pension_contribution=0)
     p = run_path(s, [-.02], account_balances=[0, 1000, 0, 0, 0, 0], initial_gains=[0, 0])
-    assert p.portfolio_nominal.iloc[1] == 1000
+    assert p.portfolio_nominal.iloc[1] == pytest.approx(1000)
     assert p.gross_withdrawal.iloc[1] == 0
     assert not any('charitable' in c for c in p.columns)
     defaults = Settings()
@@ -266,10 +272,27 @@ def test_workbook_reader(tmp_path):
     # A later row with an older date must not replace the latest valuation.
     s.cell(2, 2, date(2026, 11, 4)); s.cell(2, 9, 4323674)
     h = wb.create_sheet("Pension_Performance")
-    for row, y in enumerate(range(2020, 2027), 41):
-        h.cell(row, 16, date(y, 12, 31)); h.cell(row, 17, 100*1.05**(y-2020))
+    h.cell(10, 2, .025)
+    h.cell(11, 2, 2)
+    for row, y in enumerate(range(2026, 2020, -1), 16):
+        h.cell(row, 1, f'{y-1}–{y}')
+        h.cell(row, 2, date(y-1, 11, 5)); h.cell(row, 3, date(y, 11, 5))
+        h.cell(row, 4, .01*(y-2020)); h.cell(row, 5, 100); h.cell(row, 6, 102); h.cell(row, 7, .02)
     path = tmp_path/"fixture.xlsx"
     wb.save(path)
     out = read_workbook(path)
     assert out["balance"] == 4335877
-    assert [h["year"] for h in out["history"]] == list(range(2021, 2026))
+    assert [h["year"] for h in out["history"]] == list(range(2022, 2027))
+
+    assert out["mean_y"] == pytest.approx(.02)
+    assert out["std_y"] == pytest.approx(np.std([0, .01, .02, .03, .04], ddof=1))
+    assert out["cpi_lag_months"] == 2
+    expected_cagr = np.prod([1.02,1.03,1.04,1.05,1.06])**.2-1
+    assert out["portfolio_cagr"] == pytest.approx(expected_cagr)
+    assert out["cpi_cagr"] == pytest.approx(.02)
+    assert out["cagr_y"] == pytest.approx(expected_cagr-.02)
+    assert out["vs_target_cagr"] == pytest.approx(expected_cagr-.02-.025)
+    h.cell(16, 7, .05)
+    wb.save(path)
+    with pytest.raises(ValueError, match="Inconsistent CPI"):
+        read_workbook(path)

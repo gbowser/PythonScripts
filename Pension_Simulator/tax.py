@@ -25,7 +25,7 @@ def band_tax(start, amount, basic, additional, rates):
             + max(0.0, end-max(start, additional))*rates[2])
 
 
-def income_tax(non_savings, interest, dividends, scale=1.0, *,
+def _legacy_income_tax(non_savings, interest, dividends, scale=1.0, *,
                gift_aid_gross=0.0, relief_at_source_gross=0.0,
                dividend_rates=(.1075, .3575, .3935), truncate_components=False):
     """Allocate unused PA between savings/dividends at the beneficial breakpoints.
@@ -61,7 +61,7 @@ def income_tax(non_savings, interest, dividends, scale=1.0, *,
     return min(costs), pa, taxable
 
 
-def owner_tax(non_savings, external_interest, yield_income, gain, loss_forward,
+def _legacy_owner_tax(non_savings, external_interest, yield_income, gain, loss_forward,
               scale=1.0, dividend_share=None, relief_at_source_gross=0.0):
     """None dividend_share means choose the best hypothetical interest/dividend mix.
 
@@ -102,7 +102,81 @@ def owner_tax(non_savings, external_interest, yield_income, gain, loss_forward,
     return best
 
 
-def update_loss_forward(gain, prior_losses, scale):
+def update_loss_forward(gain, prior_losses, scale, params=None):
     if gain < 0:
         return prior_losses-gain
-    return max(0.0, prior_losses-max(0.0, gain-3000*scale))
+    return max(0.0, prior_losses-max(0.0, gain-(params.cgt_exemption if params is not None else 3000*scale)))
+
+
+def _allocation_vertices(p, s, d, rem, n, basic, additional, psa, starting, da):
+    """Vertices of the piecewise-linear PA allocation problem (property/savings).
+
+    All kinks are vertical, horizontal or x+y=constant. Enumerating their
+    intersections avoids a local numerical minimum in the three-way allocation.
+    """
+    if rem <= 0:
+        return [(0.0, 0.0)]
+    xs = {0.0, p, rem, rem-s, rem-d, n+p-starting}
+    for band in (basic, additional):
+        xs.update((n+p-band, n+p+psa-band))
+    ys = {0.0, s, s-psa, rem, rem-p, rem-d}
+    zs = {rem, rem-d, da-d+rem, s+n+p-starting-psa}
+    for band in (basic, additional):
+        zs.update((n+p+s-band, n+p+s+da-band))
+    points = {(x,y) for x in xs for y in ys}
+    points.update((x,z-x) for x in xs for z in zs)
+    points.update((z-y,y) for y in ys for z in zs)
+    return [(max(0.0,x), max(0.0,y)) for x,y in points
+            if -1e-7 <= x <= p+1e-7 and -1e-7 <= y <= s+1e-7
+            and -1e-7 <= rem-x-y <= d+1e-7]
+
+
+def income_tax(non_savings, interest, dividends, scale=1.0, *, property_income=0.0,
+               params=None, gift_aid_gross=0.0, relief_at_source_gross=0.0,
+               dividend_rates=(.1075,.3575,.3935), truncate_components=False):
+    if params is None:
+        return _legacy_income_tax(non_savings+property_income, interest, dividends, scale,
+            gift_aid_gross=gift_aid_gross, relief_at_source_gross=relief_at_source_gross,
+            dividend_rates=dividend_rates, truncate_components=truncate_components)
+    n,p,s,d = [max(0.0,float(v)) for v in (non_savings,property_income,interest,dividends)]
+    gross = n+p+s+d
+    relief = gift_aid_gross+relief_at_source_gross
+    pa = max(0.0, params.allowance-max(0.0,gross-relief-params.taper_start)/2)
+    nt = max(0.0,n-pa)
+    rem = min(p+s+d,max(0.0,pa-n))
+    basic = params.basic_band+relief
+    additional = params.additional_threshold+relief
+    taxable = max(0.0,gross-pa)
+    psa = params.savings_allowances[0 if taxable <= basic else 1 if taxable <= additional else 2]
+    costs=[]
+    for ap,ass in _allocation_vertices(p,s,d,rem,nt,basic,additional,psa,params.starting_band,params.dividend_allowance):
+        pt,st,dt = max(0,p-ap),max(0,s-ass),max(0,d-(rem-ap-ass))
+        sn = min(st,max(0,params.starting_band-nt-pt)+psa)
+        dn = min(dt,params.dividend_allowance)
+        costs.append(sum((band_tax(0,nt,basic,additional,params.other_rates),
+                          band_tax(nt,pt,basic,additional,params.property_rates),
+                          band_tax(nt+pt+sn,st-sn,basic,additional,params.savings_rates),
+                          band_tax(nt+pt+st+dn,dt-dn,basic,additional,params.dividend_rates))))
+    return min(costs),pa,taxable
+
+
+def owner_tax(non_savings, external_interest, yield_income, gain, loss_forward,
+              scale=1.0, dividend_share=None, relief_at_source_gross=0.0, *,
+              property_income=0.0, params=None):
+    if params is None:
+        return _legacy_owner_tax(non_savings+property_income, external_interest, yield_income,
+                                 gain,loss_forward,scale,dividend_share,relief_at_source_gross)
+    # The app uses fixed dividend shares. Retain automatic mix support for API
+    # callers by checking a dense deterministic set plus allowance breakpoints.
+    y=max(0.0,yield_income)
+    shares = [dividend_share] if dividend_share is not None else [k/100 for k in range(101)]
+    best=None
+    for share in shares:
+        div=y*share; interest=max(0.0,external_interest)+y-div
+        cost,pa,taxable=income_tax(non_savings,interest,div,property_income=property_income,
+                                 params=params,relief_at_source_gross=relief_at_source_gross)
+        tg=max(0.0,gain-max(0.0,loss_forward)-params.cgt_exemption)
+        low=min(tg,max(0.0,params.basic_band+relief_at_source_gross-taxable))
+        item=TaxResult(cost,low*.18+(tg-low)*.24,div,interest,pa,taxable)
+        if best is None or item.total < best.total: best=item
+    return best
