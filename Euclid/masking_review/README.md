@@ -54,6 +54,64 @@ the saved mask, so unprocessed pixels cannot enter the measurement.
 5. Enter bar/disc radial intervals (arcsec) and **Refit using accepted mask**.
    Each interval requires 0 < minimum < maximum. Overlapping or reversed physical
    assignments produce a caution. Existing adopted measurements are not overwritten.
+6. In **Deproject and profile the bar**, keep **Latest masked refit** to use the
+   complete geometry from that exact accepted mask, or explicitly choose **Entered
+   geometry** to supply observed disc PA, inclination and bar PA yourself. Angles
+   are east of north modulo 180 degrees; inclination must be below 85 degrees.
+   Choose the profile half-length, odd slit width (default 3 output pixels), minimum
+   valid fraction (default 1.0), and log/linear intensity display. Click **Deproject
+   accepted mask + bar profiles**. The requested half-length must include the bar.
+
+## Deprojection and profile-mask diagnostics
+
+Deprojection uses the celestial WCS at the reviewed centre, expands the disc minor
+axis by 1/cos(inclination), then rotates the deprojected bar onto horizontal X.
+Coordinates are arcsec in the disc plane, with a native-scale output grid. The
+transform preserves intensity values; it does not apply a photometric inclination
+correction. Resampling is bilinear but requires all contributing pixels to be valid
+and unmasked. A masked contributor cannot leak into an output science value.
+Unsupported areas and masked regions remain NaN rather than being filled.
+
+The diagnostic shows face-on masked intensity contours and the major/minor-axis
+profile apertures. Orange pixels mark transformed foreground masks; gray marks
+unavailable input coverage. The graph shades every interval where the foreground
+mask overlaps either finite-width slit: orange for major, purple hatching for minor.
+Dotted verticals mark the adopted deprojected bar extent. A coverage panel shows
+the available fraction of each aperture. With the default 100% threshold, any
+missing aperture sample leaves a profile gap. Lowering the threshold uses the
+mean of remaining valid samples and still highlights the mask cut. Gaps are never
+bridged. Masked objects outside the selected slit do not flag its profile; change
+the slit width to inspect a broader aperture.
+
+Profiles use linear, background-subtracted science values, independently of the
+image AutoStretch/gamma. Log plotting omits non-positive values but keeps them in
+the CSV. Fractions and counts are coverage diagnostics, not independent errors.
+The primary graph plots both measured sides of each axis at signed negative and
+positive deprojected radii, with the reviewed centre exactly at zero and symmetric
+horizontal limits. Blue solid is bar major; red dashed is bar minor. A dotted
+vertical marks zero and blue verticals mark the adopted bar extent. The profiles
+are neither folded nor mirrored. The combined image/coverage diagnostic is in an
+expandable section below this standalone graph.
+Results remain provisional and depend on the physical disc/bar geometry selected.
+The default source requires a matching mask-review ID and mask SHA256 from the
+masked refit; incomplete/mismatched fits cannot silently supply missing angles.
+
+Each run writes a separate `deprojections/<id>/` folder:
+
+- `deprojected_bar_aligned.fits`: native-scale face-on science, with MASK,
+  FOREGROUND, COVERAGE and VALID_WEIGHT extensions. MASK=1 means exclude.
+- `bar_profiles.csv`: signed radius, major/minor intensities, valid/requested counts,
+  foreground-mask and unsupported fractions, and mask/bar intersection flags.
+- `bar_profile.png`: image, intensity graph, shaded mask cuts and coverage plot.
+- `bar_axis_profiles.png`: standalone major/minor cuts on the signed axis centred
+  at zero, with mask-cut highlights.
+- `request.json` / `result.json`: geometry, centre, exact mask/source/refit hashes,
+  bar extent, profile apertures and affected radius intervals.
+
+Files can be downloaded from the new result panel. Restoring an accepted mask also
+reopens its last deprojection when available. Source science and adopted geometry
+are never overwritten. Entered geometry is recorded as such rather than presented
+as a newly measured result.
 
 ## Foreground sources projected on the galaxy
 
@@ -114,7 +172,7 @@ acceptance rules. At least three accepted disc/bar samples are required for nume
 angles; fewer than six disc samples are cautioned. PA is an axial mean, q is the
 median axis ratio, and inclination is acos(q), q0=0. Results remain provisional;
 fixed centre does not independently validate the nucleus. Adjacent isophotes are
-correlated. Automated deprojection is a subsequent stage after geometry review.
+correlated. Review the geometry before using the new deprojection stage.
 
 ## Launch and validation
 

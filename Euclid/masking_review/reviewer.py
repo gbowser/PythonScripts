@@ -68,7 +68,7 @@ def worker(request_path):
                       shape=list(data.shape), target=target, objects=objects,
                       source_sha256=request['source_sha256'])
         core.json_write(folder / 'result.json', result)
-    elif request['action'] == 'refit':
+    elif request['action'] in ('refit','deproject'):
         review = json.loads(Path(request['review']).read_text(encoding='utf8'))
         mask_path = Path(request['mask'])
         if core.digest(mask_path) != request['mask_sha256']:
@@ -76,6 +76,18 @@ def worker(request_path):
         mask = fits.getdata(mask_path, memmap=False).astype(bool)
         if mask.shape != data.shape:
             raise ValueError('Mask shape does not match science FITS')
+        geometry=dict(review['geometry'])
+        if request['action']=='deproject':
+            from deprojection import write_products
+            geometry.update(x=request['deprojection_centre'][0],y=request['deprojection_centre'][1])
+            provenance=dict(source_sha256=request['source_sha256'],mask_sha256=request['mask_sha256'],
+                review_sha256=core.digest(request['review']),
+                geometry_source=request['geometry_source'],geometry_refit_id=request.get('geometry_refit_id'),
+                geometry_refit_sha256=request.get('geometry_refit_sha256'),
+                geometry_cautions=request.get('geometry_cautions',[]),
+                catalogue_sha256=request['catalogue_sha256'],code_sha256=core.digest(HERE/'deprojection.py'))
+            write_products(data,mask,bad,header,geometry,review,request['options'],folder,provenance)
+            return
         result = core.fit_geometry(data, mask | bad, header, geometry, request['bounds'], folder,
                                    background_mean=review['background']['mean'])
         result.update(object_id=request['row']['object_id'], mask_review_id=review['review_id'],
@@ -101,7 +113,7 @@ class Application:
         self.job = None
 
     def folder(self, kind, identifier):
-        if kind not in ('runs', 'reviews', 'refits') or not re.fullmatch(r'[0-9a-f]{32}', identifier):
+        if kind not in ('runs', 'reviews', 'refits','deprojections') or not re.fullmatch(r'[0-9a-f]{32}', identifier):
             raise ValueError('Invalid artifact identifier')
         folder = self.output / kind / identifier
         if not folder.is_dir():
@@ -120,11 +132,23 @@ class Application:
         # Lightweight preview permits initial inspection before MTO runs.
         latest_path = self.output / f'latest_{oid}.json'
         latest = json.loads(latest_path.read_text(encoding='utf8')) if latest_path.exists() else None
+        latest_refit=None
+        if latest:
+            candidates=sorted((self.output/'refits').glob('*/result.json'),key=lambda p:p.stat().st_mtime,reverse=True)
+            for candidate in candidates:
+                fitted=json.loads(candidate.read_text(encoding='utf8'))
+                if fitted.get('mask_review_id')==latest['review_id'] and fitted.get('mask_sha256')==latest['mask_sha256']:
+                    latest_refit=dict(fitted,artifact_id=candidate.parent.name)
+                    break
+        product_path=self.output/f'latest_deprojection_{oid}.json'
+        product=json.loads(product_path.read_text(encoding='utf8')) if product_path.exists() else None
         return dict(object_id=oid, shape=list(data.shape), geometry=geometry, latest=latest,
+                    latest_refit=latest_refit,latest_deprojection=product,
                     processing_bounds=core.fit_galaxy_bounds(data.shape, geometry),
                     proposed_ellipses=core.proposed_ellipses(row, geometry),
                     original={k: row.get(k) for k in ('adopted_disc_pa_deg', 'adopted_bar_pa_deg',
-                              'adopted_inclination_deg', 'adoption_status')})
+                              'adopted_inclination_deg','review_selected_disc_pa','review_selected_bar_pa',
+                              'review_selected_inclination', 'adoption_status')})
 
     def display_image(self, oid):
         data, bad, *_ = core.load_image(self.byid[oid], self.args.fits_dir)
@@ -136,7 +160,7 @@ class Application:
         oid = str(payload.get('object_id', ''))
         if oid not in self.byid:
             raise ValueError('Unknown target')
-        if action not in ('detect', 'sweep', 'refit'):
+        if action not in ('detect', 'sweep', 'refit','deproject'):
             raise ValueError('Unknown action')
         params = core.parameters(payload.get('params', {}))
         path = core.source_path(self.byid[oid], self.args.fits_dir)
@@ -144,13 +168,40 @@ class Application:
                        mtobjects_root=str(self.args.mtobjects_root.resolve()), source_sha256=core.digest(path),
                        catalogue_sha256=self.catalogue_hash, requested_utc=utc(),
                        core_sha256=core.digest(HERE / 'masking_core.py'), worker_sha256=core.digest(__file__))
-        if action == 'refit':
+        if action in ('refit','deproject'):
             review_folder = self.folder('reviews', payload.get('review_id', ''))
             review = json.loads((review_folder / 'review.json').read_text(encoding='utf8'))
             if review['object_id'] != oid or review['source_sha256'] != request['source_sha256']:
                 raise ValueError('Approved review does not match this target or current science file')
             if review.get('processing_policy') != core.PROCESSING_POLICY:
                 raise ValueError('Run MTO and save a new Fit galaxy crop review before refitting.')
+            request.update(action=action,review=str(review_folder/'review.json'),mask=str(review_folder/'mask.fits'),
+                           mask_sha256=core.digest(review_folder/'mask.fits'))
+            if request['mask_sha256']!=review.get('mask_sha256'):
+                raise ValueError('The accepted mask file has changed; save and review a new mask')
+        if action == 'deproject':
+            from deprojection import checked_options
+            options=dict(payload.get('options',{}))
+            geometry_source=payload.get('geometry_source','masked_refit')
+            if geometry_source=='masked_refit':
+                refit_folder=self.folder('refits',payload.get('refit_id',''))
+                refit_path=refit_folder/'result.json'
+                fitted=json.loads(refit_path.read_text(encoding='utf8'))
+                if fitted.get('object_id')!=oid or fitted.get('mask_review_id')!=review['review_id'] or fitted.get('mask_sha256')!=request['mask_sha256']:
+                    raise ValueError('The geometry refit must use this exact accepted mask')
+                for key in ('disc_pa_deg','inclination_deg','bar_pa_deg'):
+                    if fitted.get(key) is None:
+                        raise ValueError('Masked refit has incomplete geometry; review the intervals and refit, or explicitly choose entered geometry')
+                    options[key]=fitted[key]
+                options['bar_radius_arcsec']=fitted['bounds']['bar_max']
+                request.update(geometry_refit_id=refit_folder.name,geometry_refit_sha256=core.digest(refit_path),
+                               deprojection_centre=[fitted['centre_x'],fitted['centre_y']],geometry_cautions=fitted.get('cautions',[]))
+            elif geometry_source!='entered':
+                raise ValueError('Choose masked refit or entered geometry')
+            else:
+                request['deprojection_centre']=[review['geometry']['x'],review['geometry']['y']]
+            request.update(geometry_source=geometry_source,options=checked_options(options))
+        if action == 'refit':
             bounds = payload.get('bounds', {})
             if set(bounds) != {'disc_min', 'disc_max', 'bar_min', 'bar_max'}:
                 raise ValueError('Enter both disc and bar radial intervals')
@@ -174,14 +225,14 @@ class Application:
         try:
             moves = [.1, .3, .5, .7, .9] if job['action'] == 'sweep' else [request['params']['move_factor']]
             for move in moves:
-                kind = 'refits' if job['action'] == 'refit' else 'runs'
+                kind = 'deprojections' if job['action']=='deproject' else 'refits' if job['action'] == 'refit' else 'runs'
                 identifier = uuid.uuid4().hex
                 folder = self.output / kind / identifier
                 folder.mkdir(parents=True)
                 req = dict(request, params=dict(request['params'], move_factor=move))
                 core.json_write(folder / 'request.json', req)
                 with self.lock:
-                    job['progress'] = f'{job["action"]}: move_factor {move:g}'
+                    job['progress'] = 'Deprojecting the accepted mask and calculating bar profiles…' if job['action']=='deproject' else f'{job["action"]}: move_factor {move:g}'
                 with (folder / 'worker.log').open('w', encoding='utf8') as log:
                     process = subprocess.run([sys.executable, str(Path(__file__).resolve()), '--worker',
                                               str(folder / 'request.json')], stdout=log, stderr=subprocess.STDOUT,
@@ -191,6 +242,8 @@ class Application:
                     raise RuntimeError(f'Calculation failed. Log: {folder / "worker.log"}\n{detail}')
                 result = json.loads((folder / 'result.json').read_text(encoding='utf8'))
                 result['artifact_id'] = identifier
+                if job['action']=='deproject':
+                    core.json_write(self.output/f'latest_deprojection_{job["object_id"]}.json',result)
                 with self.lock:
                     job['results'].append(result)
             with self.lock:
@@ -315,7 +368,8 @@ class Handler(BaseHTTPRequestHandler):
                 kind, identifier, name = args['kind'][0], args['id'][0], args['name'][0]
                 allowed = {'runs': {'image.png', 'labels.bin'},
                            'reviews': {'mask.fits', 'review.json', 'mask_review.png'},
-                           'refits': {'geometry.png', 'ellipse_profile.csv', 'result.json'}}
+                           'refits': {'geometry.png', 'ellipse_profile.csv', 'result.json'},
+                           'deprojections': {'deprojected_bar_aligned.fits','bar_profiles.csv','bar_profile.png','bar_axis_profiles.png','result.json'}}
                 if name not in allowed.get(kind, set()):
                     raise ValueError('Unknown artifact')
                 file = app.folder(kind, identifier) / name

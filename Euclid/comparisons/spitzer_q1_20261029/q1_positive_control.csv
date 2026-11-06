@@ -1,0 +1,2 @@
+name,mosaic_product_oid,tile_index,file_name,file_path,release_name,product_type,category
+__Q1_SELECTION_CONTROL__,544,102042913,EUC_MER_BGSUB-MOSAIC-VIS_TILE102042913-EE5E4F_20241021T041311.751862Z_00.00.fits,/euclid/repository_idr/iqr1/Q1_R1/MER/102042913/VIS,Q1_R1,DpdMerBksMosaic,SCIENCE

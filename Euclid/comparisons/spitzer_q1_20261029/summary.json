@@ -1,0 +1,75 @@
+{
+  "checked_utc": "2026-10-29T18:48:17.858214+00:00",
+  "spitzer_library": 182,
+  "current_q1_selection": 2777,
+  "matching_radius_arcsec": 10,
+  "matches": 0,
+  "matches_within_60_arcsec": 0,
+  "nearest_pair": {
+    "spitzer_name": "NGC1493",
+    "spitzer_ra_deg": "59.36425151142352",
+    "spitzer_dec_deg": "-46.210693730526515",
+    "euclid_object_id": "-598524774465432590",
+    "euclid_ra_deg": "59.85247744537679",
+    "euclid_dec_deg": "-46.54325908110995",
+    "separation_arcsec": 1704.0359866391643,
+    "match_within_10_arcsec": false
+  },
+  "source_hashes": {
+    "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Euclid\\library_queries\\galaxy_cones.csv": "9073d3ecb4abcb99ae65842b793026af2959619204fd388261396e4e6a1698b7",
+    "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Euclid\\reports\\MER_VIS_review_2026-10-29\\MER_VIS_reviewed_adoption_manifest.csv": "fc4c237d7079f4651992d55a781205a75c51c9048a7889d977503a86edcd6782",
+    "C:\\Users\\gordo\\Documents\\Github\\PythonScripts\\Erwin_s4g_image_downloader\\geometry_output\\s4g_image_geometry_manifest.csv": "5fc23b632eece82653c557a29f83cbe3a0d7043187eda2022e7dbffc5fe5351b"
+  },
+  "scope": "182 galaxies actually used versus the selected 2777 Q1 targets; not the complete S4G survey",
+  "existing_common_images": [
+    {
+      "name": "NGC1255",
+      "spitzer_image": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Erwin\\s4g_images_36um\\NGC1255.phot.1.fits",
+      "euclid_observed_image": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\Clean_Galaxy_Output\\NGC1255_observed.fits",
+      "euclid_source_image": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\Euclid Sample Data\\bars\\NGC1255.fits",
+      "ra_deg": "48.383317699421475",
+      "dec_deg": "-25.725106667731183",
+      "spitzer_pixel_scale_arcsec": 0.749999999999988,
+      "euclid_pixel_scale_arcsec": 0.09999855192217111,
+      "centre_inside_image": true,
+      "centre_patch_finite_fraction": 1.0,
+      "release_in_header": "not recorded",
+      "in_current_q1_selection": false
+    },
+    {
+      "name": "NGC1436",
+      "spitzer_image": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Erwin\\s4g_images_36um\\NGC1436.phot.1.fits",
+      "euclid_observed_image": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\Clean_Galaxy_Output\\NGC1436_observed.fits",
+      "euclid_source_image": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\Euclid Sample Data\\bars\\NGC1436.fits",
+      "ra_deg": "55.904507036012404",
+      "dec_deg": "-35.85304000099787",
+      "spitzer_pixel_scale_arcsec": 0.749999999999988,
+      "euclid_pixel_scale_arcsec": 0.09999966613136758,
+      "centre_inside_image": true,
+      "centre_patch_finite_fraction": 1.0,
+      "release_in_header": "not recorded",
+      "in_current_q1_selection": false
+    },
+    {
+      "name": "NGC1512",
+      "spitzer_image": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Erwin\\s4g_images_36um\\NGC1512.phot.1.fits",
+      "euclid_observed_image": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\Clean_Galaxy_Output\\NGC1512_observed.fits",
+      "euclid_source_image": "D:\\Dropbox\\Public Documents\\UCLAN\\MSc Research\\Euclid\\Euclid Sample Data\\bars\\NGC1512.fits",
+      "ra_deg": "60.97557443229083",
+      "dec_deg": "-43.34872416110383",
+      "spitzer_pixel_scale_arcsec": 0.749999999999988,
+      "euclid_pixel_scale_arcsec": 0.09999938180754171,
+      "centre_inside_image": true,
+      "centre_patch_finite_fraction": 1.0,
+      "release_in_header": "not recorded",
+      "in_current_q1_selection": false
+    }
+  ],
+  "public_q1_mosaic_footprint": {
+    "status": "checked",
+    "matching_galaxies": [],
+    "metadata_rows": 0,
+    "positive_control_rows": 1,
+    "note": "Centre coverage only; does not guarantee full usable galaxy coverage."
+  }
+}

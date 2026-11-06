@@ -5,6 +5,7 @@ let selected = new Set(), history = [], accepted = null, dirty = false, busy = f
 let view, jobTimer, loadVersion = 0, maskVersion = 0;
 let objectPage = 0;
 let displayPixels, displayMeta, proposedEllipses = [], sweepViews = [], displayTimer;
+let lastRefit=null;
 const clamp = (x,a,b) => Math.max(a,Math.min(b,x));
 // Same rational midtones transfer and monochrome AutoSTF as the centre reviewer.
 function midtonesTransfer(m,x){m=clamp(m,Number.EPSILON,1-Number.EPSILON);x=clamp(x,0,1);if(x<=0)return 0;if(x>=1)return 1;return ((m-1)*x)/((2*m-1)*x-m);}
@@ -67,14 +68,17 @@ function changed(){dirty=true;$('dirty').hidden=false;updateButtons();}
 function updateButtons(){for(const id of ['detect','sweep','showComparison','galaxy','previous','next','restore','resetParams','projectedPreset'])$(id).disabled=busy;
   $('save').disabled=busy||!result||dirty||!$('confirm').checked;
   $('refit').disabled=busy||!accepted||dirty;
+  const complete=['deprojDiscPA','deprojInclination','deprojBarPA','profileBarRadius','profileRadius'].every(id=>$(id).value!==''&&Number.isFinite(Number($(id).value)));
+  const sourceReady=$('geometrySource').value==='entered'||(lastRefit&&lastRefit.mask_review_id===accepted?.review_id&&['disc_pa_deg','inclination_deg','bar_pa_deg'].every(key=>Number.isFinite(lastRefit[key])));
+  $('deproject').disabled=busy||!accepted||dirty||!complete||!sourceReady;
   for(const id of ['undo','resetObjects','pin'])$(id).disabled=busy||!result;
 }
 function unsaved(){return result && !accepted;}
-function clearAcceptance(){accepted=null;$('confirm').checked=false;$('saved').textContent='Mask decisions have not been saved.';updateButtons();}
+function clearAcceptance(){accepted=null;$('confirm').checked=false;$('saved').textContent='Mask decisions have not been saved.';$('deprojectSection').hidden=true;updateButtons();}
 async function loadGalaxy(){
   const version=++loadVersion;const oid=$('galaxy').value;
   status('Loading native image…');result=null;labels=null;overlay=null;segmentImage=null;reference=null;image=null;displayPixels=null;sweepViews=[];
-  $('referenceSection').hidden=true;$('sweepSection').hidden=true;$('refitSection').hidden=true;accepted=null;
+  $('referenceSection').hidden=true;$('sweepSection').hidden=true;$('refitSection').hidden=true;$('deprojectSection').hidden=true;accepted=null;lastRefit=null;
   $('notes').value='';$('confirm').checked=false;$('saved').textContent='';$('objects').replaceChildren();$('metrics').replaceChildren();
   galaxy=await api('/api/galaxy?id='+encodeURIComponent(oid));if(version!==loadVersion)return;
   const response=await fetch('/api/display?id='+encodeURIComponent(oid));
@@ -88,6 +92,7 @@ async function loadGalaxy(){
   $('stretch').value='autostf';$('gamma').value=1;$('stfShadows').value=-2.8;$('stfTarget').value=.25;
   setParams(config.defaults);
   for(const key of ['bar_min','bar_max','disc_min','disc_max'])$(key).value=galaxy.geometry[key]??'';
+  lastRefit=galaxy.latest_refit||null;$('geometrySource').value='masked_refit';fillDeprojectionGeometry();
   const target=config.targets.find(t=>t.object_id===oid);
   $('targetInfo').textContent=target.status+(target.challenge?' · Close-pair challenge; inclination remains provisional.':'');
   $('restore').disabled=!galaxy.latest;fitView();stretchDisplay();updateButtons();
@@ -163,9 +168,15 @@ async function toggle(label){if(!result||busy)return;
   if(label===result.target&&selected.has(label))status('Centre label selected for masking. This excludes its entire connected segment; inspect how much galaxy light it contains.');}
 async function start(action){
   if(action==='detect'&&unsaved()&&!window.confirm('Replace the current unsaved segmentation and object decisions?'))return;
-  if(action==='refit'&&!accepted)throw Error('Accept and save a reviewed mask first.');
+  if(['refit','deproject'].includes(action)&&!accepted)throw Error('Accept and save a reviewed mask first.');
   const payload={action,object_id:galaxy.object_id,params:params()};
   if(action==='refit'){payload.review_id=accepted.review_id;payload.bounds={};for(const key of ['bar_min','bar_max','disc_min','disc_max'])payload.bounds[key]=Number($(key).value);}
+  if(action==='deproject'){
+    const inputs={disc_pa_deg:'deprojDiscPA',inclination_deg:'deprojInclination',bar_pa_deg:'deprojBarPA',bar_radius_arcsec:'profileBarRadius',radius_arcsec:'profileRadius',slit_width:'profileWidth',min_valid_fraction:'profileMinValid'};
+    payload.review_id=accepted.review_id;payload.geometry_source=$('geometrySource').value;payload.refit_id=lastRefit?.artifact_id;
+    payload.options={profile_scale:$('profileScale').value};
+    for(const [key,id] of Object.entries(inputs)){if($(id).value==='')throw Error('Enter all geometry and profile settings.');payload.options[key]=Number($(id).value);}
+  }
   const job=await api('/api/job',payload);busy=true;updateButtons();drawObjects();
   if(action==='sweep'){$('sweepSection').hidden=false;$('sweepResults').replaceChildren();sweepViews=[];$('sweepProgress').textContent='Calculating 5 move-factor settings…';$('sweepSection').scrollIntoView({behavior:'smooth',block:'start'});}
   status('Calculating in an isolated worker…');poll(job.job_id);
@@ -177,8 +188,8 @@ async function poll(id){try{const job=await api('/api/job');if(job.job_id!==id)t
   busy=false;updateButtons();drawObjects();
   if(job.status==='failed'){if(job.results.length&&job.action==='sweep')await showSweep(job.results);throw Error(job.error);}
   if(job.object_id!==galaxy.object_id)return;
-  if(job.action==='refit')showRefit(job.results[0]);else if(job.action==='sweep')await showSweep(job.results);else await useResult(job.results[0]);
-  status(job.action==='refit'?'Refit complete. Inspect the provisional geometry below.':job.action==='sweep'?'Five move-factor previews are shown in the comparison panel. Choose Use result to inspect one.':'MTO complete. Review object decisions and the proposed mask before accepting.');
+  if(job.action==='deproject')showDeprojection(job.results[0]);else if(job.action==='refit')showRefit(job.results[0]);else if(job.action==='sweep')await showSweep(job.results);else await useResult(job.results[0]);
+  status(job.action==='deproject'?'Deprojection and bar profiles complete. Shaded intervals mark foreground-mask cuts.':job.action==='refit'?'Refit complete. Inspect the provisional geometry below.':job.action==='sweep'?'Five move-factor previews are shown in the comparison panel. Choose Use result to inspect one.':'MTO complete. Review object decisions and the proposed mask before accepting.');
 }catch(e){busy=false;updateButtons();status(e.message,true);}}
 function redrawSweep(){if(!image||!galaxy||!view)return;for(const {r,img,mask} of sweepViews){
     const c=document.createElement('canvas');c.width=320;c.height=320;const ctx=c.getContext('2d');
@@ -200,6 +211,7 @@ async function showSweep(results){$('sweepSection').hidden=false;$('sweepResults
   $('sweepSection').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function showRefit(r){$('refitSection').hidden=false;$('refitImage').src=file('refits',r.artifact_id,'geometry.png');
+  lastRefit=r;fillDeprojectionGeometry();updateButtons();
   if(r.proposed_ellipses){proposedEllipses=r.proposed_ellipses;render();}
   const table=document.createElement('table'),head=document.createElement('tr');for(const label of ['Measurement','Previous reviewed value','Masked refit']){const th=document.createElement('th');th.textContent=label;head.append(th);}table.append(head);
   const format=value=>value===null||value===undefined||value===''?'Unavailable':Number(value).toFixed(2);
@@ -207,6 +219,37 @@ function showRefit(r){$('refitSection').hidden=false;$('refitImage').src=file('r
     const tr=document.createElement('tr');for(const value of [label,old?format(r.original_geometry[old]):'—',format(r[key])]){const td=document.createElement('td');td.textContent=value;tr.append(td);}table.append(tr);}
   $('refitMetrics').replaceChildren(table);for(const caution of r.cautions){const p=document.createElement('p');p.className='notice';p.textContent=caution;$('refitMetrics').append(p);}
   $('refitLinks').replaceChildren();for(const name of ['ellipse_profile.csv','result.json','geometry.png']){const a=document.createElement('a');a.href=file('refits',r.artifact_id,name);a.download=name;a.textContent=name;a.style.marginRight='18px';$('refitLinks').append(a);}
+}
+function fillDeprojectionGeometry(){
+  const source=$('geometrySource').value;
+  let values;
+  if(source==='masked_refit'){
+    values=lastRefit||{};
+    $('geometrySourceInfo').textContent=lastRefit?'Uses this masked refit. Inspect the disc/bar selections before transforming; results remain provisional.':'A complete refit of the accepted mask is required. Alternatively choose Entered geometry explicitly.';
+  }else{
+    const original=galaxy?.original||{};
+    const first=(...keys)=>{for(const key of keys){const value=original[key];if(value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value)))return Number(value);}return null;};
+    values=lastRefit||{disc_pa_deg:first('adopted_disc_pa_deg','review_selected_disc_pa'),inclination_deg:first('adopted_inclination_deg','review_selected_inclination'),bar_pa_deg:first('adopted_bar_pa_deg','review_selected_bar_pa')};
+    $('geometrySourceInfo').textContent='Entered geometry is recorded separately. Check these values; catalogue/earlier reviewed values may be provisional.';
+  }
+  for(const [id,key] of [['deprojDiscPA','disc_pa_deg'],['deprojInclination','inclination_deg'],['deprojBarPA','bar_pa_deg']]){$(id).value=values[key]??'';$(id).readOnly=source==='masked_refit';}
+  $('profileBarRadius').value=lastRefit?.bounds?.bar_max??galaxy?.geometry?.bar_max??'';
+  $('profileBarRadius').readOnly=source==='masked_refit';
+  const d=Number($('deprojDiscPA').value),i=Number($('deprojInclination').value),b=Number($('deprojBarPA').value),bar=Number($('profileBarRadius').value);
+  const delta=(b-d)*Math.PI/180,cosine=Math.cos(i*Math.PI/180);
+  const projectedBar=bar*Math.hypot(Math.cos(delta),Math.sin(delta)/Math.max(cosine,.087));
+  const outer=galaxy?.geometry?.outer_disc?.sma_arcsec??galaxy?.geometry?.disc_max??1;
+  $('profileRadius').value=Math.ceil(Math.max(outer*1.5,projectedBar*1.2)*10)/10;
+}
+function showDeprojection(r){
+  $('deprojectSection').hidden=false;$('deprojectImage').src=file('deprojections',r.artifact_id,r.axis_profile_file||'bar_profile.png');
+  $('deprojectDiagnosticDetails').hidden=!r.axis_profile_file;$('deprojectDiagnostic').src=file('deprojections',r.artifact_id,'bar_profile.png');
+  const intervals=r.major_bar_mask_intervals_arcsec||[];
+  const ranges=intervals.map(pair=>pair.map(v=>Number(v).toFixed(2)).join(' to ')+' arcsec').join('; ');
+  $('deprojectInfo').textContent=`Both sides of each axis are plotted independently: negative radius ← 0 (reviewed centre) → positive radius. Blue solid: bar major; red dashed: bar minor. Slit width ${Number(r.slit_width_arcsec).toFixed(3)} arcsec. Major-aperture mask cuts within the adopted bar: ${ranges||'none for this slit width'}. Geometry source: ${r.provenance.geometry_source}. Orange shading: major mask cuts; purple hatching: minor mask cuts. No gaps are filled. ${(r.provenance.geometry_cautions||[]).join(' ')}`;
+  $('deprojectLinks').replaceChildren();
+  for(const name of [r.axis_profile_file,'deprojected_bar_aligned.fits','bar_profiles.csv','bar_profile.png','result.json'].filter(Boolean)){const link=document.createElement('a');link.href=file('deprojections',r.artifact_id,name);link.download=name;link.textContent=name;link.style.marginRight='18px';$('deprojectLinks').append(link);}
+  $('deprojectSection').scrollIntoView({behavior:'smooth',block:'start'});
 }
 for(const canvas of canvases){let drag=null;
   canvas.addEventListener('wheel',event=>{if(!view)return;event.preventDefault();const before=xy(canvas,event),factor=event.deltaY>0?1.15:1/1.15;
@@ -224,11 +267,16 @@ for(const id of ['dilation','minarea','detect_on','residual_sigma','residual_max
 $('resetParams').onclick=()=>{setParams(config.defaults);changed();};
 $('projectedPreset').onclick=()=>{setParams({...config.defaults,detect_on:'original+residual',residual_sigma:3,gaussian_fwhm:0,move_factor:.9,minarea:5,dilation:2,min_distance:0,residual_max_area:100});changed();status('Projected-source preset loaded. Click Run MTO to calculate a new proposed mask, including compact residual detections.');};
 $('detect').onclick=safe(()=>start('detect'));$('sweep').onclick=safe(()=>start('sweep'));$('refit').onclick=safe(()=>start('refit'));
+$('deproject').onclick=safe(()=>start('deproject'));
+$('geometrySource').onchange=()=>{fillDeprojectionGeometry();updateButtons();};
+for(const id of ['deprojDiscPA','deprojInclination','deprojBarPA','profileBarRadius','profileRadius','profileWidth','profileMinValid','profileScale'])$(id).oninput=updateButtons;
 $('showComparison').onclick=safe(async()=>{const job=await api('/api/job');if(job.action!=='sweep'||job.object_id!==galaxy.object_id||!job.results?.length)throw Error('No comparison results are available for this galaxy in the current server session. Click Compare move to calculate them.');await showSweep(job.results);status(job.status==='complete'?'Last comparison reopened. Choose Use result to inspect a candidate.':'Showing the completed candidates from the last comparison.');});
 $('galaxy').onchange=safe(async()=>{if(unsaved()&&!confirm('Leave the unsaved mask decisions?')){$('galaxy').value=galaxy.object_id;return;}await loadGalaxy();});
 for(const [id,step] of [['previous',-1],['next',1]])$(id).onclick=safe(async()=>{if(unsaved()&&!confirm('Leave the unsaved mask decisions?'))return;const options=$('galaxy').options;$('galaxy').selectedIndex=($('galaxy').selectedIndex+step+options.length)%options.length;await loadGalaxy();});
 $('restore').onclick=safe(async()=>{if(!galaxy.latest)throw Error('No saved review for this target.');if(unsaved()&&!confirm('Replace unsaved decisions with the saved review?'))return;
-  const r=await api('/api/result?id='+galaxy.latest.run_id);await useResult(r,galaxy.latest);status('Saved mask and exact detection parameters restored.');});
+  const r=await api('/api/result?id='+galaxy.latest.run_id);await useResult(r,galaxy.latest);
+  if(galaxy.latest_deprojection?.mask_review_id===accepted.review_id)showDeprojection(galaxy.latest_deprojection);
+  status('Saved mask and exact detection parameters restored.');});
 $('undo').onclick=safe(async()=>{if(history.length){selected=new Set(history.pop());clearAcceptance();drawObjects();await updateMask();}});
 $('resetObjects').onclick=safe(async()=>{history.push([...selected]);selected=new Set(result.objects.filter(o=>o.mask).map(o=>o.label));clearAcceptance();drawObjects();await updateMask();});
 $('pin').onclick=()=>{reference={image,overlay};$('referenceSection').hidden=false;$('referenceInfo').textContent=`Move ${result.params.move_factor}; ${selected.size} masked labels. Frozen at time of pinning.`;render();};
