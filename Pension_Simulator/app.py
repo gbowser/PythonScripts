@@ -3,6 +3,7 @@ from dataclasses import asdict
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 import io
+from html import escape
 import json
 import math
 import importlib
@@ -37,13 +38,43 @@ from pdf_report import build_pdf_report
 from charts import add_percentile_bands
 
 st.set_page_config(page_title="Pension Simulator", page_icon="£", layout="wide")
-st.title("Pension Simulator")
+from results_store import save_run, load_run, proposed_name
+if st.query_params.get('manager') == '1':
+    from results_manager import render_manager
+    render_manager()
+    st.stop()
+if st.query_params.get('restore'):
+    try:
+        restored = load_run(st.query_params['restore'])
+        for key, value in restored['controls'].items():
+            st.session_state[key] = value
+        st.session_state.run_controls = restored['controls']
+        st.session_state.result = restored['result']
+        st.session_state.source = restored['result'].get('source')
+        st.session_state.result_signature = json.dumps(restored['result']['inputs'],sort_keys=True)
+        st.session_state.restored_run_name = restored['name']
+    except (OSError,ValueError,KeyError) as error:
+        st.error('Cannot restore saved run: '+str(error))
+    st.query_params.pop('restore')
+st.link_button('Open Simulation Results Manager', '?manager=1')
+if st.session_state.get('restored_run_name'):
+    name = escape(st.session_state.restored_run_name)
+    st.markdown('<h1 style="display:flex;align-items:baseline;flex-wrap:wrap;gap:0.5rem 1.25rem">'
+                'Pension Simulator'
+                '<span style="font-size:1rem;font-weight:400;color:var(--text-color);'
+                'opacity:0.7;overflow-wrap:anywhere">'+name+'</span></h1>',unsafe_allow_html=True)
+else:
+    st.title("Pension Simulator")
 st.caption("Gordon & Ann · real-pound portfolio forecasts · separate nominal tax calculations")
 
 
 def percent(label, default, key, minimum=-100.0, maximum=100.0):
+    # Initialise once; passing both a default and an existing session value
+    # produces Streamlit's conflicting-widget-state warning on preset/restore.
+    if key not in st.session_state:
+        st.session_state[key] = float(default*100)
     return st.number_input(label, min_value=float(minimum), max_value=float(maximum),
-                           value=float(default*100), step=.1, format="%.2f", key=key)/100
+                           step=.1, format="%.2f", key=key)/100
 
 
 def money(label, default, key, decimals=0, minimum=0.0, maximum=None, disabled=False):
@@ -268,7 +299,7 @@ with st.sidebar:
     simulations = st.selectbox("Simulations", [1, 10, 100, 500, 1000],
                                format_func=lambda n: '1 (Non-stochastic)' if n == 1 else str(n),
                                key='simulation_count', on_change=sync_simulation_type)
-    seed = st.number_input("Random seed", 0, 2147483647, 42, disabled=non_stochastic)
+    seed = st.number_input("Random seed", 0, 2147483647, 42, disabled=non_stochastic,key="random_seed")
     st.header("Returns")
     inflation = percent("Fixed CPI inflation (%)", .02, "inflation", -10, 30)
     initial_y = percent("Base case and first-year y (%)", source["mean_y"], "initial_y", -50, 100)
@@ -304,8 +335,8 @@ with st.sidebar:
     st.header("Market crisis")
     crash_enabled = st.checkbox("Include a one-off crash", False, key='crash_enabled')
     crash_loss = percent("Crash loss (%)", .4, "crash_loss", 0, 100)
-    crash_window = st.number_input("Random crash within first N years", 1, min(20, years), min(20, years), disabled=non_stochastic)
-    stress_year = st.number_input("Deterministic stress-case crash year", 1, years, min(10, years), disabled=not non_stochastic)
+    crash_window = st.number_input("Random crash within first N years", 1, min(20, years), min(20, years), disabled=non_stochastic,key="crash_window")
+    stress_year = st.number_input("Deterministic stress-case crash year", 1, years, min(10, years), disabled=not non_stochastic,key="stress_year")
     st.caption("Normal annual return is followed by the crash loss. Gifts stop in the crash year and never resume.")
     st.header("Rental property sale")
     property_sale_enabled = st.checkbox("Sell rental property", False, key='property_sale_enabled')
@@ -315,7 +346,7 @@ with st.sidebar:
     property_sale_threshold = money('Sell when portfolio reaches (£, real)',defaults.property_sale_threshold,
         'property_sale_threshold',disabled=not property_sale_enabled or property_sale_mode != 'threshold')
     property_sale_date = st.date_input("Rental property sale date", anniversary(start, 5),
-                                       min_value=start, disabled=not property_sale_enabled or property_sale_mode != 'date')
+                                       min_value=start, key="property_sale_date", disabled=not property_sale_enabled or property_sale_mode != 'date')
     property_sale_amount = money("Rental property sale proceeds (£)", defaults.property_sale_amount,
                                  "property_sale_amount", disabled=not property_sale_enabled)
     st.caption("Proceeds are nominal pounds credited to Ann's GIA with no property CGT. "
@@ -365,13 +396,13 @@ with st.expander("Accounts and tax inputs"):
         key='withdrawal_strategy')
     tax_rules = st.selectbox('Tax rules',['current_law','legacy_2026_27'],
         format_func=lambda x: 'Current law' if x == 'current_law' else 'Legacy 2026/27 with five-year indexation',key='tax_rules')
-    auto_target = st.checkbox('Choose SIPP income target automatically',True)
+    auto_target = st.checkbox('Choose SIPP income target automatically',True,key='auto_target')
     target_input = money('Taxable income target per owner (£)',50270,'sipp_income_target',disabled=auto_target)
     sipp_target = None if auto_target else target_input
     iht_rate = percent('Marginal inheritance tax rate (%)',.4,'iht_rate',0,100)
     beneficiary_rate = percent('Beneficiary pension income tax rate (%)',.4,'beneficiary_rate',0,100)
-    final_death = st.checkbox('Assess estate at final projection year',True)
-    assessment_input = st.number_input('Estate assessment year',1,years,min(years,30),disabled=final_death)
+    final_death = st.checkbox('Assess estate at final projection year',True,key='final_death')
+    assessment_input = st.number_input('Estate assessment year',1,years,min(years,30),disabled=final_death,key='assessment_input')
     assessment_year = None if final_death else assessment_input
     st.caption('The estate objective assumes both nil-rate bands are used by other property and no residence nil-rate band remains. '
                'The marginal IHT rate applies to the whole investment portfolio. Beneficiary tax applies to pensions after IHT, '
@@ -443,7 +474,7 @@ settings = Settings(start_date=start.isoformat(), starting_balance=balance, year
                     estate_assessment_year=assessment_year,tax_rules=tax_rules,annual_fee=annual_fee)
 model_root = Path(__file__).resolve().parent
 model_revision = hashlib.sha256(b''.join((model_root/name).read_bytes() for name in
-    ['app.py', 'simulation.py', 'withdrawals.py', 'tax_ledger.py', 'tax.py', 'data/evelyn_reference.csv', 'sources.py', 'tax_rules.py', 'strategies.py', 'pdf_report.py', 'charts.py'])).hexdigest()
+    ['app.py', 'simulation.py', 'withdrawals.py', 'tax_ledger.py', 'tax.py', 'data/evelyn_reference.csv', 'sources.py', 'tax_rules.py', 'strategies.py', 'pdf_report.py', 'charts.py', 'results_store.py', 'results_manager.py'])).hexdigest()
 signature = json.dumps({"settings": asdict(settings), "accounts": account_values, "gains": gains,
                         "model_revision": model_revision}, sort_keys=True)
 
@@ -453,8 +484,12 @@ if st.button("Run simulation", type="primary"):
         result = simulate(settings, account_values, gains, progress=lambda p: bar.progress(p))
         result["inputs"] = json.loads(signature)
         result["source"] = st.session_state.source
+        st.session_state.run_controls = {k:v for k,v in st.session_state.items()
+            if isinstance(v,(str,int,float,bool,date)) and k not in
+            {'result_signature','pdf_report_key','pdf_report_filename','save_run_name','restored_run_name'}}
         st.session_state.result = result
         st.session_state.result_signature = signature
+        st.session_state.pop('save_run_name',None)
     except (ValueError, RuntimeError) as error:
         st.error(str(error))
     finally:
@@ -466,6 +501,17 @@ else:
     result = st.session_state.result
     if st.session_state.result_signature != signature:
         st.warning("Inputs have changed, or the model code has been updated. These results show the previous run; select Run simulation to update them.")
+    with st.expander('Save simulation run'):
+        if 'save_run_name' not in st.session_state:
+            st.session_state.save_run_name = proposed_name(result)
+        name = st.text_input('Saved run name',key='save_run_name')
+        st.caption('Stores the completed run and its original inputs, including all paths in compressed JSON. Saved locally in data/saved_runs; not uploaded.')
+        if st.button('Save simulation run',disabled=st.session_state.result_signature != signature):
+            try:
+                save_run(name,result,st.session_state.get('run_controls',{}))
+                st.success('Saved '+name)
+            except (ValueError,OSError) as error:
+                st.error(str(error))
     real = st.radio("Show portfolio values in", ["Real pounds", "Nominal pounds"], horizontal=True) == "Real pounds"
     field = "portfolio_real" if real else "portfolio_nominal"
     q = result["quantiles"].query("value == @field")

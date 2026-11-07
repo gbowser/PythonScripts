@@ -68,3 +68,6 @@ Thumbs.db
 /.docx-render-*/
 Foreground Masking/tmp_*/
 .uv-cache-codex/
+
+# Private saved pension simulation runs
+Pension_Simulator/data/saved_runs/
