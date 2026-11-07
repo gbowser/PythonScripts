@@ -67,14 +67,19 @@ def _sections(settings,requested,real):
       ('Withdrawals and contributions',[
         ('Regular annual amount',_money(s['withdrawal'])+' real'),
         ('Monthly payment weights','11 x 1/15; then 4/15'),('Annual family gift',_money(s['gift'])),
-        ('Gift duration',f"{s['gift_years']} years"),('Ann gross SIPP contribution',_money(s['ann_pension_contribution'])),
+        ('Gift duration',f"{s['gift_years']} years"),('Ann bank payment while eligible',_money(s['ann_pension_contribution'] if s.get('ann_contribution_is_net',False) else s['ann_pension_contribution']*.8)),
+        ('Ann gross SIPP contribution',_money(s['ann_pension_contribution']/.8 if s.get('ann_contribution_is_net',False) else s['ann_pension_contribution'])),
+        ('Stop when relief ends','Yes' if s.get('ann_contribution_requires_relief',False) else 'No'),
         ('Contribution funding','Portfolio' if s['ann_contribution_from_portfolio'] else 'External bank')]),
       ('Market crisis',[
         ('Include one-off crash',on(s['crash_enabled'])),('Crash loss',_percent(s['crash_loss'])),
         ('Random window',f"Years 1 to {min(s['crash_window'],s['years'])}"),
         ('Fixed stress-case year',str(s['deterministic_crash_year']))]),
       ('Rental property sale',[
-        ('Enabled',on(s['property_sale_enabled'])),('Sale date',_date(s['property_sale_date'])),
+        ('Enabled',on(s['property_sale_enabled'])),
+        ('Trigger','Portfolio threshold' if s.get('property_sale_mode') == 'threshold' else 'Specified date'),
+        ('Portfolio threshold',_money(s.get('property_sale_threshold',1000000))+' real'),
+        ('Sale date','Path-dependent' if s.get('property_sale_mode') == 'threshold' else _date(s['property_sale_date'])),
         ('Nominal sale proceeds',_money(s['property_sale_amount']))])]
     right=[('Tax and withdrawal strategy',[
         ('Income tax and CGT enabled',on(s['taxes_enabled'])),
@@ -205,6 +210,7 @@ def _chart(c,figure,title,x,y,width,height):
     # Compact legends keep all screen traces identifiable on paper.
     lx,ly=x+8,y+35
     for trace,_ in traces:
+        if trace.showlegend is False: continue
         name=_legend_name(trace.name or '')
         needed=c.stringWidth(name,'Helvetica',7)+30
         if lx+needed>x+width-3: lx=x+8; ly-=12

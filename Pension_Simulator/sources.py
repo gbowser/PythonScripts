@@ -53,7 +53,7 @@ def read_workbook(path=DEFAULT_WORKBOOK):
         latest_date, balance = max(valuations, key=lambda p: p[0])
         sheet = wb["Pension_Performance"]
         # The workbook's published single-year TWR returns already exclude
-        # payments. Use five independent anniversary years, not overlapping
+        # payments. Use ten independent anniversary years, not overlapping
         # multi-year annualised returns or the obsolete P/Q value series.
         records = []
         for cells in sheet.iter_rows(min_row=16, max_row=36, min_col=1, max_col=9):
@@ -71,17 +71,17 @@ def read_workbook(path=DEFAULT_WORKBOOK):
                             "cpi_start": c0, "cpi_end": c1, "inflation": inflation,
                             "y": nominal-inflation,
                             "exact_real_return": (1+nominal)/(1+inflation)-1})
-        history = sorted(records, key=lambda h: h["period_end"])[-5:]
-        if len(history) != 5 or history[-1]['period_end'] != latest_date.isoformat():
-            raise ValueError("Need five complete single-year TWR records ending at the latest valuation in Pension_Performance A16:I36.")
+        history = sorted(records, key=lambda h: h["period_end"])[-10:]
+        if len(history) != 10 or history[-1]['period_end'] != latest_date.isoformat():
+            raise ValueError("Need ten complete single-year TWR records ending at the latest valuation in Pension_Performance A16:I36.")
         if any(a['period_end'] != b['period_start'] for a, b in zip(history, history[1:])):
-            raise ValueError("The five annual performance records must form consecutive years.")
+            raise ValueError("The ten annual performance records must form consecutive years.")
         cpi_lag = sheet['B11'].value
         target_margin = sheet['B10'].value
     finally:
         wb.close()
-    portfolio_cagr = math.prod(1+h["nominal_return"] for h in history)**(1/5)-1
-    cpi_cagr = math.prod(1+h["inflation"] for h in history)**(1/5)-1
+    portfolio_cagr = math.prod(1+h["nominal_return"] for h in history)**(1/len(history))-1
+    cpi_cagr = math.prod(1+h["inflation"] for h in history)**(1/len(history))-1
     return {"portfolio_cagr": portfolio_cagr, "cpi_cagr": cpi_cagr,
             "cagr_y": portfolio_cagr-cpi_cagr, "target_margin": target_margin,
             "vs_target_cagr": portfolio_cagr-cpi_cagr-target_margin if _number(target_margin) else None,
@@ -89,8 +89,8 @@ def read_workbook(path=DEFAULT_WORKBOOK):
             "balance": balance, "history": history,
             "mean_y": mean(h["y"] for h in history),
             "std_y": stdev(h["y"] for h in history),
-            "calibration_method": "five_anniversary_twr_years",
-            "performance_source": "Pension_Performance A6:J51; individual years D16:D20 minus G16:G20",
+            "calibration_method": "ten_anniversary_twr_years",
+            "performance_source": "Pension_Performance A6:J51; individual years D16:D25 minus G16:G25",
             "cpi_lag_months": cpi_lag,
             "cpi_source": "Workbook CPI indices and configured lag in Pension_Performance B11",
             "performance_rows": len(history)}

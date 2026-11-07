@@ -45,7 +45,8 @@ def test_pdf_has_saved_parameters_then_two_vector_charts():
     text=streams(pdf)
     for value in ['Pension simulation report','Starting portfolio','500,000','70,000',
                   'Auto:','50,270','Opening accounts and GIA gain assumptions','1,234','5,678',
-                  'Portfolio projection','Net annual income after tax','Evelyn S1','nominal']:
+                  'Portfolio projection','Net annual income after tax','Evelyn S1','nominal',
+                  'Ann bank payment while eligible','Ann gross SIPP contribution','2,880','3,600']:
         assert value in text
     assert '[5 3]' in text  # dashed Evelyn reference remains dashed in PDF
     assert len(re.findall(r'BT.*?Portfolio projection',text,re.S)) > 0

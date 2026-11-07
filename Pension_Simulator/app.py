@@ -1,6 +1,7 @@
 """Run with: python -m streamlit run app.py"""
 from dataclasses import asdict
-from datetime import date
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 import io
 import json
 import math
@@ -25,13 +26,15 @@ import tax_ledger as tax_ledger_model
 import simulation as simulation_model
 import sources as source_model
 import pdf_report as pdf_report_model
-for model in (tax_rules_model,tax_model,withdrawal_model,tax_ledger_model,strategy_model,simulation_model,source_model,pdf_report_model):
+import charts as charts_model
+for model in (tax_rules_model,tax_model,withdrawal_model,tax_ledger_model,strategy_model,simulation_model,source_model,pdf_report_model,charts_model):
     importlib.reload(model)
 
 from simulation import (ACCOUNT_NAMES, REFERENCE_BALANCES, REFERENCE_GAINS, EVELYN_SCENARIOS,
                         Settings, anniversary, simulate, evelyn_label, evelyn_preset, evelyn_mismatches, household_net_income)
 from sources import DEFAULT_WORKBOOK, load_snapshot, read_workbook, save_snapshot
 from pdf_report import build_pdf_report
+from charts import add_percentile_bands
 
 st.set_page_config(page_title="Pension Simulator", page_icon="£", layout="wide")
 st.title("Pension Simulator")
@@ -105,7 +108,7 @@ def cashflow_table(table, real):
     return displayed.drop(columns=aliases+(['portfolio_nominal'] if real else ['portfolio_real']), errors='ignore')
 
 
-if "source" not in st.session_state or (st.session_state.source and st.session_state.source.get("calibration_method") != "five_anniversary_twr_years"):
+if "source" not in st.session_state or (st.session_state.source and st.session_state.source.get("calibration_method") != "ten_anniversary_twr_years"):
     try:
         st.session_state.source = load_snapshot()
     except (OSError, ValueError):
@@ -132,11 +135,11 @@ with st.expander("Portfolio source and historical calibration", expanded=st.sess
         st.write(f"Saved valuation: **£{source['balance']:,.0f}** at **{source['valuation_date']}**. "
                  f"Historical mean y: **{source['mean_y']:.2%}**; sample standard deviation: **{source['std_y']:.2%}**.")
         if 'portfolio_cagr' in source:
-            st.write(f"Five-year compound annual rates: portfolio **{source['portfolio_cagr']:.3%}**, "
+            st.write(f"Ten-year compound annual rates: portfolio **{source['portfolio_cagr']:.3%}**, "
                      f"CPI **{source['cpi_cagr']:.3%}**, difference **{source['cagr_y']:.3%}**.")
             if source.get('vs_target_cagr') is not None:
-                st.caption(f"Row 45 reconciliation: E45 minus H45 = {source['cagr_y']:.3%}. "
-                           f"J45 also subtracts the {source['target_margin']:.2%} target margin, "
+                st.caption(f"Row 50 reconciliation: E50 minus H50 = {source['cagr_y']:.3%}. "
+                           f"J50 also subtracts the {source['target_margin']:.2%} target margin, "
                            f"giving {source['vs_target_cagr']:.3%}. The arithmetic annual mean above "
                            "is used for Normal y draws; CAGR already includes compounding effects.")
         n=len(source['history'])
@@ -148,14 +151,14 @@ with st.expander("Portfolio source and historical calibration", expanded=st.sess
                        "(independent Normal annual observations assumed).")
         history = pd.DataFrame(source["history"])
         st.dataframe(present_table(history), hide_index=True)
-        st.caption("Five consecutive single-year time-weighted returns ending at the valuation date, from "
+        st.caption("Ten consecutive single-year time-weighted returns ending at the valuation date, from "
                    "Pension_Performance A6:J51. y = portfolio return minus CPI inflation; sample standard "
-                   "deviation uses five annual observations, not overlapping multi-year averages. "
+                   "deviation uses ten annual observations, not overlapping multi-year averages. "
                    "The workbook's configured CPI lag is retained. Exact compounded real returns are also shown.")
         st.caption(f"Source: {source.get('performance_source', 'Legacy snapshot — refresh the workbook')}. "
                    f"CPI lag: {source.get('cpi_lag_months', 'unknown')} months.")
 
-        if st.button("Use five-year y estimates"):
+        if st.button("Use ten-year y estimates"):
             st.session_state.initial_y = source['mean_y']*100
             st.session_state.std_y = source['std_y']*100
             st.rerun()
@@ -179,16 +182,16 @@ if st.session_state.get('personal_income_defaults_version') != 1:
     if st.session_state.get('ann_rental_confirmed_raw') == 10000:
         st.session_state.ann_rental_confirmed_raw=defaults.ann_property
         st.session_state.ann_rental_confirmed=f'£{defaults.ann_property:,.0f}'
-    st.session_state.ann_contribution_net_mode=True
+    st.session_state.ann_contribution_net_mode=st.session_state.get('ann_contribution_raw',2880) <= 2880
     st.session_state.personal_income_defaults_version=1
 
 # Migrate existing browser sessions once, before constructing return widgets.
 # Streamlit retains explicit session values when a widget's default changes.
-if st.session_state.get('custom_return_defaults_version') != 1:
-    if not st.session_state.get('selected_evelyn', 0):
+if st.session_state.get('custom_return_defaults_version') != 2:
+    if st.session_state.get('projection_mode', 'Custom') == 'Custom':
         st.session_state.initial_y = source['mean_y']*100
         st.session_state.std_y = source['std_y']*100
-    st.session_state.custom_return_defaults_version = 1
+    st.session_state.custom_return_defaults_version = 2
 
 with st.sidebar:
     st.header("Projection")
@@ -201,12 +204,14 @@ with st.sidebar:
             return
         st.session_state.last_evelyn = number
         preset = evelyn_preset(number)
-        widget_map = {'years': 'projection_years', 'initial_y': 'initial_y', 'std_y': 'std_y',
+        widget_map = {'years': 'projection_years', 'initial_y': 'initial_y',
                       'gift_years': 'gift_years', 'crash_enabled': 'crash_enabled',
                       'property_sale_enabled': 'property_sale_enabled'}
         for field, key in widget_map.items():
             value = preset[field]*100 if field in {'initial_y', 'std_y'} else preset[field]
             st.session_state[key] = value
+        # Keep a historical volatility ready for switching the preset to stochastic.
+        st.session_state.std_y = source['std_y']*100
         st.session_state.simulation_type = 'Non-stochastic (zero volatility)'
         money_map = {'gift': 'gift', 'withdrawal': 'withdrawal'}
         for field, key in money_map.items():
@@ -234,7 +239,7 @@ with st.sidebar:
             apply_scenario()
         selected_evelyn = st.selectbox('Scenario preset', list(labels), format_func=labels.get,
                                        key='selected_evelyn', on_change=apply_scenario)
-        st.caption('Choose a preset to fill the inputs, then Run simulation. Inputs remain editable. The past gift is already included in the starting balance.')
+        st.caption('Choose a preset to set gifts and returns, then Run simulation. Personal income and pension contributions are preserved. The past gift is already included in the starting balance. Additional pension top-ups change the portfolio assumptions, so disable them explicitly if you want the original Evelyn reference comparison.')
     else:
         selected_evelyn = 0
         st.caption(f"Custom: historical y defaults are {source['mean_y']:.2%} mean and "
@@ -392,7 +397,7 @@ with st.expander("Accounts and tax inputs"):
                "These are historical reference figures; the forecast uses your selected dividend shares, defaulting to 50% each. "
                "Ann's £9,306 State Pension in the return relates to 2025/26; the newer schedule's £9,494 remains the starting forecast amount.")
     st.caption("Ann's default £2,880 annual bank payment receives £720 relief while eligible, giving £3,600 gross in the SIPP. "
-               "After age 75 the bank payment stays £2,880 with no relief. Gross-entry mode is also available. "
+               "Contributions stop when relief is unavailable (from age 75 in this model). Gross-entry mode is also available. "
                "Contributions occur at each period end. If portfolio-funded, the cash payment is an additional "
                "withdrawal and is skipped when obligations cannot be fully funded. Evelyn presets preserve personal income and contribution inputs.")
 
@@ -421,7 +426,7 @@ settings = Settings(start_date=start.isoformat(), starting_balance=balance, year
                     estate_assessment_year=assessment_year,tax_rules=tax_rules,annual_fee=annual_fee)
 model_root = Path(__file__).resolve().parent
 model_revision = hashlib.sha256(b''.join((model_root/name).read_bytes() for name in
-    ['app.py', 'simulation.py', 'withdrawals.py', 'tax_ledger.py', 'tax.py', 'data/evelyn_reference.csv', 'sources.py', 'tax_rules.py', 'strategies.py', 'pdf_report.py'])).hexdigest()
+    ['app.py', 'simulation.py', 'withdrawals.py', 'tax_ledger.py', 'tax.py', 'data/evelyn_reference.csv', 'sources.py', 'tax_rules.py', 'strategies.py', 'pdf_report.py', 'charts.py'])).hexdigest()
 signature = json.dumps({"settings": asdict(settings), "accounts": account_values, "gains": gains,
                         "model_revision": model_revision}, sort_keys=True)
 
@@ -470,13 +475,8 @@ else:
             st.write('Earlier second-death assessments')
             st.dataframe(present_table(result['strategy_sensitivity'].drop(columns='T',errors='ignore')),hide_index=True)
     fig = go.Figure()
-    for percentile in ([] if deterministic_result else range(10, 100, 10)):
-        fig.add_trace(go.Scatter(x=q.year, y=q[f"p{percentile}"], mode="lines",
-                     name=f"{percentile}th percentile", fill="tonexty" if percentile > 10 else None,
-                     fillcolor="rgba(61,130,183,0.075)",
-                     line=dict(color="#0c597a" if percentile == 50 else "#78a9c7",
-                               width=3 if percentile == 50 else 1),
-                     hovertemplate=f"Year %{{x}} · P{percentile}: £%{{y:,.0f}}<extra></extra>"))
+    if not deterministic_result:
+        add_percentile_bands(fig,q.year,q)
     if deterministic_result and non_stochastic:
         fig.add_trace(go.Scatter(x=base.year, y=base[field], name="Our model: fixed y, no crash",
                                  hovertemplate="Year %{x} · Base: £%{y:,.0f}<extra></extra>",
@@ -504,7 +504,7 @@ else:
                    "In nominal view it is converted using this run's CPI assumption. The reference is shown only while projection inputs match the preset comparison assumptions.")
     st.caption("Non-stochastic forecast: zero volatility and fixed CPI + y each year. Any enabled crash uses the selected fixed year."
                if deterministic_result else
-               "Deciles describe the distribution at each year, not individual investable paths. "
+               "Green bands are above the median and pink/red below it, with darker bands nearer the median. Deciles describe each year’s distribution, not individual investable paths. "
                "The deterministic base case holds y at its initial value; simulated y is random from year two.")
     if detail.return_clipped.fillna(False).any():
         st.warning("Some normal draws implied a loss below 100%; those returns were limited to a 100% loss.")
@@ -523,15 +523,9 @@ else:
             hovertemplate='Year %{x} · £%{y:,.0f}<extra></extra>'))
     else:
         income_q=(income_data.groupby('year').net_annual_income_real
-                  .quantile([.1,.5,.9]).unstack())
-        for percentile,column in [(10,.1),(90,.9)]:
-            income_fig.add_trace(go.Scatter(x=income_q.index,y=income_q[column],mode='lines',
-                name=f'{percentile}th percentile',line=dict(color='#8cbba4',width=1),
-                fill='tonexty' if percentile == 90 else None,fillcolor='rgba(36,107,71,0.14)',
-                hovertemplate=f'Year %{{x}} · P{percentile}: £%{{y:,.0f}}<extra></extra>'))
-        income_fig.add_trace(go.Scatter(x=income_q.index,y=income_q[.5],mode='lines',
-            name='Median net annual income',line=dict(color='#246b47',width=3),
-            hovertemplate='Year %{x} · Median: £%{y:,.0f}<extra></extra>'))
+                  .quantile(np.arange(.1,1,.1)).unstack())
+        income_q.columns=[f'p{int(round(c*100))}' for c in income_q.columns]
+        add_percentile_bands(income_fig,income_q.index,income_q)
     income_fig.update_layout(height=420,xaxis_title='Years from valuation date',
         xaxis=dict(dtick=1 if result['settings']['years'] <= 15 else 5),
         yaxis_title='Net annual income (£, valuation-date purchasing power)',
@@ -542,7 +536,7 @@ else:
                'less the full income-tax and CGT liability. Always shown in valuation-date pounds. '
                'Family gifts, property-sale proceeds and reinvested investment income are excluded; '
                'voluntary pension contributions are not deducted. Negative values indicate a cash deficit after tax.')
-    st.caption('The median and shaded 10th–90th percentile range use the simulated paths for each year, '
+    st.caption('The median and shaded 10th–90th percentile range use the simulated paths for each year. Green is above the median, pink/red below it; darker bands are nearer the median, '
                'including any portfolio depletion. External income continues after the portfolio runs out.'
                if not deterministic_result else
                'This is the selected non-stochastic forecast, including any enabled fixed-year crash.')
@@ -568,8 +562,9 @@ else:
             if st.session_state.get('pdf_report_key') != pdf_key:
                 st.session_state.pdf_report_data=build_pdf_report(result,fig,income_fig,real=real)
                 st.session_state.pdf_report_key=pdf_key
+                st.session_state.pdf_report_filename='pension_simulation_report_'+datetime.now(ZoneInfo('Europe/London')).strftime('%Y-%m-%d_%H-%M-%S')+'.pdf'
             pdf_data=st.session_state.pdf_report_data
-        st.download_button('PDF report',pdf_data,'pension_simulation_report.pdf','application/pdf',
+        st.download_button('PDF report',pdf_data,st.session_state.get('pdf_report_filename','pension_simulation_report.pdf'),'application/pdf',
                            disabled=not current_run,
                            help='Simulation parameters followed by both graphs. Run the simulation after changing inputs before exporting.')
         st.download_button("Deciles CSV", result["quantiles"].to_csv(index=False), "pension_deciles.csv", "text/csv")

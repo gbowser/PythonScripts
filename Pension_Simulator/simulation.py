@@ -98,8 +98,8 @@ class Settings:
     non_stochastic: bool = False
     evelyn_scenario: int = 0
     inflation: float = .02
-    initial_y: float = -.006227264187740222
-    std_y: float = .13304562358622968
+    initial_y: float = .02600556938565014
+    std_y: float = .1011793257146728
     taxes_enabled: bool = True
     income_yield: float = .0267
     withdrawal: float = 150000.0
@@ -123,6 +123,7 @@ class Settings:
     property_sale_threshold: float = 1000000.0
     ann_pension_contribution: float = 2880.0
     ann_contribution_is_net: bool = True
+    ann_contribution_requires_relief: bool = True
     ann_contribution_from_portfolio: bool = False
     ann_state_pension: float = 9494.0
     gordon_state_weekly: float = 241.30
@@ -230,6 +231,7 @@ def pension_contribution(settings,when):
     """Gross credit, bank cash and gross relief-eligible contribution at year end."""
     eligible=when < date(2032,6,26)
     amount=settings.ann_pension_contribution
+    if not eligible and settings.ann_contribution_requires_relief: return 0.0,0.0,0.0
     if settings.ann_contribution_is_net:
         gross=amount/.8 if eligible else amount
         return gross,amount,gross if eligible else 0.0
@@ -290,7 +292,7 @@ def run_path(settings, ys, crash_year=0, account_balances=None, initial_gains=No
     tax_ledger = NominalTaxLedger(balances,gains,
         (s.gordon_lsa_remaining,s.ann_lsa_remaining),(s.gordon_tax_free_share,s.ann_tax_free_share))
     rows = [{"year": 0, "date": start.isoformat(), "portfolio_nominal": float(balances.sum()),
-             "portfolio_real": float(balances.sum()), "inflation_index": 1.0,
+             "portfolio_real": float(balances.sum()), "inflation_index": 1.0, "property_sale_triggered":False,
              **dict(zip(ACCOUNT_NAMES, balances))}]
     uprate = max(.025, s.inflation, s.earnings_growth)
     for year in range(1, s.years+1):
@@ -355,7 +357,8 @@ def run_path(settings, ys, crash_year=0, account_balances=None, initial_gains=No
         # Monthly receipts are £10k for months 1–11 and £40k in month 12
         # at the default £150k annual Day-0 spending level. Each payment is
         # inflated from Day 0; growth is compounded evenly between months.
-        sale_t = 1-remaining_fraction if sold_this_year else None
+        sale_t = ((trigger_month/12 if s.property_sale_mode == 'threshold' else 1-remaining_fraction)
+                  if sold_this_year else None)
         monthly_nominal_factor = (1+normal_return)**(1/12)
         monthly_real_factor = monthly_nominal_factor/(1+s.inflation)**(1/12)
         for month in range(1, 13):
@@ -473,6 +476,7 @@ def run_path(settings, ys, crash_year=0, account_balances=None, initial_gains=No
                      "property_sale_actual_date": sale_date.isoformat() if sold_this_year else None,
                      "property_sale_triggered": bool(sold_this_year and s.property_sale_mode == 'threshold'),
                      "property_sale_trigger_value_real": trigger_value if sold_this_year and trigger_year else None,
+                     "property_sale_trigger_value": trigger_value*sale_price_index if sold_this_year and trigger_year else None,
                      "property_sale_investment_gain": sale_investment_gain,
                      "rental_profit_ann": rental_profit,
                      "portfolio_nominal": float(balances.sum()*cpi_index),
