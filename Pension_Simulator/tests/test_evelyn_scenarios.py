@@ -39,7 +39,9 @@ def test_reference_is_hidden_when_preset_parameters_change():
     assert result['evelyn_reference'] is None
     assert result['evelyn_reference_mismatches']
     assert not evelyn_mismatches(replace(s,taxes_enabled=False,withdrawal_strategy='annual_tax'))
-    assert not evelyn_mismatches(replace(s,non_stochastic=False,std_y=.133))
+    assert not evelyn_mismatches(replace(s,ann_pension_contribution=2880))
+    for count in [1,10,100,500,1000]:
+        assert not evelyn_mismatches(replace(s,non_stochastic=count == 1,std_y=.101179,simulations=count,ann_pension_contribution=2880))
 
 
 def test_preset_populates_inputs_and_graph_has_only_selected_reference():
@@ -51,7 +53,6 @@ def test_preset_populates_inputs_and_graph_has_only_selected_reference():
     assert next(n for n in app.number_input if n.label == 'Gift duration (years)').value == 5
     assert next(n for n in app.number_input if n.label == 'Base case and first-year y (%)').value == 2.5
     assert next(n for n in app.text_input if n.label == 'Annual gift (£)').value == '£150,000'
-    next(w for w in app.text_input if w.label == 'Ann annual bank contribution (£)').set_value('£0').run()
     next(b for b in app.button if b.label == 'Run simulation').click().run(timeout=60)
     assert not app.exception
     assert not app.error
@@ -81,7 +82,6 @@ def test_stochastic_preset_keeps_reference_and_hides_fixed_y_curve():
     app=AppTest.from_file(str(Path(__file__).resolve().parents[1]/'app.py'),default_timeout=60).run()
     next(w for w in app.radio if w.label == 'Projection mode').set_value('Evelyn preset').run()
     next(w for w in app.selectbox if w.label == 'Withdrawal strategy').set_value('annual_tax').run()
-    next(w for w in app.text_input if w.label == 'Ann annual bank contribution (£)').set_value('£0').run()
     next(b for b in app.button if b.label == 'Run simulation').click().run(timeout=60)
     assert not app.exception and not app.error
     initial=json.loads(app.get('plotly_chart')[0].proto.spec)

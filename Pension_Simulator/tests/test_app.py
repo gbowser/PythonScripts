@@ -211,3 +211,23 @@ def test_evelyn_stochastic_uses_historical_default_volatility():
     assert not app.exception
     assert next(w for w in app.number_input if w.label == 'Annual standard deviation of y (%)').value == expected
     assert next(w for w in app.number_input if w.label == 'Base case and first-year y (%)').value == 0
+
+
+def test_simulation_count_options_and_mode_synchronisation():
+    app = AppTest.from_file(str(Path(__file__).resolve().parents[1]/"app.py"), default_timeout=60).run()
+    count = lambda: next(w for w in app.selectbox if w.label == 'Simulations')
+    mode = lambda: next(w for w in app.radio if w.label == 'Simulation type')
+    assert count().options == ['1 (Non-stochastic)', '10', '100', '500', '1000']
+    count().set_value(1).run()
+    assert mode().value == 'Non-stochastic (zero volatility)'
+    assert next(w for w in app.number_input if w.label == 'Annual standard deviation of y (%)').value == 0
+    count().set_value(10).run()
+    assert mode().value == 'Stochastic'
+    next(w for w in app.number_input if w.label == 'Years').set_value(1).run()
+    next(b for b in app.button if b.label == 'Run simulation').click().run(timeout=60)
+    assert not app.exception
+    assert app.session_state.result['settings']['simulations'] == 10
+    mode().set_value('Non-stochastic (zero volatility)').run()
+    assert count().value == 1
+    mode().set_value('Stochastic').run()
+    assert count().value == 100

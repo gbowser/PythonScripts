@@ -213,6 +213,7 @@ with st.sidebar:
         # Keep a historical volatility ready for switching the preset to stochastic.
         st.session_state.std_y = source['std_y']*100
         st.session_state.simulation_type = 'Non-stochastic (zero volatility)'
+        st.session_state.simulation_count = 1
         money_map = {'gift': 'gift', 'withdrawal': 'withdrawal'}
         for field, key in money_map.items():
             value = preset[field]
@@ -239,18 +240,34 @@ with st.sidebar:
             apply_scenario()
         selected_evelyn = st.selectbox('Scenario preset', list(labels), format_func=labels.get,
                                        key='selected_evelyn', on_change=apply_scenario)
-        st.caption('Choose a preset to set gifts and returns, then Run simulation. Personal income and pension contributions are preserved. The past gift is already included in the starting balance. Additional pension top-ups change the portfolio assumptions, so disable them explicitly if you want the original Evelyn reference comparison.')
+        st.caption('Choose a preset to set gifts and returns, then Run simulation. Personal income and pension contributions are preserved. The past gift is already included in the starting balance. The original Evelyn reference remains visible as a benchmark, including when you add stochastic simulations or pension top-ups.')
     else:
         selected_evelyn = 0
         st.caption(f"Custom: historical y defaults are {source['mean_y']:.2%} mean and "
                    f"{source['std_y']:.2%} standard deviation. Inputs remain editable. "
                    "Switching to Custom restores these two estimates; other settings stay as displayed.")
-    mode = st.radio("Simulation type", ["Stochastic", "Non-stochastic (zero volatility)"], key='simulation_type')
+    def sync_simulation_count():
+        if st.session_state.simulation_type != 'Stochastic':
+            st.session_state.simulation_count = 1
+        elif st.session_state.get('simulation_count', 100) == 1:
+            st.session_state.simulation_count = 100
+
+    def sync_simulation_type():
+        st.session_state.simulation_type = ('Non-stochastic (zero volatility)'
+                                            if st.session_state.simulation_count == 1 else 'Stochastic')
+
+    if 'simulation_count' not in st.session_state:
+        st.session_state.simulation_count = (1 if st.session_state.get('simulation_type') ==
+                                             'Non-stochastic (zero volatility)' else 100)
+    mode = st.radio("Simulation type", ["Stochastic", "Non-stochastic (zero volatility)"],
+                    key='simulation_type', on_change=sync_simulation_count)
     non_stochastic = mode != "Stochastic"
     start = st.date_input("Valuation date", date.fromisoformat(source["valuation_date"]), key="start_date")
     balance = money("Starting portfolio (£)", source["balance"], "balance")
     years = st.number_input("Years", 1, 60, 30, key='projection_years')
-    simulations = st.number_input("Simulations", 100, 2000, 100, step=100, disabled=non_stochastic)
+    simulations = st.selectbox("Simulations", [1, 10, 100, 500, 1000],
+                               format_func=lambda n: '1 (Non-stochastic)' if n == 1 else str(n),
+                               key='simulation_count', on_change=sync_simulation_type)
     seed = st.number_input("Random seed", 0, 2147483647, 42, disabled=non_stochastic)
     st.header("Returns")
     inflation = percent("Fixed CPI inflation (%)", .02, "inflation", -10, 30)
@@ -501,7 +518,7 @@ else:
         st.caption(f"Evelyn S{reference_number} is the original real-value chart, approximately digitised from the supplied Word document "
                    "and rounded to £10,000, not another run of our model. Years 0–34 correspond to Gordon's ages 65–99. "
                    "The reference is not rescaled to our starting balance and is not extended beyond year 34. "
-                   "In nominal view it is converted using this run's CPI assumption. The reference is shown only while projection inputs match the preset comparison assumptions.")
+                   "In nominal view it is converted using this run's CPI assumption. Simulation count and volatility do not change the reference. Our model includes your selected pension top-ups; the original Evelyn illustration does not. Other projection inputs must match the preset comparison assumptions.")
     st.caption("Non-stochastic forecast: zero volatility and fixed CPI + y each year. Any enabled crash uses the selected fixed year."
                if deterministic_result else
                "Green bands are above the median and pink/red below it, with darker bands nearer the median. Deciles describe each year’s distribution, not individual investable paths. "

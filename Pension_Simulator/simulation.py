@@ -59,7 +59,7 @@ def evelyn_mismatches(settings):
     # illustration when their central return and cash-flow assumptions match.
     expected.pop('non_stochastic')
     expected.pop('std_y')
-    expected.update(inflation=.02,starting_balance=4335877.0,annual_fee=0.0,ann_pension_contribution=0.0)
+    expected.update(inflation=.02,starting_balance=4335877.0,annual_fee=0.0)
     labels={'years':'projection length',
             'initial_y':'return above CPI',
             'gift':'annual gift','gift_years':'gift duration','withdrawal':'regular withdrawal',
@@ -165,8 +165,8 @@ class Settings:
         for name, value in asdict(self).items():
             if isinstance(value, (int, float)) and not math.isfinite(value):
                 raise ValueError(f"{name} must be finite.")
-        if not 1 <= self.years <= 60 or not (1 if self.non_stochastic else 100) <= self.simulations <= 2000:
-            raise ValueError("Use 1–60 years and 100–2000 simulations.")
+        if not 1 <= self.years <= 60 or not 1 <= self.simulations <= 2000:
+            raise ValueError("Use 1–60 years and 1–2000 simulations.")
         if not -.5 < self.inflation <= .3 or self.std_y < 0:
             raise ValueError("Inflation must be between -50% and 30%; volatility cannot be negative.")
         if self.inflation+self.initial_y <= -1:
