@@ -1,6 +1,6 @@
 # Pension Simulator
 
-Streamlit model for Gordon and Ann Bowser. Balances are projected in valuation-date pounds, with a separate nominal income-tax and CGT ledger. The Word manual is [docs/Pension_Simulator_Model_Guide.docx](docs/Pension_Simulator_Model_Guide_Updated.docx).
+Streamlit model for Gordon and Ann Bowser. Balances are projected in valuation-date pounds, with a separate nominal income-tax and CGT ledger. The Word manual is [updated Word model and user guide](docs/Pension_Simulator_Model_Guide_Updated.docx) (7 November 2026).
 
 ## Run
 

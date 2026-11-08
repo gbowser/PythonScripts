@@ -38,8 +38,12 @@ from pdf_report import build_pdf_report
 from charts import add_percentile_bands
 
 st.set_page_config(page_title="Pension Simulator", page_icon="£", layout="wide")
+import results_store as results_store_model
+importlib.reload(results_store_model)
 from results_store import save_run, load_run, proposed_name
 if st.query_params.get('manager') == '1':
+    import results_manager as results_manager_model
+    importlib.reload(results_manager_model)
     from results_manager import render_manager
     render_manager()
     st.stop()

@@ -90,7 +90,7 @@ def list_runs(directory=STORE):
             runs.append(dict(id=payload['id'], Name=payload['name'], Saved=payload['saved_at'],
                              Gift=s.get('gift'), Gift_years=s.get('gift_years'),
                              Mean_y=s.get('initial_y'), Std_dev=s.get('std_y'),
-                             Shock=s['crash_enabled'], Property_sale=s['property_sale_enabled'], Size_KB=round(path.stat().st_size/1024,1)))
+                             Shock=s['crash_enabled'], Property_sale=s['property_sale_enabled'], Parameters=s, Size_KB=round(path.stat().st_size/1024,1)))
         except (OSError, ValueError, KeyError, TypeError) as error:
             errors.append(f'{path.name}: {error}')
     return sorted(runs, key=lambda r: r['Saved'], reverse=True), errors

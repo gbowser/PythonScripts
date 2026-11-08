@@ -6,6 +6,51 @@ from results_store import list_runs, load_run, delete_runs, paired_deltas
 from charts import add_percentile_bands
 
 
+def compact_run_table(rows):
+    """Expand lightweight metadata without opening compressed path results."""
+    leading = [
+        ('gift','Gift',88,'money'),('gift_years','Gift yrs',62,'integer'),
+        ('initial_y','Mean y',65,'rate'),('std_y','Std dev',65,'rate'),
+        ('inflation','CPI',60,'rate'),('withdrawal','Withdrawal',95,'money'),
+        ('crash_enabled','Shock',55,'bool'),('crash_loss','Loss',60,'rate'),
+        ('crash_window','Window',62,'integer'),('deterministic_crash_year','Shock yr',68,'integer'),
+        ('property_sale_enabled','Sell',50,'bool'),('property_sale_mode','Sale trigger',88,'text'),
+        ('property_sale_threshold','Sale level',100,'money'),('property_sale_amount','Sale price',100,'money'),
+        ('property_sale_date','Sale date',95,'text'),('starting_balance','Start value',110,'money'),
+        ('income_yield','Yield',60,'rate'),('annual_fee','Fee',60,'rate'),
+        ('taxes_enabled','Tax',48,'bool'),('withdrawal_strategy','Strategy',80,'text')]
+    used={item[0] for item in leading}
+    excluded={'years','simulations'}  # Kept out of the list as requested; pairing still validates both.
+    parameters=sorted({k for r in rows for k in r.get('Parameters',{})}-used-excluded)
+    rates={'earnings_growth','gordon_citibank_growth','dividend_share_gordon','dividend_share_ann',
+           'gordon_tax_free_share','ann_tax_free_share','iht_rate','beneficiary_income_tax_rate'}
+    integers={'seed','evelyn_scenario','estate_assessment_year'}
+    texts={'start_date','tax_rules'}
+    booleans={'non_stochastic','ann_contribution_is_net','ann_contribution_requires_relief','ann_contribution_from_portfolio'}
+    specs=leading+[(k,k.replace('_',' ').capitalize(),
+                    70 if k in rates|integers|booleans else 115,
+                    'rate' if k in rates else 'integer' if k in integers else
+                    'bool' if k in booleans else 'text' if k in texts else 'money') for k in parameters]
+    config={'Name':st.column_config.TextColumn('Scenario',width=310),
+            'Saved':st.column_config.TextColumn('Saved',width=120)}
+    formats={}
+    data=[]
+    for row in rows:
+        item={'Name':row['Name'],'Saved':pd.Timestamp(row['Saved']).tz_convert('Europe/London').strftime('%d %b %H:%M')}
+        item.update({key:row.get('Parameters',{}).get(key) for key,_,_,_ in specs})
+        data.append(item)
+    for key,label,width,kind in specs:
+        help_text=key.replace('_',' ').capitalize()
+        if kind=='bool':
+            config[key]=st.column_config.CheckboxColumn(label,width=width,help=help_text)
+        else:
+            config[key]=st.column_config.Column(label,width=width,help=help_text)
+            if kind=='money': formats[key]=lambda v:'Auto / CPI' if pd.isna(v) else ('Pension first' if v>=1e12 else f'£{v:,.0f}')
+            elif kind=='rate': formats[key]=lambda v:'CPI / auto' if pd.isna(v) else f'{v:.2%}'
+            elif kind=='integer': formats[key]=lambda v:'Auto' if pd.isna(v) else f'{v:.0f}'
+    return pd.DataFrame(data),config,formats
+
+
 def render_manager():
     st.title('Simulation Results Manager')
     st.link_button('Open simulation engine', '?', help='Opens the simulator in a new browser tab.')
@@ -17,21 +62,12 @@ def render_manager():
         return
     st.caption('Select one row to restore it, or multiple rows to compare. Values are saved snapshots; no simulation is rerun.')
     st.caption(f"{len(rows)} saved runs")
-    table = pd.DataFrame(rows)
-    displayed=table.drop(columns=['id','Size_KB'])
-    displayed['Saved']=pd.to_datetime(displayed['Saved'],utc=True).dt.tz_convert('Europe/London').dt.strftime('%d %b %y %H:%M')
-    selection = st.dataframe(displayed.style.format({'Gift':'£{:,.0f}', 'Mean_y':'{:.2%}', 'Std_dev':'{:.2%}'},na_rep='—'),
-                             column_config={
-                                 'Name':st.column_config.TextColumn('Scenario',width='medium'),
-                                 'Saved':st.column_config.TextColumn('Saved',width='small'),
-                                 'Gift':st.column_config.NumberColumn('Gift (£)',width='small'),
-                                 'Gift_years':st.column_config.NumberColumn('Gift years',width='small',format='%d'),
-                                 'Mean_y':st.column_config.NumberColumn('Mean y',width='small',help='Base-case growth above CPI; also the annual stochastic mean.'),
-                                 'Std_dev':st.column_config.NumberColumn('Std dev',width='small',help='Annual standard deviation of y.'),
-                                 'Shock':st.column_config.CheckboxColumn('Shock',width='small'),
-                                 'Property_sale':st.column_config.CheckboxColumn('Sell property',width='small')},
-                             hide_index=True, height=350,row_height=30,
-                             on_select='rerun', selection_mode='multi-row', key='saved_run_list')
+    displayed,config,formats=compact_run_table(rows)
+    st.caption('Scroll horizontally for additional inputs. Column headers describe the saved parameters; pairing settings are checked before plotting.')
+    selection = st.dataframe(displayed.style.format(formats,na_rep='—'),
+                             column_config=config,width='content',
+                             hide_index=True,height=min(350,38+28*len(rows)),row_height=28,
+                             on_select='rerun',selection_mode='multi-row',key='saved_run_list')
     indices = selection.selection.rows
     selected = [rows[i] for i in indices]
     if not selected:

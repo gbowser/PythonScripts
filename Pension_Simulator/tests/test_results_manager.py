@@ -7,6 +7,16 @@ from streamlit.testing.v1 import AppTest
 from results_store import save_run,load_run,list_runs,delete_runs,paired_deltas
 
 
+@pytest.fixture(autouse=True)
+def preserve_store_test_doubles(monkeypatch):
+    # Production reloads these modules on reruns; preserve temporary storage
+    # and synthetic selection test doubles within this test module.
+    import importlib
+    reload_module=importlib.reload
+    monkeypatch.setattr(importlib,'reload',lambda module: module if module.__name__ in
+                        {'results_store','results_manager'} else reload_module(module))
+
+
 def test_path_differences_before_quantiles():
     def fixture(values):
         return {'result':{'settings':dict(start_date='2026-11-05',seed=42,simulations=2,years=1,non_stochastic=False),
@@ -101,3 +111,17 @@ def test_manager_comparison_window(tmp_path,monkeypatch):
     assert not app.exception
     assert any('random seed' in warning.value and 'baseline:' in warning.value for warning in app.warning)
     assert len(app.get('plotly_chart'))==1
+
+
+def test_compact_table_includes_model_inputs_with_fixed_widths():
+    from dataclasses import asdict
+    from simulation import Settings
+    from results_manager import compact_run_table
+    parameters=asdict(Settings())
+    table,config,formats=compact_run_table([{'Name':'Test','Saved':'2026-11-07T18:00:00+00:00','Parameters':parameters}])
+    assert set(parameters)-{'years','simulations'} <= set(table.columns)
+    assert 'Size_KB' not in table and 'years' not in table and 'simulations' not in table
+    assert config['initial_y']['width']==65
+    assert config['crash_enabled']['width']==55
+    assert formats['gift'](150000)=='£150,000'
+    assert formats['initial_y'](.025)=='2.50%'
