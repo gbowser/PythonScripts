@@ -22,7 +22,7 @@ def compact_run_table(rows):
     used={item[0] for item in leading}
     excluded={'years','simulations'}  # Kept out of the list as requested; pairing still validates both.
     parameters=sorted({k for r in rows for k in r.get('Parameters',{})}-used-excluded)
-    rates={'earnings_growth','gordon_citibank_growth','dividend_share_gordon','dividend_share_ann',
+    rates={'gia_income_yield_gordon','gia_income_yield_ann','earnings_growth','gordon_citibank_growth','dividend_share_gordon','dividend_share_ann',
            'gordon_tax_free_share','ann_tax_free_share','iht_rate','beneficiary_income_tax_rate'}
     integers={'seed','evelyn_scenario','estate_assessment_year'}
     texts={'start_date','tax_rules'}

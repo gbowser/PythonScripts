@@ -4,3 +4,5 @@ __pycache__/
 data/portfolio_snapshot.json
 exports/
 *.log
+
+data/account_allocation.json

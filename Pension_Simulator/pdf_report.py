@@ -63,6 +63,8 @@ def _sections(settings,requested,real):
       ('Returns',[
         ('Fixed CPI',_percent(s['inflation'])),('Mean and first-year y',_percent(s['initial_y'],3)),
         ('Annual y standard deviation',_percent(s['std_y'],3)),('Reinvested yield',_percent(s['income_yield'])),
+        ('Gordon GIA yield',_percent(s.get('gia_income_yield_gordon') if s.get('gia_income_yield_gordon') is not None else s['income_yield'])),
+        ('Ann GIA yield',_percent(s.get('gia_income_yield_ann') if s.get('gia_income_yield_ann') is not None else s['income_yield'])),
         ('Additional annual fee',_percent(s.get('annual_fee',0)))]),
       ('Withdrawals and contributions',[
         ('Regular annual amount',_money(s['withdrawal'])+' real'),

@@ -102,6 +102,8 @@ class Settings:
     std_y: float = .1011793257146728
     taxes_enabled: bool = True
     income_yield: float = .0267
+    gia_income_yield_gordon: float | None = None
+    gia_income_yield_ann: float | None = None
     withdrawal: float = 150000.0
     gift: float = 150000.0
     gift_years: int = 10
@@ -175,6 +177,9 @@ class Settings:
             raise ValueError("Crash loss must be 0–100%; its window must be 1–20 years.")
         if self.crash_enabled and not 1 <= self.deterministic_crash_year <= self.years:
             raise ValueError("The deterministic crash year must be within the projection.")
+        for value in [self.gia_income_yield_gordon,self.gia_income_yield_ann]:
+            if value is not None and (not math.isfinite(value) or not 0<=value<=1):
+                raise ValueError('GIA income yields must be between 0% and 100%.')
         for n in ["starting_balance", "income_yield", "withdrawal", "gift", "gift_years", "gordon_interest",
                   "gordon_citibank_pension", "ann_interest", "ann_property", "ann_pension_contribution",
                   "ann_state_pension", "property_sale_amount", "property_sale_threshold", "gordon_state_weekly", "seed"]:
@@ -366,7 +371,8 @@ def run_path(settings, ys, crash_year=0, account_balances=None, initial_gains=No
             prices = opening_price_index*(1+s.inflation)**t1
             old_prices = opening_price_index*(1+s.inflation)**t0
             before = balances.copy()
-            month_yield = before[[0, 3]]*old_prices*s.income_yield/12
+            gia_rates=np.array([s.income_yield if v is None else v for v in [s.gia_income_yield_gordon,s.gia_income_yield_ann]])
+            month_yield = before[[0, 3]]*old_prices*gia_rates/12
             balances *= monthly_real_factor
             month_nominal_gain = before.sum()*old_prices*(monthly_nominal_factor-1)
             deposit_real = 0.0
@@ -377,7 +383,7 @@ def run_path(settings, ys, crash_year=0, account_balances=None, initial_gains=No
                 deposit_end = sale_proceeds*(1+normal_return)**part
                 balances[3] += deposit_end/prices
                 month_nominal_gain += deposit_end-sale_proceeds
-                month_yield[1] += sale_proceeds*s.income_yield*part
+                month_yield[1] += sale_proceeds*gia_rates[1]*part
             if crash and month == 12:
                 # A sale exactly at the period end is deposited after the crash.
                 exempt = sale_proceeds/prices if deposit_now and sale_t == 1 else 0.0

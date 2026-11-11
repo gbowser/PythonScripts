@@ -40,17 +40,38 @@ def interpolate(points, when):
     return math.exp(math.log(v0)*(1-weight) + math.log(v1)*weight)
 
 
+def latest_valuation(wb):
+    sheet_name=next((n for n in ['Pension','Pensions'] if n in wb.sheetnames),None)
+    if sheet_name is None:
+        raise ValueError('Workbook has no Pension or Pensions sheet.')
+    latest=None
+    for number,row in enumerate(wb[sheet_name].iter_rows(min_col=2,max_col=9,values_only=True),1):
+        when,value=_date(row[0]),row[7]
+        if when is not None and value is not None:
+            if not _number(value) or value < 0:
+                raise ValueError(f'Invalid cached portfolio balance in {sheet_name}!I{number}; recalculate and save Excel.')
+            latest=dict(valuation_date=when.isoformat(),balance=float(value),
+                        valuation_source=f'{sheet_name}!B{number}/I{number}')
+    if latest is None:
+        raise ValueError(f'No dated numeric balances in {sheet_name} columns B/I.')
+    return latest
+
+
+def read_latest_valuation(path=DEFAULT_WORKBOOK):
+    """Read last populated dated I balance without requiring fresh calibration."""
+    wb=load_workbook(path,read_only=True,data_only=True)
+    try:
+        return dict(latest_valuation(wb),workbook=str(Path(path).resolve()))
+    finally:
+        wb.close()
+
+
 def read_workbook(path=DEFAULT_WORKBOOK):
     wb = load_workbook(path, read_only=True, data_only=True)
     try:
-        valuations = []
-        for row in wb["Pensions"].iter_rows(min_col=2, max_col=9, values_only=True):
-            d, v = _date(row[0]), row[7]
-            if d and _number(v) and v > 0:
-                valuations.append((d, float(v)))
-        if not valuations:
-            raise ValueError("No dated positive balances in Pensions columns B/I.")
-        latest_date, balance = max(valuations, key=lambda p: p[0])
+        valuation=latest_valuation(wb)
+        latest_date=date.fromisoformat(valuation['valuation_date'])
+        balance=valuation['balance']
         sheet = wb["Pension_Performance"]
         # The workbook's published single-year TWR returns already exclude
         # payments. Use ten independent anniversary years, not overlapping
@@ -72,8 +93,9 @@ def read_workbook(path=DEFAULT_WORKBOOK):
                             "y": nominal-inflation,
                             "exact_real_return": (1+nominal)/(1+inflation)-1})
         history = sorted(records, key=lambda h: h["period_end"])[-10:]
-        if len(history) != 10 or history[-1]['period_end'] != latest_date.isoformat():
-            raise ValueError("Need ten complete single-year TWR records ending at the latest valuation in Pension_Performance A16:I36.")
+        calibration_end=_date(sheet['B8'].value)
+        if len(history) != 10 or not calibration_end or history[-1]['period_end'] != calibration_end.isoformat():
+            raise ValueError("Need ten complete single-year TWR records ending at the saved performance valuation date in Pension_Performance B8/A16:I36.")
         if any(a['period_end'] != b['period_start'] for a, b in zip(history, history[1:])):
             raise ValueError("The ten annual performance records must form consecutive years.")
         cpi_lag = sheet['B11'].value
@@ -93,7 +115,7 @@ def read_workbook(path=DEFAULT_WORKBOOK):
             "performance_source": "Pension_Performance A6:J51; individual years D16:D25 minus G16:G25",
             "cpi_lag_months": cpi_lag,
             "cpi_source": "Workbook CPI indices and configured lag in Pension_Performance B11",
-            "performance_rows": len(history)}
+            "performance_rows": len(history), "calibration_end_date": history[-1]["period_end"]}
 
 
 def load_snapshot():

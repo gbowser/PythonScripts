@@ -231,3 +231,32 @@ def test_simulation_count_options_and_mode_synchronisation():
     assert count().value == 1
     mode().set_value('Stochastic').run()
     assert count().value == 100
+
+
+def test_account_edits_sync_total_reset_and_workbook_reload():
+    from simulation import ACCOUNT_NAMES,REFERENCE_BALANCES
+    from sources import read_latest_valuation
+    app=AppTest.from_file(str(Path(__file__).resolve().parents[1]/'app.py'),default_timeout=60).run()
+    original=app.session_state.balance_raw
+    account=ACCOUNT_NAMES[0]
+    old=app.session_state['balance_'+account+'_raw']
+    next(w for w in app.text_input if w.label==account+' (£)').set_value('£200,000').run()
+    assert not app.exception
+    assert abs(app.session_state.balance_raw-(original-old+200000))<1e-6
+    total=app.session_state.balance_raw
+    edited=[app.session_state['balance_'+n+'_raw'] for n in ACCOUNT_NAMES]
+    next(b for b in app.button if b.label=='Reset account balances to proportional allocation').click().run()
+    assert not app.exception
+    assert app.session_state.balance_raw==total
+    for name,expected in zip(ACCOUNT_NAMES,edited):
+        assert abs(app.session_state['balance_'+name+'_raw']-expected)<1e-6
+    latest=read_latest_valuation()
+    next(b for b in app.button if b.label=='Reload latest portfolio valuation').click().run()
+    assert not app.exception
+    assert app.session_state.balance_raw==latest['balance']
+    assert abs(sum(app.session_state['balance_'+n+'_raw'] for n in ACCOUNT_NAMES)-latest['balance'])<1e-6
+
+    fresh=AppTest.from_file(str(Path(__file__).resolve().parents[1]/'app.py'),default_timeout=60).run()
+    assert not fresh.exception
+    for name,reference in zip(ACCOUNT_NAMES,edited):
+        assert abs(fresh.session_state['balance_'+name+'_raw']-latest['balance']*reference/sum(edited))<1e-6

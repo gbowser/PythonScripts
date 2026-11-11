@@ -33,9 +33,12 @@ for model in (tax_rules_model,tax_model,withdrawal_model,tax_ledger_model,strate
 
 from simulation import (ACCOUNT_NAMES, REFERENCE_BALANCES, REFERENCE_GAINS, EVELYN_SCENARIOS,
                         Settings, anniversary, simulate, evelyn_label, evelyn_preset, evelyn_mismatches, household_net_income)
-from sources import DEFAULT_WORKBOOK, load_snapshot, read_workbook, save_snapshot
+from sources import DEFAULT_WORKBOOK, load_snapshot, read_workbook, save_snapshot, read_latest_valuation
 from pdf_report import build_pdf_report
 from charts import add_percentile_bands
+import account_allocation
+from account_allocation import saved_allocation, save_allocation
+from positions_import import read_positions
 
 st.set_page_config(page_title="Pension Simulator", page_icon="£", layout="wide")
 import results_store as results_store_model
@@ -55,8 +58,11 @@ if st.query_params.get('restore'):
         st.session_state.run_controls = restored['controls']
         st.session_state.result = restored['result']
         st.session_state.source = restored['result'].get('source')
+        if (st.session_state.source or {}).get('positions_import'):
+            st.session_state.positions_import=st.session_state.source['positions_import']
         st.session_state.result_signature = json.dumps(restored['result']['inputs'],sort_keys=True)
         st.session_state.restored_run_name = restored['name']
+        st.session_state.startup_valuation_checked = True
     except (OSError,ValueError,KeyError) as error:
         st.error('Cannot restore saved run: '+str(error))
     st.query_params.pop('restore')
@@ -81,7 +87,7 @@ def percent(label, default, key, minimum=-100.0, maximum=100.0):
                            step=.1, format="%.2f", key=key)/100
 
 
-def money(label, default, key, decimals=0, minimum=0.0, maximum=None, disabled=False):
+def money(label, default, key, decimals=0, minimum=0.0, maximum=None, disabled=False, on_commit=None):
     # Streamlit number_input cannot group thousands or show a £ prefix.
     # Keep the numeric value separately so rounding the display never rounds
     # calculated defaults (notably proportional account allocations).
@@ -100,6 +106,8 @@ def money(label, default, key, decimals=0, minimum=0.0, maximum=None, disabled=F
                 return
             st.session_state[raw_key] = value
             st.session_state[key] = f"£{value:,.{decimals}f}"
+            if on_commit is not None:
+                on_commit()
         except ValueError:
             pass
 
@@ -113,6 +121,72 @@ def money(label, default, key, decimals=0, minimum=0.0, maximum=None, disabled=F
                  (f" Maximum: £{maximum:,.0f}." if maximum is not None else ""))
         st.stop()
     return st.session_state[raw_key]
+
+
+def set_money_state(key,value):
+    st.session_state[key+'_raw']=float(value)
+    st.session_state[key]=f'£{value:,.0f}'
+
+
+def account_total_changed():
+    total=sum(st.session_state.get('balance_'+name+'_raw',0.0) for name in ACCOUNT_NAMES)
+    set_money_state('balance',total)
+    if total>0:
+        try:
+            save_allocation(ACCOUNT_NAMES,[st.session_state['balance_'+n+'_raw'] for n in ACCOUNT_NAMES])
+            st.session_state.pop('allocation_save_error',None)
+        except (OSError,ValueError) as error:
+            st.session_state.allocation_save_error=str(error)
+
+
+def allocate_account_total(total,reference=False):
+    values=np.array([st.session_state.get('balance_'+name+'_raw',0.0) for name in ACCOUNT_NAMES])
+    if reference or values.sum()<=0:
+        values=np.array(saved_allocation(ACCOUNT_NAMES,REFERENCE_BALANCES))
+    for name,value in zip(ACCOUNT_NAMES,values/values.sum()*total):
+        set_money_state('balance_'+name,value)
+
+
+def starting_total_changed():
+    allocate_account_total(st.session_state.balance_raw)
+
+
+def reset_account_allocation():
+    allocate_account_total(st.session_state.balance_raw,reference=True)
+
+
+def reload_latest_portfolio():
+    try:
+        latest=read_latest_valuation(DEFAULT_WORKBOOK)
+        st.session_state.source=dict(st.session_state.source or {},**latest)
+        set_money_state('balance',latest['balance'])
+        st.session_state.start_date=date.fromisoformat(latest['valuation_date'])
+        allocate_account_total(latest['balance'])
+        st.session_state.pop('startup_valuation_error',None)
+        st.session_state.portfolio_reload_message=f"Loaded £{latest['balance']:,.0f} at {latest['valuation_date']}. Accounts rescaled in their current proportions."
+    except (OSError,ValueError,KeyError) as error:
+        st.session_state.startup_valuation_error=str(error)
+
+
+def import_latest_positions():
+    try:
+        imported=read_positions()
+        values=[imported['accounts'][name]['value'] for name in ACCOUNT_NAMES]
+        # Complete parsing and reference persistence before changing widgets.
+        save_allocation(ACCOUNT_NAMES,values)
+        for name,value in zip(ACCOUNT_NAMES,values):
+            set_money_state('balance_'+name,value)
+        set_money_state('balance',imported['total'])
+        for j,owner in enumerate(['Gordon','Ann']):
+            account=imported['accounts'][owner+' GIA']
+            set_money_state(f'annualised_gain_{j}',account['gain'])
+            st.session_state[f'fixed_dividend_share_{j}']=account['dividend_share']*100
+            st.session_state[f'gia_income_yield_{j}']=account['income_yield']*100
+        st.session_state.gia_separate_yields=True
+        st.session_state.positions_import=imported
+        st.session_state.pop('positions_import_error',None)
+    except (OSError,ValueError,KeyError) as error:
+        st.session_state.positions_import_error=str(error)
 
 
 def present_table(table):
@@ -149,6 +223,33 @@ if "source" not in st.session_state or (st.session_state.source and st.session_s
     except (OSError, ValueError):
         st.session_state.source = None
 
+# Preserve edits already present in a browser session when introducing this feature.
+if not account_allocation.ALLOCATION.exists() and all('balance_'+n+'_raw' in st.session_state for n in ACCOUNT_NAMES):
+    current=[st.session_state['balance_'+n+'_raw'] for n in ACCOUNT_NAMES]
+    if sum(current)>0 and not st.session_state.get('restored_run_name'):
+        save_allocation(ACCOUNT_NAMES,current)
+if st.session_state.get('allocation_save_error'):
+    st.warning('The account reference could not be saved: '+st.session_state.allocation_save_error)
+
+# Refresh once per new simulator session, not on each widget rerun.
+# Restoring a saved run deliberately keeps its historical opening values.
+if not st.session_state.get('startup_valuation_checked'):
+    st.session_state.startup_valuation_checked=True
+    try:
+        latest=read_latest_valuation(DEFAULT_WORKBOOK)
+        if st.session_state.source is None:
+            fallback=Settings()
+            st.session_state.source=dict(history=[],mean_y=fallback.initial_y,std_y=fallback.std_y,
+                                         calibration_method='ten_anniversary_twr_years')
+        st.session_state.source=dict(st.session_state.source,**latest)
+        for key in ['balance','start_date']+['balance_'+n for n in ACCOUNT_NAMES]:
+            st.session_state.pop(key,None)
+    except (OSError,ValueError,KeyError) as error:
+        st.session_state.startup_valuation_error=str(error)
+if st.session_state.get('startup_valuation_error'):
+    st.warning('Latest workbook balance could not be loaded. Using saved or default inputs: '+
+               st.session_state.startup_valuation_error)
+
 with st.expander("Portfolio source and historical calibration", expanded=st.session_state.source is None):
     path = st.text_input("Excel workbook (cached values; macros are never run)", DEFAULT_WORKBOOK)
     if st.button("Read latest workbook and recalibrate"):
@@ -157,6 +258,7 @@ with st.expander("Portfolio source and historical calibration", expanded=st.sess
                 source = read_workbook(path)
                 save_snapshot(source)
                 st.session_state.source = source
+                st.session_state.pop('startup_valuation_error',None)
                 # Update only the source-driven controls on an explicit refresh.
                 for key in ("balance", "start_date", "initial_y", "std_y"):
                     st.session_state.pop(key, None)
@@ -167,7 +269,7 @@ with st.expander("Portfolio source and historical calibration", expanded=st.sess
             st.error(str(error))
     source = st.session_state.source
     if source:
-        st.write(f"Saved valuation: **£{source['balance']:,.0f}** at **{source['valuation_date']}**. "
+        st.write(f"Opening valuation: **£{source['balance']:,.0f}** at **{source['valuation_date']}**. "
                  f"Historical mean y: **{source['mean_y']:.2%}**; sample standard deviation: **{source['std_y']:.2%}**.")
         if 'portfolio_cagr' in source:
             st.write(f"Ten-year compound annual rates: portfolio **{source['portfolio_cagr']:.3%}**, "
@@ -184,9 +286,11 @@ with st.expander("Portfolio source and historical calibration", expanded=st.sess
                        f"Indicative 95% confidence interval for mean y: "
                        f"{source['mean_y']-margin:.2%} to {source['mean_y']+margin:.2%} "
                        "(independent Normal annual observations assumed).")
+        if source['history']:
+            st.caption('Return calibration: '+source['history'][0]['period_start']+' to '+source['history'][-1]['period_end']+'. Latest balance is refreshed separately at startup.')
         history = pd.DataFrame(source["history"])
         st.dataframe(present_table(history), hide_index=True)
-        st.caption("Ten consecutive single-year time-weighted returns ending at the valuation date, from "
+        st.caption("Ten consecutive single-year time-weighted returns from the last calibration, from "
                    "Pension_Performance A6:J51. y = portfolio return minus CPI inflation; sample standard "
                    "deviation uses ten annual observations, not overlapping multi-year averages. "
                    "The workbook's configured CPI lag is retained. Exact compounded real returns are also shown.")
@@ -298,7 +402,11 @@ with st.sidebar:
                     key='simulation_type', on_change=sync_simulation_count)
     non_stochastic = mode != "Stochastic"
     start = st.date_input("Valuation date", date.fromisoformat(source["valuation_date"]), key="start_date")
-    balance = money("Starting portfolio (£)", source["balance"], "balance")
+    balance = money("Starting portfolio (£)", source["balance"], "balance",on_commit=starting_total_changed)
+    st.button('Reload latest portfolio valuation',on_click=reload_latest_portfolio,
+              help='Reads the last dated column I balance from the workbook and rescales all accounts in their current proportions.')
+    if st.session_state.get('portfolio_reload_message'):
+        st.caption(st.session_state.portfolio_reload_message)
     years = st.number_input("Years", 1, 60, 30, key='projection_years')
     simulations = st.selectbox("Simulations", [1, 10, 100, 500, 1000],
                                format_func=lambda n: '1 (Non-stochastic)' if n == 1 else str(n),
@@ -364,10 +472,27 @@ with st.sidebar:
         st.caption("The selected sale falls after the projection, so it has no effect on these results.")
 
 with st.expander("Accounts and tax inputs"):
-    st.write("Starting account balances are scaled from the 15 October account schedule. "
-             "Starting GIA gain assumptions use twice the approximately six-month CGT YTD figures: "
+    st.button('Import latest Evelyn positions spreadsheet',on_click=import_latest_positions,
+              help='Reads the most recently saved positions*.xlsx in Home Finances/Pension and imports all six accounts, GIA gains and estimated income mix.')
+    if st.session_state.get('positions_import_error'):
+        st.error(st.session_state.positions_import_error)
+    if st.session_state.get('positions_import'):
+        imported=st.session_state.positions_import
+        st.caption('Imported '+imported['file']+' · file saved '+imported['file_saved']+'. File save time is not a valuation date; the projection date remains editable.')
+        with st.expander('Imported positions and income estimates'):
+            summary=pd.DataFrame(imported['accounts']).T
+            st.dataframe(summary.style.format({c:('£{:,.2f}' if c in ['value','gain','income','dividends','interest','gilt_gain'] else '{:.2%}' if c in ['income_yield','dividend_share'] else '{:.0f}') for c in summary.columns},na_rep='—'))
+            st.dataframe(pd.DataFrame(imported['audit']),hide_index=True)
+            for note in imported['notes']: st.caption(note)
+        st.warning('Imported GIA unrealised gains include exempt gilt gains and are not verified tax costs. The current aggregate GIA gain model does not track gilt exemptions separately. Income shares are estimates; check accumulation-fund income against tax statements.')
+    st.write("Starting account balances use your latest saved split, or the original account schedule until one is saved. "
+             "Before a positions import, starting GIA gain defaults use twice the approximately six-month CGT YTD figures: "
              "Gordon £2,902 × 2 = £5,804; Ann £3,837 × 2 = £7,674, as requested.")
-    scaled = REFERENCE_BALANCES/REFERENCE_BALANCES.sum()*balance
+    allocation=np.array(saved_allocation(ACCOUNT_NAMES,REFERENCE_BALANCES))
+    scaled = allocation/allocation.sum()*balance
+    separate_gia_yields=st.checkbox('Use separate GIA income yields',False,key='gia_separate_yields')
+    st.caption('Separate GIA yields affect taxable income only and are already included in CPI + y total return. The importer sets each yield to estimated annualIncome divided by that GIA valuation.')
+    gia_yields=[]
     c1, c2 = st.columns(2)
     account_values, gains, shares, tfc_shares, lsas = [], [], [], [], []
     for j, col in enumerate((c1, c2)):
@@ -375,18 +500,19 @@ with st.expander("Accounts and tax inputs"):
             st.subheader(("Gordon", "Ann")[j])
             for k in range(j*3, j*3+3):
                 # Default allocation follows the total unless explicitly edited.
-                account_values.append(money(ACCOUNT_NAMES[k]+" (£)", scaled[k], "balance_"+ACCOUNT_NAMES[k]))
+                account_values.append(money(ACCOUNT_NAMES[k]+" (£)", scaled[k], "balance_"+ACCOUNT_NAMES[k],on_commit=account_total_changed))
             gains.append(money("GIA unrealised gain (£)", REFERENCE_GAINS[j], f"annualised_gain_{j}", minimum=None))
             fraction = percent("Dividends as share of GIA yield (%)", .5, f"fixed_dividend_share_{j}", 0, 100)
             shares.append(fraction)
+            gia_yields.append(percent('GIA estimated annual income yield (%)',yield_rate,f'gia_income_yield_{j}',0,100)
+                              if separate_gia_yields else None)
             tfc_shares.append(percent('Tax-free share of SIPP withdrawals (%)',
                 defaults.gordon_tax_free_share if j == 0 else defaults.ann_tax_free_share,f'tfc_share_{j}',0,25))
             lsas.append(money('Remaining lump sum allowance (£)',
                 defaults.gordon_lsa_remaining if j == 0 else defaults.ann_lsa_remaining,f'lsa_{j}'))
-    if st.button("Reset account balances to proportional allocation"):
-        for name in ACCOUNT_NAMES:
-            st.session_state.pop("balance_"+name, None)
-        st.rerun()
+    st.button("Reset account balances to proportional allocation",on_click=reset_account_allocation,
+              help='Replaces all six account amounts using your latest saved account percentages, keeping the starting total unchanged.')
+    st.caption('Editing an account updates the starting portfolio total. Editing the starting total rescales accounts in their current proportions. Account edits automatically save your reference split for future sessions. Reset reapplies that split to the current total; it does not read Excel or change the total.')
     st.write(f"Account total: **£{sum(account_values):,.0f}**")
     st.caption("Gordon defaults to no remaining tax-free cash. Ann defaults to 25% tax-free withdrawals, capped by her remaining nominal LSA. Confirm Ann’s pension statement; set her share to zero if already taken. "
                "Each GIA defaults to 50% dividends and 50% securities interest; the split is editable for each owner.")
@@ -458,7 +584,7 @@ settings = Settings(start_date=start.isoformat(), starting_balance=balance, year
                     evelyn_scenario=selected_evelyn,
                     non_stochastic=non_stochastic,
                     simulations=simulations, seed=seed, inflation=inflation, initial_y=initial_y,
-                    std_y=std_y, taxes_enabled=taxes_enabled, income_yield=yield_rate, withdrawal=withdrawal,
+                    std_y=std_y, taxes_enabled=taxes_enabled, income_yield=yield_rate, gia_income_yield_gordon=gia_yields[0],gia_income_yield_ann=gia_yields[1],withdrawal=withdrawal,
                     gift=gift, gift_years=gift_years, crash_enabled=crash_enabled,
                     crash_loss=crash_loss, crash_window=crash_window, deterministic_crash_year=stress_year,
                     earnings_growth=earnings, gordon_citibank_pension=citibank,
@@ -478,7 +604,7 @@ settings = Settings(start_date=start.isoformat(), starting_balance=balance, year
                     estate_assessment_year=assessment_year,tax_rules=tax_rules,annual_fee=annual_fee)
 model_root = Path(__file__).resolve().parent
 model_revision = hashlib.sha256(b''.join((model_root/name).read_bytes() for name in
-    ['app.py', 'simulation.py', 'withdrawals.py', 'tax_ledger.py', 'tax.py', 'data/evelyn_reference.csv', 'sources.py', 'tax_rules.py', 'strategies.py', 'pdf_report.py', 'charts.py', 'results_store.py', 'results_manager.py'])).hexdigest()
+    ['app.py', 'simulation.py', 'withdrawals.py', 'tax_ledger.py', 'tax.py', 'data/evelyn_reference.csv', 'sources.py', 'tax_rules.py', 'strategies.py', 'pdf_report.py', 'charts.py', 'results_store.py', 'results_manager.py', 'account_allocation.py', 'positions_import.py'])).hexdigest()
 signature = json.dumps({"settings": asdict(settings), "accounts": account_values, "gains": gains,
                         "model_revision": model_revision}, sort_keys=True)
 
@@ -487,7 +613,9 @@ if st.button("Run simulation", type="primary"):
     try:
         result = simulate(settings, account_values, gains, progress=lambda p: bar.progress(p))
         result["inputs"] = json.loads(signature)
-        result["source"] = st.session_state.source
+        result["source"] = dict(st.session_state.source or {})
+        if st.session_state.get("positions_import"):
+            result["source"]["positions_import"] = st.session_state.positions_import
         st.session_state.run_controls = {k:v for k,v in st.session_state.items()
             if isinstance(v,(str,int,float,bool,date)) and k not in
             {'result_signature','pdf_report_key','pdf_report_filename','save_run_name','restored_run_name'}}
