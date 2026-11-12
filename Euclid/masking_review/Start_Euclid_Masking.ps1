@@ -48,10 +48,19 @@ for ($attempt = 0; $attempt -lt 80; $attempt++) {
     }
     if (Test-Path -LiteralPath $statePath) {
         $state = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
-        if ($state.pid -eq $process.Id -and $state.url -match '^http://127\.0\.0\.1:\d+/$') {
-            if (-not $NoBrowser) { Start-Process $state.url }
-            Write-Output ('Euclid masking ready: ' + $state.url)
-            exit 0
+        # Virtual-environment launchers can spawn Python with a different PID.
+        # Verify the actual reviewer and output directory instead of PID equality.
+        if ($state.url -match '^http://127\.0\.0\.1:\d+/$') {
+            try {
+                $health = Invoke-RestMethod -Uri ($state.url + 'api/health') -TimeoutSec 2
+            } catch {
+                continue
+            }
+            if (($health.app -eq 'euclid_mto_masking_v1') -and ($health.output -eq $output)) {
+                if (-not $NoBrowser) { Start-Process $state.url }
+                Write-Output ('Euclid masking ready: ' + $state.url)
+                exit 0
+            }
         }
     }
 }
