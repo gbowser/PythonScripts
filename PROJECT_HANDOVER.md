@@ -1,6 +1,6 @@
 # Project handover
 
-Last updated: 12 November 2026.
+Last updated: 13 November 2026.
 
 ## Working across computers
 
@@ -115,3 +115,43 @@ apertures and wavelengths when comparing profiles.
 
 No new scientific processing or laptop installation was requested in the latest
 turn; the current task is establishing ongoing repository handover notes.
+
+## Astronomy source catalogue and conservative cleanup 13 November 2026
+
+- Completed a static catalogue of the nine requested astronomy directories and
+  additional astronomy source with creation/modification timestamps since 1 June
+  2026. The DOCX indexes 807 source/companion files, including 621 .py files and
+  754 distinct content hashes. Many August timestamps appear to reflect migration;
+  actual post-June authorship is not established. Git-history access was denied.
+- Catalogue: `C:\Users\gordo\Documents\Codex\2026-11-13\referenced-chatgpt-conversation-this-is-an-2\outputs\Astronomy_Scripts_Catalogue.docx`.
+  Includes workflow relationships, per-file static evidence, CLI declarations,
+  dependencies, launch forms, path checks, uncertainties and cleanup register.
+- User authorised a dated archive. Moved 10 confirmed one-off text-patch helpers
+  from `Foreground Masking` into `_archive/2026-11-13_catalogue_cleanup/`, preserving
+  the original relative structure. `archive_manifest.json` records full hashes,
+  original/destination paths and verified target markers; README explains restore.
+  No science data, runtime implementations, reviews or provenance backups moved.
+- All 807 inspected source hashes were verified unchanged at active/archive paths.
+  The S4G manifest has 182 image paths and all exist. The current local Euclid and
+  reviewed-adoption manifests have 2777 FITS paths each and all checked paths exist.
+  These are existence checks, not scientific or pixel-level validation.
+- On this audit host the D:\Dropbox research root exists; the configured Laptop
+  C:\Users\gordo\Dropbox research root was not found. Earlier ENVIRONMENT_CHECK.md
+  describes another host and its test results were not rerun.
+- Found `SRA/Density Shoulder Quantification v1.1.py` dynamically imports the absent
+  `SRA - 650stars.py`. `SRA - D650_simulation.py` and D650_stars.npy exist, but no
+  repair/substitution was made. Empty placeholders and notebook JSON saved as .py
+  are identified in the catalogue. Native .so files have Windows MZ headers;
+  native loading was not exercised in this task.
+- No scientific processing, package installation, GUI acceptance testing or
+  remote catalogue query was performed. No commit or push was requested/performed.
+
+### Catalogue revision requested by user
+
+The 807-file reference was too granular. The replacement is a 17-page catalogue
+of 40 top-level programs/workflows, with supporting routines, workers, QA and
+maintenance scripts omitted as entries. It uses paths relative to PythonScripts
+and focuses on useful CSV/PDF/PNG/FITS/workbook outputs. Revised deliverable:
+`C:/Users/gordo/Documents/Codex/2026-11-13/referenced-chatgpt-conversation-this-is-an-2/outputs/Astronomy_Programs_Catalogue.docx`.
+All 40 entry-point source paths and hashes were rechecked. The DOCX was rendered
+through Word and all 17 pages checked; no new source changes or archive moves.

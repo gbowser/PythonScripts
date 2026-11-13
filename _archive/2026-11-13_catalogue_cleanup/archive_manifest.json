@@ -1,0 +1,156 @@
+{
+  "root": "C:\\Users\\gordo\\Documents\\Github\\PythonScripts",
+  "files": [
+    {
+      "original": "Foreground Masking\\add_failure_trial_retention.py",
+      "archived": "_archive\\2026-11-13_catalogue_cleanup\\Foreground Masking\\add_failure_trial_retention.py",
+      "sha256": "7229aae891f1fe347096be507e3a9f50a7d58a1f11030029aed672be6a74d15e",
+      "reason": "One-off source patch; intended result found in target code; no filename references in indexed first-party source.",
+      "evidence": [
+        {
+          "target": "Foreground Masking\\MER_VIS_pipeline_v2\\recover_failed_MER_VIS_geometry.py",
+          "marker": "MER_VIS_adaptive_v2_recovery",
+          "verified": true
+        },
+        {
+          "target": "Foreground Masking\\MER_VIS_pipeline_v2\\finalize_MER_VIS_geometry.py",
+          "marker": "MER_VIS_failed_recovery_audit",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "original": "Foreground Masking\\add_labelled_segmentation_recovery.py",
+      "archived": "_archive\\2026-11-13_catalogue_cleanup\\Foreground Masking\\add_labelled_segmentation_recovery.py",
+      "sha256": "247674a8358dd2c841e79fb6280e2a53ef127c1f7e0d170da9a6bed7df815984",
+      "reason": "One-off source patch; intended result found in target code; no filename references in indexed first-party source.",
+      "evidence": [
+        {
+          "target": "Foreground Masking\\MER_VIS_pipeline_v2\\recover_failed_MER_VIS_geometry.py",
+          "marker": "segmentation_mask_removed_recovery",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "original": "Foreground Masking\\add_matched_before_after_comparison.py",
+      "archived": "_archive\\2026-11-13_catalogue_cleanup\\Foreground Masking\\add_matched_before_after_comparison.py",
+      "sha256": "b69b6c5f2e3e85b2a08ae4795a13864c1ccaf7e6e3e96f402fe36d690528e1e8",
+      "reason": "One-off source patch; intended result found in target code; no filename references in indexed first-party source.",
+      "evidence": [
+        {
+          "target": "Foreground Masking\\MER_VIS_pipeline_v2\\prepare_current_MER_VIS_report_data.py",
+          "marker": "paired_supplied_comparison",
+          "verified": true
+        },
+        {
+          "target": "Foreground Masking\\MER_VIS_pipeline_v2\\write_current_MER_VIS_comparison_summary.py",
+          "marker": "Before and after on exactly the same galaxies",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "original": "Foreground Masking\\add_v2_centre_checks.py",
+      "archived": "_archive\\2026-11-13_catalogue_cleanup\\Foreground Masking\\add_v2_centre_checks.py",
+      "sha256": "83bfae9750c2c343dc58f161efccc019582f50062b4ef314881fe82d1a9713d3",
+      "reason": "One-off source patch; intended result found in target code; no filename references in indexed first-party source.",
+      "evidence": [
+        {
+          "target": "Foreground Masking\\MER_VIS_pipeline_v2\\fit_adaptive_MER_VIS_geometry.py",
+          "marker": "centre_offset_large",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "original": "Foreground Masking\\fix_VIS_photutils_compatibility.py",
+      "archived": "_archive\\2026-11-13_catalogue_cleanup\\Foreground Masking\\fix_VIS_photutils_compatibility.py",
+      "sha256": "28bbab9606253e37ed0555a2fab1cfec2f83457e5ca92d50cc544fc275a085a4",
+      "reason": "One-off source patch; intended result found in target code; no filename references in indexed first-party source.",
+      "evidence": [
+        {
+          "target": "Euclid\\fit_euclid_VIS_geometry.py",
+          "marker": "def fit_image_compatible",
+          "verified": true
+        },
+        {
+          "target": "Euclid\\datalabs_MER_VIS\\fit_MER_VIS_geometry_portable.py",
+          "marker": "def sample_fraction",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "original": "Foreground Masking\\handle_cloud_pdf_rename_locks.py",
+      "archived": "_archive\\2026-11-13_catalogue_cleanup\\Foreground Masking\\handle_cloud_pdf_rename_locks.py",
+      "sha256": "2d2ab786474e4af9a38414bf55b70847e7fff575427e3a25c671a8b7a3e2967a",
+      "reason": "One-off source patch; intended result found in target code; no filename references in indexed first-party source.",
+      "evidence": [
+        {
+          "target": "Foreground Masking\\MER_VIS_pipeline_v2\\report_code\\assemble_grouped_MER_VIS_reports.py",
+          "marker": "shutil.copyfile(temp,path)",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "original": "Foreground Masking\\improve_v2_report_centre_display.py",
+      "archived": "_archive\\2026-11-13_catalogue_cleanup\\Foreground Masking\\improve_v2_report_centre_display.py",
+      "sha256": "251cf10d1bbf99b2ac1febd2b0543f11f049c60530c4f3fa5369621d1cb4f876",
+      "reason": "One-off source patch; intended result found in target code; no filename references in indexed first-party source.",
+      "evidence": [
+        {
+          "target": "Foreground Masking\\MER_VIS_pipeline_v2\\report_code\\make_MER_VIS_galaxy_report_cards.py",
+          "marker": "Centre offset",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "original": "Foreground Masking\\make_pdf_replacement_retryable.py",
+      "archived": "_archive\\2026-11-13_catalogue_cleanup\\Foreground Masking\\make_pdf_replacement_retryable.py",
+      "sha256": "408bd1f0224f84a7cffbca4badb58f8d8e27edc56e2e7ae39e1415a31757849d",
+      "reason": "One-off source patch; intended result found in target code; no filename references in indexed first-party source.",
+      "evidence": [
+        {
+          "target": "Foreground Masking\\MER_VIS_pipeline_v2\\report_code\\assemble_grouped_MER_VIS_reports.py",
+          "marker": "for retry in range(9)",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "original": "Foreground Masking\\patch_v2_report_generation.py",
+      "archived": "_archive\\2026-11-13_catalogue_cleanup\\Foreground Masking\\patch_v2_report_generation.py",
+      "sha256": "6a9e2ecb9e5cf23b30f8d2a192ecca1c09780957eda5029c732f49640e679567",
+      "reason": "One-off source patch; intended result found in target code; no filename references in indexed first-party source.",
+      "evidence": [
+        {
+          "target": "Foreground Masking\\MER_VIS_pipeline_v2\\report_code\\generate_all_MER_VIS_galaxy_reports.py",
+          "marker": "QI_adaptive_v2",
+          "verified": true
+        },
+        {
+          "target": "Foreground Masking\\MER_VIS_pipeline_v2\\report_code\\make_MER_VIS_galaxy_report_cards.py",
+          "marker": "used_for_geometry",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "original": "Foreground Masking\\revise_MER_VIS_report_builder.py",
+      "archived": "_archive\\2026-11-13_catalogue_cleanup\\Foreground Masking\\revise_MER_VIS_report_builder.py",
+      "sha256": "84887be05590a36bf770fb875a51d6d3947fd3873ecbbc5dc0f9a5c93d402996",
+      "reason": "One-off source patch; intended result found in target code; no filename references in indexed first-party source.",
+      "evidence": [
+        {
+          "target": "Foreground Masking\\build_MER_VIS_fit_report_revised.py",
+          "marker": "Euclid_MER_VIS_geometry_fitting_report_revised_90deg.docx",
+          "verified": true
+        }
+      ]
+    }
+  ],
+  "status": "completed"
+}
