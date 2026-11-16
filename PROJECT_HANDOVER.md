@@ -123,7 +123,7 @@ turn; the current task is establishing ongoing repository handover notes.
   2026. The DOCX indexes 807 source/companion files, including 621 .py files and
   754 distinct content hashes. Many August timestamps appear to reflect migration;
   actual post-June authorship is not established. Git-history access was denied.
-- Catalogue: `C:\Users\gordo\Documents\Codex\2026-11-13\referenced-chatgpt-conversation-this-is-an-2\outputs\Astronomy_Scripts_Catalogue.docx`.
+- Catalogue: `C:\Users\gordo\Documents\Github\PythonScripts\Euclid\Codex Documentation\Astronomy_Scripts_Catalogue.docx`.
   Includes workflow relationships, per-file static evidence, CLI declarations,
   dependencies, launch forms, path checks, uncertainties and cleanup register.
 - User authorised a dated archive. Moved 10 confirmed one-off text-patch helpers
@@ -152,6 +152,22 @@ The 807-file reference was too granular. The replacement is a 17-page catalogue
 of 40 top-level programs/workflows, with supporting routines, workers, QA and
 maintenance scripts omitted as entries. It uses paths relative to PythonScripts
 and focuses on useful CSV/PDF/PNG/FITS/workbook outputs. Revised deliverable:
-`C:/Users/gordo/Documents/Codex/2026-11-13/referenced-chatgpt-conversation-this-is-an-2/outputs/Astronomy_Programs_Catalogue.docx`.
+`C:/Users/gordo/Documents/Github/PythonScripts/Euclid/Codex Documentation/Astronomy_Programs_Catalogue.docx`.
 All 40 entry-point source paths and hashes were rechecked. The DOCX was rendered
 through Word and all 17 pages checked; no new source changes or archive moves.
+## Documentation relocation 16 November 2026
+
+Completed after user confirmed ALL finished documents, including unrelated
+reports, and closed the open catalogue. Eight finished files now reside in
+`Euclid/Codex Documentation`: both astronomy catalogues, the RPA draft and notes,
+both Peru weather reports, and both Peru map PNGs. Source/destination SHA256
+checks matched for every move. No finished files remain in the Codex outputs
+folders; temporary Office lock files and intermediate work/render data were
+excluded. Document contents were not regenerated.
+
+Five builders now save future DOCX files into the same destination:
+`work/build_catalogue.py`, `work/build_programs.py`, the Peru weather builder,
+RPA `edit_form.py`, and Euclid image-products `build.py`. Their original Codex
+work folders and source data remain in place. The catalogue verification script
+and handover-generator output reference were also repointed. All six relevant
+Python scripts passed syntax parsing. No builder was run to overwrite documents.
