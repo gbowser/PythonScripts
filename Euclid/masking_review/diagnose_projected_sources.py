@@ -6,6 +6,7 @@ import sys
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import masking_core as core
+from validation_storage import validation_output
 
 
 def trial(config):
@@ -25,7 +26,7 @@ def trial(config):
             same_as_centre=label==centre,area=int(np.sum(labels==label)) if label else 0,
             nearby_labels=[int(v) for v in np.unique(labels[y-3:y+4,x-3:x+4])])
     result=dict(config=config,points=points,background=bg)
-    destination=core.HERE/'validation_output/knots'/f'trial_{config["residual_sigma"]}_{config["fwhm"]}.npz'
+    destination=validation_output()/'knots'/f'trial_{config["residual_sigma"]}_{config["fwhm"]}.npz'
     np.savez_compressed(destination,segmentation=labels)
     return result
 
@@ -34,7 +35,7 @@ if __name__=='__main__':
     if len(sys.argv)>1:
         print(json.dumps(trial(json.loads(sys.argv[1]))))
     else:
-        destination=core.HERE/'validation_output/knots'
+        destination=validation_output()/'knots'
         destination.mkdir(parents=True,exist_ok=True)
         reports=[]
         for residual in [0,3,5,8]:

@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 $root = 'D:\Dropbox\Public Documents\UCLAN\MSc Research\Remove foreground objects\clean22_haigh_aligned_bright150_galaxy150_sep_sensitivity'
 $log = Join-Path $root 'windows_pipeline_supervisor.log'
 $result = Join-Path $root 'SEP_merging_sensitivity\sep_merging_sensitivity_result.json'
-$wrapper = '/mnt/c/Users/gordo/Documents/Github/PythonScripts/run_galaxy150_pipeline_foreground.sh'
+$wrapper = '/mnt/c/Users/gordo/Documents/Github/PythonScripts/Foreground Masking/Optimisation/launchers/run_galaxy150_pipeline_foreground.sh'
 $attempt = 0
 $maximumAttempts = 12
 
@@ -20,7 +20,8 @@ while (-not (Test-Path -LiteralPath $result)) {
     }
     $attempt++
     Write-SupervisorLog "Starting attached WSL pipeline attempt $attempt/$maximumAttempts."
-    $arguments = @('-d', 'Ubuntu-24.04', '-u', 'root', '--', 'bash', $wrapper)
+    # Start-Process joins arguments into a command line; preserve the path's spaces.
+    $arguments = @('-d', 'Ubuntu-24.04', '-u', 'root', '--', 'bash', ('"{0}"' -f $wrapper))
     $process = Start-Process -FilePath 'wsl.exe' -ArgumentList $arguments -WindowStyle Hidden -PassThru
     $process.WaitForExit()
     Write-SupervisorLog "WSL pipeline attempt $attempt exited with code $($process.ExitCode)."

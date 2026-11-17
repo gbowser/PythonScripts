@@ -1,7 +1,7 @@
 from pathlib import Path
 p=Path('MER_VIS_pipeline_v2/report_code/make_MER_VIS_galaxy_report_cards.py');s=p.read_text(encoding='utf-8-sig');s=s.replace("else:maxa=min(raw.shape)*scale*.25", """else:
   # Failed fits need a target-scale view rather than an entire large sky cutout.
-  segpath=Path(__file__).resolve().parent.parent/'datalabs_MER_VIS'/'MER_VIS_datalabs_manifest.csv'
+  segpath=Path(__file__).resolve().parent.parent/'Q1/datalabs_MER_VIS'/'MER_VIS_datalabs_manifest.csv'
   if segpath.is_file():
    catalog=pd.read_csv(segpath,dtype={'object_id':str}).set_index('object_id')
    maxa=max(3,1.8*np.sqrt(float(catalog.loc[oid,'segmentation_area'])/np.pi)*scale)

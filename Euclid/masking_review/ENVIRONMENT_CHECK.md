@@ -76,6 +76,9 @@ option, and its source-hash assertion also omits a FITS-directory argument.
 
 Successful integration evidence:
 `validation_output/77f25761538c460f8e4afda3b2629189/validation.json`.
+Storage update 17 November 2026: this historical relative output tree is now
+under the research archive's `Euclid/masking_review/validation_output`, not the
+repository. This move does not rerun the historical validation.
 The additional deprojection evidence is `deprojection_validation.json` in that
 folder. All six documented deprojection products were created under
 `deprojections/a61fc95fc2c949c7b7359f5d0bbcc7e6/`.

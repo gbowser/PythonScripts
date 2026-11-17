@@ -9,7 +9,7 @@ import astropy.units as u
 import matplotlib;matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
-sys.path.insert(0,str(Path('../Euclid/datalabs_MER_VIS').resolve()))
+sys.path.insert(0,str(Path('../Euclid/Q1/datalabs_MER_VIS').resolve()))
 from MER_VIS_geometry_transforms import local_pixel_matrix
 out=Path(r'D:\Dropbox\Public Documents\UCLAN\MSc Research\Euclid\MER_VIS_PA_validation')
 f='EUC_MER_BGSUB-MOSAIC-VIS_TILE102023983-8D3C9A_20241018T181958.121344Z_00.00.fits';full=out/f;part=out/(f+'.part')

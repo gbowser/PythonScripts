@@ -3,6 +3,7 @@ import csv
 import json
 from pathlib import Path
 import masking_core as core
+from validation_storage import validation_output
 
 
 def main():
@@ -29,7 +30,7 @@ def main():
         except (ValueError, OSError, KeyError) as exc:
             finding.update(status='requires_outer_disc_review', reason=str(exc))
         findings.append(finding)
-    output = core.HERE / 'validation_output/boundary_audit'
+    output = validation_output() / 'boundary_audit'
     output.mkdir(parents=True,exist_ok=True)
     with (output/'boundary_audit.csv').open('w',newline='',encoding='utf8') as stream:
         writer=csv.DictWriter(stream,fieldnames=list(findings[0]));writer.writeheader();writer.writerows(findings)

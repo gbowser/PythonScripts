@@ -1,6 +1,6 @@
 import csv,math,json,statistics
 from pathlib import Path
-p=Path(r'C:\Users\gordo\Documents\Github\PythonScripts\Euclid\datalabs_MER_VIS\MER_VIS_geometry_comparison_manifest.csv')
+p=Path(r'C:\Users\gordo\Documents\Github\PythonScripts\Euclid\Q1\datalabs_MER_VIS\MER_VIS_geometry_comparison_manifest.csv')
 rows=list(csv.DictReader(p.open(encoding='utf-8-sig')))
 def num(r,k):
  try:

@@ -1,4 +1,4 @@
-"""Opt-in native MTO pilot validation; writes only to validation_output/<uuid>."""
+"""Opt-in native MTO validation; writes validation_output/<uuid> in research storage."""
 import argparse
 import json
 from pathlib import Path
@@ -7,6 +7,7 @@ import uuid
 
 import masking_core as core
 from reviewer import Application
+from validation_storage import validation_output
 
 
 def wait(app):
@@ -22,7 +23,7 @@ def wait(app):
 
 def main():
     root = Path(__file__).resolve().parent
-    output = root / 'validation_output' / uuid.uuid4().hex
+    output = validation_output() / uuid.uuid4().hex
     args = argparse.Namespace(output=output, catalogue=core.DEFAULT_CATALOGUE,
                               all_targets=False, fits_dir=None, mtobjects_root=core.ROOT / 'mtobjects')
     app = Application(args)

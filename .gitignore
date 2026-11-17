@@ -71,3 +71,21 @@ Foreground Masking/tmp_*/
 
 # Private saved pension simulation runs
 Pension_Simulator/data/saved_runs/
+
+# Installed JavaScript packages (reinstall locally; never vendor in Git)
+node_modules/
+
+# Research data relocated to Dropbox on 17 November 2026
+Euclid/DR1/barred_galaxy_pilot/full_manifest/*.csv
+Euclid/DR1/barred_galaxy_pilot/full_manifest/*.json
+Euclid/DR1/barred_galaxy_pilot/full_manifest/query_evidence/
+Euclid/reports/MER_VIS_review_2026-10-29/MER_VIS_reviewed_adoption_manifest.json
+Foreground Masking/MER_VIS_adoption_2026_10_29/MER_VIS_reviewed_adoption_manifest.json
+outputs/tesla-20261007/*.inspect.ndjson
+Complete-Python-3-Bootcamp-master/Complete-Python-3-Bootcamp-master.zip
+
+# Obsolete Gaia degree-course downloads removed at user's request
+Gaia/PleiadesList.txt
+Dissertation/*.vot.gz
+Dissertation/mydata.csv
+Dissertation/mydata-specific-params.csv

@@ -56,7 +56,7 @@ The Euclid morphology snapshot was retrieved on 16 October 2026. The program
 uses this cached exact-object-ID catalogue; it does not make 2777 remote queries
 or download images. Existing Euclid raw errors/flags, normalized Zoobot bar
 fractions, Zenodo bar fractions and Zenodo version-specific provenance remain
-in the manifest. See datalabs_MER_VIS/GEOMETRY_COMPARISON_README.md for the
+in the manifest. See Q1/datalabs_MER_VIS/GEOMETRY_COMPARISON_README.md for the
 complete catalogue definitions and scientific limitations.
 
 ## Rerun and options

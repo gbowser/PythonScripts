@@ -1,0 +1,3 @@
+# From PythonScripts: uv pip install -r tools/document_rendering/requirements.txt
+pdf2image
+Pillow

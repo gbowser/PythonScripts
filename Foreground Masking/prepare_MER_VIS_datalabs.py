@@ -2,8 +2,8 @@
 from pathlib import Path
 import csv,json,requests
 
-out=Path('../Euclid/datalabs_MER_VIS').resolve();out.mkdir(exist_ok=True)
-source=Path('../Euclid/q1_mer_vis_cutouts/mer_vis_cutout_manifest.csv')
+out=Path('../Euclid/Q1/datalabs_MER_VIS').resolve();out.mkdir(exist_ok=True)
+source=Path('../Euclid/Q1/q1_mer_vis_cutouts/mer_vis_cutout_manifest.csv')
 rows=list(csv.DictReader(source.open(newline='',encoding='utf-8')))
 ids=sorted({int(r['mosaic_product_oid']) for r in rows})
 q='SELECT mosaic_product_oid,datalabs_path,file_name FROM sedm.mosaic_product WHERE mosaic_product_oid IN ('+','.join(map(str,ids))+')'

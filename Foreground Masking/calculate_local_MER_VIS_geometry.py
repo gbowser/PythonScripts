@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-SUPPORT = HERE/'datalabs_MER_VIS'
+SUPPORT = HERE/'Q1/datalabs_MER_VIS'
 DEFAULT_INPUT = Path(r'D:\Dropbox\Public Documents\UCLAN\MSc Research\Euclid\Euclid_MER_VIS_cutouts')
 FIT_COLUMNS = {
     'bar_pa_deg':'codex_bar_pa_sky_deg', 'disk_pa_deg':'codex_disc_pa_sky_deg',

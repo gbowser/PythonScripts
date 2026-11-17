@@ -1,7 +1,7 @@
 """Prepare the portable version of the existing geometry algorithm for Datalabs."""
 import ast,json
 from pathlib import Path
-root=Path('../Euclid').resolve();out=root/'datalabs_MER_VIS'
+root=Path('../Euclid').resolve();out=root/'Q1/datalabs_MER_VIS'
 def function(path,name):
  source=path.read_text(encoding='utf-8')
  node=next(n for n in ast.parse(source).body if isinstance(n,ast.FunctionDef) and n.name==name)

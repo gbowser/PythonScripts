@@ -48,8 +48,8 @@ def _render_card(r,profiles,out,ordinal):
  elif len(pr) and not failed:maxa=float(pr.sma_arcsec.max())
  else:
   # Failed fits need a target-scale view rather than an entire large sky cutout.
-  segpath=Path(__file__).resolve().parent.parent/'datalabs_MER_VIS'/'MER_VIS_datalabs_manifest.csv'
-  if not segpath.is_file():segpath=Path(r'C:\Users\gordo\Documents\Github\PythonScripts\Euclid\datalabs_MER_VIS\MER_VIS_datalabs_manifest.csv')
+  segpath=Path(__file__).resolve().parent.parent/'Q1/datalabs_MER_VIS'/'MER_VIS_datalabs_manifest.csv'
+  if not segpath.is_file():segpath=Path(r'C:\Users\gordo\Documents\Github\PythonScripts\Euclid\Q1\datalabs_MER_VIS\MER_VIS_datalabs_manifest.csv')
   if segpath.is_file():
    catalog=pd.read_csv(segpath,dtype={'object_id':str}).set_index('object_id')
    maxa=max(3,1.8*np.sqrt(float(catalog.loc[oid,'segmentation_area'])/np.pi)*scale)

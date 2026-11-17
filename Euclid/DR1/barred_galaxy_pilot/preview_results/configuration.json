@@ -1,0 +1,16 @@
+{
+  "manifest_sha256": "77ae0711bbb844a3e8da2b3e12440bc63a3a75b4cbd29775e89edee9e7225308",
+  "source_mode": "download",
+  "selection_policy": "provisional_two_answer_disc",
+  "shadows": -2.8,
+  "target": 0.25,
+  "gamma": 1.0,
+  "preview_max_side": 1536,
+  "imports_seconds": 0.8264347000076668,
+  "python": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "processor": "Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",
+  "numpy": "2.3.5",
+  "max_download_bytes": 134217728,
+  "keep_fits": false
+}

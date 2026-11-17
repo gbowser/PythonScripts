@@ -204,4 +204,9 @@ or Ctrl+C for terminal launches. Unit tests include crop-only detector input,
 native coordinate mapping, exclusion of unprocessed pixels, unrestricted centre-label masking,
 source immutability, AutoStretch and known-ellipse geometry recovery. The Node test
 uses a mocked DOM/canvas; it is not a visual browser test. Integration outputs are
-labelled automated validation and remain under validation_output, not adopted reviews.
+labelled automated validation and remain under the configured research archive's
+`Euclid/masking_review/validation_output`, not adopted reviews. On the desktop
+this is `D:\Dropbox\Public Documents\UCLAN\MSc Research\Euclid\masking_review\validation_output`.
+Existing validation artifacts were relocated there on 17 November 2026;
+`validate_integration.py`, `audit_boundaries.py` and
+`diagnose_projected_sources.py` now use that location. The archive must exist.

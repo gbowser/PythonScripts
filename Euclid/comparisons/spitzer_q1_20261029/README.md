@@ -45,6 +45,6 @@ Files retained here:
 - `q1_mosaic_footprint_query.sql`: exact ADQL query.
 - `summary.json`: results, UTC query time, source hashes and existing image details.
 
-Reproduce with `Euclid/compare_spitzer_q1_overlap.py --check-footprint` using the
+Reproduce with `Euclid/Q1/compare_spitzer_q1_overlap.py --check-footprint` using the
 project's scientific Python environment. This script downloads metadata only.
 Public release context: https://www.euclid-ec.org/science/q1/

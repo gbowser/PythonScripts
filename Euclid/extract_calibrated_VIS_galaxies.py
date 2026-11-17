@@ -24,10 +24,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input-dir", type=Path, default=DEFAULT_INPUT)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--targets-csv", type=Path, default=HERE / "q1_barred_spirals" / "verified_barred_spirals.csv")
+    parser.add_argument("--targets-csv", type=Path, default=HERE / "Q1/q1_barred_spirals" / "verified_barred_spirals.csv")
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--deproject-existing", action="store_true", help="Deproject saved native cutouts using the geometry CSV")
-    parser.add_argument("--geometry-csv", type=Path, default=HERE / "q1_barred_spirals" / "deprojection_geometry.csv")
+    parser.add_argument("--geometry-csv", type=Path, default=HERE / "Q1/q1_barred_spirals" / "deprojection_geometry.csv")
     args = parser.parse_args()
     if args.deproject_existing:
         from deproject_calibrated_VIS_galaxies import process_existing

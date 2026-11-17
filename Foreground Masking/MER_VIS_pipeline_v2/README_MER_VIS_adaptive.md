@@ -23,7 +23,7 @@ Use Python with astropy, photutils, numpy and scipy. The report generators also 
 From PythonScripts, choose a NEW result folder:
 
 ```powershell
-python .\Euclid\adaptive_MER_VIS\fit_adaptive_MER_VIS_geometry.py --catalogue .\Euclid\datalabs_MER_VIS\MER_VIS_geometry_comparison_manifest.csv --segmentation .\Euclid\datalabs_MER_VIS\MER_VIS_datalabs_manifest.csv --input-dir 'D:\Dropbox\Public Documents\UCLAN\MSc Research\Euclid\Euclid_MER_VIS_cutouts' --output-dir 'D:\Dropbox\Public Documents\UCLAN\MSc Research\Euclid\Euclid_MER_VIS_geometry_NEW' --workers 12
+python .\Euclid\adaptive_MER_VIS\fit_adaptive_MER_VIS_geometry.py --catalogue .\Euclid\Q1\datalabs_MER_VIS\MER_VIS_geometry_comparison_manifest.csv --segmentation .\Euclid\Q1\datalabs_MER_VIS\MER_VIS_datalabs_manifest.csv --input-dir 'D:\Dropbox\Public Documents\UCLAN\MSc Research\Euclid\Euclid_MER_VIS_cutouts' --output-dir 'D:\Dropbox\Public Documents\UCLAN\MSc Research\Euclid\Euclid_MER_VIS_geometry_NEW' --workers 12
 ```
 
 The run is checkpointed and can be resumed with the same command. Changes in algorithm, input catalogue or segmentation require a new folder. Finalization expects all2777 rows, compares against a baseline manifest and performs explicit failed-target recovery. Report generation accepts `--geometry-dir` and `--output-dir`; assembly and verification accept `--input-dir`. Do not mix old card metadata with new results.

@@ -13,7 +13,7 @@ def get(path):
  with urllib.request.urlopen(url+path,timeout=30) as r:return json.load(r)
 boot=get('api/bootstrap');raw=(ORIGINAL/'MER_VIS_saved_reviews.json').read_bytes();reviews=json.loads(raw);assert reviews==boot['reviews']
 source=DATA/'Euclid_MER_VIS_geometry'/'MER_VIS_local_geometry_manifest.csv';manifest_hash=hashlib.sha256(source.read_bytes()).hexdigest();rows=list(csv.DictReader(source.open(encoding='utf-8-sig')));byid={r['object_id']:r for r in rows};old_ids={r['object_id'] for r in boot['sample']}
-seg={r['object_id']:r.get('segmentation_area') for r in csv.DictReader((REPO/'datalabs_MER_VIS'/'MER_VIS_datalabs_manifest.csv').open(encoding='utf-8-sig'))}
+seg={r['object_id']:r.get('segmentation_area') for r in csv.DictReader((REPO/'Q1/datalabs_MER_VIS'/'MER_VIS_datalabs_manifest.csv').open(encoding='utf-8-sig'))}
 priority=['-663928688473758026','2756030807655229287','-595029565493921205','-537890362287224823','-518633776290631360','2681494150647395085','2654474268655808169','-586374330510251740','-524824554283124036','2645436353651870062','2697242050653408730']
 controls=[r['object_id'] for r in boot['sample'] if r['category']=='control' and r['object_id'] not in priority][:2]
 selected=set(priority+controls);validation=[]

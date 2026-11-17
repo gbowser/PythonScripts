@@ -1,0 +1,6 @@
+# PC dependencies for the Q1 catalogue, cutout-link and overlap programs.
+# From PythonScripts: uv pip install -r Euclid/Q1/requirements.txt
+# ESA's source-extraction pilot has its own Linux installer.
+astropy
+numpy
+requests

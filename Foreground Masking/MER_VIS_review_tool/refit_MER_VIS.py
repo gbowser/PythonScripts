@@ -50,13 +50,13 @@ class ReviewRefits:
         try:
             folder.mkdir(parents=True)
             area = None
-            candidates=[HERE.parent/'datalabs_MER_VIS'/'MER_VIS_datalabs_manifest.csv', HERE.parent.parent/'Euclid'/'datalabs_MER_VIS'/'MER_VIS_datalabs_manifest.csv']
+            candidates=[HERE.parent/'Q1/datalabs_MER_VIS'/'MER_VIS_datalabs_manifest.csv', HERE.parent.parent/'Euclid'/'Q1/datalabs_MER_VIS'/'MER_VIS_datalabs_manifest.csv']
             segpath=next((p for p in candidates if p.exists()),candidates[0])
             if segpath.exists():
                 with segpath.open(encoding='utf-8-sig') as stream:
                     area = next((r.get('segmentation_area') for r in csv.DictReader(stream) if r['object_id'] == oid), None)
             if area is None:
-                raise ValueError('The segmentation size catalogue is missing; restore datalabs_MER_VIS/MER_VIS_datalabs_manifest.csv')
+                raise ValueError('The segmentation size catalogue is missing; restore Q1/datalabs_MER_VIS/MER_VIS_datalabs_manifest.csv')
             row = dict(self.byid[oid], manual_centre_x_pix=x, manual_centre_y_pix=y)
             request = dict(object_id=oid, row=row, segmentation_area=area, lock_centre=locked,
                            source_manifest_sha256=self.digest,

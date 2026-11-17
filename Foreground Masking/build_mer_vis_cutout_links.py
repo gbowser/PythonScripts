@@ -41,7 +41,7 @@ def main():
     here = Path(__file__).resolve().parent
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--targets-csv', type=Path, required=True)
-    parser.add_argument('--output-dir', type=Path, default=here/'q1_mer_vis_cutouts')
+    parser.add_argument('--output-dir', type=Path, default=here/'Q1/q1_mer_vis_cutouts')
     parser.add_argument('--overwrite', action='store_true')
     args = parser.parse_args()
     with args.targets_csv.open(newline='', encoding='utf-8-sig') as handle:
@@ -137,7 +137,7 @@ measuring faint outer-disc light. Use native celestial WCS when fitting geometry
 Regenerate from PythonScripts:
 
 ```powershell
-& '.\\.venv\\Scripts\\python.exe' '.\\Euclid\\build_mer_vis_cutout_links.py' `
+& '.\\.venv\\Scripts\\python.exe' '.\\Euclid\\Q1\\build_mer_vis_cutout_links.py' `
   --targets-csv '.\\Foreground Masking\\q1_full_candidate_audit\\morphology_candidates.csv' `
   --overwrite
 ```

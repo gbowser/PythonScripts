@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 base=Path('MER_VIS_adoption_2026_10_29');oid='-663928688473758026'
 source=json.loads((base/'source_reviews.json').read_text());g=json.loads((base/'galaxies.json').read_text())['galaxies'][oid]
 test=next(r for r in json.loads((base/'MER_VIS_sensitivity_results.json').read_text()) if r['id']==oid)
-module_path=Path('C:/Users/gordo/Documents/Github/PythonScripts/Euclid/datalabs_MER_VIS/MER_VIS_geometry_transforms.py')
+module_path=Path('C:/Users/gordo/Documents/Github/PythonScripts/Euclid/Q1/datalabs_MER_VIS/MER_VIS_geometry_transforms.py')
 spec=importlib.util.spec_from_file_location('mer_transforms',module_path);transforms=importlib.util.module_from_spec(spec);spec.loader.exec_module(transforms)
 review_root=Path('C:/Users/gordo/Documents/Github/PythonScripts/Euclid/review_MER_VIS/saved_reviews_centre_v3')
 result=json.loads((review_root/'refits'/source[oid]['settings']['refit_id']/'result.json').read_text())

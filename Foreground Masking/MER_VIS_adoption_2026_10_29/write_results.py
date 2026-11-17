@@ -1,5 +1,12 @@
-import pathlib,json,collections,hashlib
-b=pathlib.Path('MER_VIS_adoption_2026_10_29');rows=json.loads((b/'MER_VIS_reviewed_adoption_manifest.json').read_text());reviewed=[r for r in rows if r['reviewed']];experiments=json.loads((b/'MER_VIS_sensitivity_results.json').read_text())
+import pathlib,json,collections,hashlib,sys
+b=pathlib.Path(__file__).resolve().parent
+sys.path.insert(0,str(b.parents[1]))
+from machine_paths import detect_pc,research_folder
+archive=research_folder(detect_pc(b))
+if not archive.is_dir():
+    raise RuntimeError(f'Research storage unavailable: {archive}')
+manifest=archive/'Foreground Masking/MER_VIS_adoption_2026_10_29/MER_VIS_reviewed_adoption_manifest.json'
+rows=json.loads(manifest.read_text());reviewed=[r for r in rows if r['reviewed']];experiments=json.loads((b/'MER_VIS_sensitivity_results.json').read_text())
 counts=collections.Counter(r['adoption_status'] for r in reviewed)
 lines=['# MER VIS adopted review policy and sensitivity results','', '29 October 2026. All 19 centre-pilot assessments are complete. The latest review changes one case from unassessed to visually usable; the recommendations otherwise stand.','',
 '## Latest galaxy: 2697242050653408730','', 'The reviewer selected outer disc contours because the inner contours follow spiral structure. The saved interval contains two accepted disc ellipses. Disc PA is 127.95° (provisional), bar PA is 74.33°, and no inclination is available under the current minimum-three rule. The centre is now visually confirmed. This is a visual recovery, not a complete deprojection measurement. Status: provisional_incomplete_disc. No inclination has been invented from the two samples.','',

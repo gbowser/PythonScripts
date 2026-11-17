@@ -37,7 +37,7 @@ p('The catalogue selection and ellipse measurements are provisional. Visual revi
 doc.add_heading('1 Build the galaxy list',1)
 h('Set up the working folder')
 p('Run PowerShell commands from C:\\Users\\gordo\\Documents\\Github\\PythonScripts. The existing .venv supplies the astronomy packages; the code is in the Euclid subfolder.')
-code("Set-Location 'C:\\Users\\gordo\\Documents\\Github\\PythonScripts'\n& '.\\.venv\\Scripts\\python.exe' `\n  '.\\Euclid\\compile_q1_VIS_barred_spirals.py' --candidates 25 --overwrite")
+code("Set-Location 'C:\\Users\\gordo\\Documents\\Github\\PythonScripts'\n& '.\\.venv\\Scripts\\python.exe' `\n  '.\\Euclid\\Q1\\compile_q1_VIS_barred_spirals.py' --candidates 25 --overwrite")
 h('Select morphology candidates')
 p('compile_q1_VIS_barred_spirals.py streams the Galaxy Zoo Euclid Q1 morphology catalogue from Zenodo record 15106473. It takes the first 25 qualifying entries in catalogue order, rather than scanning the whole catalogue or ranking the largest galaxies.')
 bullet('Require release_name = Q1_R1 and warning_galaxy_fails_training_cuts = false.')
@@ -46,7 +46,7 @@ bullet('Keep the exact object_id as a string, ICRS centre in decimal degrees, mo
 p('These Zoobot morphology fractions are conditional on the classification questions; they are not unconditional probabilities that an object is a barred spiral. The search radius is half the catalogue display width: radius_arcmin = cutout_width_arcsec / 120. It is not a measured bar radius.')
 h('Verify individual frame availability')
 p('For each candidate, the script queries sedm.calibrated_frame through Euclid TAP. It requires VIS, DpdVisCalibratedQuadFrame, Q1_R1, a cone intersecting the frame footprint, and the galaxy centre inside that footprint. TOP 1 records one example exposure. This does not prove that the centre lies on an actual science quadrant or that the whole galaxy is covered.')
-p('Outputs in Euclid\\q1_barred_spirals: availability_checks.csv records all checks; verified_barred_spirals.csv contains available candidates; galaxy_cones.csv contains centres and radii; manual_download_top5.sql supplies a bounded archive query. Network errors are reported separately from no match.')
+p('Outputs in Euclid\\Q1\\q1_barred_spirals: availability_checks.csv records all checks; verified_barred_spirals.csv contains available candidates; galaxy_cones.csv contains centres and radii; manual_download_top5.sql supplies a bounded archive query. Network errors are reported separately from no match.')
 
 page('2 Build the download links')
 p('The archive ADQL query returns metadata. Exporting a VOTable or CSV downloads the result table, not the FITS pixel data. Several galaxies can share an exposure, so deduplicate file_name before preparing image downloads.')
@@ -58,7 +58,7 @@ h('Construct a file URL from each filename')
 code('https://eas.esac.esa.int/sas-dd/data?RETRIEVAL_TYPE=FILE\n&FILE_NAME=<URL-encoded file_name>&RELEASE=sedm')
 p('Join the two lines above into one URL. RELEASE=sedm selects the download service namespace; the query’s release_name=Q1_R1 selects the data release. Do not substitute Q1_R1 for sedm in this URL.')
 p('For a refreshed shortlist, the following Python code creates a Markdown link file from the verified CSV. Save it as a small helper in Euclid and run it from PythonScripts. This constructs links only; it does not download images.')
-code("import csv\nfrom pathlib import Path\nfrom urllib.parse import urlencode\nfolder = Path('Euclid/q1_barred_spirals')\nwith (folder / 'verified_barred_spirals.csv').open() as f:\n    rows = list(csv.DictReader(f))\nnames = sorted({r['file_name'] for r in rows\n                if r.get('file_name')})\nlinks = ['# FITS download links', '']\nfor name in names:\n    params = urlencode({'RETRIEVAL_TYPE': 'FILE',\n                        'FILE_NAME': name, 'RELEASE': 'sedm'})\n    url = 'https://eas.esac.esa.int/sas-dd/data?' + params\n    links.append(f'- [{name}]({url})')\n(folder / 'FITS_DOWNLOAD_LINKS.md').write_text(\n    '\\n'.join(links) + '\\n', encoding='utf-8')")
+code("import csv\nfrom pathlib import Path\nfrom urllib.parse import urlencode\nfolder = Path('Euclid/Q1/q1_barred_spirals')\nwith (folder / 'verified_barred_spirals.csv').open() as f:\n    rows = list(csv.DictReader(f))\nnames = sorted({r['file_name'] for r in rows\n                if r.get('file_name')})\nlinks = ['# FITS download links', '']\nfor name in names:\n    params = urlencode({'RETRIEVAL_TYPE': 'FILE',\n                        'FILE_NAME': name, 'RELEASE': 'sedm'})\n    url = 'https://eas.esac.esa.int/sas-dd/data?' + params\n    links.append(f'- [{name}]({url})')\n(folder / 'FITS_DOWNLOAD_LINKS.md').write_text(\n    '\\n'.join(links) + '\\n', encoding='utf-8')")
 h('Download manually')
 p('Open FITS_DOWNLOAD_LINKS.md in VS Code and press Ctrl+Shift+V for the clickable preview. Download each distinct file into the Euclid Download Data folder listed on page 6. The five current files are each 7,315,678,080 bytes, about 36.6 GB in total. They are single calibrated exposures with multiple detector extensions, not merged images or galaxy-centred cutouts.')
 
@@ -139,7 +139,7 @@ for text in [
 'VIS processing and FITS products: https://doi.org/10.1051/0004-6361/202554594',
 'Photutils isophote fitting: https://photutils.readthedocs.io/en/latest/user_guide/isophote.html',
 'VIS flag definitions: https://euclid.esac.esa.int/msp/dpdd/v1.1/visdpd/dpcards/vis_flagmap.html',
-'Local implementation notes: Euclid/PHOTUTILS_GEOMETRY.md and Euclid/q1_barred_spirals/README.md.']:
+'Local implementation notes: Euclid/PHOTUTILS_GEOMETRY.md and Euclid/Q1/q1_barred_spirals/README.md.']:
     a=doc.add_paragraph(text);a.paragraph_format.space_after=Pt(4)
     for r in a.runs:r.font.size=Pt(9)
 doc.core_properties.title='Euclid Q1 barred spiral galaxy processing'

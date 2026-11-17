@@ -1,0 +1,5 @@
+astroquery>=0.4.11
+astropy
+numpy
+matplotlib
+requests

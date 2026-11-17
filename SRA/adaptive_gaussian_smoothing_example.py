@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -90,5 +92,14 @@ plt.grid(True, alpha=0.3)
 plt.legend()
 plt.tight_layout()
 
-plt.savefig("adaptive_gaussian_smoothing_example.png", dpi=200)
+# A bare filename previously wrote into the terminal's working directory.
+# Give new results a fixed location so they do not clutter PythonScripts.
+research_folder = Path(r"D:\Dropbox\Public Documents\UCLAN\MSc Research")
+if not research_folder.is_dir():
+    raise SystemExit(f"Dropbox research folder unavailable: {research_folder}")
+output_folder = research_folder / "SRA" / "example_outputs"
+output_folder.mkdir(parents=True, exist_ok=True)
+output_file = output_folder / "adaptive_gaussian_smoothing_example.png"
+plt.savefig(output_file, dpi=200)
+print("Saved:", output_file)
 plt.show()

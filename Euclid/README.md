@@ -1,5 +1,10 @@
 # Euclid bar cutouts
 
+Release-specific programs are in [DR1](DR1/README.md) and [Q1](Q1/README.md).
+See the [folder guide](Codex%20Documentation/Repository_Folder_Guide.md) for
+current paths and root-directory run commands. The tools below are shared or
+work on local images whose release is not established.
+
 Run from the PythonScripts directory using Python with numpy, scipy and
 astropy installed (the existing project environment supplies these):
 

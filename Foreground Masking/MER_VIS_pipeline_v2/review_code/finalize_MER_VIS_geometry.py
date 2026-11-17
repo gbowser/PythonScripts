@@ -11,7 +11,7 @@ p=argparse.ArgumentParser();p.add_argument('--geometry-dir',type=Path,required=T
 # Retry only failed targets, retaining trial profiles with zero strict samples so
 # explicitly relaxed recovery has actual samples to assess. Successful fits unchanged.
 from recover_failed_MER_VIS_geometry import measure as recover
-segpath=Path(__file__).parent.parent/'datalabs_MER_VIS'/'MER_VIS_datalabs_manifest.csv'
+segpath=Path(__file__).parent.parent/'Q1/datalabs_MER_VIS'/'MER_VIS_datalabs_manifest.csv'
 seg={z['object_id']:z.get('segmentation_area','') for z in csv.DictReader(segpath.open(encoding='utf-8-sig'))}
 retried=[]
 cache={}

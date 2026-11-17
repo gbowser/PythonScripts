@@ -1,0 +1,1 @@
+SELECT table_name,column_name,datatype,unit,description FROM TAP_SCHEMA.columns WHERE table_name IN ('dr1.mer_catalogue_wide_survey','dr1.mer_morphology_wide_survey','dr1.mer_catalogue_deep_survey','dr1.mer_morphology_deep_survey','dr1.mer_cutouts_wide_survey','dr1.mer_cutouts_deep_survey','dr1.mosaic_product')

@@ -18,7 +18,7 @@ def inclination(q):
  q=number(q)
  return math.degrees(math.acos(q)) if q is not None and 0<q<=1 else ''
 def main():
- out=HERE/'datalabs_MER_VIS';out.mkdir(exist_ok=True)
+ out=HERE/'Q1/datalabs_MER_VIS';out.mkdir(exist_ok=True)
  targets=list(csv.DictReader((out/'MER_VIS_datalabs_manifest.csv').open(newline='',encoding='utf-8-sig')))
  fields=['position_angle','position_angle_err','ellipticity','ellipticity_err','semimajor_axis','semimajor_axis_err']
  morph=['sersic_angle','sersic_angle_err','sersic_sersic_vis_axis_ratio','sersic_sersic_vis_axis_ratio_err','sersic_sersic_vis_radius','sersic_visnir_flags','disk_sersic_angle','disk_sersic_disk_axis_ratio','disk_sersic_flags','bar_strong','bar_weak','bar_no']

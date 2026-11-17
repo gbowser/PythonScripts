@@ -1,0 +1,27 @@
+{
+  "object_id": "-3585431460652891530",
+  "requested_ra_deg": "358.54314601915615",
+  "requested_dec_deg": "-65.28915303140428",
+  "native_fits_wcs": {
+    "CRVAL1": 358.2794895361,
+    "CD1_1": -2.777777777778e-05,
+    "CD1_2": 0.0,
+    "CRVAL2": -65.5,
+    "CD2_1": 0.0,
+    "CD2_2": 2.777777777778e-05,
+    "CRPIX1": 4120.0,
+    "CRPIX2": -7431.0,
+    "CTYPE1": "RA---TAN",
+    "CTYPE2": "DEC--TAN"
+  },
+  "png_flipud": true,
+  "png_size": [
+    303,
+    302
+  ],
+  "native_shape": [
+    302,
+    303
+  ],
+  "preview_is_science": false
+}
