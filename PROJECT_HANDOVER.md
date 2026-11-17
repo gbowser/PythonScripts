@@ -462,13 +462,16 @@ Euclid/Codex Documentation/Git_Storage_Guide.md. Both full-manifest Markdown
 guides, folder guide, DR1/root README and masking docs updated. Validation
 scripts now use machine_paths research storage and reject unavailable storage;
 adoption writer reads archived JSON. Installed dependencies/environments stay
-locally; node_modules will be removed from Git tracking and ignored.
+locally; 13398 node_modules files removed from Git tracking and ignored.
 Audit covered files >20,000,000 bytes except .git; .pytest_cache access denied
 and five obsolete long-path render-cache entries could not be statted.
 Dropbox sync completion and fresh-machine private artifact runtime unavailable
 for verification. Published history is retained; older blobs remain there.
 
-History correction, final validation and push are in progress.
+The two unpublished commits were consolidated into 6efd226, preserving all
+source changes except the documented cleanup and path updates. Normal push
+to gbowser/PythonScripts main succeeded (f346977 -> 6efd226); no force push.
+Every new outgoing blob was below20MB (largest1,535,388bytes).
 Validation completed: all 378 moved copies hash-verified, both full DR1 tables
 have 166553 distinct and matching IDs, six changed Python files parse, and the
 validation helper resolves the expected archive path. No science jobs rerun.

@@ -86,7 +86,8 @@ entitlements. Keeping generated results in Dropbox avoids adding an LFS storage
 dependency for this project.
 
 Deleting a large file in a later commit does not remove it from earlier commits.
-Only the two unpublished commits are being rebuilt, preserving the already
+Only the two unpublished commits were consolidated into cleanup commit
+`6efd226`, pushed successfully to `gbowser/PythonScripts` main, preserving the already
 published `origin/main` history. Previously published libraries and data remain
 in that older history, so this cleanup does not shrink existing clones or fully
 purge GitHub storage. No published-history rewrite or force push is needed.
