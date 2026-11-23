@@ -1,6 +1,12 @@
 # DR1 barred-galaxy preview pilot — 16 November 2026
 
-Open **gallery.html** to review all 100 galaxies. DR1_first100_review.csv is the concise review manifest; query_evidence/DR1_first100_manifest.csv retains full input metadata and cutout URLs. Import object_id as TEXT in Excel: these signed 64-bit identifiers lose precision if treated as spreadsheet numbers.
+Open **gallery.html** to review all 100 galaxies. The gallery, review CSV,
+benchmark, `preview_results` and `query_evidence` now live together in the Dropbox
+research folder at `Euclid/DR1/barred_galaxy_pilot` (relocated 23 November 2026).
+On the laptop this is
+`C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research\Euclid\DR1\barred_galaxy_pilot`;
+on the desktop use `D:\Dropbox\Public Documents\UCLAN\MSc Research` as the root.
+Source, notebook and requirements remain in Git. DR1_first100_review.csv is the concise review manifest; query_evidence/DR1_first100_manifest.csv retains full input metadata and cutout URLs. Import object_id as TEXT in Excel: these signed 64-bit identifiers lose precision if treated as spreadsheet numbers.
 
 ## Selection and total
 

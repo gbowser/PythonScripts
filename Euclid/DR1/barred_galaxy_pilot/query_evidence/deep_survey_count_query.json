@@ -1,8 +1,0 @@
-{
-  "endpoint": "https://eas.esac.esa.int/tap-server/tap/sync",
-  "sql_sha256": "9bcc8038574341576fa76bbd1ea72c9e1c2fea1fa7b41028985f507fcb1d993a",
-  "response_sha256": "7a39d5cdac8302a35e74df83a50cca046869ce035088ee18aea3e46f9f8fc6d4",
-  "rows": 1,
-  "seconds": 2.7711516999988817,
-  "utc": "2026-11-16T14:19:25.058147+00:00"
-}

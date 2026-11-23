@@ -1,6 +1,6 @@
 # Project handover
 
-Last updated: 17 November 2026.
+Last updated: 23 November 2026.
 
 ## Working across computers
 
@@ -13,6 +13,61 @@ Git transfers tracked files after commit, push and pull. It does not transfer
 Python environments, external scientific images or ignored local results.
 The handover and instruction files have been created locally; their creation
 does not mean they have been committed or pushed.
+
+## Repository maintenance ZIP reconciliation - 23 November 2026
+
+User requested all ZIPs in laptop research `Repository_maintenance` unpacked,
+with source in Git and large/generated outputs in Dropbox. Verified root:
+`C:/Users/gordo/Dropbox/Public Documents/UCLAN/MSc Research`.
+Desktop research equivalent remains `D:/Dropbox/Public Documents/UCLAN/MSc Research`.
+
+- Reconciled four ZIPs in `Repository_maintenance/H_Codex_archives_2026-11-17/Archives`:
+  DR1_All_Qualifying_Manifests, DR1_Manifests, DR1_Barred_Galaxy_Pilot and
+  ESA_Source_Extraction_Pilot. All 437 members have exact SHA256-verified unpacked
+  destinations: 420 identical existing files reused, 17 historical variants
+  extracted separately. CRC/path validation passed. The four original ZIPs were
+  subsequently deleted at the user's explicit request (details below).
+- Current DR1 builders, notebook, requirements and guides stay in
+  `Euclid/DR1/barred_galaxy_pilot` and its `full_manifest` subfolder. Full-table
+  outputs/evidence were already present in the matching Dropbox location and
+  byte-identical to the ZIPs; no large duplicate tables were created.
+- Moved all 243 generated pilot files (14,694,822 bytes) to research
+  `Euclid/DR1/barred_galaxy_pilot`: gallery, benchmark/review CSVs, original hashes,
+  preview_results and query_evidence. Each destination hash matched before source
+  removal; source removal and all destination hashes rechecked. All 200 gallery
+  links resolve; all 100 individual PNGs retained. Ignore rules and current guides
+  now reflect these locations. Git shows source-tree deletions for these moved
+  outputs; this is intentional, not lost research data.
+- Preserved three historical DR1 guides under source `archive_imports`; three
+  older ESA Python files under
+  `Euclid/Q1/datalabs_MER_VIS/source_extraction_pilot/archive_imports/ESA_Source_Extraction_Pilot`.
+  Active code was not replaced; ESA pilot belongs to Q1, not DR1. Ten historical
+  CSV variants (line-ending differences only) and one different checksum manifest
+  stay in Dropbox `archive_imports` beside their data. READMEs mark historical code.
+- Exact member/source/destination hashes and archive hashes:
+  research `Repository_maintenance/2026-11-23_archive_import/import_manifest.json`.
+  Maintenance audit JSONs, Word pre-edit backups and Git bundle remain in their
+  original maintenance folders. Source helper `tools/import_research_archives.py`
+  defaults to read-only; explicit `--research-root`, optional `--apply`.
+- Validation: all 437 member hashes, 243 relocation hashes/absent old copies,
+  four unchanged ZIP hashes, 200 gallery links, 100 PNGs, ten newline-only CSV
+  comparisons and 13 Python syntax parses passed; `git diff --check` passed.
+  No science processing, catalogue query, runtime revalidation or package install.
+  No commit/push performed; Dropbox sync completion unverified. Commit/push these
+  source/docs/deletion changes when authorized, then pull on the other computer.
+
+User subsequently requested deletion of the extracted ZIPs. Rechecked all 437
+saved member hashes and all four ZIP hashes, then deleted the four named archives
+on 23 November 2026 (271,839,407 bytes). Verified their absence; extracted files,
+other maintenance records and Git bundle retained. Deletion audit:
+research `Repository_maintenance/2026-11-23_archive_import/deleted_verified_zips.json`.
+The one-time ZIP importer now requires the original archives to rerun; the saved
+import manifest is the inventory of the unpacked files. Dropbox sync completion
+remains unverified.
+
+This supersedes older statements below that the 100-object gallery/results
+remain in the repository; the full current storage guide is
+`Euclid/Codex Documentation/Git_Storage_Guide.md`.
 
 ## Active project: Euclid foreground masking and bar analysis
 

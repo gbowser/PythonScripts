@@ -76,6 +76,12 @@ Pension_Simulator/data/saved_runs/
 node_modules/
 
 # Research data relocated to Dropbox on 17 November 2026
+Euclid/DR1/barred_galaxy_pilot/preview_results/
+Euclid/DR1/barred_galaxy_pilot/query_evidence/
+Euclid/DR1/barred_galaxy_pilot/gallery.html
+Euclid/DR1/barred_galaxy_pilot/benchmark_manifest.csv
+Euclid/DR1/barred_galaxy_pilot/DR1_first100_review.csv
+Euclid/DR1/barred_galaxy_pilot/SHA256.json
 Euclid/DR1/barred_galaxy_pilot/full_manifest/*.csv
 Euclid/DR1/barred_galaxy_pilot/full_manifest/*.json
 Euclid/DR1/barred_galaxy_pilot/full_manifest/query_evidence/

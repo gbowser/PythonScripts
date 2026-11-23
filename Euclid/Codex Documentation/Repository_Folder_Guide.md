@@ -4,9 +4,11 @@ Updated 17 November 2026. Release-specific programs now live under
 `Euclid/DR1` and `Euclid/Q1`. Shared analysis and local-image tools remain under
 `Euclid`. Commands below run from the PythonScripts repository root.
 
-The full-catalogue CSV/JSON outputs and query evidence have since moved to the
-matching Dropbox research folder; `full_manifest` now contains builders and
-guides. Other large-data relocations and dependency handling are listed in
+The full-catalogue outputs and the 100-object pilot gallery, PNGs, manifests and
+query evidence now live in the matching Dropbox research folder. The pilot source
+and `full_manifest` builders, notebooks and guides remain in Git. The pilot
+relocation and four-ZIP reconciliation were verified on 23 November 2026.
+Other large-data relocations and dependency handling are listed in
 [Git storage](Git_Storage_Guide.md). Earlier Word exports show the prior layout.
 
 ```text
@@ -19,9 +21,8 @@ PythonScripts/
         Galaxy_image_remote.py
         requirements.txt
         README.md
-      barred_galaxy_pilot/          Existing 100-object pilot, gallery and evidence
-        preview_results/           Individual PNGs and four contact sheets
-        query_evidence/            Exact executed queries and responses
+      barred_galaxy_pilot/          100-object pilot source, notebook and guide
+        archive_imports/           Historical guides from ZIP exports
         full_manifest/             Metadata builders; generated catalogue in Dropbox
     Q1/
       compile_q1_VIS_barred_spirals.py
@@ -94,14 +95,18 @@ The obsolete `LAPTOP_MER_MTO_SETUP.md` and `LAPTOP_SETUP_REPORT.md` transfer
 notes were deleted, along with the stale root `debug.log`. `PROJECT_HANDOVER.md`
 remains because the user's latest AGENTS instructions explicitly require it.
 
-## Yesterday's DR1 pilot previews
+## DR1 pilot previews in Dropbox
 
-- [Gallery of 100 galaxies](../DR1/barred_galaxy_pilot/gallery.html).
-- Contact sheets: [1](../DR1/barred_galaxy_pilot/preview_results/contact_sheet_01.png),
-  [2](../DR1/barred_galaxy_pilot/preview_results/contact_sheet_02.png),
-  [3](../DR1/barred_galaxy_pilot/preview_results/contact_sheet_03.png),
-  [4](../DR1/barred_galaxy_pilot/preview_results/contact_sheet_04.png).
+Below the Dropbox research root, open:
+
+- Gallery: `Euclid/DR1/barred_galaxy_pilot/gallery.html`.
+- Contact sheets: `Euclid/DR1/barred_galaxy_pilot/preview_results/contact_sheet_01.png`
+  through `contact_sheet_04.png`.
 - Individual images: `Euclid/DR1/barred_galaxy_pilot/preview_results/png`.
+
+The laptop research root is
+`C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research`;
+the desktop root is `D:\Dropbox\Public Documents\UCLAN\MSc Research`.
 
 Install pilot dependencies from
 `Euclid/DR1/barred_galaxy_pilot/requirements.txt`, or full-manifest dependencies

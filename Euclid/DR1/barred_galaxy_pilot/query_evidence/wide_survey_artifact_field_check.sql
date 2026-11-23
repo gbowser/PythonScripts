@@ -1,1 +1,0 @@
-SELECT COUNT(*) AS n FROM dr1.mer_morphology_wide_survey m WHERE m.data_set_release='DR1_R2' AND m.smooth_or_featured_artifact_star_zoom >= 0 AND m.smooth_or_featured_artifact_star_zoom < 1.0E100

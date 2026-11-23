@@ -2,6 +2,34 @@
 
 Updated 17 November 2026 after GitHub rejected a 247.47 MiB DR1 detail CSV.
 
+23 November 2026: all four ZIPs under research `Repository_maintenance` were
+unpacked or reconciled against existing identical files (437 archive members).
+The 243 generated 100-galaxy pilot files (14,694,822 bytes), including the gallery,
+PNGs, benchmark and query evidence, also moved from Git source folders into the
+matching Dropbox `Euclid/DR1/barred_galaxy_pilot` folder. All copies were
+SHA256-verified before source removal. Active source, notebooks, requirements
+and guides remain in Git. Ignore rules prevent reintroducing these outputs.
+
+This laptop's verified research root is
+`C:\Users\gordo\Dropbox\Public Documents\UCLAN\MSc Research`.
+Open `Euclid/DR1/barred_galaxy_pilot/gallery.html` below it; all 100 PNGs and
+their sidecars remain together. The 166,553-object full tables were already
+present and byte-identical to both ZIPs; they were not duplicated or rebuilt.
+Seventeen differing archive members were preserved under `archive_imports`
+beside the corresponding source/data, including three older Q1 ESA pilot Python
+files. Current source was not replaced. The ten pilot evidence CSV differences
+are line endings only. The user subsequently requested deletion of the four
+extracted ZIPs: all 437 member hashes and archive hashes were rechecked, then
+271,839,407 bytes of ZIP files were deleted on 23 November. Maintenance audits,
+Word backups and the Git bundle remain. The deletion record is
+`Repository_maintenance/2026-11-23_archive_import/deleted_verified_zips.json`.
+No commit, push or Dropbox sync completion was verified.
+Detailed member destinations and hashes:
+`Repository_maintenance/2026-11-23_archive_import/import_manifest.json`.
+The original one-time import is implemented in `tools/import_research_archives.py`
+(`--research-root`, optional `--apply`); it requires the now-deleted original ZIPs.
+Use the saved import manifest for the current inventory of unpacked files.
+
 ## Current locations
 
 The archive root on this desktop is
@@ -16,6 +44,7 @@ Moved files retain their paths relative to PythonScripts under that archive:
 | Repository-relative location | What moved |
 | --- | --- |
 | `Euclid/DR1/barred_galaxy_pilot/full_manifest` | All generated CSV/JSON tables, validation, hashes and the complete query evidence tree; builders, requirements and guides stay in Git |
+| `Euclid/DR1/barred_galaxy_pilot` | Gallery, benchmark/review CSVs, original hashes, preview_results and pilot query_evidence; moved 23 November |
 | `Euclid/masking_review/validation_output` | Entire automated-validation output tree; adopted saved reviews were not moved |
 | `Euclid/reports/MER_VIS_review_2026-10-29/MER_VIS_reviewed_adoption_manifest.json` | Large JSON; companion CSV and review notes remain in Git |
 | `Foreground Masking/MER_VIS_adoption_2026_10_29/MER_VIS_reviewed_adoption_manifest.json` | Large JSON; source and small companions remain in Git |
